@@ -14,7 +14,10 @@ export default function Home() {
       const items = data.items.filter(
         (item) => item.category === category.id,
       ) as ItemJson[]
-      const groups = Object.groupBy(items, ({ row }) => row)
+      const groups = items.reduce((pre, cur) => {
+        ;(pre[cur.row] = pre[cur.row] || []).push(cur)
+        return pre
+      }, {} as Record<number, ItemJson[]>)
 
       return {
         ...category,
@@ -34,14 +37,27 @@ export default function Home() {
         <div className="w-full max-w-7xl px-6">
           <Tabs aria-label="Options">
             {tabs.map((tab) => (
-              <Tab key={tab.id} title={tab.name}>
+              <Tab
+                key={tab.id}
+                title={
+                  <div className="flex items-center">
+                    <IconItem name={tab.icon || tab.id} />
+                    {tab.name}
+                  </div>
+                }
+              >
                 <Card>
                   <CardBody>
                     <div>
                       {tab.item_groups.map((group, index) => (
-                        <div key={index} className="flex flex-wrap">
+                        <div key={index} className="flex flex-wrap ">
                           {group.map((item) => (
-                            <IconItem name={item.id} key={item.id} />
+                            <div key={item.id} className="p-2">
+                              <IconItem
+                                name={item.icon || item.id}
+                                text={item.iconText}
+                              />
+                            </div>
                           ))}
                         </div>
                       ))}
