@@ -1,5 +1,7 @@
 {
   "extends": "next/core-web-vitals",
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
   "rules": {
     "react/self-closing-comp": ["error", { "component": true, "html": true }]
   }
