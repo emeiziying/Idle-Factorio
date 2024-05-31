@@ -593,7 +593,7 @@ async function processMod(): Promise<void> {
       fs.writeFileSync(modHashPath, JSON.stringify(modHash))
     }
 
-    fs.writeFileSync(modDataPath, JSON.stringify(modData))
+    fs.writeFileSync(modDataPath, JSON.stringify(modData, null, 2))
     fs.writeFileSync(
       `${tempPath}/data-report.json`,
       JSON.stringify(modDataReport),
@@ -1770,6 +1770,7 @@ async function processMod(): Promise<void> {
       category: 'technology',
       row,
       time: techData.unit.time,
+      count: techData.unit.count,
       producers,
       in: techIngredientsMap[techRaw.name],
       out: { [id]: 1 },
