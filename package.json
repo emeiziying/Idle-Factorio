@@ -11,7 +11,8 @@
     "postfactorio-api": "prettier --write \"scripts/factorio.models.ts\"",
     "factorio-dump": "scripts\\factorio-dump.bat",
     "factorio-dump:mac": "scripts/factorio-dump.sh",
-    "factorio-build": "ts-node -r tsconfig-paths/register scripts/factorio-build.ts"
+    "factorio-build": "ts-node -r tsconfig-paths/register scripts/factorio-build.ts",
+    "sample-data": "ts-node -r tsconfig-paths/register scripts/sample-data.ts"
   },
   "dependencies": {
     "@nextui-org/react": "^2.4.0",
@@ -28,6 +29,7 @@
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
+    "@tsconfig/node20": "^20.1.4",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
