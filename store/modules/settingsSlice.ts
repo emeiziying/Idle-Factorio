@@ -1,3 +1,4 @@
+import { environment } from '@/environments'
 import { coalesce, fnPropsNotNullish, getIdOptions } from '@/helpers'
 import {
   DisplayRate,
@@ -34,11 +35,24 @@ import {
   type Fuel,
   type Item,
   type Machine,
+  type Module,
   type Options,
   type Rational,
   type Recipe,
   type Technology,
 } from '@/models'
+import {
+  getHashRecord,
+  getI18nRecord,
+  getModInfoRecord,
+  getModRecord,
+  getModSets,
+} from '@/store/modules/datasetsSlice'
+import {
+  getColumns,
+  getLanguage,
+  getStates,
+} from '@/store/modules/preferencesSlice'
 import type { RootState } from '@/store/store'
 import { createSelector, createSlice } from '@reduxjs/toolkit'
 
@@ -163,38 +177,34 @@ export const getCosts = createSelector(settingsState, (state) => state.costs)
 
 /* Complex selectors */
 export const getMod = createSelector(
-  getModId,
-  Datasets.getModRecord,
+  [getModId, getModRecord],
   (id, data) => data[id],
 )
 
 export const getHash = createSelector(
   getModId,
-  Datasets.getHashRecord,
+  getHashRecord,
   (id, hashEntities) => hashEntities[id],
 )
 
 export const getGame = createSelector(
-  getModId,
-  Datasets.getModInfoRecord,
+  [getModId, getModInfoRecord],
   (id, data) => data[id]?.game ?? Game.Factorio,
 )
 
 export const getGameStates = createSelector(
   getGame,
-  Preferences.getStates,
+  getStates,
   (game, states) => states[game],
 )
 
 export const getSavedStates = createSelector(getGameStates, (states) =>
   Object.keys(states)
     .sort()
-    .map(
-      (i): SelectItem => ({
-        label: i,
-        value: i,
-      }),
-    ),
+    .map((i) => ({
+      label: i,
+      value: i,
+    })),
 )
 
 export const getGameInfo = createSelector(getGame, (game) => gameInfo[game])
@@ -220,16 +230,14 @@ export const getPresetOptions = createSelector(getGame, (game) =>
 
 export const getModOptions = createSelector(
   getGame,
-  Datasets.getModSets,
+  getModSets,
   (game, modSets) =>
     modSets
       .filter((b) => b.game === game)
-      .map(
-        (m): SelectItem => ({
-          label: m.name,
-          value: m.id,
-        }),
-      ),
+      .map((m) => ({
+        label: m.name,
+        value: m.id,
+      })),
 )
 
 export const getLinkValueOptions = createSelector(getGame, (game) =>
@@ -237,8 +245,7 @@ export const getLinkValueOptions = createSelector(getGame, (game) =>
 )
 
 export const getColumnsState = createSelector(
-  getGameInfo,
-  Preferences.getColumns,
+  [getGameInfo, getColumns],
   (gameInfo, columnsState) => {
     return gameColumnsState(
       { ...initialColumnsState, ...columnsState },
@@ -247,50 +254,52 @@ export const getColumnsState = createSelector(
   },
 )
 
-export const getDefaults = createSelector(getPreset, getMod, (preset, base) => {
-  if (base?.defaults == null) return null
+export const getDefaults = createSelector(
+  [getPreset, getMod],
+  (preset, base) => {
+    if (base?.defaults == null) return null
 
-  const m = base.defaults
-  let moduleRank: string[] = []
-  switch (base.game) {
-    case Game.Factorio: {
-      moduleRank = preset === Preset.Minimum ? [] : m.moduleRank
-      break
+    const m = base.defaults
+    let moduleRank: string[] = []
+    switch (base.game) {
+      case Game.Factorio: {
+        moduleRank = preset === Preset.Minimum ? [] : m.moduleRank
+        break
+      }
+      case Game.DysonSphereProgram: {
+        moduleRank = preset === Preset.Beacon8 ? m.moduleRank : []
+        break
+      }
+      case Game.FinalFactory:
+      case Game.Satisfactory: {
+        moduleRank = m.moduleRank
+      }
     }
-    case Game.DysonSphereProgram: {
-      moduleRank = preset === Preset.Beacon8 ? m.moduleRank : []
-      break
+    const defaults: Defaults = {
+      beltId: preset === Preset.Minimum ? m.minBelt : m.maxBelt,
+      pipeId: preset === Preset.Minimum ? m.minPipe : m.maxPipe,
+      fuelId: m.fuel,
+      cargoWagonId: m.cargoWagon,
+      fluidWagonId: m.fluidWagon,
+      excludedRecipeIds: m.excludedRecipes,
+      machineRankIds:
+        preset === Preset.Minimum ? m.minMachineRank : m.maxMachineRank,
+      moduleRankIds: moduleRank,
+      beaconCount:
+        preset < Preset.Beacon8
+          ? rational(0n)
+          : preset < Preset.Beacon12
+            ? rational(8n)
+            : rational(12n),
+      beaconId: m.beacon,
+      beaconModuleId: preset < Preset.Beacon8 ? ItemId.Module : m.beaconModule,
     }
-    case Game.FinalFactory:
-    case Game.Satisfactory: {
-      moduleRank = m.moduleRank
-    }
-  }
-  const defaults: Defaults = {
-    beltId: preset === Preset.Minimum ? m.minBelt : m.maxBelt,
-    pipeId: preset === Preset.Minimum ? m.minPipe : m.maxPipe,
-    fuelId: m.fuel,
-    cargoWagonId: m.cargoWagon,
-    fluidWagonId: m.fluidWagon,
-    excludedRecipeIds: m.excludedRecipes,
-    machineRankIds:
-      preset === Preset.Minimum ? m.minMachineRank : m.maxMachineRank,
-    moduleRankIds: moduleRank,
-    beaconCount:
-      preset < Preset.Beacon8
-        ? rational(0n)
-        : preset < Preset.Beacon12
-          ? rational(8n)
-          : rational(12n),
-    beaconId: m.beacon,
-    beaconModuleId: preset < Preset.Beacon8 ? ItemId.Module : m.beaconModule,
-  }
-  return defaults
-})
+    return defaults
+  },
+)
 
 export const getSettings = createSelector(
-  settingsState,
-  getDefaults,
+  [settingsState, getDefaults],
   (s, d) => ({
     ...s,
     ...{
@@ -314,18 +323,12 @@ export const getResearchFactor = createSelector(getResearchSpeed, (speed) =>
 )
 
 export const getI18n = createSelector(
-  getMod,
-  Datasets.getI18nRecord,
-  Preferences.getLanguage,
+  [getMod, getI18nRecord, getLanguage],
   (base, i18n, lang) => (base ? i18n[`${base.id}-${lang}`] : null),
 )
 
 export const getDataset = createSelector(
-  getMod,
-  getI18n,
-  getHash,
-  getDefaults,
-  getGame,
+  [getMod, getI18n, getHash, getDefaults, getGame],
   (mod, i18n, hash, defaults, game) => {
     // Map out entities with mods
     const categoryEntities = toEntities(
@@ -685,15 +688,12 @@ export const getAdjustmentData = createSelector(
   }),
 )
 
-export const getModMenuItem = createSelector(
-  getMod,
-  (mod): MenuItem => ({
-    icon: 'fa-solid fa-database',
-    routerLink: '/data',
-    queryParamsHandling: 'preserve',
-    label: mod?.name,
-  }),
-)
+export const getModMenuItem = createSelector(getMod, (mod) => ({
+  icon: 'fa-solid fa-database',
+  routerLink: '/data',
+  queryParamsHandling: 'preserve',
+  label: mod?.name,
+}))
 
 export function reduceEntities(
   value: Entities<string[]>,

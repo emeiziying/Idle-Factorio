@@ -2,6 +2,8 @@
 import IconItem from '@/components/IconItem'
 // import data from '@/data/data.json'
 import type { ItemJson, ModData } from '@/models'
+import { useAppStore } from '@/store/hooks'
+import { getAdjustedDataset } from '@/store/modules/recipesSlice'
 import { Card, CardBody, Tab, Tabs } from '@nextui-org/react'
 import { useWhyDidYouUpdate } from 'ahooks'
 import { useMemo } from 'react'
@@ -22,6 +24,9 @@ console.log(
 )
 
 export default function Home() {
+  const store = useAppStore()
+  const dataset = getAdjustedDataset(store.getState())
+
   const tabs = useMemo(() => {
     return data.categories.map((category) => {
       const items = data.items.filter((item) => item.category === category.id)
@@ -44,7 +49,7 @@ export default function Home() {
     })
   }, [])
 
-  useWhyDidYouUpdate('Home', [tabs])
+  useWhyDidYouUpdate('Home', [tabs, dataset])
 
   return (
     <main>

@@ -6,7 +6,13 @@ import {
   type Entities,
   type MachineSettings,
 } from '@/models'
+import {
+  getDataset,
+  getDefaults,
+  getFuelRankIds,
+} from '@/store/modules/settingsSlice'
 import type { RootState } from '@/store/store'
+import { RecipeUtility } from '@/utilities'
 import { createSelector, createSlice } from '@reduxjs/toolkit'
 
 export type MachinesState = {
@@ -29,12 +35,7 @@ export const machinesState = (state: RootState): MachinesState => state.machines
 
 /* Complex selectors */
 export const getMachinesState = createSelector(
-  [
-    machinesState,
-    Settings.getFuelRankIds,
-    Settings.getDefaults,
-    Settings.getDataset,
-  ],
+  [machinesState, getFuelRankIds, getDefaults, getDataset],
   (state, fuelRankIds, defaults, data) => {
     const ids = state.ids ?? defaults?.machineRankIds ?? []
 
