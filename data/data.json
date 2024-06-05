@@ -2213,15 +2213,10 @@
       "machine": {
         "speed": 1800,
         "type": "burner",
-        "fuelCategories": [
-          "chemical"
-        ],
+        "fuelCategories": ["chemical"],
         "usage": 1800,
         "pollution": 30,
-        "size": [
-          3,
-          2
-        ]
+        "size": [3, 2]
       }
     },
     {
@@ -2254,14 +2249,9 @@
       "machine": {
         "speed": 1,
         "type": "burner",
-        "fuelCategories": [
-          "nuclear"
-        ],
+        "fuelCategories": ["nuclear"],
         "usage": 40000,
-        "size": [
-          5,
-          5
-        ]
+        "size": [5, 5]
       }
     },
     {
@@ -2280,10 +2270,7 @@
       "machine": {
         "speed": 10000,
         "usage": 10000,
-        "size": [
-          3,
-          2
-        ]
+        "size": [3, 2]
       }
     },
     {
@@ -2308,15 +2295,10 @@
           "pollution"
         ],
         "type": "burner",
-        "fuelCategories": [
-          "chemical"
-        ],
+        "fuelCategories": ["chemical"],
         "usage": 150,
         "pollution": 12,
-        "size": [
-          2,
-          2
-        ]
+        "size": [2, 2]
       }
     },
     {
@@ -2331,10 +2313,7 @@
         "type": "electric",
         "usage": 90,
         "pollution": 10,
-        "size": [
-          3,
-          3
-        ]
+        "size": [3, 3]
       }
     },
     {
@@ -2345,10 +2324,7 @@
       "row": 2,
       "machine": {
         "speed": 1,
-        "size": [
-          1,
-          2
-        ]
+        "size": [1, 2]
       }
     },
     {
@@ -2363,10 +2339,7 @@
         "type": "electric",
         "usage": 90,
         "pollution": 10,
-        "size": [
-          3,
-          3
-        ]
+        "size": [3, 3]
       }
     },
     {
@@ -2378,15 +2351,10 @@
       "machine": {
         "speed": 1,
         "type": "burner",
-        "fuelCategories": [
-          "chemical"
-        ],
+        "fuelCategories": ["chemical"],
         "usage": 90,
         "pollution": 2,
-        "size": [
-          2,
-          2
-        ]
+        "size": [2, 2]
       }
     },
     {
@@ -2398,15 +2366,10 @@
       "machine": {
         "speed": 2,
         "type": "burner",
-        "fuelCategories": [
-          "chemical"
-        ],
+        "fuelCategories": ["chemical"],
         "usage": 90,
         "pollution": 4,
-        "size": [
-          2,
-          2
-        ]
+        "size": [2, 2]
       }
     },
     {
@@ -2422,10 +2385,7 @@
         "usage": 180,
         "drain": 6,
         "pollution": 1,
-        "size": [
-          3,
-          3
-        ]
+        "size": [3, 3]
       }
     },
     {
@@ -2440,10 +2400,7 @@
         "usage": 75,
         "drain": 2.5,
         "pollution": 4,
-        "size": [
-          3,
-          3
-        ]
+        "size": [3, 3]
       }
     },
     {
@@ -2459,10 +2416,7 @@
         "usage": 150,
         "drain": 5,
         "pollution": 3,
-        "size": [
-          3,
-          3
-        ]
+        "size": [3, 3]
       }
     },
     {
@@ -2478,10 +2432,7 @@
         "usage": 375,
         "drain": 12.5,
         "pollution": 2,
-        "size": [
-          3,
-          3
-        ]
+        "size": [3, 3]
       }
     },
     {
@@ -2497,10 +2448,7 @@
         "usage": 420,
         "drain": 14,
         "pollution": 6,
-        "size": [
-          5,
-          5
-        ]
+        "size": [5, 5]
       }
     },
     {
@@ -2516,10 +2464,7 @@
         "usage": 210,
         "drain": 7,
         "pollution": 4,
-        "size": [
-          3,
-          3
-        ]
+        "size": [3, 3]
       }
     },
     {
@@ -2535,10 +2480,7 @@
         "usage": 350,
         "drain": 11.666666666666666,
         "pollution": 4,
-        "size": [
-          3,
-          3
-        ]
+        "size": [3, 3]
       }
     },
     {
@@ -2552,10 +2494,7 @@
         "modules": 2,
         "type": "electric",
         "usage": 60,
-        "size": [
-          3,
-          3
-        ]
+        "size": [3, 3]
       }
     },
     {
@@ -2570,13 +2509,8 @@
         "range": 3,
         "type": "electric",
         "usage": 480,
-        "disallowedEffects": [
-          "productivity"
-        ],
-        "size": [
-          3,
-          3
-        ]
+        "disallowedEffects": ["productivity"],
+        "size": [3, 3]
       }
     },
     {
@@ -2700,10 +2634,7 @@
           "parts": 100,
           "launch": 2435
         },
-        "size": [
-          9,
-          9
-        ]
+        "size": [9, 9]
       }
     },
     {
@@ -3489,9 +3420,7 @@
       "category": "technology",
       "row": 1,
       "technology": {
-        "prerequisites": [
-          "automation"
-        ]
+        "prerequisites": ["automation"]
       },
       "stack": 200
     },
@@ -3501,9 +3430,7 @@
       "category": "technology",
       "row": 1,
       "technology": {
-        "prerequisites": [
-          "electronics"
-        ]
+        "prerequisites": ["electronics"]
       },
       "stack": 200
     },
@@ -3561,9 +3488,7 @@
       "category": "technology",
       "row": 1,
       "technology": {
-        "prerequisites": [
-          "steel-processing"
-        ]
+        "prerequisites": ["steel-processing"]
       },
       "stack": 200
     },
@@ -3581,9 +3506,7 @@
       "category": "technology",
       "row": 1,
       "technology": {
-        "prerequisites": [
-          "military"
-        ]
+        "prerequisites": ["military"]
       },
       "iconText": "1",
       "stack": 200
@@ -3594,9 +3517,7 @@
       "category": "technology",
       "row": 1,
       "technology": {
-        "prerequisites": [
-          "military"
-        ]
+        "prerequisites": ["military"]
       },
       "iconText": "1",
       "stack": 200
@@ -3607,10 +3528,7 @@
       "category": "technology",
       "row": 1,
       "technology": {
-        "prerequisites": [
-          "military",
-          "steel-processing"
-        ]
+        "prerequisites": ["military", "steel-processing"]
       },
       "stack": 200
     },
@@ -3635,9 +3553,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "plastics"
-        ]
+        "prerequisites": ["plastics"]
       },
       "stack": 200
     },
@@ -3647,10 +3563,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "electronics",
-          "logistic-science-pack-technology"
-        ]
+        "prerequisites": ["electronics", "logistic-science-pack-technology"]
       },
       "stack": 200
     },
@@ -3660,9 +3573,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "sulfur-processing"
-        ]
+        "prerequisites": ["sulfur-processing"]
       },
       "stack": 200
     },
@@ -3701,10 +3612,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "stone-wall-technology",
-          "military-2"
-        ]
+        "prerequisites": ["stone-wall-technology", "military-2"]
       },
       "stack": 200
     },
@@ -3727,9 +3635,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "sulfur-processing"
-        ]
+        "prerequisites": ["sulfur-processing"]
       },
       "stack": 200
     },
@@ -3739,9 +3645,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "logistic-science-pack-technology"
-        ]
+        "prerequisites": ["logistic-science-pack-technology"]
       },
       "stack": 200
     },
@@ -3751,10 +3655,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "advanced-electronics",
-          "sulfur-processing"
-        ]
+        "prerequisites": ["advanced-electronics", "sulfur-processing"]
       },
       "stack": 200
     },
@@ -3764,10 +3665,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "military-2",
-          "stone-wall-technology"
-        ]
+        "prerequisites": ["military-2", "stone-wall-technology"]
       },
       "stack": 200
     },
@@ -3790,10 +3688,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "advanced-material-processing",
-          "automation-2"
-        ]
+        "prerequisites": ["advanced-material-processing", "automation-2"]
       },
       "stack": 200
     },
@@ -3831,10 +3726,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "logistics-2",
-          "engine"
-        ]
+        "prerequisites": ["logistics-2", "engine"]
       },
       "stack": 200
     },
@@ -3844,10 +3736,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "railway",
-          "fluid-handling"
-        ]
+        "prerequisites": ["railway", "fluid-handling"]
       },
       "stack": 200
     },
@@ -3857,9 +3746,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "railway"
-        ]
+        "prerequisites": ["railway"]
       },
       "stack": 200
     },
@@ -3869,9 +3756,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "automated-rail-transportation"
-        ]
+        "prerequisites": ["automated-rail-transportation"]
       },
       "stack": 200
     },
@@ -3881,9 +3766,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "advanced-electronics"
-        ]
+        "prerequisites": ["advanced-electronics"]
       },
       "iconText": "1",
       "stack": 200
@@ -3894,9 +3777,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "logistic-science-pack-technology"
-        ]
+        "prerequisites": ["logistic-science-pack-technology"]
       },
       "stack": 200
     },
@@ -3906,9 +3787,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "automation-2"
-        ]
+        "prerequisites": ["automation-2"]
       },
       "iconText": "1",
       "stack": 200
@@ -3919,9 +3798,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "research-speed-1"
-        ]
+        "prerequisites": ["research-speed-1"]
       },
       "icon": "research-speed-1",
       "iconText": "2",
@@ -3947,9 +3824,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "stack-inserter-technology"
-        ]
+        "prerequisites": ["stack-inserter-technology"]
       },
       "iconText": "1",
       "stack": 200
@@ -3960,9 +3835,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "inserter-capacity-bonus-1"
-        ]
+        "prerequisites": ["inserter-capacity-bonus-1"]
       },
       "icon": "inserter-capacity-bonus-1",
       "iconText": "2",
@@ -3974,9 +3847,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "fluid-handling"
-        ]
+        "prerequisites": ["fluid-handling"]
       },
       "stack": 200
     },
@@ -3986,10 +3857,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "automation-2",
-          "engine"
-        ]
+        "prerequisites": ["automation-2", "engine"]
       },
       "stack": 200
     },
@@ -3999,9 +3867,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "oil-processing"
-        ]
+        "prerequisites": ["oil-processing"]
       },
       "stack": 200
     },
@@ -4011,9 +3877,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "oil-processing"
-        ]
+        "prerequisites": ["oil-processing"]
       },
       "stack": 200
     },
@@ -4039,10 +3903,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "logistics-2",
-          "engine"
-        ]
+        "prerequisites": ["logistics-2", "engine"]
       },
       "stack": 200
     },
@@ -4052,9 +3913,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "oil-processing"
-        ]
+        "prerequisites": ["oil-processing"]
       },
       "stack": 200
     },
@@ -4064,9 +3923,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "military-2"
-        ]
+        "prerequisites": ["military-2"]
       },
       "iconText": "1",
       "stack": 200
@@ -4077,9 +3934,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "physical-projectile-damage-1"
-        ]
+        "prerequisites": ["physical-projectile-damage-1"]
       },
       "icon": "physical-projectile-damage-1",
       "iconText": "2",
@@ -4091,9 +3946,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "weapon-shooting-speed-1"
-        ]
+        "prerequisites": ["weapon-shooting-speed-1"]
       },
       "icon": "weapon-shooting-speed-1",
       "iconText": "2",
@@ -4105,10 +3958,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "heavy-armor-technology",
-          "advanced-electronics"
-        ]
+        "prerequisites": ["heavy-armor-technology", "advanced-electronics"]
       },
       "stack": 200
     },
@@ -4118,9 +3968,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "solar-panel-equipment-technology"
-        ]
+        "prerequisites": ["solar-panel-equipment-technology"]
       },
       "stack": 200
     },
@@ -4130,9 +3978,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "solar-panel-equipment-technology"
-        ]
+        "prerequisites": ["solar-panel-equipment-technology"]
       },
       "stack": 200
     },
@@ -4155,10 +4001,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "modular-armor-technology",
-          "solar-energy"
-        ]
+        "prerequisites": ["modular-armor-technology", "solar-energy"]
       },
       "stack": 200
     },
@@ -4168,9 +4011,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "advanced-electronics"
-        ]
+        "prerequisites": ["advanced-electronics"]
       },
       "stack": 200
     },
@@ -4180,9 +4021,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "modules"
-        ]
+        "prerequisites": ["modules"]
       },
       "stack": 200
     },
@@ -4192,9 +4031,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "modules"
-        ]
+        "prerequisites": ["modules"]
       },
       "stack": 200
     },
@@ -4204,9 +4041,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "modules"
-        ]
+        "prerequisites": ["modules"]
       },
       "stack": 200
     },
@@ -4216,10 +4051,7 @@
       "category": "technology",
       "row": 2,
       "technology": {
-        "prerequisites": [
-          "explosives-technology",
-          "military-2"
-        ]
+        "prerequisites": ["explosives-technology", "military-2"]
       },
       "stack": 200
     },
@@ -4229,10 +4061,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "flammables",
-          "military-science-pack-technology"
-        ]
+        "prerequisites": ["flammables", "military-science-pack-technology"]
       },
       "stack": 200
     },
@@ -4269,9 +4098,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "flamethrower-technology"
-        ]
+        "prerequisites": ["flamethrower-technology"]
       },
       "iconText": "1",
       "stack": 200
@@ -4282,9 +4109,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "stronger-explosives-1"
-        ]
+        "prerequisites": ["stronger-explosives-1"]
       },
       "iconText": "2",
       "stack": 200
@@ -4295,9 +4120,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "refined-flammables-1"
-        ]
+        "prerequisites": ["refined-flammables-1"]
       },
       "icon": "refined-flammables-1",
       "iconText": "2",
@@ -4309,9 +4132,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "physical-projectile-damage-2"
-        ]
+        "prerequisites": ["physical-projectile-damage-2"]
       },
       "icon": "physical-projectile-damage-1",
       "iconText": "3",
@@ -4323,9 +4144,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "weapon-shooting-speed-2"
-        ]
+        "prerequisites": ["weapon-shooting-speed-2"]
       },
       "iconText": "3",
       "stack": 200
@@ -4336,9 +4155,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "physical-projectile-damage-3"
-        ]
+        "prerequisites": ["physical-projectile-damage-3"]
       },
       "icon": "physical-projectile-damage-1",
       "iconText": "4",
@@ -4350,9 +4167,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "weapon-shooting-speed-3"
-        ]
+        "prerequisites": ["weapon-shooting-speed-3"]
       },
       "icon": "weapon-shooting-speed-3",
       "iconText": "4",
@@ -4364,9 +4179,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "military-science-pack-technology"
-        ]
+        "prerequisites": ["military-science-pack-technology"]
       },
       "stack": 200
     },
@@ -4376,9 +4189,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "defender"
-        ]
+        "prerequisites": ["defender"]
       },
       "iconText": "1",
       "stack": 200
@@ -4389,9 +4200,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "follower-robot-count-1"
-        ]
+        "prerequisites": ["follower-robot-count-1"]
       },
       "icon": "follower-robot-count-1",
       "iconText": "2",
@@ -4416,9 +4225,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "chemical-science-pack-technology"
-        ]
+        "prerequisites": ["chemical-science-pack-technology"]
       },
       "iconText": "2",
       "stack": 200
@@ -4443,9 +4250,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "advanced-oil-processing-technology"
-        ]
+        "prerequisites": ["advanced-oil-processing-technology"]
       },
       "stack": 200
     },
@@ -4455,9 +4260,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "lubricant-technology"
-        ]
+        "prerequisites": ["lubricant-technology"]
       },
       "stack": 200
     },
@@ -4467,10 +4270,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "railway",
-          "chemical-science-pack-technology"
-        ]
+        "prerequisites": ["railway", "chemical-science-pack-technology"]
       },
       "iconText": "1",
       "stack": 200
@@ -4481,9 +4281,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "braking-force-1"
-        ]
+        "prerequisites": ["braking-force-1"]
       },
       "icon": "braking-force-1",
       "iconText": "2",
@@ -4551,10 +4349,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "electric-engine",
-          "battery-technology"
-        ]
+        "prerequisites": ["electric-engine", "battery-technology"]
       },
       "stack": 200
     },
@@ -4564,9 +4359,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "robotics"
-        ]
+        "prerequisites": ["robotics"]
       },
       "stack": 200
     },
@@ -4576,9 +4369,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "robotics"
-        ]
+        "prerequisites": ["robotics"]
       },
       "stack": 200
     },
@@ -4601,9 +4392,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "robotics"
-        ]
+        "prerequisites": ["robotics"]
       },
       "iconText": "1",
       "stack": 200
@@ -4614,9 +4403,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "worker-robots-speed-1"
-        ]
+        "prerequisites": ["worker-robots-speed-1"]
       },
       "icon": "worker-robots-speed-1",
       "iconText": "2",
@@ -4628,9 +4415,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "mining-productivity-1"
-        ]
+        "prerequisites": ["mining-productivity-1"]
       },
       "icon": "mining-productivity-1",
       "iconText": "2",
@@ -4642,9 +4427,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "robotics"
-        ]
+        "prerequisites": ["robotics"]
       },
       "iconText": "1",
       "stack": 200
@@ -4655,9 +4438,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "research-speed-2"
-        ]
+        "prerequisites": ["research-speed-2"]
       },
       "icon": "research-speed-1",
       "iconText": "3",
@@ -4669,9 +4450,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "research-speed-3"
-        ]
+        "prerequisites": ["research-speed-3"]
       },
       "icon": "research-speed-1",
       "iconText": "4",
@@ -4683,9 +4462,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "inserter-capacity-bonus-2"
-        ]
+        "prerequisites": ["inserter-capacity-bonus-2"]
       },
       "icon": "inserter-capacity-bonus-1",
       "iconText": "3",
@@ -4697,9 +4474,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "chemical-science-pack-technology"
-        ]
+        "prerequisites": ["chemical-science-pack-technology"]
       },
       "stack": 200
     },
@@ -4722,9 +4497,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "uranium-processing-technology"
-        ]
+        "prerequisites": ["uranium-processing-technology"]
       },
       "stack": 200
     },
@@ -4776,10 +4549,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "speed-module-technology",
-          "advanced-electronics-2"
-        ]
+        "prerequisites": ["speed-module-technology", "advanced-electronics-2"]
       },
       "iconText": "2",
       "stack": 200
@@ -4818,10 +4588,7 @@
       "category": "technology",
       "row": 3,
       "technology": {
-        "prerequisites": [
-          "flammables",
-          "advanced-oil-processing-technology"
-        ]
+        "prerequisites": ["flammables", "advanced-oil-processing-technology"]
       },
       "stack": 200
     },
@@ -4859,11 +4626,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "automobilism",
-          "military-3",
-          "explosives-technology"
-        ]
+        "prerequisites": ["automobilism", "military-3", "explosives-technology"]
       },
       "stack": 200
     },
@@ -4873,10 +4636,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "rocketry",
-          "military-3"
-        ]
+        "prerequisites": ["rocketry", "military-3"]
       },
       "stack": 200
     },
@@ -4886,9 +4646,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "physical-projectile-damage-4"
-        ]
+        "prerequisites": ["physical-projectile-damage-4"]
       },
       "iconText": "5",
       "stack": 200
@@ -4899,9 +4657,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "weapon-shooting-speed-4"
-        ]
+        "prerequisites": ["weapon-shooting-speed-4"]
       },
       "iconText": "5",
       "stack": 200
@@ -4912,9 +4668,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "laser-shooting-speed-2"
-        ]
+        "prerequisites": ["laser-shooting-speed-2"]
       },
       "iconText": "3",
       "stack": 200
@@ -4925,9 +4679,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "laser-shooting-speed-3"
-        ]
+        "prerequisites": ["laser-shooting-speed-3"]
       },
       "icon": "laser-shooting-speed-3",
       "iconText": "4",
@@ -4939,11 +4691,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "defender",
-          "military-3",
-          "laser"
-        ]
+        "prerequisites": ["defender", "military-3", "laser"]
       },
       "stack": 200
     },
@@ -4953,9 +4701,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "follower-robot-count-2"
-        ]
+        "prerequisites": ["follower-robot-count-2"]
       },
       "icon": "follower-robot-count-1",
       "iconText": "3",
@@ -4967,9 +4713,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "follower-robot-count-3"
-        ]
+        "prerequisites": ["follower-robot-count-3"]
       },
       "icon": "follower-robot-count-1",
       "iconText": "4",
@@ -5027,10 +4771,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "laser",
-          "military-science-pack-technology"
-        ]
+        "prerequisites": ["laser", "military-science-pack-technology"]
       },
       "stack": 200
     },
@@ -5040,10 +4781,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "laser",
-          "military-science-pack-technology"
-        ]
+        "prerequisites": ["laser", "military-science-pack-technology"]
       },
       "iconText": "1",
       "stack": 200
@@ -5054,9 +4792,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "energy-weapons-damage-1"
-        ]
+        "prerequisites": ["energy-weapons-damage-1"]
       },
       "icon": "energy-weapons-damage-1",
       "iconText": "2",
@@ -5068,9 +4804,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "stronger-explosives-2"
-        ]
+        "prerequisites": ["stronger-explosives-2"]
       },
       "iconText": "3",
       "stack": 200
@@ -5081,9 +4815,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "refined-flammables-2"
-        ]
+        "prerequisites": ["refined-flammables-2"]
       },
       "icon": "refined-flammables-1",
       "iconText": "3",
@@ -5095,9 +4827,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "energy-weapons-damage-2"
-        ]
+        "prerequisites": ["energy-weapons-damage-2"]
       },
       "icon": "energy-weapons-damage-1",
       "iconText": "3",
@@ -5109,9 +4839,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "energy-weapons-damage-3"
-        ]
+        "prerequisites": ["energy-weapons-damage-3"]
       },
       "icon": "energy-weapons-damage-1",
       "iconText": "4",
@@ -5123,10 +4851,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "laser",
-          "military-science-pack-technology"
-        ]
+        "prerequisites": ["laser", "military-science-pack-technology"]
       },
       "icon": "laser-shooting-speed-3",
       "iconText": "1",
@@ -5138,9 +4863,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "laser-shooting-speed-1"
-        ]
+        "prerequisites": ["laser-shooting-speed-1"]
       },
       "icon": "laser-shooting-speed-3",
       "iconText": "2",
@@ -5180,9 +4903,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "braking-force-2"
-        ]
+        "prerequisites": ["braking-force-2"]
       },
       "icon": "braking-force-1",
       "iconText": "3",
@@ -5194,9 +4915,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "braking-force-3"
-        ]
+        "prerequisites": ["braking-force-3"]
       },
       "icon": "braking-force-1",
       "iconText": "4",
@@ -5208,9 +4927,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "braking-force-4"
-        ]
+        "prerequisites": ["braking-force-4"]
       },
       "icon": "braking-force-1",
       "iconText": "5",
@@ -5222,9 +4939,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "worker-robots-storage-1"
-        ]
+        "prerequisites": ["worker-robots-storage-1"]
       },
       "icon": "worker-robots-storage-1",
       "iconText": "2",
@@ -5236,9 +4951,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "research-speed-4"
-        ]
+        "prerequisites": ["research-speed-4"]
       },
       "icon": "research-speed-1",
       "iconText": "5",
@@ -5250,9 +4963,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "inserter-capacity-bonus-3"
-        ]
+        "prerequisites": ["inserter-capacity-bonus-3"]
       },
       "icon": "inserter-capacity-bonus-1",
       "iconText": "4",
@@ -5264,9 +4975,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "inserter-capacity-bonus-4"
-        ]
+        "prerequisites": ["inserter-capacity-bonus-4"]
       },
       "icon": "inserter-capacity-bonus-1",
       "iconText": "5",
@@ -5278,9 +4987,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "inserter-capacity-bonus-5"
-        ]
+        "prerequisites": ["inserter-capacity-bonus-5"]
       },
       "icon": "inserter-capacity-bonus-1",
       "iconText": "6",
@@ -5319,10 +5026,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "nuclear-power",
-          "production-science-pack-technology"
-        ]
+        "prerequisites": ["nuclear-power", "production-science-pack-technology"]
       },
       "stack": 200
     },
@@ -5413,9 +5117,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "worker-robots-speed-2"
-        ]
+        "prerequisites": ["worker-robots-speed-2"]
       },
       "icon": "worker-robots-speed-1",
       "iconText": "3",
@@ -5427,9 +5129,7 @@
       "category": "technology",
       "row": 4,
       "technology": {
-        "prerequisites": [
-          "worker-robots-speed-3"
-        ]
+        "prerequisites": ["worker-robots-speed-3"]
       },
       "icon": "worker-robots-speed-1",
       "iconText": "4",
@@ -5454,9 +5154,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "braking-force-5"
-        ]
+        "prerequisites": ["braking-force-5"]
       },
       "icon": "braking-force-1",
       "iconText": "6",
@@ -5468,9 +5166,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "braking-force-6"
-        ]
+        "prerequisites": ["braking-force-6"]
       },
       "icon": "braking-force-1",
       "iconText": "7",
@@ -5496,9 +5192,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "worker-robots-speed-4"
-        ]
+        "prerequisites": ["worker-robots-speed-4"]
       },
       "icon": "worker-robots-speed-1",
       "iconText": "5",
@@ -5510,9 +5204,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "mining-productivity-2"
-        ]
+        "prerequisites": ["mining-productivity-2"]
       },
       "icon": "mining-productivity-1",
       "iconText": "3",
@@ -5524,9 +5216,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "worker-robots-storage-2"
-        ]
+        "prerequisites": ["worker-robots-storage-2"]
       },
       "icon": "worker-robots-storage-1",
       "iconText": "3",
@@ -5538,9 +5228,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "research-speed-5"
-        ]
+        "prerequisites": ["research-speed-5"]
       },
       "icon": "research-speed-1",
       "iconText": "6",
@@ -5552,9 +5240,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "inserter-capacity-bonus-6"
-        ]
+        "prerequisites": ["inserter-capacity-bonus-6"]
       },
       "icon": "inserter-capacity-bonus-1",
       "iconText": "7",
@@ -5566,10 +5252,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "military-4",
-          "tank-technology"
-        ]
+        "prerequisites": ["military-4", "tank-technology"]
       },
       "stack": 200
     },
@@ -5609,9 +5292,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "stronger-explosives-3"
-        ]
+        "prerequisites": ["stronger-explosives-3"]
       },
       "icon": "stronger-explosives-3",
       "iconText": "4",
@@ -5623,9 +5304,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "refined-flammables-3"
-        ]
+        "prerequisites": ["refined-flammables-3"]
       },
       "icon": "refined-flammables-1",
       "iconText": "4",
@@ -5637,9 +5316,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "stronger-explosives-4"
-        ]
+        "prerequisites": ["stronger-explosives-4"]
       },
       "icon": "stronger-explosives-3",
       "iconText": "5",
@@ -5651,9 +5328,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "refined-flammables-4"
-        ]
+        "prerequisites": ["refined-flammables-4"]
       },
       "icon": "refined-flammables-1",
       "iconText": "5",
@@ -5665,9 +5340,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "energy-weapons-damage-4"
-        ]
+        "prerequisites": ["energy-weapons-damage-4"]
       },
       "icon": "energy-weapons-damage-1",
       "iconText": "5",
@@ -5679,9 +5352,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "physical-projectile-damage-5"
-        ]
+        "prerequisites": ["physical-projectile-damage-5"]
       },
       "icon": "physical-projectile-damage-5",
       "iconText": "6",
@@ -5693,9 +5364,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "stronger-explosives-5"
-        ]
+        "prerequisites": ["stronger-explosives-5"]
       },
       "icon": "stronger-explosives-3",
       "iconText": "6",
@@ -5707,9 +5376,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "refined-flammables-5"
-        ]
+        "prerequisites": ["refined-flammables-5"]
       },
       "icon": "refined-flammables-1",
       "iconText": "6",
@@ -5721,9 +5388,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "energy-weapons-damage-5"
-        ]
+        "prerequisites": ["energy-weapons-damage-5"]
       },
       "icon": "energy-weapons-damage-1",
       "iconText": "6",
@@ -5735,9 +5400,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "weapon-shooting-speed-5"
-        ]
+        "prerequisites": ["weapon-shooting-speed-5"]
       },
       "icon": "weapon-shooting-speed-5",
       "iconText": "6",
@@ -5749,9 +5412,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "laser-shooting-speed-4"
-        ]
+        "prerequisites": ["laser-shooting-speed-4"]
       },
       "icon": "laser-shooting-speed-3",
       "iconText": "5",
@@ -5763,9 +5424,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "laser-shooting-speed-5"
-        ]
+        "prerequisites": ["laser-shooting-speed-5"]
       },
       "icon": "laser-shooting-speed-3",
       "iconText": "6",
@@ -5777,9 +5436,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "laser-shooting-speed-6"
-        ]
+        "prerequisites": ["laser-shooting-speed-6"]
       },
       "icon": "laser-shooting-speed-3",
       "iconText": "7",
@@ -5791,11 +5448,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "military-4",
-          "distractor",
-          "speed-module-technology"
-        ]
+        "prerequisites": ["military-4", "distractor", "speed-module-technology"]
       },
       "stack": 200
     },
@@ -5805,10 +5458,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "follower-robot-count-4",
-          "destroyer"
-        ]
+        "prerequisites": ["follower-robot-count-4", "destroyer"]
       },
       "icon": "follower-robot-count-1",
       "iconText": "5",
@@ -5820,9 +5470,7 @@
       "category": "technology",
       "row": 5,
       "technology": {
-        "prerequisites": [
-          "follower-robot-count-5"
-        ]
+        "prerequisites": ["follower-robot-count-5"]
       },
       "icon": "follower-robot-count-1",
       "iconText": "6",
@@ -5941,10 +5589,7 @@
       "category": "technology",
       "row": 6,
       "technology": {
-        "prerequisites": [
-          "artillery",
-          "space-science-pack-technology"
-        ]
+        "prerequisites": ["artillery", "space-science-pack-technology"]
       },
       "iconText": "1",
       "stack": 200
@@ -5955,10 +5600,7 @@
       "category": "technology",
       "row": 6,
       "technology": {
-        "prerequisites": [
-          "artillery",
-          "space-science-pack-technology"
-        ]
+        "prerequisites": ["artillery", "space-science-pack-technology"]
       },
       "iconText": "1",
       "stack": 200
@@ -6160,10 +5802,7 @@
       "category": "logistics",
       "row": 1,
       "time": 0.5,
-      "producers": [
-        "assembling-machine-2",
-        "assembling-machine-3"
-      ],
+      "producers": ["assembling-machine-2", "assembling-machine-3"],
       "in": {
         "iron-gear-wheel": 10,
         "fast-transport-belt": 1,
@@ -6220,10 +5859,7 @@
       "category": "logistics",
       "row": 1,
       "time": 2,
-      "producers": [
-        "assembling-machine-2",
-        "assembling-machine-3"
-      ],
+      "producers": ["assembling-machine-2", "assembling-machine-3"],
       "in": {
         "iron-gear-wheel": 80,
         "fast-underground-belt": 2,
@@ -6282,10 +5918,7 @@
       "category": "logistics",
       "row": 1,
       "time": 2,
-      "producers": [
-        "assembling-machine-2",
-        "assembling-machine-3"
-      ],
+      "producers": ["assembling-machine-2", "assembling-machine-3"],
       "in": {
         "fast-splitter": 1,
         "iron-gear-wheel": 10,
@@ -7175,11 +6808,7 @@
       "category": "logistics",
       "row": 8,
       "time": 3.2,
-      "producers": [
-        "stone-furnace",
-        "steel-furnace",
-        "electric-furnace"
-      ],
+      "producers": ["stone-furnace", "steel-furnace", "electric-furnace"],
       "in": {
         "stone": 2
       },
@@ -7193,10 +6822,7 @@
       "category": "logistics",
       "row": 8,
       "time": 10,
-      "producers": [
-        "assembling-machine-2",
-        "assembling-machine-3"
-      ],
+      "producers": ["assembling-machine-2", "assembling-machine-3"],
       "in": {
         "stone-brick": 5,
         "iron-ore": 1,
@@ -7232,10 +6858,7 @@
       "category": "logistics",
       "row": 8,
       "time": 15,
-      "producers": [
-        "assembling-machine-2",
-        "assembling-machine-3"
-      ],
+      "producers": ["assembling-machine-2", "assembling-machine-3"],
       "in": {
         "concrete": 20,
         "iron-stick": 8,
@@ -8041,9 +7664,7 @@
       "category": "intermediate-products",
       "row": 0,
       "time": 1,
-      "producers": [
-        "chemical-plant"
-      ],
+      "producers": ["chemical-plant"],
       "in": {
         "sulfur": 5,
         "iron-plate": 1,
@@ -8060,9 +7681,7 @@
       "category": "intermediate-products",
       "row": 0,
       "time": 5,
-      "producers": [
-        "oil-refinery"
-      ],
+      "producers": ["oil-refinery"],
       "in": {
         "crude-oil": 100
       },
@@ -8077,9 +7696,7 @@
       "category": "intermediate-products",
       "row": 0,
       "time": 5,
-      "producers": [
-        "oil-refinery"
-      ],
+      "producers": ["oil-refinery"],
       "in": {
         "water": 50,
         "crude-oil": 100
@@ -8097,9 +7714,7 @@
       "category": "intermediate-products",
       "row": 0,
       "time": 5,
-      "producers": [
-        "oil-refinery"
-      ],
+      "producers": ["oil-refinery"],
       "in": {
         "coal": 10,
         "heavy-oil": 25,
@@ -8121,9 +7736,7 @@
       "category": "intermediate-products",
       "row": 0,
       "time": 5,
-      "producers": [
-        "oil-refinery"
-      ],
+      "producers": ["oil-refinery"],
       "in": {
         "coal": 10,
         "heavy-oil": 25,
@@ -8146,9 +7759,7 @@
       "category": "intermediate-products",
       "row": 0,
       "time": 2,
-      "producers": [
-        "chemical-plant"
-      ],
+      "producers": ["chemical-plant"],
       "in": {
         "water": 30,
         "heavy-oil": 40
@@ -8164,9 +7775,7 @@
       "category": "intermediate-products",
       "row": 0,
       "time": 2,
-      "producers": [
-        "chemical-plant"
-      ],
+      "producers": ["chemical-plant"],
       "in": {
         "water": 30,
         "light-oil": 30
@@ -8182,9 +7791,7 @@
       "category": "intermediate-products",
       "row": 0,
       "time": 2,
-      "producers": [
-        "chemical-plant"
-      ],
+      "producers": ["chemical-plant"],
       "in": {
         "light-oil": 10
       },
@@ -8199,9 +7806,7 @@
       "category": "intermediate-products",
       "row": 0,
       "time": 2,
-      "producers": [
-        "chemical-plant"
-      ],
+      "producers": ["chemical-plant"],
       "in": {
         "petroleum-gas": 20
       },
@@ -8216,9 +7821,7 @@
       "category": "intermediate-products",
       "row": 0,
       "time": 2,
-      "producers": [
-        "chemical-plant"
-      ],
+      "producers": ["chemical-plant"],
       "in": {
         "heavy-oil": 20
       },
@@ -8233,9 +7836,7 @@
       "category": "intermediate-products",
       "row": 0,
       "time": 1,
-      "producers": [
-        "chemical-plant"
-      ],
+      "producers": ["chemical-plant"],
       "in": {
         "heavy-oil": 10
       },
@@ -8258,9 +7859,7 @@
         "raw-fish": 1
       },
       "part": "rocket-part",
-      "producers": [
-        "rocket-silo"
-      ]
+      "producers": ["rocket-silo"]
     },
     {
       "id": "iron-plate",
@@ -8268,11 +7867,7 @@
       "category": "intermediate-products",
       "row": 2,
       "time": 3.2,
-      "producers": [
-        "stone-furnace",
-        "steel-furnace",
-        "electric-furnace"
-      ],
+      "producers": ["stone-furnace", "steel-furnace", "electric-furnace"],
       "in": {
         "iron-ore": 1
       },
@@ -8286,11 +7881,7 @@
       "category": "intermediate-products",
       "row": 2,
       "time": 3.2,
-      "producers": [
-        "stone-furnace",
-        "steel-furnace",
-        "electric-furnace"
-      ],
+      "producers": ["stone-furnace", "steel-furnace", "electric-furnace"],
       "in": {
         "copper-ore": 1
       },
@@ -8304,11 +7895,7 @@
       "category": "intermediate-products",
       "row": 2,
       "time": 16,
-      "producers": [
-        "stone-furnace",
-        "steel-furnace",
-        "electric-furnace"
-      ],
+      "producers": ["stone-furnace", "steel-furnace", "electric-furnace"],
       "in": {
         "iron-plate": 5
       },
@@ -8323,9 +7910,7 @@
       "category": "intermediate-products",
       "row": 2,
       "time": 1,
-      "producers": [
-        "chemical-plant"
-      ],
+      "producers": ["chemical-plant"],
       "in": {
         "petroleum-gas": 20,
         "coal": 1
@@ -8341,9 +7926,7 @@
       "category": "intermediate-products",
       "row": 2,
       "time": 1,
-      "producers": [
-        "chemical-plant"
-      ],
+      "producers": ["chemical-plant"],
       "in": {
         "water": 30,
         "petroleum-gas": 30
@@ -8359,9 +7942,7 @@
       "category": "intermediate-products",
       "row": 2,
       "time": 4,
-      "producers": [
-        "chemical-plant"
-      ],
+      "producers": ["chemical-plant"],
       "in": {
         "sulfuric-acid": 20,
         "iron-plate": 1,
@@ -8378,9 +7959,7 @@
       "category": "intermediate-products",
       "row": 2,
       "time": 4,
-      "producers": [
-        "chemical-plant"
-      ],
+      "producers": ["chemical-plant"],
       "in": {
         "sulfur": 1,
         "coal": 1,
@@ -8397,9 +7976,7 @@
       "category": "intermediate-products",
       "row": 2,
       "time": 12,
-      "producers": [
-        "centrifuge"
-      ],
+      "producers": ["centrifuge"],
       "in": {
         "uranium-ore": 10
       },
@@ -8528,10 +8105,7 @@
       "category": "intermediate-products",
       "row": 3,
       "time": 10,
-      "producers": [
-        "assembling-machine-2",
-        "assembling-machine-3"
-      ],
+      "producers": ["assembling-machine-2", "assembling-machine-3"],
       "in": {
         "electronic-circuit": 20,
         "advanced-circuit": 2,
@@ -8569,10 +8143,7 @@
       "category": "intermediate-products",
       "row": 3,
       "time": 10,
-      "producers": [
-        "assembling-machine-2",
-        "assembling-machine-3"
-      ],
+      "producers": ["assembling-machine-2", "assembling-machine-3"],
       "in": {
         "engine-unit": 1,
         "lubricant": 15,
@@ -8652,10 +8223,7 @@
       "category": "intermediate-products",
       "row": 3,
       "time": 30,
-      "producers": [
-        "assembling-machine-2",
-        "assembling-machine-3"
-      ],
+      "producers": ["assembling-machine-2", "assembling-machine-3"],
       "in": {
         "solid-fuel": 10,
         "light-oil": 10
@@ -8671,9 +8239,7 @@
       "category": "intermediate-products",
       "row": 3,
       "time": 3,
-      "producers": [
-        "rocket-silo"
-      ],
+      "producers": ["rocket-silo"],
       "in": {
         "rocket-control-unit": 10,
         "low-density-structure": 10,
@@ -8690,9 +8256,7 @@
       "category": "intermediate-products",
       "row": 3,
       "time": 90,
-      "producers": [
-        "centrifuge"
-      ],
+      "producers": ["centrifuge"],
       "in": {
         "uranium-235": 1,
         "rocket-fuel": 1
@@ -8714,9 +8278,7 @@
       "out": {
         "used-up-uranium-fuel-cell": 0
       },
-      "producers": [
-        "nuclear-reactor"
-      ],
+      "producers": ["nuclear-reactor"],
       "isBurn": true
     },
     {
@@ -8746,9 +8308,7 @@
       "category": "intermediate-products",
       "row": 3,
       "time": 60,
-      "producers": [
-        "centrifuge"
-      ],
+      "producers": ["centrifuge"],
       "in": {
         "used-up-uranium-fuel-cell": 5
       },
@@ -8763,9 +8323,7 @@
       "category": "intermediate-products",
       "row": 3,
       "time": 60,
-      "producers": [
-        "centrifuge"
-      ],
+      "producers": ["centrifuge"],
       "in": {
         "uranium-235": 40,
         "uranium-238": 5
@@ -8917,9 +8475,7 @@
         "space-science-pack": 1000
       },
       "part": "rocket-part",
-      "producers": [
-        "rocket-silo"
-      ]
+      "producers": ["rocket-silo"]
     },
     {
       "id": "pistol",
@@ -9337,9 +8893,7 @@
       "category": "combat",
       "row": 1,
       "time": 6,
-      "producers": [
-        "chemical-plant"
-      ],
+      "producers": ["chemical-plant"],
       "in": {
         "steel-plate": 5,
         "crude-oil": 100
@@ -10059,9 +9613,7 @@
       "out": {
         "water": 1200
       },
-      "producers": [
-        "offshore-pump"
-      ]
+      "producers": ["offshore-pump"]
     },
     {
       "id": "steam",
@@ -10075,9 +9627,7 @@
       "out": {
         "steam": 1
       },
-      "producers": [
-        "boiler"
-      ]
+      "producers": ["boiler"]
     },
     {
       "id": "heat-exchanger-steam-boil",
@@ -10091,9 +9641,7 @@
       "out": {
         "steam-500": 1
       },
-      "producers": [
-        "heat-exchanger"
-      ]
+      "producers": ["heat-exchanger"]
     },
     {
       "id": "iron-ore",
@@ -10107,10 +9655,7 @@
       },
       "cost": 100,
       "isMining": true,
-      "producers": [
-        "burner-mining-drill",
-        "electric-mining-drill"
-      ]
+      "producers": ["burner-mining-drill", "electric-mining-drill"]
     },
     {
       "id": "copper-ore",
@@ -10124,10 +9669,7 @@
       },
       "cost": 100,
       "isMining": true,
-      "producers": [
-        "burner-mining-drill",
-        "electric-mining-drill"
-      ]
+      "producers": ["burner-mining-drill", "electric-mining-drill"]
     },
     {
       "id": "coal",
@@ -10141,10 +9683,7 @@
       },
       "cost": 100,
       "isMining": true,
-      "producers": [
-        "burner-mining-drill",
-        "electric-mining-drill"
-      ]
+      "producers": ["burner-mining-drill", "electric-mining-drill"]
     },
     {
       "id": "stone",
@@ -10158,10 +9697,7 @@
       },
       "cost": 100,
       "isMining": true,
-      "producers": [
-        "burner-mining-drill",
-        "electric-mining-drill"
-      ]
+      "producers": ["burner-mining-drill", "electric-mining-drill"]
     },
     {
       "id": "uranium-ore",
@@ -10177,9 +9713,7 @@
       },
       "cost": 100,
       "isMining": true,
-      "producers": [
-        "electric-mining-drill"
-      ]
+      "producers": ["electric-mining-drill"]
     },
     {
       "id": "crude-oil",
@@ -10193,9 +9727,7 @@
       },
       "cost": 10,
       "isMining": true,
-      "producers": [
-        "pumpjack"
-      ]
+      "producers": ["pumpjack"]
     },
     {
       "id": "automation",
@@ -10204,9 +9736,7 @@
       "row": 1,
       "time": 10,
       "count": 10,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1
       },
@@ -10222,9 +9752,7 @@
       "row": 1,
       "time": 15,
       "count": 30,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1
       },
@@ -10240,9 +9768,7 @@
       "row": 1,
       "time": 15,
       "count": 30,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1
       },
@@ -10258,9 +9784,7 @@
       "row": 1,
       "time": 15,
       "count": 20,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1
       },
@@ -10276,9 +9800,7 @@
       "row": 1,
       "time": 15,
       "count": 10,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1
       },
@@ -10294,9 +9816,7 @@
       "row": 1,
       "time": 10,
       "count": 10,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1
       },
@@ -10312,9 +9832,7 @@
       "row": 1,
       "time": 10,
       "count": 10,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1
       },
@@ -10330,9 +9848,7 @@
       "row": 1,
       "time": 5,
       "count": 75,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1
       },
@@ -10348,9 +9864,7 @@
       "row": 1,
       "time": 5,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1
       },
@@ -10366,9 +9880,7 @@
       "row": 1,
       "time": 30,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1
       },
@@ -10384,9 +9896,7 @@
       "row": 1,
       "time": 15,
       "count": 10,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1
       },
@@ -10402,9 +9912,7 @@
       "row": 1,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1
       },
@@ -10421,9 +9929,7 @@
       "row": 1,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1
       },
@@ -10440,9 +9946,7 @@
       "row": 1,
       "time": 30,
       "count": 30,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1
       },
@@ -10458,9 +9962,7 @@
       "row": 2,
       "time": 15,
       "count": 40,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10478,9 +9980,7 @@
       "row": 2,
       "time": 15,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10497,9 +9997,7 @@
       "row": 2,
       "time": 15,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10516,9 +10014,7 @@
       "row": 2,
       "time": 15,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10535,9 +10031,7 @@
       "row": 2,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10555,9 +10049,7 @@
       "row": 2,
       "time": 30,
       "count": 250,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10574,9 +10066,7 @@
       "row": 2,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10593,9 +10083,7 @@
       "row": 2,
       "time": 15,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10612,9 +10100,7 @@
       "row": 2,
       "time": 30,
       "count": 150,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10631,9 +10117,7 @@
       "row": 2,
       "time": 30,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10650,9 +10134,7 @@
       "row": 2,
       "time": 10,
       "count": 75,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10669,9 +10151,7 @@
       "row": 2,
       "time": 15,
       "count": 30,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10688,9 +10168,7 @@
       "row": 2,
       "time": 30,
       "count": 75,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10707,9 +10185,7 @@
       "row": 2,
       "time": 30,
       "count": 250,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10726,9 +10202,7 @@
       "row": 2,
       "time": 30,
       "count": 150,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10745,9 +10219,7 @@
       "row": 2,
       "time": 30,
       "count": 120,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10765,9 +10237,7 @@
       "row": 2,
       "time": 30,
       "count": 75,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10784,9 +10254,7 @@
       "row": 2,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10803,9 +10271,7 @@
       "row": 2,
       "time": 30,
       "count": 75,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10822,9 +10288,7 @@
       "row": 2,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10841,9 +10305,7 @@
       "row": 2,
       "time": 60,
       "count": 250,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10861,9 +10323,7 @@
       "row": 2,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10880,9 +10340,7 @@
       "row": 2,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10900,9 +10358,7 @@
       "row": 2,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10921,9 +10377,7 @@
       "row": 2,
       "time": 30,
       "count": 150,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10940,9 +10394,7 @@
       "row": 2,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10960,9 +10412,7 @@
       "row": 2,
       "time": 30,
       "count": 250,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -10981,9 +10431,7 @@
       "row": 2,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11000,9 +10448,7 @@
       "row": 2,
       "time": 15,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11019,9 +10465,7 @@
       "row": 2,
       "time": 30,
       "count": 150,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11038,9 +10482,7 @@
       "row": 2,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11057,9 +10499,7 @@
       "row": 2,
       "time": 15,
       "count": 20,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11078,9 +10518,7 @@
       "row": 2,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11097,9 +10535,7 @@
       "row": 2,
       "time": 30,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11116,9 +10552,7 @@
       "row": 2,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11136,9 +10570,7 @@
       "row": 2,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11157,9 +10589,7 @@
       "row": 2,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11178,9 +10608,7 @@
       "row": 2,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11197,9 +10625,7 @@
       "row": 2,
       "time": 15,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11216,9 +10642,7 @@
       "row": 2,
       "time": 15,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11235,9 +10659,7 @@
       "row": 2,
       "time": 15,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11254,9 +10676,7 @@
       "row": 2,
       "time": 15,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11273,9 +10693,7 @@
       "row": 2,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11292,9 +10710,7 @@
       "row": 2,
       "time": 30,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11311,9 +10727,7 @@
       "row": 2,
       "time": 30,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11330,9 +10744,7 @@
       "row": 2,
       "time": 30,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11349,9 +10761,7 @@
       "row": 2,
       "time": 15,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1
@@ -11368,9 +10778,7 @@
       "row": 3,
       "time": 30,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11388,9 +10796,7 @@
       "row": 3,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11408,9 +10814,7 @@
       "row": 3,
       "time": 15,
       "count": 120,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11428,9 +10832,7 @@
       "row": 3,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11449,9 +10851,7 @@
       "row": 3,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11470,9 +10870,7 @@
       "row": 3,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11492,9 +10890,7 @@
       "row": 3,
       "time": 60,
       "count": 300,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11514,9 +10910,7 @@
       "row": 3,
       "time": 60,
       "count": 300,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11535,9 +10929,7 @@
       "row": 3,
       "time": 60,
       "count": 400,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11557,9 +10949,7 @@
       "row": 3,
       "time": 60,
       "count": 400,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11579,9 +10969,7 @@
       "row": 3,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11599,9 +10987,7 @@
       "row": 3,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11620,9 +11006,7 @@
       "row": 3,
       "time": 30,
       "count": 300,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11642,9 +11026,7 @@
       "row": 3,
       "time": 15,
       "count": 150,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11662,9 +11044,7 @@
       "row": 3,
       "time": 30,
       "count": 300,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11683,9 +11063,7 @@
       "row": 3,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11703,9 +11081,7 @@
       "row": 3,
       "time": 30,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11723,9 +11099,7 @@
       "row": 3,
       "time": 30,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11743,9 +11117,7 @@
       "row": 3,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11764,9 +11136,7 @@
       "row": 3,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11786,9 +11156,7 @@
       "row": 3,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11806,9 +11174,7 @@
       "row": 3,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11826,9 +11192,7 @@
       "row": 3,
       "time": 30,
       "count": 250,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11847,9 +11211,7 @@
       "row": 3,
       "time": 45,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11868,9 +11230,7 @@
       "row": 3,
       "time": 30,
       "count": 75,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11888,9 +11248,7 @@
       "row": 3,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11908,9 +11266,7 @@
       "row": 3,
       "time": 30,
       "count": 250,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11928,9 +11284,7 @@
       "row": 3,
       "time": 30,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11948,9 +11302,7 @@
       "row": 3,
       "time": 30,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11969,9 +11321,7 @@
       "row": 3,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -11991,9 +11341,7 @@
       "row": 3,
       "time": 60,
       "count": 500,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12013,9 +11361,7 @@
       "row": 3,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12034,9 +11380,7 @@
       "row": 3,
       "time": 30,
       "count": 250,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12056,9 +11400,7 @@
       "row": 3,
       "time": 30,
       "count": 500,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12078,9 +11420,7 @@
       "row": 3,
       "time": 30,
       "count": 250,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12100,9 +11440,7 @@
       "row": 3,
       "time": 30,
       "count": 75,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12120,9 +11458,7 @@
       "row": 3,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12140,9 +11476,7 @@
       "row": 3,
       "time": 30,
       "count": 800,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12160,9 +11494,7 @@
       "row": 3,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12180,9 +11512,7 @@
       "row": 3,
       "time": 30,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12200,9 +11530,7 @@
       "row": 3,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12220,9 +11548,7 @@
       "row": 3,
       "time": 30,
       "count": 75,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12241,9 +11567,7 @@
       "row": 3,
       "time": 30,
       "count": 75,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12262,9 +11586,7 @@
       "row": 3,
       "time": 30,
       "count": 75,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12283,9 +11605,7 @@
       "row": 3,
       "time": 45,
       "count": 300,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12303,9 +11623,7 @@
       "row": 3,
       "time": 45,
       "count": 300,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12323,9 +11641,7 @@
       "row": 4,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12346,9 +11662,7 @@
       "row": 4,
       "time": 30,
       "count": 250,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12367,9 +11681,7 @@
       "row": 4,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12388,9 +11700,7 @@
       "row": 4,
       "time": 60,
       "count": 500,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12410,9 +11720,7 @@
       "row": 4,
       "time": 60,
       "count": 500,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12432,9 +11740,7 @@
       "row": 4,
       "time": 60,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12454,9 +11760,7 @@
       "row": 4,
       "time": 60,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12477,9 +11781,7 @@
       "row": 4,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12498,9 +11800,7 @@
       "row": 4,
       "time": 30,
       "count": 400,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12521,9 +11821,7 @@
       "row": 4,
       "time": 30,
       "count": 600,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12544,9 +11842,7 @@
       "row": 4,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12565,9 +11861,7 @@
       "row": 4,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12586,9 +11880,7 @@
       "row": 4,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12607,9 +11899,7 @@
       "row": 4,
       "time": 30,
       "count": 150,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12628,9 +11918,7 @@
       "row": 4,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12650,9 +11938,7 @@
       "row": 4,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12673,9 +11959,7 @@
       "row": 4,
       "time": 60,
       "count": 300,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12695,9 +11979,7 @@
       "row": 4,
       "time": 60,
       "count": 300,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12718,9 +12000,7 @@
       "row": 4,
       "time": 60,
       "count": 300,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12741,9 +12021,7 @@
       "row": 4,
       "time": 60,
       "count": 400,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12764,9 +12042,7 @@
       "row": 4,
       "time": 30,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12787,9 +12063,7 @@
       "row": 4,
       "time": 30,
       "count": 100,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12810,9 +12084,7 @@
       "row": 4,
       "time": 60,
       "count": 150,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12832,9 +12104,7 @@
       "row": 4,
       "time": 15,
       "count": 300,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12854,9 +12124,7 @@
       "row": 4,
       "time": 30,
       "count": 250,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12877,9 +12145,7 @@
       "row": 4,
       "time": 30,
       "count": 350,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12900,9 +12166,7 @@
       "row": 4,
       "time": 35,
       "count": 450,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12923,9 +12187,7 @@
       "row": 4,
       "time": 60,
       "count": 300,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12946,9 +12208,7 @@
       "row": 4,
       "time": 30,
       "count": 500,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12969,9 +12229,7 @@
       "row": 4,
       "time": 30,
       "count": 250,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -12992,9 +12250,7 @@
       "row": 4,
       "time": 30,
       "count": 300,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13015,9 +12271,7 @@
       "row": 4,
       "time": 30,
       "count": 400,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13038,9 +12292,7 @@
       "row": 4,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13059,9 +12311,7 @@
       "row": 4,
       "time": 30,
       "count": 1500,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13080,9 +12330,7 @@
       "row": 4,
       "time": 30,
       "count": 50,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13101,9 +12349,7 @@
       "row": 4,
       "time": 60,
       "count": 300,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13123,9 +12369,7 @@
       "row": 4,
       "time": 60,
       "count": 300,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13145,9 +12389,7 @@
       "row": 4,
       "time": 60,
       "count": 300,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13167,9 +12409,7 @@
       "row": 4,
       "time": 30,
       "count": 75,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13188,9 +12428,7 @@
       "row": 4,
       "time": 30,
       "count": 500,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13209,9 +12447,7 @@
       "row": 4,
       "time": 30,
       "count": 250,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13230,9 +12466,7 @@
       "row": 4,
       "time": 60,
       "count": 150,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13253,9 +12487,7 @@
       "row": 4,
       "time": 60,
       "count": 250,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13276,9 +12508,7 @@
       "row": 4,
       "time": 45,
       "count": 300,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13297,9 +12527,7 @@
       "row": 5,
       "time": 45,
       "count": 550,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13321,9 +12549,7 @@
       "row": 5,
       "time": 60,
       "count": 650,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13345,9 +12571,7 @@
       "row": 5,
       "time": 30,
       "count": 2000,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13367,9 +12591,7 @@
       "row": 5,
       "time": 60,
       "count": 500,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13391,9 +12613,7 @@
       "row": 5,
       "time": 60,
       "count": 1000,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13415,9 +12635,7 @@
       "row": 5,
       "time": 60,
       "count": 450,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13439,9 +12657,7 @@
       "row": 5,
       "time": 30,
       "count": 500,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13463,9 +12679,7 @@
       "row": 5,
       "time": 30,
       "count": 600,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13487,9 +12701,7 @@
       "row": 5,
       "time": 30,
       "count": 2000,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13509,9 +12721,7 @@
       "row": 5,
       "time": 45,
       "count": 1000,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13531,9 +12741,7 @@
       "row": 5,
       "time": 45,
       "count": 150,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13555,9 +12763,7 @@
       "row": 5,
       "time": 60,
       "count": 400,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13579,9 +12785,7 @@
       "row": 5,
       "time": 60,
       "count": 400,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13603,9 +12807,7 @@
       "row": 5,
       "time": 60,
       "count": 500,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13627,9 +12829,7 @@
       "row": 5,
       "time": 60,
       "count": 500,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13651,9 +12851,7 @@
       "row": 5,
       "time": 60,
       "count": 500,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13675,9 +12873,7 @@
       "row": 5,
       "time": 60,
       "count": 600,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13699,9 +12895,7 @@
       "row": 5,
       "time": 60,
       "count": 600,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13723,9 +12917,7 @@
       "row": 5,
       "time": 60,
       "count": 600,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13747,9 +12939,7 @@
       "row": 5,
       "time": 60,
       "count": 600,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13771,9 +12961,7 @@
       "row": 5,
       "time": 60,
       "count": 600,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13795,9 +12983,7 @@
       "row": 5,
       "time": 60,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13819,9 +13005,7 @@
       "row": 5,
       "time": 60,
       "count": 350,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13843,9 +13027,7 @@
       "row": 5,
       "time": 60,
       "count": 450,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13867,9 +13049,7 @@
       "row": 5,
       "time": 30,
       "count": 300,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13889,9 +13069,7 @@
       "row": 5,
       "time": 30,
       "count": 800,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13913,9 +13091,7 @@
       "row": 5,
       "time": 30,
       "count": 1000,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13937,9 +13113,7 @@
       "row": 5,
       "time": 30,
       "count": 400,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13959,9 +13133,7 @@
       "row": 5,
       "time": 30,
       "count": 200,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -13981,9 +13153,7 @@
       "row": 5,
       "time": 60,
       "count": 1000,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -14003,9 +13173,7 @@
       "row": 6,
       "time": 30,
       "count": 2500,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -14026,9 +13194,7 @@
       "row": 6,
       "time": 45,
       "count": 5000,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -14048,9 +13214,7 @@
       "category": "technology",
       "row": 6,
       "time": 60,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -14072,9 +13236,7 @@
       "category": "technology",
       "row": 6,
       "time": 60,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -14096,9 +13258,7 @@
       "category": "technology",
       "row": 6,
       "time": 60,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -14119,9 +13279,7 @@
       "category": "technology",
       "row": 6,
       "time": 60,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -14142,9 +13300,7 @@
       "category": "technology",
       "row": 6,
       "time": 60,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -14166,9 +13322,7 @@
       "category": "technology",
       "row": 6,
       "time": 60,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -14190,9 +13344,7 @@
       "category": "technology",
       "row": 6,
       "time": 60,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -14214,9 +13366,7 @@
       "category": "technology",
       "row": 6,
       "time": 60,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,
@@ -14238,9 +13388,7 @@
       "category": "technology",
       "row": 7,
       "time": 30,
-      "producers": [
-        "lab"
-      ],
+      "producers": ["lab"],
       "in": {
         "automation-science-pack": 1,
         "logistic-science-pack": 1,

@@ -1,8 +1,14 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit'
+import machinesReducer from './modules/machinesSlice'
+import recipesReducer from './modules/recipesSlice'
+import settingsReducer from './modules/settingsSlice'
 import technologiesReducer from './modules/technologiesSlice'
 
 const rootReducer = combineReducers({
+  recipes: recipesReducer,
   technologies: technologiesReducer,
+  machines: machinesReducer,
+  settings: settingsReducer,
 })
 
 export const makeStore = (preloadedState?: RootState) =>

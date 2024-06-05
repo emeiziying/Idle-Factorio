@@ -1,23 +1,38 @@
 'use client'
 import IconItem from '@/components/IconItem'
-import data from '@/data/data.json'
+// import data from '@/data/data.json'
 import type { ItemJson, ModData } from '@/models'
 import { Card, CardBody, Tab, Tabs } from '@nextui-org/react'
 import { useWhyDidYouUpdate } from 'ahooks'
 import { useMemo } from 'react'
 
+const data = require('@/data/data.json') as ModData
+
+console.log(data.items.length, data.recipes.length)
+const itemIds = data.items.map((item) => item.id)
+const recipeIds = data.recipes.map((recipe) => recipe.id)
+
+console.log(
+  'items have,recipes dont have',
+  itemIds.filter((id) => !recipeIds.includes(id)),
+)
+console.log(
+  'recipes have,items dont have',
+  recipeIds.filter((id) => !itemIds.includes(id)),
+)
+
 export default function Home() {
   const tabs = useMemo(() => {
-    const { categories } = data as never as ModData
+    return data.categories.map((category) => {
+      const items = data.items.filter((item) => item.category === category.id)
 
-    return categories.map((category) => {
-      const items = data.items.filter(
-        (item) => item.category === category.id,
-      ) as ItemJson[]
-      const groups = items.reduce((pre, cur) => {
-        ;(pre[cur.row] = pre[cur.row] || []).push(cur)
-        return pre
-      }, {} as Record<number, ItemJson[]>)
+      const groups = items.reduce(
+        (pre, cur) => {
+          ;(pre[cur.row] = pre[cur.row] || []).push(cur)
+          return pre
+        },
+        {} as Record<number, ItemJson[]>,
+      )
 
       return {
         ...category,
