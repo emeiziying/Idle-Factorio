@@ -4,10 +4,11 @@ import { useMemo } from 'react'
 type Props = {
   name: string
   text?: string
+  size?: number | string
 }
 
 const IconItem = (props: Props) => {
-  const { name, text } = props
+  const { name, text, size = 32 } = props
 
   const style = useMemo(() => {
     const item = data.icons.find((e) => e.id === name)
@@ -15,14 +16,19 @@ const IconItem = (props: Props) => {
     return { backgroundPosition: item.position }
   }, [name])
 
+  const scale = useMemo(() => Number(size) / 64, [size])
+
   return (
-    <div className="w-8 h-8 relative">
+    <div
+      className="relative"
+      style={{ width: `${size}px`, height: `${size}px` }}
+    >
       <div
         style={{
           width: 64,
           height: 64,
-          background: `url(/icons.webp)`,
-          transform: 'scale(.5)',
+          background: 'url(/icons.webp)',
+          transform: `scale(${scale})`,
           transformOrigin: '0 0',
           ...style,
         }}

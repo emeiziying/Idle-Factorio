@@ -56,6 +56,7 @@ export interface Recipe {
   drain?: Rational
   consumption?: Rational
   pollution?: Rational
+  count?: number
 }
 
 export function parseRecipe(json: RecipeJson): Recipe {
@@ -78,6 +79,7 @@ export function parseRecipe(json: RecipeJson): Recipe {
     icon: json.icon,
     iconText: json.iconText,
     usage: rational(json.usage),
+    count: json.count,
   }
 }
 

@@ -9,6 +9,7 @@ import {
 } from '@/store/modules/settingsSlice'
 import { Card, CardBody } from '@nextui-org/react'
 import { useWhyDidYouUpdate } from 'ahooks'
+import classnames from 'classnames'
 import { useMemo } from 'react'
 
 const TechnologyPanel = () => {
@@ -16,6 +17,16 @@ const TechnologyPanel = () => {
 
   const researchedTechnologyIds = useAppSelector(getResearchedTechnologyIds)
   const adjustedDataset = useAppSelector(getAdjustedDataset)
+
+  const technologyEntities = useMemo(
+    () => adjustedDataset.technologyEntities,
+    [adjustedDataset],
+  )
+
+  const recipeEntities = useMemo(
+    () => adjustedDataset.recipeEntities,
+    [adjustedDataset],
+  )
 
   const technology = useMemo(() => {
     let selection: string[] = researchedTechnologyIds || []
@@ -55,7 +66,13 @@ const TechnologyPanel = () => {
     [technology],
   )
 
-  useWhyDidYouUpdate('TechnologyPanel', { technology, itemEntities, tabs })
+  useWhyDidYouUpdate('TechnologyPanel', {
+    technology,
+    technologyEntities,
+    itemEntities,
+    tabs,
+    recipeEntities,
+  })
 
   return (
     <Card>
@@ -67,7 +84,9 @@ const TechnologyPanel = () => {
               {technology[key].map((id) => (
                 <div
                   key={id}
-                  className="p-2"
+                  className={classnames('p-2 flex flex-col items-center w-20', {
+                    'opacity-50': key !== 'available',
+                  })}
                   onClick={() =>
                     key === 'available' && dispatch(UNLOCK_TECHNOLOGY(id))
                   }
@@ -75,7 +94,19 @@ const TechnologyPanel = () => {
                   <IconItem
                     name={itemEntities[id].icon || id}
                     text={itemEntities[id].iconText}
+                    size="32"
                   />
+
+                  <div className="flex items-center pt-1">
+                    {Object.keys(recipeEntities[id].in).map((inId) => (
+                      <IconItem key={inId} name={inId} size="12" />
+                    ))}
+                    {recipeEntities[id].count && (
+                      <span className="text-[8px] pl-1">
+                        x{recipeEntities[id].count}
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

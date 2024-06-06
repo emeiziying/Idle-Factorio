@@ -19,6 +19,7 @@
     "@reduxjs/toolkit": "^2.2.5",
     "@sideway/formula": "^3.0.1",
     "ahooks": "^3.8.0",
+    "classnames": "^2.5.1",
     "d3": "^7.9.0",
     "framer-motion": "^11.2.6",
     "glpk-ts": "^0.0.11",
