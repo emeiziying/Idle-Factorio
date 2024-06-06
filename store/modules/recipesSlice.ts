@@ -10,7 +10,11 @@ import {
 } from '@/store/modules/settingsSlice'
 import type { RootState } from '@/store/store'
 import { RecipeUtility } from '@/utilities'
-import { createSelector, createSlice } from '@reduxjs/toolkit'
+import {
+  createSelector,
+  createSlice,
+  type PayloadAction,
+} from '@reduxjs/toolkit'
 
 export type RecipesState = Entities<RecipeSettings>
 
@@ -19,8 +23,14 @@ export const initialRecipesState: RecipesState = {}
 export const recipesSlice = createSlice({
   name: 'recipes',
   initialState: initialRecipesState,
-  reducers: {},
+  reducers: {
+    load(state, action: PayloadAction<RecipesState>) {
+      Object.assign(state, action.payload)
+    },
+  },
 })
+
+export const { load } = recipesSlice.actions
 
 /* Base selector functions */
 export const recipesState = (state: RootState): RecipesState => state.recipes

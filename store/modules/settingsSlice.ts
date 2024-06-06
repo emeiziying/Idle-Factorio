@@ -54,7 +54,11 @@ import {
   getStates,
 } from '@/store/modules/preferencesSlice'
 import type { RootState } from '@/store/store'
-import { createSelector, createSlice } from '@reduxjs/toolkit'
+import {
+  createSelector,
+  createSlice,
+  type PayloadAction,
+} from '@reduxjs/toolkit'
 
 export interface SettingsState {
   modId: string
@@ -117,8 +121,22 @@ export const initialSettingsState: SettingsState = {
 export const settingsSlice = createSlice({
   name: 'settings',
   initialState: initialSettingsState,
-  reducers: {},
+  reducers: {
+    SET_RESEARCHED_TECHNOLOGIES: (
+      state,
+      action: PayloadAction<string[] | null>,
+    ) => {
+      state.researchedTechnologyIds = action.payload
+    },
+    UNLOCK_TECHNOLOGY: (state, action: PayloadAction<string>) => {
+      ;(state.researchedTechnologyIds =
+        state.researchedTechnologyIds || []).push(action.payload)
+    },
+  },
 })
+
+export const { SET_RESEARCHED_TECHNOLOGIES, UNLOCK_TECHNOLOGY } =
+  settingsSlice.actions
 
 /* Base selector functions */
 export const settingsState = (state: RootState): SettingsState => state.settings
@@ -663,6 +681,7 @@ export const getAvailableRecipes = createSelector(
     if (researchedTechnologyIds == null) return data.recipeIds
 
     const set = new Set(researchedTechnologyIds)
+
     return data.recipeIds.filter((i) => {
       const recipe = data.recipeEntities[i]
       return recipe.unlockedBy == null || set.has(recipe.unlockedBy)

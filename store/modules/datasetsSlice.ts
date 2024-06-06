@@ -2,6 +2,7 @@ import { data } from '@/data'
 import type {
   AppData,
   Entities,
+  IdValuePayload,
   Mod,
   ModData,
   ModHash,
@@ -9,7 +10,17 @@ import type {
   ModInfo,
 } from '@/models'
 import type { RootState } from '@/store/store'
-import { createSelector, createSlice } from '@reduxjs/toolkit'
+import {
+  createSelector,
+  createSlice,
+  type PayloadAction,
+} from '@reduxjs/toolkit'
+
+export interface DatasetPayload {
+  data: IdValuePayload<ModData> | null
+  hash: IdValuePayload<ModHash> | null
+  i18n: IdValuePayload<ModI18n> | null
+}
 
 export interface DatasetsState extends AppData {
   dataRecord: Entities<ModData | undefined>
@@ -27,8 +38,26 @@ export const initialDatasetsState: DatasetsState = {
 export const datasetsSlice = createSlice({
   name: 'datasets',
   initialState: initialDatasetsState,
-  reducers: {},
+  reducers: {
+    loadMod: (state, action: PayloadAction<DatasetPayload>) => {
+      const { data, hash, i18n } = action.payload
+
+      Object.assign(state, {
+        dataRecord: data
+          ? { ...state.dataRecord, ...{ [data.id]: data.value } }
+          : state.dataRecord,
+        hashRecord: hash
+          ? { ...state.hashRecord, ...{ [hash.id]: hash.value } }
+          : state.hashRecord,
+        i18nRecord: i18n
+          ? { ...state.i18nRecord, ...{ [i18n.id]: i18n.value } }
+          : state.i18nRecord,
+      })
+    },
+  },
 })
+
+export const { loadMod } = datasetsSlice.actions
 
 /* Base selector functions */
 export const datasetsState = (state: RootState): DatasetsState => state.datasets

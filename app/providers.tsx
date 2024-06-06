@@ -1,5 +1,4 @@
 'use client'
-import storage from '@/store/storage'
 import { makeStore, type AppStore } from '@/store/store'
 import { NextUIProvider } from '@nextui-org/react'
 import { useRef } from 'react'
@@ -9,7 +8,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const storeRef = useRef<AppStore>()
   if (!storeRef.current) {
     // Create the store instance the first time this renders
-    storeRef.current = makeStore(storage.load())
+    storeRef.current = makeStore()
   }
 
   return (
