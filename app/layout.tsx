@@ -10,11 +10,11 @@ export const metadata: Metadata = {
   description: 'Idle-Factorio is a game inspired by Factorio.',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html suppressHydrationWarning>
       <body className={inter.className}>
         <Providers>{children}</Providers>
       </body>

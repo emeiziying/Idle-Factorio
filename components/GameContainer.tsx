@@ -16,7 +16,7 @@ import { useEffect, useMemo } from 'react'
 
 const data = require('@/data/data.json') as ModData
 const hash = require('@/data/hash.json') as ModHash
-const i18n = require('@/data/i18n/zh.json') as ModI18n
+const i18n = require('@/i18n/zh.json') as ModI18n
 
 const GameContainer = () => {
   const dispatch = useAppDispatch()
@@ -107,39 +107,41 @@ const GameContainer = () => {
   ])
 
   return (
-    <Tabs aria-label="Options">
-      {categoryIds.map((categoryId) => (
-        <Tab
-          key={categoryId}
-          title={
-            <div className="flex items-center">
-              <IconItem name={categoryId} />
-              {categoryEntities[categoryId].name}
-            </div>
-          }
-          className="py-2 px-0"
-        >
-          <Card>
-            <CardBody>
-              <div>
-                {categoryRows[categoryId].map((ids, index) => (
-                  <div key={index} className="flex flex-wrap ">
-                    {ids.map((id) => (
-                      <div key={id} className="p-2">
-                        <IconItem
-                          name={itemEntities[id].icon || id}
-                          text={itemEntities[id].iconText}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ))}
+    <div>
+      <Tabs aria-label="Options">
+        {categoryIds.map((categoryId) => (
+          <Tab
+            key={categoryId}
+            title={
+              <div className="flex items-center">
+                <IconItem name={categoryId} />
+                {categoryEntities[categoryId].name}
               </div>
-            </CardBody>
-          </Card>
-        </Tab>
-      ))}
-    </Tabs>
+            }
+            className="py-2 px-0"
+          >
+            <Card>
+              <CardBody>
+                <div>
+                  {categoryRows[categoryId].map((ids, index) => (
+                    <div key={index} className="flex flex-wrap ">
+                      {ids.map((id) => (
+                        <div key={id} className="p-2">
+                          <IconItem
+                            name={itemEntities[id].icon || id}
+                            text={itemEntities[id].iconText}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </CardBody>
+            </Card>
+          </Tab>
+        ))}
+      </Tabs>
+    </div>
   )
 }
 

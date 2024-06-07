@@ -10,10 +10,12 @@ import {
 import { Card, CardBody } from '@nextui-org/react'
 import { useWhyDidYouUpdate } from 'ahooks'
 import classnames from 'classnames'
+import { useTranslations } from 'next-intl'
 import { useMemo } from 'react'
 
 const TechnologyPanel = () => {
   const dispatch = useAppDispatch()
+  const t = useTranslations()
 
   const researchedTechnologyIds = useAppSelector(getResearchedTechnologyIds)
   const adjustedDataset = useAppSelector(getAdjustedDataset)
@@ -77,6 +79,7 @@ const TechnologyPanel = () => {
   return (
     <Card>
       <CardBody>
+        {t('cancel')}
         {tabs.map((key) => (
           <div key={key}>
             <div>{key}</div>
