@@ -1,3 +1,4 @@
+import '@/app/globals.css'
 import Providers from '@/app/providers'
 import Navigation from '@/components/Navigation'
 import { locales } from '@/config'
@@ -10,7 +11,7 @@ import {
   unstable_setRequestLocale,
 } from 'next-intl/server'
 import { Inter } from 'next/font/google'
-import type { ReactNode } from 'react'
+import { type ReactNode } from 'react'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -34,7 +35,7 @@ export async function generateMetadata({
   } satisfies Metadata
 }
 
-export default async function RootLayout({
+export default async function LocaleLayout({
   children,
   params: { locale },
 }: Props) {
@@ -46,12 +47,14 @@ export default async function RootLayout({
   const messages = await getMessages()
 
   return (
-    <html className="h-full" lang={locale}>
-      <body className={clsx(inter.className, 'flex h-full flex-col')}>
-        <NextIntlClientProvider messages={messages}>
-          <Navigation />
-          <Providers>{children}</Providers>
-        </NextIntlClientProvider>
+    <html lang={locale}>
+      <body className={clsx(inter.className, 'flex min-h-full flex-col')}>
+        <Providers>
+          <NextIntlClientProvider messages={messages}>
+            <Navigation />
+            {children}
+          </NextIntlClientProvider>
+        </Providers>
       </body>
     </html>
   )

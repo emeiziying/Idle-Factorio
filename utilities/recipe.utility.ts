@@ -113,11 +113,11 @@ export class RecipeUtility {
     moduleRankIds: string[],
     count: Rational,
   ): string[] {
-    const module = this.bestMatch(
+    const tempModule = this.bestMatch(
       options.map((o) => o.value),
       moduleRankIds,
     )
-    return new Array(count.toNumber()).fill(module)
+    return new Array(count.toNumber()).fill(tempModule)
   }
 
   static adjustRecipe(
@@ -189,26 +189,26 @@ export class RecipeUtility {
           : rational(1n)
       if (settings.moduleIds && settings.moduleIds.length) {
         for (const id of settings.moduleIds) {
-          const module = data.moduleEntities[id]
-          if (module) {
-            if (module.speed) {
-              speed = speed.add(module.speed.mul(factor))
+          const tempModule = data.moduleEntities[id]
+          if (tempModule) {
+            if (tempModule.speed) {
+              speed = speed.add(tempModule.speed.mul(factor))
             }
 
-            if (module.productivity) {
-              prod = prod.add(module.productivity.mul(factor))
+            if (tempModule.productivity) {
+              prod = prod.add(tempModule.productivity.mul(factor))
             }
 
-            if (module.consumption) {
-              consumption = consumption.add(module.consumption.mul(factor))
+            if (tempModule.consumption) {
+              consumption = consumption.add(tempModule.consumption.mul(factor))
             }
 
-            if (module.pollution) {
-              pollution = pollution.add(module.pollution.mul(factor))
+            if (tempModule.pollution) {
+              pollution = pollution.add(tempModule.pollution.mul(factor))
             }
 
-            if (module.sprays) {
-              let sprays = module.sprays
+            if (tempModule.sprays) {
+              let sprays = tempModule.sprays
               // If proliferator is applied to proliferator, apply productivity bonus to sprays
               const pModule = data.moduleEntities[proliferatorSprayId]
               if (pModule) {
@@ -221,7 +221,7 @@ export class RecipeUtility {
                   .floor() // DSP rounds down # of sprays
               }
               // Calculate amount of proliferator required for this recipe
-              const pId = module.proliferator
+              const pId = tempModule.proliferator
               if (pId) {
                 if (!proliferatorSprays[pId]) {
                   proliferatorSprays[pId] = rational(0n)
@@ -245,20 +245,22 @@ export class RecipeUtility {
             beaconSettings.count?.nonzero()
           ) {
             for (const id of beaconModules) {
-              const module = data.moduleEntities[id]
+              const tempModule = data.moduleEntities[id]
               const beacon = data.beaconEntities[beaconSettings.id]
               const factor = beaconSettings.count.mul(beacon.effectivity)
-              if (module.speed) {
-                speed = speed.add(module.speed.mul(factor))
+              if (tempModule.speed) {
+                speed = speed.add(tempModule.speed.mul(factor))
               }
-              if (module.productivity) {
-                prod = prod.add(module.productivity.mul(factor))
+              if (tempModule.productivity) {
+                prod = prod.add(tempModule.productivity.mul(factor))
               }
-              if (module.consumption) {
-                consumption = consumption.add(module.consumption.mul(factor))
+              if (tempModule.consumption) {
+                consumption = consumption.add(
+                  tempModule.consumption.mul(factor),
+                )
               }
-              if (module.pollution) {
-                pollution = pollution.add(module.pollution.mul(factor))
+              if (tempModule.pollution) {
+                pollution = pollution.add(tempModule.pollution.mul(factor))
               }
             }
           }
@@ -521,6 +523,8 @@ export class RecipeUtility {
       data,
     )
     this.adjustCost(recipeIds, recipeR, recipesState, cost, data)
+    console.log('adjustDataset', recipeR)
+
     return this.finalizeData(recipeIds, excludedRecipeIds, recipeR, data)
   }
 

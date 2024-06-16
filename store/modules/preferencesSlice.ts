@@ -11,7 +11,11 @@ import {
   type Entities,
 } from '@/models'
 import type { RootState } from '@/store/store'
-import { createSelector, createSlice } from '@reduxjs/toolkit'
+import {
+  createSelector,
+  createSlice,
+  type PayloadAction,
+} from '@reduxjs/toolkit'
 
 export interface PreferencesState {
   states: Record<Game, Entities<string>>
@@ -60,9 +64,15 @@ export const initialPreferencesState: PreferencesState = {
 
 export const preferencesSlice = createSlice({
   name: 'preferences',
-  initialState: {} as PreferencesState,
-  reducers: {},
+  initialState: initialPreferencesState,
+  reducers: {
+    SET_LANGUAGE: (state, action: PayloadAction<Language>) => {
+      state.language = action.payload
+    },
+  },
 })
+
+export const { SET_LANGUAGE } = preferencesSlice.actions
 
 /* Base selector functions */
 export const preferencesState = (state: RootState): PreferencesState =>

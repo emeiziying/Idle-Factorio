@@ -1,6 +1,7 @@
 'use client'
 
 import IconItem from '@/components/IconItem'
+import { useMountedState } from '@/hooks/useMountedState'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { getAdjustedDataset } from '@/store/modules/recipesSlice'
 import {
@@ -14,6 +15,7 @@ import { useTranslations } from 'next-intl'
 import { useMemo } from 'react'
 
 const TechnologyPanel = () => {
+  const mounted = useMountedState()
   const dispatch = useAppDispatch()
   const t = useTranslations()
 
@@ -76,13 +78,14 @@ const TechnologyPanel = () => {
     recipeEntities,
   })
 
+  if (!mounted) return null
+
   return (
     <Card>
       <CardBody>
-        {t('cancel')}
         {tabs.map((key) => (
           <div key={key}>
-            <div>{key}</div>
+            <div>{t(`techPicker.${key}`)}</div>
             <div className="flex flex-wrap">
               {technology[key].map((id) => (
                 <div
