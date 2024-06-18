@@ -3,26 +3,31 @@
 import IconItem from '@/components/IconItem'
 import ItemEntity from '@/components/ItemEntity'
 import { useMountedState } from '@/hooks/useMountedState'
-import { Language, type Entities } from '@/models'
+import { type Entities } from '@/models'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { loadMod, type DatasetPayload } from '@/store/modules/datasetsSlice'
-import { SET_LANGUAGE } from '@/store/modules/preferencesSlice'
-import { getAdjustedDataset } from '@/store/modules/recipesSlice'
+import { getItemsState } from '@/store/modules/itemsSlice'
+import { getMachinesState } from '@/store/modules/machinesSlice'
 import {
-  SET_RESEARCHED_TECHNOLOGIES,
-  getAvailableRecipes,
-} from '@/store/modules/settingsSlice'
+  getAdjustedDataset,
+  getRecipesState,
+} from '@/store/modules/recipesSlice'
+import { getAvailableRecipes } from '@/store/modules/settingsSlice'
 import { Card, CardBody, Tab, Tabs } from '@nextui-org/react'
+import { useWhyDidYouUpdate } from 'ahooks'
 import { useTranslations } from 'next-intl'
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 
-const GameContainer = ({ modData }: { modData: DatasetPayload }) => {
+const GameContainer = () => {
   const dispatch = useAppDispatch()
   const mounted = useMountedState()
   const t = useTranslations()
 
   const adjustedDataset = useAppSelector(getAdjustedDataset)
   const availableRecipes = useAppSelector(getAvailableRecipes)
+
+  const itemsState = useAppSelector(getItemsState)
+  const machinesState = useAppSelector(getMachinesState)
+  const recipesState = useAppSelector(getRecipesState)
 
   const categoryRows = useMemo(() => {
     const allIdsSet = new Set(availableRecipes)
@@ -50,11 +55,11 @@ const GameContainer = ({ modData }: { modData: DatasetPayload }) => {
     [adjustedDataset],
   )
 
-  useEffect(() => {
-    dispatch(SET_LANGUAGE(Language.Chinese))
-    dispatch(loadMod(modData))
-    dispatch(SET_RESEARCHED_TECHNOLOGIES([]))
-  }, [dispatch, modData])
+  useWhyDidYouUpdate('GameContainer', {
+    itemsState,
+    machinesState,
+    recipesState,
+  })
 
   if (!mounted) return null
 

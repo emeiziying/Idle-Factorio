@@ -24,6 +24,7 @@
     "d3": "^7.9.0",
     "framer-motion": "^11.2.6",
     "glpk-ts": "^0.0.11",
+    "immutable": "^3.8.2",
     "next": "14.2.3",
     "next-intl": "^3.14.1",
     "primeng": "^17.17.0",
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@tsconfig/node20": "^20.1.4",
     "@types/d3": "^7.4.3",
+    "@types/immutable": "^3.8.7",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

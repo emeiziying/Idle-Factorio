@@ -515,6 +515,17 @@ export class RecipeUtility {
     cost: CostSettings,
     data: Dataset,
   ): AdjustedDataset {
+    console.log(
+      'adjustDataset',
+      recipeIds,
+      excludedRecipeIds,
+      recipesState,
+      itemsState,
+      adjustmentData,
+      cost,
+      data,
+    )
+
     const recipeR = this.adjustRecipes(
       recipeIds,
       recipesState,
@@ -523,8 +534,6 @@ export class RecipeUtility {
       data,
     )
     this.adjustCost(recipeIds, recipeR, recipesState, cost, data)
-    console.log('adjustDataset', recipeR)
-
     return this.finalizeData(recipeIds, excludedRecipeIds, recipeR, data)
   }
 

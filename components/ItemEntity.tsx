@@ -1,7 +1,14 @@
 import IconItem from '@/components/IconItem'
-import { useAppSelector } from '@/store/hooks'
+import { Rational } from '@/models'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { getAdjustedDataset } from '@/store/modules/recipesSlice'
-import { Tooltip } from '@nextui-org/react'
+import {
+  addItemStock,
+  recordsState,
+  subItemStock,
+  type ItemRecord,
+} from '@/store/modules/recordsSlice'
+import { Button, Tooltip } from '@nextui-org/react'
 import { useTranslations } from 'next-intl'
 import { useMemo } from 'react'
 
@@ -11,7 +18,9 @@ type Props = {
 
 const ItemEntity = ({ id }: Props) => {
   const t = useTranslations()
+  const dispatch = useAppDispatch()
   const adjustedDataset = useAppSelector(getAdjustedDataset)
+  const records = useAppSelector(recordsState)
 
   const itemEntity = useMemo(
     () => adjustedDataset.itemEntities[id],
@@ -23,8 +32,30 @@ const ItemEntity = ({ id }: Props) => {
     [adjustedDataset, id],
   )
 
+  const itemRecord = useMemo<ItemRecord | undefined>(
+    () => records[id],
+    [records, id],
+  )
+
+  const canMake = useMemo(
+    () =>
+      Object.keys(recipeEntity.in).every(
+        (id) =>
+          records[id]?.stock && records[id].stock.gte(recipeEntity.in[id]),
+      ),
+    [recipeEntity, records],
+  )
+
+  const handleManualMake = () => {
+    dispatch(addItemStock({ id, stock: new Rational(1n) }))
+    Object.keys(recipeEntity.in).forEach((inId) => {
+      dispatch(subItemStock({ id: inId, stock: recipeEntity.in[inId] }))
+    })
+  }
+
   return (
     <Tooltip
+      isDisabled={true}
       content={
         <div className="text-black">
           <div className="flex items-center">
@@ -56,6 +87,14 @@ const ItemEntity = ({ id }: Props) => {
     >
       <div className="p-1">
         <IconItem name={itemEntity.icon || id} text={itemEntity.iconText} />
+        <div>
+          {itemEntity.name}
+          <div>time:{recipeEntity.time.toNumber()}</div>
+          <div>stock:{itemRecord?.stock.toNumber() || 0}</div>
+          <Button isDisabled={!canMake} onClick={handleManualMake} size="sm">
+            Make
+          </Button>
+        </div>
       </div>
     </Tooltip>
   )

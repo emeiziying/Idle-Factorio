@@ -1,4 +1,5 @@
-import data from '@/data/data.json'
+import { useAppSelector } from '@/store/hooks'
+import { getDataset } from '@/store/modules/settingsSlice'
 import { useMemo, type ReactNode } from 'react'
 
 type Props = {
@@ -11,11 +12,13 @@ type Props = {
 const IconItem = (props: Props) => {
   const { name, text, size = 32, children } = props
 
+  const dataset = useAppSelector(getDataset)
+
   const style = useMemo(() => {
-    const item = data.icons.find((e) => e.id === name)
-    if (!item) return
-    return { backgroundPosition: item.position }
-  }, [name])
+    const icon = dataset.iconEntities[name]
+    if (!icon) return
+    return { backgroundPosition: icon.position }
+  }, [name, dataset.iconEntities])
 
   const scale = useMemo(() => Number(size) / 64, [size])
 
