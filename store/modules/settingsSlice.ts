@@ -674,6 +674,38 @@ export const getAllResearchedTechnologyIds = createSelector(
   },
 )
 
+export const getTechnologyState = createSelector(
+  getResearchedTechnologyIds,
+  getDataset,
+  (researchedTechnologyIds, data) => {
+    let selection: string[] = researchedTechnologyIds || []
+    const set = new Set(selection)
+    const available: string[] = []
+    const locked: string[] = []
+
+    let technologyIds = data.technologyIds
+
+    const researched = selection
+
+    for (const id of technologyIds) {
+      if (!set.has(id)) {
+        const tech = data.technologyEntities[id]
+
+        if (
+          tech.prerequisites == null ||
+          tech.prerequisites.every((p) => set.has(p))
+        ) {
+          available.push(id)
+        } else {
+          locked.push(id)
+        }
+      }
+    }
+
+    return { available, locked, researched }
+  },
+)
+
 export const getAvailableRecipes = createSelector(
   getAllResearchedTechnologyIds,
   getDataset,
@@ -684,7 +716,10 @@ export const getAvailableRecipes = createSelector(
 
     return data.recipeIds.filter((i) => {
       const recipe = data.recipeEntities[i]
-      return recipe.unlockedBy == null || set.has(recipe.unlockedBy)
+      return (
+        (recipe.unlockedBy == null || set.has(recipe.unlockedBy)) &&
+        !recipe.isTechnology
+      )
     })
   },
 )

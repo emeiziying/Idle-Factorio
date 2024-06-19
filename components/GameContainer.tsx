@@ -59,6 +59,8 @@ const GameContainer = () => {
     itemsState,
     machinesState,
     recipesState,
+    adjustedDataset,
+    availableRecipes,
   })
 
   if (!mounted) return null

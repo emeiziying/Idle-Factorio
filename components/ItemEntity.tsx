@@ -1,14 +1,9 @@
+import CraftingButton from '@/components/CraftingButton'
 import IconItem from '@/components/IconItem'
-import { Rational } from '@/models'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { getAdjustedDataset } from '@/store/modules/recipesSlice'
-import {
-  addItemStock,
-  recordsState,
-  subItemStock,
-  type ItemRecord,
-} from '@/store/modules/recordsSlice'
-import { Button, Tooltip } from '@nextui-org/react'
+import { recordsState, type ItemRecord } from '@/store/modules/recordsSlice'
+import { Tooltip } from '@nextui-org/react'
 import { useTranslations } from 'next-intl'
 import { useMemo } from 'react'
 
@@ -37,21 +32,9 @@ const ItemEntity = ({ id }: Props) => {
     [records, id],
   )
 
-  const canMake = useMemo(
-    () =>
-      Object.keys(recipeEntity.in).every(
-        (id) =>
-          records[id]?.stock && records[id].stock.gte(recipeEntity.in[id]),
-      ),
-    [recipeEntity, records],
-  )
-
-  const handleManualMake = () => {
-    dispatch(addItemStock({ id, stock: new Rational(1n) }))
-    Object.keys(recipeEntity.in).forEach((inId) => {
-      dispatch(subItemStock({ id: inId, stock: recipeEntity.in[inId] }))
-    })
-  }
+  const canManualCrafting = useMemo(() => {
+    return recipeEntity.category !== 'smelting'
+  }, [recipeEntity])
 
   return (
     <Tooltip
@@ -88,12 +71,10 @@ const ItemEntity = ({ id }: Props) => {
       <div className="p-1">
         <IconItem name={itemEntity.icon || id} text={itemEntity.iconText} />
         <div>
-          {itemEntity.name}
+          {itemEntity.name}-{itemEntity.id}
           <div>time:{recipeEntity.time.toNumber()}</div>
           <div>stock:{itemRecord?.stock.toNumber() || 0}</div>
-          <Button isDisabled={!canMake} onClick={handleManualMake} size="sm">
-            Make
-          </Button>
+          {canManualCrafting && <CraftingButton id={id} />}
         </div>
       </div>
     </Tooltip>

@@ -7,6 +7,7 @@ import { getAdjustedDataset } from '@/store/modules/recipesSlice'
 import {
   UNLOCK_TECHNOLOGY,
   getResearchedTechnologyIds,
+  getTechnologyState,
 } from '@/store/modules/settingsSlice'
 import { Card, CardBody } from '@nextui-org/react'
 import { useWhyDidYouUpdate } from 'ahooks'
@@ -21,6 +22,7 @@ const TechnologyPanel = () => {
 
   const researchedTechnologyIds = useAppSelector(getResearchedTechnologyIds)
   const adjustedDataset = useAppSelector(getAdjustedDataset)
+  const technologyState = useAppSelector(getTechnologyState)
 
   const technologyEntities = useMemo(
     () => adjustedDataset.technologyEntities,
@@ -32,46 +34,18 @@ const TechnologyPanel = () => {
     [adjustedDataset],
   )
 
-  const technology = useMemo(() => {
-    let selection: string[] = researchedTechnologyIds || []
-    const set = new Set(selection)
-    const available: string[] = []
-    const locked: string[] = []
-
-    let technologyIds = adjustedDataset.technologyIds
-
-    const researched = selection
-
-    for (const id of technologyIds) {
-      if (!set.has(id)) {
-        const tech = adjustedDataset.technologyEntities[id]
-
-        if (
-          tech.prerequisites == null ||
-          tech.prerequisites.every((p) => set.has(p))
-        ) {
-          available.push(id)
-        } else {
-          locked.push(id)
-        }
-      }
-    }
-
-    return { available, locked, researched }
-  }, [adjustedDataset, researchedTechnologyIds])
-
   const itemEntities = useMemo(
     () => adjustedDataset.itemEntities,
     [adjustedDataset],
   )
 
   const tabs = useMemo(
-    () => Object.keys(technology) as (keyof typeof technology)[],
-    [technology],
+    () => Object.keys(technologyState) as (keyof typeof technologyState)[],
+    [technologyState],
   )
 
   useWhyDidYouUpdate('TechnologyPanel', {
-    technology,
+    technologyState,
     technologyEntities,
     itemEntities,
     tabs,
@@ -87,7 +61,7 @@ const TechnologyPanel = () => {
           <div key={key}>
             <div>{t(`techPicker.${key}`)}</div>
             <div className="flex flex-wrap">
-              {technology[key].map((id) => (
+              {technologyState[key].map((id) => (
                 <div
                   key={id}
                   className={classnames('p-2 flex flex-col items-center w-20', {

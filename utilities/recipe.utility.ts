@@ -515,17 +515,6 @@ export class RecipeUtility {
     cost: CostSettings,
     data: Dataset,
   ): AdjustedDataset {
-    console.log(
-      'adjustDataset',
-      recipeIds,
-      excludedRecipeIds,
-      recipesState,
-      itemsState,
-      adjustmentData,
-      cost,
-      data,
-    )
-
     const recipeR = this.adjustRecipes(
       recipeIds,
       recipesState,

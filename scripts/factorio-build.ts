@@ -1421,7 +1421,7 @@ async function processMod(): Promise<void> {
           const recipe: RecipeJson = {
             id,
             name: recipeLocale.names[proto.name],
-            category: subgroup.group,
+            category: proto.category || subgroup.group,
             row: getRecipeRow(proto),
             time: recipeData.energy_required ?? 0.5,
             producers,

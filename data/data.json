@@ -6157,7 +6157,7 @@
     {
       "id": "express-transport-belt",
       "name": "Express transport belt",
-      "category": "logistics",
+      "category": "crafting-with-fluid",
       "row": 1,
       "time": 0.5,
       "producers": [
@@ -6217,7 +6217,7 @@
     {
       "id": "express-underground-belt",
       "name": "Express underground belt",
-      "category": "logistics",
+      "category": "crafting-with-fluid",
       "row": 1,
       "time": 2,
       "producers": [
@@ -6279,7 +6279,7 @@
     {
       "id": "express-splitter",
       "name": "Express splitter",
-      "category": "logistics",
+      "category": "crafting-with-fluid",
       "row": 1,
       "time": 2,
       "producers": [
@@ -7172,7 +7172,7 @@
     {
       "id": "stone-brick",
       "name": "Stone brick",
-      "category": "logistics",
+      "category": "smelting",
       "row": 8,
       "time": 3.2,
       "producers": [
@@ -7190,7 +7190,7 @@
     {
       "id": "concrete",
       "name": "Concrete",
-      "category": "logistics",
+      "category": "crafting-with-fluid",
       "row": 8,
       "time": 10,
       "producers": [
@@ -7210,7 +7210,7 @@
     {
       "id": "hazard-concrete",
       "name": "Hazard concrete",
-      "category": "logistics",
+      "category": "crafting",
       "row": 8,
       "time": 0.25,
       "producers": [
@@ -7229,7 +7229,7 @@
     {
       "id": "refined-concrete",
       "name": "Refined concrete",
-      "category": "logistics",
+      "category": "crafting-with-fluid",
       "row": 8,
       "time": 15,
       "producers": [
@@ -7250,7 +7250,7 @@
     {
       "id": "refined-hazard-concrete",
       "name": "Refined hazard concrete",
-      "category": "logistics",
+      "category": "crafting",
       "row": 8,
       "time": 0.25,
       "producers": [
@@ -7269,7 +7269,7 @@
     {
       "id": "landfill",
       "name": "Landfill",
-      "category": "logistics",
+      "category": "crafting",
       "row": 8,
       "time": 0.5,
       "producers": [
@@ -8014,7 +8014,7 @@
     {
       "id": "satellite",
       "name": "Satellite",
-      "category": "production",
+      "category": "crafting",
       "row": 6,
       "time": 5,
       "producers": [
@@ -8038,7 +8038,7 @@
     {
       "id": "sulfuric-acid",
       "name": "Sulfuric acid",
-      "category": "intermediate-products",
+      "category": "chemistry",
       "row": 0,
       "time": 1,
       "producers": [
@@ -8057,7 +8057,7 @@
     {
       "id": "basic-oil-processing",
       "name": "Basic oil processing",
-      "category": "intermediate-products",
+      "category": "oil-processing",
       "row": 0,
       "time": 5,
       "producers": [
@@ -8074,7 +8074,7 @@
     {
       "id": "advanced-oil-processing",
       "name": "Advanced oil processing",
-      "category": "intermediate-products",
+      "category": "oil-processing",
       "row": 0,
       "time": 5,
       "producers": [
@@ -8094,7 +8094,7 @@
     {
       "id": "coal-liquefaction",
       "name": "Coal liquefaction",
-      "category": "intermediate-products",
+      "category": "oil-processing",
       "row": 0,
       "time": 5,
       "producers": [
@@ -8118,7 +8118,7 @@
     {
       "id": "coal-liquefaction-steam-500",
       "name": "Coal liquefaction",
-      "category": "intermediate-products",
+      "category": "oil-processing",
       "row": 0,
       "time": 5,
       "producers": [
@@ -8143,7 +8143,7 @@
     {
       "id": "heavy-oil-cracking",
       "name": "Heavy oil cracking to light oil",
-      "category": "intermediate-products",
+      "category": "chemistry",
       "row": 0,
       "time": 2,
       "producers": [
@@ -8161,7 +8161,7 @@
     {
       "id": "light-oil-cracking",
       "name": "Light oil cracking to petroleum gas",
-      "category": "intermediate-products",
+      "category": "chemistry",
       "row": 0,
       "time": 2,
       "producers": [
@@ -8179,7 +8179,7 @@
     {
       "id": "solid-fuel-from-light-oil",
       "name": "Solid fuel",
-      "category": "intermediate-products",
+      "category": "chemistry",
       "row": 0,
       "time": 2,
       "producers": [
@@ -8196,7 +8196,7 @@
     {
       "id": "solid-fuel-from-petroleum-gas",
       "name": "Solid fuel",
-      "category": "intermediate-products",
+      "category": "chemistry",
       "row": 0,
       "time": 2,
       "producers": [
@@ -8213,7 +8213,7 @@
     {
       "id": "solid-fuel-from-heavy-oil",
       "name": "Solid fuel",
-      "category": "intermediate-products",
+      "category": "chemistry",
       "row": 0,
       "time": 2,
       "producers": [
@@ -8230,7 +8230,7 @@
     {
       "id": "lubricant",
       "name": "Lubricant",
-      "category": "intermediate-products",
+      "category": "chemistry",
       "row": 0,
       "time": 1,
       "producers": [
@@ -8265,7 +8265,7 @@
     {
       "id": "iron-plate",
       "name": "Iron plate",
-      "category": "intermediate-products",
+      "category": "smelting",
       "row": 2,
       "time": 3.2,
       "producers": [
@@ -8283,7 +8283,7 @@
     {
       "id": "copper-plate",
       "name": "Copper plate",
-      "category": "intermediate-products",
+      "category": "smelting",
       "row": 2,
       "time": 3.2,
       "producers": [
@@ -8301,7 +8301,7 @@
     {
       "id": "steel-plate",
       "name": "Steel plate",
-      "category": "intermediate-products",
+      "category": "smelting",
       "row": 2,
       "time": 16,
       "producers": [
@@ -8320,7 +8320,7 @@
     {
       "id": "plastic-bar",
       "name": "Plastic bar",
-      "category": "intermediate-products",
+      "category": "chemistry",
       "row": 2,
       "time": 1,
       "producers": [
@@ -8338,7 +8338,7 @@
     {
       "id": "sulfur",
       "name": "Sulfur",
-      "category": "intermediate-products",
+      "category": "chemistry",
       "row": 2,
       "time": 1,
       "producers": [
@@ -8356,7 +8356,7 @@
     {
       "id": "battery",
       "name": "Battery",
-      "category": "intermediate-products",
+      "category": "chemistry",
       "row": 2,
       "time": 4,
       "producers": [
@@ -8375,7 +8375,7 @@
     {
       "id": "explosives",
       "name": "Explosives",
-      "category": "intermediate-products",
+      "category": "chemistry",
       "row": 2,
       "time": 4,
       "producers": [
@@ -8394,7 +8394,7 @@
     {
       "id": "uranium-processing",
       "name": "Uranium processing",
-      "category": "intermediate-products",
+      "category": "centrifuging",
       "row": 2,
       "time": 12,
       "producers": [
@@ -8466,7 +8466,7 @@
     {
       "id": "empty-barrel",
       "name": "Empty barrel",
-      "category": "intermediate-products",
+      "category": "crafting",
       "row": 3,
       "time": 1,
       "producers": [
@@ -8525,7 +8525,7 @@
     {
       "id": "processing-unit",
       "name": "Processing unit",
-      "category": "intermediate-products",
+      "category": "crafting-with-fluid",
       "row": 3,
       "time": 10,
       "producers": [
@@ -8545,7 +8545,7 @@
     {
       "id": "engine-unit",
       "name": "Engine unit",
-      "category": "intermediate-products",
+      "category": "advanced-crafting",
       "row": 3,
       "time": 10,
       "producers": [
@@ -8566,7 +8566,7 @@
     {
       "id": "electric-engine-unit",
       "name": "Electric engine unit",
-      "category": "intermediate-products",
+      "category": "crafting-with-fluid",
       "row": 3,
       "time": 10,
       "producers": [
@@ -8608,7 +8608,7 @@
     {
       "id": "rocket-control-unit",
       "name": "Rocket control unit",
-      "category": "intermediate-products",
+      "category": "crafting",
       "row": 3,
       "time": 30,
       "producers": [
@@ -8628,7 +8628,7 @@
     {
       "id": "low-density-structure",
       "name": "Low density structure",
-      "category": "intermediate-products",
+      "category": "crafting",
       "row": 3,
       "time": 20,
       "producers": [
@@ -8649,7 +8649,7 @@
     {
       "id": "rocket-fuel",
       "name": "Rocket fuel",
-      "category": "intermediate-products",
+      "category": "crafting-with-fluid",
       "row": 3,
       "time": 30,
       "producers": [
@@ -8668,7 +8668,7 @@
     {
       "id": "rocket-part",
       "name": "Rocket part",
-      "category": "intermediate-products",
+      "category": "rocket-building",
       "row": 3,
       "time": 3,
       "producers": [
@@ -8687,7 +8687,7 @@
     {
       "id": "nuclear-fuel",
       "name": "Nuclear fuel",
-      "category": "intermediate-products",
+      "category": "centrifuging",
       "row": 3,
       "time": 90,
       "producers": [
@@ -8743,7 +8743,7 @@
     {
       "id": "nuclear-fuel-reprocessing",
       "name": "Nuclear fuel reprocessing",
-      "category": "intermediate-products",
+      "category": "centrifuging",
       "row": 3,
       "time": 60,
       "producers": [
@@ -8760,7 +8760,7 @@
     {
       "id": "kovarex-enrichment-process",
       "name": "Kovarex enrichment process",
-      "category": "intermediate-products",
+      "category": "centrifuging",
       "row": 3,
       "time": 60,
       "producers": [
@@ -9334,7 +9334,7 @@
     {
       "id": "flamethrower-ammo",
       "name": "Flamethrower ammo",
-      "category": "combat",
+      "category": "chemistry",
       "row": 1,
       "time": 6,
       "producers": [
