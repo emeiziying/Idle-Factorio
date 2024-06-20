@@ -22,13 +22,14 @@ await i18n
   .init({
     fallbackLng: 'en',
     debug: true,
-    // defaultNS: 'app',
+    ns: ['app', 'data'],
+    defaultNS: 'app',
 
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default
     },
     backend: {
-      loadPath: '/i18n/{{ns}}/{{lng}}.json',
+      loadPath: '/i18n/{{lng}}/{{ns}}.json',
     },
   });
 

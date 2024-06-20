@@ -10,14 +10,15 @@ function App() {
 
   return (
     <>
-      <h1>{t('data.beacon')}</h1>
-      <h1>{t('categories.fluids')}</h1>
+      <h1>{t('app.error')}</h1>
+      <h1>{t('items.accumulator')}</h1>
+      <h1>{t('categories.production')}</h1>
 
       <div>
-        <a href="https://vitejs.dev" target="_blank">
+        <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
           <img src={viteLogo} className="logo" alt="Vite logo" />
         </a>
-        <a href="https://react.dev" target="_blank">
+        <a href="https://react.dev" target="_blank" rel="noreferrer">
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
       </div>
