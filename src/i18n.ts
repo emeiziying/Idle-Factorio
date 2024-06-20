@@ -28,7 +28,7 @@ await i18n
       escapeValue: false, // not needed for react as it escapes by default
     },
     backend: {
-      loadPath: '/i18n/{{lng}}/{{ns}}.json',
+      loadPath: '/i18n/{{ns}}/{{lng}}.json',
     },
   });
 

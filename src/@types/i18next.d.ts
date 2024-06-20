@@ -10,6 +10,10 @@ declare module 'i18next' {
     // custom namespace type, if you changed it
     // defaultNS: 'app';
     // custom resources type
-    resources: typeof app & typeof data;
+    // resources: typeof app & typeof data;
+    resources: {
+      app: typeof app;
+      data: typeof data;
+    };
   }
 }
