@@ -1,23 +1,4 @@
 {
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.formatOnSave": true,
-  "editor.formatOnPaste": false,
-  "editor.codeActionsOnSave": {
-    "source.addMissingImports": "explicit"
-    // "source.fixAll.eslint": "explicit"
-  },
-  "javascript.preferences.importModuleSpecifier": "non-relative",
-  "typescript.preferences.importModuleSpecifier": "non-relative",
-  "typescript.preferences.preferTypeOnlyAutoImports": true,
-  "eslint.validate": [
-    "html",
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ],
-  "angular.enable-strict-mode-prompt": false,
-  "i18n-ally.localesPaths": ["i18n", "data/i18n"],
-  "i18n-ally.keystyle": "nested",
-  "i18n-ally.displayLanguage": "zh"
+  "i18n-ally.localesPaths": ["public/i18n"],
+  "i18n-ally.keystyle": "nested"
 }
