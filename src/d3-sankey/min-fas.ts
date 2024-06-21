@@ -1,4 +1,4 @@
-import { coalesce } from '~/helpers';
+import { coalesce } from '@/helpers';
 import {
   SankeyGraph,
   SankeyLinkExtraProperties,

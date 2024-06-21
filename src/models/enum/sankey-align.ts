@@ -1,5 +1,3 @@
-import { SelectItem } from 'primeng/api';
-
 export enum SankeyAlign {
   Justify = 0,
   Left = 1,

@@ -1,5 +1,3 @@
-import { SelectItem } from 'primeng/api';
-
 export enum Theme {
   Dark = 'dark',
   Light = 'light',

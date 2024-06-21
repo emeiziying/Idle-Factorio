@@ -5,12 +5,12 @@ import {
   IdValueDefaultPayload,
   IdValuePayload,
   ValueDefaultPayload,
-} from '~/models';
+} from '@/models';
 
 export class StoreUtility {
   static rankEquals<T extends number | string>(
     a: T[],
-    b: T[] | undefined,
+    b: T[] | undefined
   ): boolean {
     if (b == null) {
       return false;
@@ -20,7 +20,7 @@ export class StoreUtility {
 
   static arrayEquals<T extends number | string>(
     a: T[],
-    b: T[] | undefined,
+    b: T[] | undefined
   ): boolean {
     if (b == null) {
       return false;
@@ -30,17 +30,17 @@ export class StoreUtility {
 
   static payloadEquals<T>(
     payload: IdValueDefaultPayload<T>,
-    rank = false,
+    rank = false
   ): boolean {
     return Array.isArray(payload.value) && Array.isArray(payload.def)
       ? rank
         ? this.rankEquals(
             payload.value as (number | string)[],
-            payload.def as (number | string)[],
+            payload.def as (number | string)[]
           )
         : this.arrayEquals(
             payload.value as (number | string)[],
-            payload.def as (number | string)[],
+            payload.def as (number | string)[]
           )
       : payload.value === payload.def;
   }
@@ -49,7 +49,7 @@ export class StoreUtility {
   static resetFields<T extends object>(
     state: Entities<T>,
     fields: (keyof T)[],
-    id?: string,
+    id?: string
   ): Entities<T> {
     // Spread into new state
     let newState = { ...state };
@@ -63,12 +63,12 @@ export class StoreUtility {
   static resetField<T extends object>(
     state: Entities<T>,
     field: keyof T,
-    id?: string,
+    id?: string
   ): Entities<T> {
     // Spread into new state
     const newState = { ...state };
     for (const i of Object.keys(newState).filter(
-      (j) => (!id || id === j) && newState[j][field] !== undefined,
+      (j) => (!id || id === j) && newState[j][field] !== undefined
     )) {
       if (Object.keys(newState[i]).length === 1) {
         delete newState[i];
@@ -85,7 +85,7 @@ export class StoreUtility {
     state: Entities<T>,
     field: K,
     payload: IdValueDefaultPayload<T[K]>,
-    rank = false,
+    rank = false
   ): Entities<T> {
     // Spread into new state
     if (this.payloadEquals(payload, rank)) {
@@ -110,7 +110,7 @@ export class StoreUtility {
   static assignValue<T, K extends keyof T>(
     state: Entities<T>,
     field: K,
-    payload: IdValuePayload<T[K]>,
+    payload: IdValuePayload<T[K]>
   ): Entities<T> {
     return {
       ...state,
@@ -125,7 +125,7 @@ export class StoreUtility {
   }
 
   static compareValues(
-    payload: ValueDefaultPayload<string[]>,
+    payload: ValueDefaultPayload<string[]>
   ): string[] | undefined {
     return this.arrayEquals(payload.value, payload.def)
       ? undefined
@@ -134,7 +134,7 @@ export class StoreUtility {
 
   static compareRank(
     value: string[],
-    def: string[] | undefined,
+    def: string[] | undefined
   ): string[] | undefined {
     return this.rankEquals(value, def) ? undefined : value;
   }
@@ -151,12 +151,12 @@ export class StoreUtility {
     field: K,
     subfield: L,
     index: number,
-    id?: string,
+    id?: string
   ): Entities<T> {
     // Spread into new state
     const newState = { ...state };
     for (const i of Object.keys(newState).filter(
-      (j) => (!id || id === j) && newState[j][field] != null,
+      (j) => (!id || id === j) && newState[j][field] != null
     )) {
       const arr = newState[i][field];
       if (arr != null) {
@@ -194,7 +194,7 @@ export class StoreUtility {
     field: K,
     subfield: L,
     payload: IdIndexValueDefaultPayload<V[L]>,
-    rank = false,
+    rank = false
   ): Entities<T> {
     if (this.payloadEquals(payload, rank)) {
       // Resetting to null, spread into new state
@@ -243,7 +243,7 @@ export class StoreUtility {
     state: Entities<T>,
     field: K,
     subfield: L,
-    payload: IdIndexValuePayload<V[L]>,
+    payload: IdIndexValuePayload<V[L]>
   ): Entities<T> {
     return {
       ...state,
@@ -257,9 +257,9 @@ export class StoreUtility {
               new Array(payload.index + 1).fill({})
             ).map((v, i) => {
               if (i === payload.index) {
-                return { ...v, ...{ [subfield]: payload.value } };
+                return { ...v, ...{ [subfield]: payload.value } } as U;
               } else {
-                return v;
+                return v as U;
               }
             }),
           },

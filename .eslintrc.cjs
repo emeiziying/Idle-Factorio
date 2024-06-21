@@ -21,6 +21,19 @@ module.exports = {
       { allowConstantExport: true },
     ],
     'import/newline-after-import': ['error', { count: 1 }],
+    '@typescript-eslint/no-unsafe-enum-comparison': 'off',
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        args: 'all',
+        argsIgnorePattern: '^_',
+        caughtErrors: 'all',
+        caughtErrorsIgnorePattern: '^_',
+        destructuredArrayIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+      },
+    ],
   },
   parserOptions: {
     ecmaVersion: 'latest',

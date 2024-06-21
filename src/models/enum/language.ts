@@ -1,5 +1,3 @@
-import { SelectItem } from 'primeng/api';
-
 export enum Language {
   English = 'en',
   Chinese = 'zh',

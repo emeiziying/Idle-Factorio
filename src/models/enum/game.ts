@@ -1,5 +1,3 @@
-import { SelectItem } from 'primeng/api';
-
 export enum Game {
   Factorio = 'Factorio',
   CaptainOfIndustry = 'CaptainOfIndustry',

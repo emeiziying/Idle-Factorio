@@ -1,5 +1,3 @@
-import { SelectItem } from 'primeng/api';
-
 export enum PowerUnit {
   Auto = 0,
   kW = 1,

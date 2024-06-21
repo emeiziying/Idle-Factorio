@@ -1,5 +1,3 @@
-import { SelectItem } from 'primeng/api';
-
 export enum FlowDiagram {
   Sankey = 0,
   BoxLine = 1,

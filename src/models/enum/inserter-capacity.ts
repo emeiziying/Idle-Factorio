@@ -1,5 +1,3 @@
-import { SelectItem } from 'primeng/api';
-
 export enum InserterCapacity {
   Capacity0 = 0,
   Capacity2 = 1,

@@ -9,6 +9,7 @@
   "editor.codeActionsOnSave": {
     "source.addMissingImports": "explicit"
   },
+  "typescript.preferences.importModuleSpecifier": "non-relative",
 
   "i18n-ally.localesPaths": ["public/i18n"],
   "i18n-ally.keystyle": "nested",

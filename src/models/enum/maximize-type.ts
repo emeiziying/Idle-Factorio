@@ -1,5 +1,3 @@
-import { SelectItem } from 'primeng/api';
-
 export enum MaximizeType {
   Weight = 0,
   Ratio = 1,

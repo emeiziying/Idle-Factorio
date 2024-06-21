@@ -1,5 +1,3 @@
-import { SelectItem } from 'primeng/api';
-
 import { Rational } from '../rational';
 
 export interface BeaconSettings {

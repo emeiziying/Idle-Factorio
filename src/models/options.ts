@@ -1,5 +1,3 @@
-import { SelectItem } from 'primeng/api';
-
 export interface Options {
   categories: SelectItem[];
   items: SelectItem[];

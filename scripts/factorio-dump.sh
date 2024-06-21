@@ -1,4 +1,4 @@
-cd ~/Library/Application\ Support/Steam/steamapps/common/Factorio/factorio.app/Contents/MacOS
+cd @/Library/Application\ Support/Steam/steamapps/common/Factorio/factorio.app/Contents/MacOS
 
 ./factorio --dump-data
 ./factorio --dump-prototype-locale

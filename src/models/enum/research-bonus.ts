@@ -1,5 +1,3 @@
-import { SelectItem } from 'primeng/api';
-
 import { Rational, rational } from '../rational';
 
 export const researchBonus = {

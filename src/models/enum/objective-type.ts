@@ -1,5 +1,3 @@
-import { SelectItem } from 'primeng/api';
-
 export enum ObjectiveType {
   Output = 0,
   Input = 1,

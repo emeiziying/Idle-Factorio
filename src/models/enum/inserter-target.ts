@@ -1,5 +1,3 @@
-import { SelectItem } from 'primeng/api';
-
 export enum InserterTarget {
   Chest = 0,
   ExpressTransportBelt = 1,

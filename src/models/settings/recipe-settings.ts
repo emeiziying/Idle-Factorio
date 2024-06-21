@@ -1,5 +1,3 @@
-import { SelectItem } from 'primeng/api';
-
 import { Rational } from '../rational';
 import { BeaconSettings } from './beacon-settings';
 

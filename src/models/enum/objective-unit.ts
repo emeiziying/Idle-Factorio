@@ -1,5 +1,3 @@
-import { SelectItem } from 'primeng/api';
-
 import { DisplayRateInfo } from './display-rate';
 import { Game } from './game';
 
@@ -12,7 +10,7 @@ export enum ObjectiveUnit {
 
 export function objectiveUnitOptions(
   dispRateInfo: DisplayRateInfo,
-  game: Game,
+  game: Game
 ): SelectItem<ObjectiveUnit>[] {
   const result: SelectItem<ObjectiveUnit>[] = [
     { value: ObjectiveUnit.Items, label: dispRateInfo.itemsLabel },
