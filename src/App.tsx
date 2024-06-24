@@ -1,3 +1,6 @@
+import { useAppSelector } from '@/store/hooks';
+import { recordsState } from '@/store/modules/recordsSlice';
+import { useWhyDidYouUpdate } from 'ahooks';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import './App.css';
@@ -7,6 +10,10 @@ import viteLogo from '/vite.svg';
 function App() {
   const [count, setCount] = useState(0);
   const { t } = useTranslation('app');
+
+  const records = useAppSelector(recordsState);
+
+  useWhyDidYouUpdate('App', { records });
 
   return (
     <>

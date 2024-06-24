@@ -1,7 +1,6 @@
 {
   "version": {
-    "base": "1.1.107",
-    "DataRawJson": "0.1.1"
+    "base": "1.1.107"
   },
   "categories": [
     {
@@ -104,7 +103,7 @@
     {
       "id": "inserter",
       "position": "-132px -198px",
-      "color": "#a18459"
+      "color": "#a08459"
     },
     {
       "id": "long-handed-inserter",
@@ -124,12 +123,12 @@
     {
       "id": "stack-inserter",
       "position": "-264px -132px",
-      "color": "#80995c"
+      "color": "#7f995c"
     },
     {
       "id": "stack-filter-inserter",
       "position": "-264px -198px",
-      "color": "#979797"
+      "color": "#979697"
     },
     {
       "id": "small-electric-pole",
@@ -169,12 +168,12 @@
     {
       "id": "rail",
       "position": "-330px -132px",
-      "color": "#7b705a"
+      "color": "#7a705a"
     },
     {
       "id": "train-stop",
       "position": "-330px -198px",
-      "color": "#936656"
+      "color": "#936556"
     },
     {
       "id": "rail-signal",
@@ -214,7 +213,7 @@
     {
       "id": "tank",
       "position": "-396px 0px",
-      "color": "#715843"
+      "color": "#705843"
     },
     {
       "id": "spidertron",
@@ -274,7 +273,7 @@
     {
       "id": "red-wire",
       "position": "-396px -396px",
-      "color": "#d05838"
+      "color": "#d05738"
     },
     {
       "id": "green-wire",
@@ -329,7 +328,7 @@
     {
       "id": "refined-hazard-concrete",
       "position": "-198px -462px",
-      "color": "#87795c"
+      "color": "#86795c"
     },
     {
       "id": "landfill",
@@ -364,17 +363,17 @@
     {
       "id": "accumulator",
       "position": "-528px -132px",
-      "color": "#7f9799"
+      "color": "#7f9798"
     },
     {
       "id": "nuclear-reactor",
       "position": "-528px -198px",
-      "color": "#84866c"
+      "color": "#84866b"
     },
     {
       "id": "heat-pipe",
       "position": "-528px -264px",
-      "color": "#ae7262"
+      "color": "#ae7261"
     },
     {
       "id": "heat-exchanger",
@@ -389,7 +388,7 @@
     {
       "id": "burner-mining-drill",
       "position": "-528px -462px",
-      "color": "#696160"
+      "color": "#696060"
     },
     {
       "id": "electric-mining-drill",
@@ -399,7 +398,7 @@
     {
       "id": "offshore-pump",
       "position": "-66px -528px",
-      "color": "#6e5f4d"
+      "color": "#6e5e4d"
     },
     {
       "id": "pumpjack",
@@ -424,7 +423,7 @@
     {
       "id": "assembling-machine-1",
       "position": "-396px -528px",
-      "color": "#72645d"
+      "color": "#72645c"
     },
     {
       "id": "assembling-machine-2",
@@ -469,7 +468,7 @@
     {
       "id": "speed-module-2",
       "position": "-594px -396px",
-      "color": "#5f8999"
+      "color": "#5f8998"
     },
     {
       "id": "speed-module-3",
@@ -574,12 +573,12 @@
     {
       "id": "plastic-bar",
       "position": "-660px -528px",
-      "color": "#cccccc"
+      "color": "#cbcbcb"
     },
     {
       "id": "sulfur",
       "position": "-660px -594px",
-      "color": "#afa546"
+      "color": "#afa545"
     },
     {
       "id": "battery",
@@ -629,7 +628,7 @@
     {
       "id": "engine-unit",
       "position": "-594px -660px",
-      "color": "#6d6450"
+      "color": "#6d6350"
     },
     {
       "id": "electric-engine-unit",
@@ -659,7 +658,7 @@
     {
       "id": "rocket-part",
       "position": "-726px -264px",
-      "color": "#7b7e78"
+      "color": "#7b7d78"
     },
     {
       "id": "nuclear-fuel",
@@ -729,12 +728,12 @@
     {
       "id": "submachine-gun",
       "position": "-462px -726px",
-      "color": "#635f5d"
+      "color": "#635f5c"
     },
     {
       "id": "shotgun",
       "position": "-528px -726px",
-      "color": "#866257"
+      "color": "#866256"
     },
     {
       "id": "combat-shotgun",
@@ -774,12 +773,12 @@
     {
       "id": "shotgun-shell",
       "position": "-792px -264px",
-      "color": "#a05238"
+      "color": "#a05138"
     },
     {
       "id": "piercing-shotgun-shell",
       "position": "-792px -330px",
-      "color": "#6d8169"
+      "color": "#6d8168"
     },
     {
       "id": "cannon-shell",
@@ -814,7 +813,7 @@
     {
       "id": "explosive-rocket",
       "position": "0px -792px",
-      "color": "#846d6b"
+      "color": "#846c6b"
     },
     {
       "id": "atomic-bomb",
@@ -829,7 +828,7 @@
     {
       "id": "grenade",
       "position": "-198px -792px",
-      "color": "#656c5c"
+      "color": "#656c5b"
     },
     {
       "id": "cluster-grenade",
@@ -854,7 +853,7 @@
     {
       "id": "distractor-capsule",
       "position": "-528px -792px",
-      "color": "#76723e"
+      "color": "#75723e"
     },
     {
       "id": "destroyer-capsule",
@@ -864,7 +863,7 @@
     {
       "id": "light-armor",
       "position": "-660px -792px",
-      "color": "#72593c"
+      "color": "#72593b"
     },
     {
       "id": "heavy-armor",
@@ -919,7 +918,7 @@
     {
       "id": "personal-roboport-equipment",
       "position": "-858px -528px",
-      "color": "#7a705c"
+      "color": "#7a705b"
     },
     {
       "id": "personal-roboport-mk2-equipment",
@@ -944,7 +943,7 @@
     {
       "id": "personal-laser-defense-equipment",
       "position": "0px -858px",
-      "color": "#756042"
+      "color": "#746042"
     },
     {
       "id": "discharge-defense-equipment",
@@ -1014,7 +1013,7 @@
     {
       "id": "heavy-oil",
       "position": "-924px 0px",
-      "color": "#994f29"
+      "color": "#984f28"
     },
     {
       "id": "light-oil",
@@ -1044,7 +1043,7 @@
     {
       "id": "advanced-oil-processing",
       "position": "-924px -396px",
-      "color": "#716960"
+      "color": "#71695f"
     },
     {
       "id": "coal-liquefaction",
@@ -1164,7 +1163,7 @@
     {
       "id": "automation-2",
       "position": "-990px -66px",
-      "color": "#5a5a55"
+      "color": "#5a5a54"
     },
     {
       "id": "advanced-electronics",
@@ -1259,7 +1258,7 @@
     {
       "id": "rail-signals",
       "position": "-330px -990px",
-      "color": "#ab8f67"
+      "color": "#ab8e67"
     },
     {
       "id": "mining-productivity-1",
@@ -1279,7 +1278,7 @@
     {
       "id": "stack-inserter-technology",
       "position": "-594px -990px",
-      "color": "#78855a"
+      "color": "#788559"
     },
     {
       "id": "inserter-capacity-bonus-1",
@@ -1499,7 +1498,7 @@
     {
       "id": "uranium-processing-technology",
       "position": "-1122px -264px",
-      "color": "#697d59"
+      "color": "#687d59"
     },
     {
       "id": "nuclear-power",
@@ -1574,7 +1573,7 @@
     {
       "id": "distractor",
       "position": "-132px -1122px",
-      "color": "#645e39"
+      "color": "#635e39"
     },
     {
       "id": "energy-shield-mk2-equipment-technology",
@@ -1599,7 +1598,7 @@
     {
       "id": "energy-weapons-damage-1",
       "position": "-462px -1122px",
-      "color": "#a97259"
+      "color": "#a87259"
     },
     {
       "id": "stronger-explosives-3",
@@ -1654,7 +1653,7 @@
     {
       "id": "logistic-system",
       "position": "-1188px 0px",
-      "color": "#958452"
+      "color": "#948452"
     },
     {
       "id": "personal-roboport-mk2-equipment-technology",
@@ -1679,7 +1678,7 @@
     {
       "id": "uranium-ammo",
       "position": "-1188px -330px",
-      "color": "#759141"
+      "color": "#759041"
     },
     {
       "id": "destroyer",
@@ -1704,7 +1703,7 @@
     {
       "id": "spidertron-technology",
       "position": "-1188px -660px",
-      "color": "#7b6043"
+      "color": "#7b5f43"
     },
     {
       "id": "atomic-bomb-technology",
@@ -1744,7 +1743,7 @@
     {
       "id": "fluids",
       "position": "0px -1188px",
-      "color": "#476975"
+      "color": "#476974"
     }
   ],
   "items": [

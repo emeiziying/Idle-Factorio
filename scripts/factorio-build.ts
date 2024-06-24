@@ -565,8 +565,7 @@ async function processMod(): Promise<void> {
         if (i.beacon) addIfMissing(oldHash, 'beacons', i.id);
         if (i.belt) addIfMissing(oldHash, 'belts', i.id);
         if (i.fuel) addIfMissing(oldHash, 'fuels', i.id);
-        if (!!i.cargoWagon || !!i.fluidWagon)
-          addIfMissing(oldHash, 'wagons', i.id);
+        if (i.cargoWagon ?? i.fluidWagon) addIfMissing(oldHash, 'wagons', i.id);
         if (i.machine) addIfMissing(oldHash, 'machines', i.id);
         if (i.module) addIfMissing(oldHash, 'modules', i.id);
         if (i.technology) addIfMissing(oldHash, 'technologies', i.id);
@@ -615,6 +614,7 @@ async function processMod(): Promise<void> {
   const technologySet = new Set<M.TechnologyPrototype>();
   for (const key of Object.keys(dataRaw.technology)) {
     const techRaw = dataRaw.technology[key];
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
     const techData = techRaw[mode] || (techRaw as M.TechnologyData);
 
     if (
@@ -827,7 +827,7 @@ async function processMod(): Promise<void> {
 
     if (item.fuel_value) itemsUsed.add(item.name);
 
-    if (item.rocket_launch_product || item.rocket_launch_products) {
+    if (item.rocket_launch_product ?? item.rocket_launch_products) {
       itemsUsed.add(item.name);
 
       if (item.rocket_launch_product) {
@@ -885,6 +885,7 @@ async function processMod(): Promise<void> {
   const techDataMap: Record<string, M.TechnologyData> = {};
   const techIngredientsMap: Record<string, Record<string, number>> = {};
   for (const tech of technologySet) {
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
     const techData = tech[mode] || (tech as M.TechnologyData);
     const techIngredients =
       techData.unit == null ? {} : getIngredients(techData.unit.ingredients)[0];
@@ -1187,10 +1188,10 @@ async function processMod(): Promise<void> {
       // Parse module
       if (M.isModulePrototype(proto)) {
         item.module = {
-          consumption: proto.effect.consumption?.bonus ?? undefined,
-          pollution: proto.effect.pollution?.bonus ?? undefined,
-          productivity: proto.effect.productivity?.bonus ?? undefined,
-          speed: proto.effect.speed?.bonus ?? undefined,
+          consumption: proto.effect.consumption?.bonus,
+          pollution: proto.effect.pollution?.bonus,
+          productivity: proto.effect.productivity?.bonus,
+          speed: proto.effect.speed?.bonus,
         };
 
         let limitation = proto.limitation;
@@ -1251,8 +1252,7 @@ async function processMod(): Promise<void> {
      * ingredient temperatures
      */
     const fluidTempOptions: Record<string, number[]> = {};
-    for (let i = 0; i < fluidTempRules.length; i++) {
-      const fluidId = fluidTempRules[i];
+    for (const fluidId of fluidTempRules) {
       const [minTemp, maxTemp] = recipeInTemp[fluidId];
       const fluid = dataRaw.fluid[fluidId];
 
@@ -1425,7 +1425,7 @@ async function processMod(): Promise<void> {
           const recipe: RecipeJson = {
             id,
             name: recipeLocale.names[proto.name],
-            category: proto.category || subgroup.group,
+            category: proto.category ?? subgroup.group,
             row: getRecipeRow(proto),
             time: recipeData.energy_required ?? 0.5,
             producers,
@@ -1723,7 +1723,9 @@ async function processMod(): Promise<void> {
 
   const technologies = Array.from(technologySet).sort((a, b) => {
     // First, sort by number of ingredients
-    const aData = a[mode] ?? (a as M.TechnologyData);
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+    const aData = a[mode] || (a as M.TechnologyData);
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
     const bData = b[mode] || (b as M.TechnologyData);
     const aIngredients = coerceArray(aData.unit.ingredients);
     const bIngredients = coerceArray(bData.unit.ingredients);
@@ -1847,12 +1849,13 @@ async function processMod(): Promise<void> {
   logTime('Generating sprite sheet');
   spritesmith.run(
     { src: Object.keys(iconFiles), padding: 2 },
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     async (_, result) => {
       const modIconsPath = `${modPath}/icons.webp`;
       await sharp(result.image).webp().toFile(modIconsPath);
 
       modData.icons = await Promise.all(
-        Object.keys(result.coordinates).map(async (file) => {
+        Object.keys(result.coordinates).map((file) => {
           const coords = result.coordinates[file];
           return {
             id: iconFiles[file],

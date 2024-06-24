@@ -36,7 +36,9 @@ interface DataType {
   value: string;
 }
 
-const API_PATH = 'https://lua-api.factorio.com/latest/prototype-api.json';
+const version = process.argv[2] ?? 'latest';
+
+const API_PATH = `https://lua-api.factorio.com/${version}/prototype-api.json`;
 
 function getPrototypeApi(): Promise<M.PrototypeApi> {
   return new Promise((resolve, reject) => {
