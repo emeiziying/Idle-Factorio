@@ -51,7 +51,7 @@ export default async function LocaleLayout({
   const dataJSON = await fs.readFile(process.cwd() + '/data/data.json', 'utf8')
   const hashJSON = await fs.readFile(process.cwd() + '/data/hash.json', 'utf8')
   const i18nJSON = await fs.readFile(
-    process.cwd() + `/data/i18n/${locale}.json`,
+    process.cwd() + `/i18n/data/${locale}.json`,
     'utf8',
   )
 
