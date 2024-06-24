@@ -3,7 +3,7 @@ import fs from 'fs'
 import sharp from 'sharp'
 import spritesmith from 'spritesmith'
 
-import { coalesce } from '~/helpers'
+import { coalesce } from '@/helpers'
 import {
   CategoryJson,
   Entities,
@@ -14,7 +14,7 @@ import {
   ModHash,
   RecipeJson,
   TechnologyJson,
-} from '~/models'
+} from '@/models'
 import * as D from './factorio-build.models'
 import * as M from './factorio.models'
 import {

@@ -1,13 +1,13 @@
-import { data } from '@/data'
-import type {
-  AppData,
-  Entities,
-  IdValuePayload,
-  Mod,
-  ModData,
-  ModHash,
-  ModI18n,
-  ModInfo,
+import {
+  Game,
+  type AppData,
+  type Entities,
+  type IdValuePayload,
+  type Mod,
+  type ModData,
+  type ModHash,
+  type ModI18n,
+  type ModInfo,
 } from '@/models'
 import type { RootState } from '@/store/store'
 import {
@@ -29,7 +29,9 @@ export interface DatasetsState extends AppData {
 }
 
 export const initialDatasetsState: DatasetsState = {
-  ...data,
+  mods: [{ id: '1.1', name: '1.1.x', game: Game.Factorio }],
+  v0: ['1.1'],
+  hash: ['1.1'],
   dataRecord: {},
   hashRecord: {},
   i18nRecord: {},

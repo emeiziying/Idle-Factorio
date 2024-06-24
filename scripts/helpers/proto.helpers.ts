@@ -1,4 +1,4 @@
-import { coalesce } from '~/helpers'
+import { coalesce } from '@/helpers'
 import {
   BeaconJson,
   BeltJson,
@@ -7,7 +7,7 @@ import {
   FluidWagonJson,
   ModuleEffect,
   SiloJson,
-} from '~/models'
+} from '@/models'
 import * as D from '../factorio-build.models'
 import * as M from '../factorio.models'
 import { getDisallowedEffects } from './data.helpers'

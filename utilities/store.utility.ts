@@ -5,7 +5,7 @@ import {
   IdValueDefaultPayload,
   IdValuePayload,
   ValueDefaultPayload,
-} from '~/models';
+} from '@/models'
 
 export class StoreUtility {
   static rankEquals<T extends number | string>(
@@ -13,9 +13,9 @@ export class StoreUtility {
     b: T[] | undefined,
   ): boolean {
     if (b == null) {
-      return false;
+      return false
     }
-    return a.length === b.length && a.every((v, i) => v === b[i]);
+    return a.length === b.length && a.every((v, i) => v === b[i])
   }
 
   static arrayEquals<T extends number | string>(
@@ -23,9 +23,9 @@ export class StoreUtility {
     b: T[] | undefined,
   ): boolean {
     if (b == null) {
-      return false;
+      return false
     }
-    return this.rankEquals([...a].sort(), [...b].sort());
+    return this.rankEquals([...a].sort(), [...b].sort())
   }
 
   static payloadEquals<T>(
@@ -42,7 +42,7 @@ export class StoreUtility {
             payload.value as (number | string)[],
             payload.def as (number | string)[],
           )
-      : payload.value === payload.def;
+      : payload.value === payload.def
   }
 
   /** Resets a passed fields of the state */
@@ -52,11 +52,11 @@ export class StoreUtility {
     id?: string,
   ): Entities<T> {
     // Spread into new state
-    let newState = { ...state };
+    let newState = { ...state }
     for (const field of fields) {
-      newState = this.resetField(newState, field, id);
+      newState = this.resetField(newState, field, id)
     }
-    return newState;
+    return newState
   }
 
   /** Resets a passed field of the state */
@@ -66,19 +66,19 @@ export class StoreUtility {
     id?: string,
   ): Entities<T> {
     // Spread into new state
-    const newState = { ...state };
+    const newState = { ...state }
     for (const i of Object.keys(newState).filter(
       (j) => (!id || id === j) && newState[j][field] !== undefined,
     )) {
       if (Object.keys(newState[i]).length === 1) {
-        delete newState[i];
+        delete newState[i]
       } else {
         // Spread into new state
-        newState[i] = { ...newState[i] };
-        delete newState[i][field];
+        newState[i] = { ...newState[i] }
+        delete newState[i][field]
       }
     }
-    return newState;
+    return newState
   }
 
   static compareReset<T extends object, K extends keyof T>(
@@ -90,20 +90,20 @@ export class StoreUtility {
     // Spread into new state
     if (this.payloadEquals(payload, rank)) {
       // Resetting to null
-      const newState = { ...state };
+      const newState = { ...state }
       if (newState[payload.id] !== undefined) {
-        newState[payload.id] = { ...newState[payload.id] };
+        newState[payload.id] = { ...newState[payload.id] }
         if (newState[payload.id][field] !== undefined) {
-          delete newState[payload.id][field];
+          delete newState[payload.id][field]
         }
         if (Object.keys(newState[payload.id]).length === 0) {
-          delete newState[payload.id];
+          delete newState[payload.id]
         }
       }
-      return newState;
+      return newState
     } else {
       // Setting field
-      return this.assignValue(state, field, payload);
+      return this.assignValue(state, field, payload)
     }
   }
 
@@ -117,11 +117,11 @@ export class StoreUtility {
       ...{
         [payload.id]: { ...state[payload.id], ...{ [field]: payload.value } },
       },
-    };
+    }
   }
 
   static compareValue<T>(payload: ValueDefaultPayload<T>): T | undefined {
-    return payload.value === payload.def ? undefined : payload.value;
+    return payload.value === payload.def ? undefined : payload.value
   }
 
   static compareValues(
@@ -129,14 +129,14 @@ export class StoreUtility {
   ): string[] | undefined {
     return this.arrayEquals(payload.value, payload.def)
       ? undefined
-      : payload.value;
+      : payload.value
   }
 
   static compareRank(
     value: string[],
     def: string[] | undefined,
   ): string[] | undefined {
-    return this.rankEquals(value, def) ? undefined : value;
+    return this.rankEquals(value, def) ? undefined : value
   }
 
   /** Resets a passed field of the state */
@@ -154,33 +154,33 @@ export class StoreUtility {
     id?: string,
   ): Entities<T> {
     // Spread into new state
-    const newState = { ...state };
+    const newState = { ...state }
     for (const i of Object.keys(newState).filter(
       (j) => (!id || id === j) && newState[j][field] != null,
     )) {
-      const arr = newState[i][field];
+      const arr = newState[i][field]
       if (arr != null) {
-        const newArr = arr.map((a) => ({ ...a }));
+        const newArr = arr.map((a) => ({ ...a }))
 
         // Reset the specific subfield
-        delete (newArr[index] as unknown as V)[subfield];
+        delete (newArr[index] as unknown as V)[subfield]
 
         if (newArr.length === 1 && Object.keys(newArr[index]).length === 0) {
           // Delete this field from the entity
-          delete newState[i][field];
+          delete newState[i][field]
         } else {
           // Set this field on the entitiy
-          newState[i][field] = newArr as unknown as T[K];
+          newState[i][field] = newArr as unknown as T[K]
         }
       }
 
       // Check whether whole entity has keys
       if (Object.keys(newState[i]).length === 0) {
         // Delete the whole entity
-        delete newState[i];
+        delete newState[i]
       }
     }
-    return newState;
+    return newState
   }
 
   static compareResetIndex<
@@ -198,38 +198,38 @@ export class StoreUtility {
   ): Entities<T> {
     if (this.payloadEquals(payload, rank)) {
       // Resetting to null, spread into new state
-      const newState = { ...state };
+      const newState = { ...state }
       if (newState[payload.id] !== undefined) {
-        newState[payload.id] = { ...newState[payload.id] };
-        const arr = newState[payload.id][field];
+        newState[payload.id] = { ...newState[payload.id] }
+        const arr = newState[payload.id][field]
         if (arr != null) {
-          const newArr = arr.map((a) => ({ ...a }));
+          const newArr = arr.map((a) => ({ ...a }))
 
           // Reset the specific subfield
-          delete (newArr[payload.index] as unknown as V)[subfield];
+          delete (newArr[payload.index] as unknown as V)[subfield]
 
           if (
             newArr.length === 1 &&
             Object.keys(newArr[payload.index]).length === 0
           ) {
             // Delete this field from the entity
-            delete newState[payload.id][field];
+            delete newState[payload.id][field]
           } else {
             // Set this field on the entity
-            newState[payload.id][field] = newArr as unknown as T[K];
+            newState[payload.id][field] = newArr as unknown as T[K]
           }
         }
 
         // Check whether whole entity has keys
         if (Object.keys(newState[payload.id]).length === 0) {
           // Delete the whole entity
-          delete newState[payload.id];
+          delete newState[payload.id]
         }
       }
-      return newState;
+      return newState
     } else {
       // Setting field
-      return this.assignIndexValue(state, field, subfield, payload);
+      return this.assignIndexValue(state, field, subfield, payload)
     }
   }
 
@@ -257,14 +257,14 @@ export class StoreUtility {
               new Array(payload.index + 1).fill({})
             ).map((v, i) => {
               if (i === payload.index) {
-                return { ...v, ...{ [subfield]: payload.value } };
+                return { ...v, ...{ [subfield]: payload.value } }
               } else {
-                return v;
+                return v
               }
             }),
           },
         },
       },
-    };
+    }
   }
 }

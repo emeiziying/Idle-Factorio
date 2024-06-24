@@ -1,10 +1,10 @@
-import { coalesce } from '~/helpers';
+import { coalesce } from '@/helpers'
 import {
   SankeyGraph,
   SankeyLinkExtraProperties,
   SankeyNode,
   SankeyNodeExtraProperties,
-} from './models';
+} from './models'
 
 /**
  * Determine a set of links which need to be reversed to render the graph acyclic.
@@ -18,115 +18,115 @@ export function minFAS<
   N extends SankeyNodeExtraProperties = object,
   L extends SankeyLinkExtraProperties = object,
 >(graph: SankeyGraph<N, L>): void {
-  const nodes = new Set<SankeyNode<N, L>>();
-  const indegrees = new Map<SankeyNode<N, L>, number>();
-  const outdegrees = new Map<SankeyNode<N, L>, number>();
+  const nodes = new Set<SankeyNode<N, L>>()
+  const indegrees = new Map<SankeyNode<N, L>, number>()
+  const outdegrees = new Map<SankeyNode<N, L>, number>()
 
   for (const node of graph.nodes) {
-    nodes.add(node);
-    let incount = 0;
-    let outcount = 0;
+    nodes.add(node)
+    let incount = 0
+    let outcount = 0
     for (const link of coalesce(node.targetLinks, [])) {
-      if (link.source !== node) incount++;
+      if (link.source !== node) incount++
     }
 
     for (const link of coalesce(node.sourceLinks, [])) {
-      if (link.target !== node) outcount++;
+      if (link.target !== node) outcount++
     }
 
-    indegrees.set(node, incount);
-    outdegrees.set(node, outcount);
+    indegrees.set(node, incount)
+    outdegrees.set(node, outcount)
   }
 
   function remove(node: SankeyNode<N, L>): void {
-    nodes.delete(node);
+    nodes.delete(node)
     for (const link of coalesce(node.targetLinks, [])) {
-      const source = link.source as SankeyNode<N, L>;
+      const source = link.source as SankeyNode<N, L>
       if (nodes.has(source)) {
-        const subdegree = coalesce(outdegrees.get(source), 0);
-        outdegrees.set(source, subdegree - 1);
+        const subdegree = coalesce(outdegrees.get(source), 0)
+        outdegrees.set(source, subdegree - 1)
       }
     }
 
     for (const link of coalesce(node.sourceLinks, [])) {
-      const target = link.target as SankeyNode<N, L>;
+      const target = link.target as SankeyNode<N, L>
       if (nodes.has(target)) {
-        const subdegree = coalesce(indegrees.get(target), 0);
-        indegrees.set(target, subdegree - 1);
+        const subdegree = coalesce(indegrees.get(target), 0)
+        indegrees.set(target, subdegree - 1)
       }
     }
   }
 
-  const s1 = [];
-  const s2 = [];
+  const s1 = []
+  const s2 = []
   while (nodes.size > 0) {
     // Remove sink nodes until none are found.
     for (;;) {
-      let found = false;
+      let found = false
       for (const node of nodes) {
-        const outdegree = outdegrees.get(node);
+        const outdegree = outdegrees.get(node)
         if (outdegree === 0) {
-          found = true;
-          s2.push(node);
-          remove(node);
+          found = true
+          s2.push(node)
+          remove(node)
         }
       }
 
-      if (!found) break;
+      if (!found) break
     }
 
     // Remove source nodes until none are found.
     for (;;) {
-      let found = false;
+      let found = false
       for (const node of nodes) {
-        const indegree = indegrees.get(node);
+        const indegree = indegrees.get(node)
         // Unclear how to test this block
         // istanbul ignore if
         if (indegree === 0) {
-          found = true;
-          s1.push(node);
-          remove(node);
+          found = true
+          s1.push(node)
+          remove(node)
         }
       }
 
-      if (!found) break;
+      if (!found) break
     }
 
-    if (nodes.size === 0) break;
+    if (nodes.size === 0) break
 
-    let maxDelta = null;
-    let maxNode = null;
+    let maxDelta = null
+    let maxNode = null
     for (const node of nodes) {
       const delta =
-        coalesce(outdegrees.get(node), 0) - coalesce(indegrees.get(node), 0);
+        coalesce(outdegrees.get(node), 0) - coalesce(indegrees.get(node), 0)
       if (maxDelta === null || delta > maxDelta) {
-        maxDelta = delta;
-        maxNode = node;
+        maxDelta = delta
+        maxNode = node
       }
     }
 
     if (maxNode != null) {
-      s1.push(maxNode);
-      remove(maxNode);
+      s1.push(maxNode)
+      remove(maxNode)
     }
   }
 
-  s2.reverse();
-  const order = s1.concat(s2);
-  const orderMap = new Map();
+  s2.reverse()
+  const order = s1.concat(s2)
+  const orderMap = new Map()
   for (const [i, node] of order.entries()) {
-    orderMap.set(node, i);
+    orderMap.set(node, i)
   }
 
   for (const link of graph.links) {
-    const i = orderMap.get(link.source);
-    const j = orderMap.get(link.target);
+    const i = orderMap.get(link.source)
+    const j = orderMap.get(link.target)
     if (i === j) {
-      link.direction = 'self';
+      link.direction = 'self'
     } else if (i < j) {
-      link.direction = 'forward';
+      link.direction = 'forward'
     } else {
-      link.direction = 'backward';
+      link.direction = 'backward'
     }
   }
 }

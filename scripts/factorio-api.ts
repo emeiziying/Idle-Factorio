@@ -1,60 +1,62 @@
-import fs from 'fs';
-import handlebars from 'handlebars';
-import https from 'node:https';
+import fs from 'fs'
+import handlebars from 'handlebars'
+import https from 'node:https'
 
-import * as M from './factorio-api.models';
+import * as M from './factorio-api.models'
 
 interface Data {
-  app: string;
-  appVersion: string;
-  apiVersion: number;
-  stage: string;
-  interfaces: Interface[];
-  types: DataType[];
+  app: string
+  appVersion: string
+  apiVersion: number
+  stage: string
+  interfaces: Interface[]
+  types: DataType[]
 }
 
 interface Interface {
-  name: string;
-  description: string;
-  export: boolean;
-  extends?: string;
-  typeName?: string;
-  props: Property[];
-  isTypeFunction?: string;
+  name: string
+  description: string
+  export: boolean
+  extends?: string
+  typeName?: string
+  props: Property[]
+  isTypeFunction?: string
 }
 
 interface Property {
-  name: string;
-  description: string;
-  optional: boolean;
-  type: string;
+  name: string
+  description: string
+  optional: boolean
+  type: string
 }
 
 interface DataType {
-  name: string;
-  description: string;
-  value: string;
+  name: string
+  description: string
+  value: string
 }
 
-const API_PATH = 'https://lua-api.factorio.com/latest/prototype-api.json';
+const version = process.argv[2] || 'latest'
+
+const API_PATH = `https://lua-api.factorio.com/${version}/prototype-api.json`
 
 function getPrototypeApi(): Promise<M.PrototypeApi> {
   return new Promise((resolve, reject) => {
     https
       .get(API_PATH, (res) => {
-        let data = '';
+        let data = ''
 
         res.on('data', (chunk) => {
-          data += chunk;
-        });
+          data += chunk
+        })
 
         res.on('end', () => {
-          const api = JSON.parse(data) as M.PrototypeApi;
-          resolve(api);
-        });
+          const api = JSON.parse(data) as M.PrototypeApi
+          resolve(api)
+        })
       })
-      .on('error', (err) => reject(err));
-  });
+      .on('error', (err) => reject(err))
+  })
 }
 
 function parseType(type: M.DataType, structName?: string): string {
@@ -62,7 +64,7 @@ function parseType(type: M.DataType, structName?: string): string {
     // Handle known built-in types
     switch (type) {
       case 'bool':
-        return 'boolean';
+        return 'boolean'
       case 'double':
       case 'float':
       case 'int8':
@@ -72,44 +74,44 @@ function parseType(type: M.DataType, structName?: string): string {
       case 'uint16':
       case 'uint32':
       case 'uint64':
-        return 'number';
+        return 'number'
       case 'string':
-        return 'string';
+        return 'string'
       case 'DataExtendMethod':
-        return '() => void';
+        return '() => void'
       default:
-        return type;
+        return type
     }
   }
 
   switch (type.complex_type) {
     case 'array':
-      return `${parseType(type.value, structName)}[]`;
+      return `${parseType(type.value, structName)}[]`
     case 'dictionary':
       return `Record<${parseType(type.key, structName)}, ${parseType(
         type.value,
         structName,
-      )}>`;
+      )}>`
     case 'literal': {
       if (typeof type.value === 'string') {
-        return `'${type.value}'`;
+        return `'${type.value}'`
       } else {
-        return type.value.toString();
+        return type.value.toString()
       }
     }
     case 'struct':
       if (structName == null)
-        throw 'Unexpected struct: use properties on parent or pass a struct name to use';
+        throw 'Unexpected struct: use properties on parent or pass a struct name to use'
 
-      return structName;
+      return structName
     case 'tuple':
-      return `[${type.values.map((v) => parseType(v, structName)).join(', ')}]`;
+      return `[${type.values.map((v) => parseType(v, structName)).join(', ')}]`
     case 'type':
-      return parseType(type.value, structName);
+      return parseType(type.value, structName)
     case 'union':
       return `(${type.options
         .map((o) => parseType(o, structName))
-        .join(' | ')})`;
+        .join(' | ')})`
   }
 }
 
@@ -119,21 +121,21 @@ function parseProperty(prop: M.Property): Property {
     description: prop.description,
     optional: prop.optional,
     type: parseType(prop.type),
-  };
+  }
 }
 
 function getTypePropertyValue(props: M.Property[]): string | undefined {
-  const typeProp = props.find((p) => p.name === 'type');
+  const typeProp = props.find((p) => p.name === 'type')
   if (
     typeProp &&
     typeof typeProp.type !== 'string' &&
     typeProp.type.complex_type === 'literal' &&
     typeof typeProp.type.value === 'string'
   ) {
-    return typeProp.type.value;
+    return typeProp.type.value
   }
 
-  return undefined;
+  return undefined
 }
 
 function parsePrototypeApi(api: M.PrototypeApi): Data {
@@ -144,7 +146,7 @@ function parsePrototypeApi(api: M.PrototypeApi): Data {
     stage: api.stage,
     interfaces: [],
     types: [],
-  };
+  }
 
   api.prototypes.forEach((p) => {
     const int: Interface = {
@@ -153,18 +155,18 @@ function parsePrototypeApi(api: M.PrototypeApi): Data {
       export: p.parent == null,
       extends: p.parent,
       props: p.properties.map((p) => parseProperty(p)),
-    };
-
-    const typePropValue = getTypePropertyValue(p.properties);
-    if (typePropValue != null) {
-      int.isTypeFunction = typePropValue;
-    } else if (p.typename) {
-      int.typeName = p.typename;
-      int.isTypeFunction = p.typename;
     }
 
-    data.interfaces.push(int);
-  });
+    const typePropValue = getTypePropertyValue(p.properties)
+    if (typePropValue != null) {
+      int.isTypeFunction = typePropValue
+    } else if (p.typename) {
+      int.typeName = p.typename
+      int.isTypeFunction = p.typename
+    }
+
+    data.interfaces.push(int)
+  })
 
   api.types.forEach((t) => {
     if (typeof t.type === 'string') {
@@ -173,9 +175,9 @@ function parsePrototypeApi(api: M.PrototypeApi): Data {
           name: t.name,
           description: t.description,
           value: parseType(t.type),
-        };
+        }
 
-        data.types.push(dataType);
+        data.types.push(dataType)
       }
     } else if (t.type.complex_type === 'struct') {
       const int: Interface = {
@@ -184,49 +186,49 @@ function parsePrototypeApi(api: M.PrototypeApi): Data {
         export: t.parent == null,
         extends: t.parent,
         props: [],
-      };
-
-      if (t.properties) {
-        int.props = t.properties.map((p) => parseProperty(p));
-
-        int.isTypeFunction = getTypePropertyValue(t.properties);
       }
 
-      data.interfaces.push(int);
+      if (t.properties) {
+        int.props = t.properties.map((p) => parseProperty(p))
+
+        int.isTypeFunction = getTypePropertyValue(t.properties)
+      }
+
+      data.interfaces.push(int)
     } else {
-      let structName: string | undefined;
+      let structName: string | undefined
 
       if (t.properties) {
-        structName = `_${t.name}`;
+        structName = `_${t.name}`
         const int: Interface = {
           name: structName,
           description: t.description,
           export: false,
           extends: t.parent,
           props: t.properties.map((p) => parseProperty(p)),
-        };
+        }
 
-        data.interfaces.push(int);
+        data.interfaces.push(int)
       }
 
       const dataType: DataType = {
         name: t.name,
         description: t.description,
         value: parseType(t.type, structName),
-      };
+      }
 
-      data.types.push(dataType);
+      data.types.push(dataType)
     }
-  });
+  })
 
-  return data;
+  return data
 }
 
 const generate = async function (): Promise<void> {
-  console.log(`Regenerating Factorio prototype models from ${API_PATH}...`);
+  console.log(`Regenerating Factorio prototype models from ${API_PATH}...`)
 
-  const api = await getPrototypeApi();
-  const data = parsePrototypeApi(api);
+  const api = await getPrototypeApi()
+  const data = parsePrototypeApi(api)
   const modelsSource = `/** Generated file, do not edit. See scripts/factorio-api.ts for generator. */
 
 /**
@@ -272,13 +274,13 @@ export function is{{name}}(value: unknown): value is {{name}} {
 {{/if}}
 export type {{name}} = {{{value}}};
 
-{{/types}}`;
+{{/types}}`
 
-  const modelsTemplate = handlebars.compile(modelsSource);
-  const result = modelsTemplate(data);
+  const modelsTemplate = handlebars.compile(modelsSource)
+  const result = modelsTemplate(data)
 
-  fs.writeFileSync('scripts/factorio.models.ts', result);
-  console.log(`Generated ${api.prototypes.length} models`);
-};
+  fs.writeFileSync('scripts/factorio.models.ts', result)
+  console.log(`Generated ${api.prototypes.length} models`)
+}
 
-generate();
+generate()

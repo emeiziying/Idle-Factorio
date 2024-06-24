@@ -3,7 +3,7 @@ import type { MachinesState } from '@/store/modules/machinesSlice'
 import type { RecipesState } from '@/store/modules/recipesSlice'
 import { SelectItem } from 'primeng/api'
 
-import { coalesce, fnPropsNotNullish } from '~/helpers'
+import { coalesce, fnPropsNotNullish } from '@/helpers'
 import {
   AdjustedDataset,
   AdjustedRecipe,
@@ -28,7 +28,7 @@ import {
   finalizeRecipe,
   isRecipeObjective,
   rational,
-} from '~/models'
+} from '@/models'
 
 export class RecipeUtility {
   static MIN_FACTOR = rational(1n, 5n)

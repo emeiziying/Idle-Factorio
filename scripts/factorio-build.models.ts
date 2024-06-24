@@ -1,4 +1,4 @@
-import { Entities } from '~/models'
+import { Entities } from '@/models'
 import * as M from './factorio.models'
 
 export interface ModList {

@@ -1,6 +1,5 @@
-import type { ItemsState } from '@/store/modules/itemsSlice'
-import { sankey } from '~/d3-sankey'
-import { coalesce } from '~/helpers'
+import { sankey } from '@/d3-sankey'
+import { coalesce } from '@/helpers'
 import {
   AdjustedDataset,
   DisplayRateInfo,
@@ -17,7 +16,8 @@ import {
   RecipeSettings,
   Step,
   toEntities,
-} from '~/models'
+} from '@/models'
+import type { ItemsState } from '@/store/modules/itemsSlice'
 
 const ROOT_ID = ''
 

@@ -1,5 +1,5 @@
+import { coalesce } from '@/helpers'
 import { min } from 'd3'
-import { coalesce } from '~/helpers'
 import {
   SankeyLink,
   SankeyLinkExtraProperties,

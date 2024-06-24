@@ -1,6 +1,6 @@
-import { SelectItem } from 'primeng/api';
+import { SelectItem } from 'primeng/api'
 
-import { Entities, ItemId } from '~/models';
+import { Entities, ItemId } from '@/models'
 
 export function getIdOptions(
   ids: string[],
@@ -9,10 +9,10 @@ export function getIdOptions(
 ): SelectItem[] {
   const list = ids.map(
     (i): SelectItem => ({ label: entities[i].name, value: i }),
-  );
+  )
   if (emptyModule) {
-    list.unshift({ label: 'None', value: ItemId.Module });
+    list.unshift({ label: 'None', value: ItemId.Module })
   }
 
-  return list;
+  return list
 }

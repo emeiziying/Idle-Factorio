@@ -1,7 +1,7 @@
-import zh from './data/i18n/zh.json'
-import en from './i18n/en.json'
+import appEn from './i18n/app/en.json'
+import dataEn from './i18n/data/en.json'
 
-type Messages = typeof en & typeof zh
+type Messages = typeof dataEn & typeof appEn
 
 declare global {
   // Use type safe message keys with `next-intl`
