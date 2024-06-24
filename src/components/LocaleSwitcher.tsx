@@ -1,18 +1,16 @@
-import { locales } from '@/config'
-import { useLocale, useTranslations } from 'next-intl'
-import LocaleSwitcherSelect from './LocaleSwitcherSelect'
+import { useTranslation } from 'react-i18next';
+import LocaleSwitcherSelect from './LocaleSwitcherSelect';
+import { locales } from '@/i18n';
 
 export default function LocaleSwitcher() {
-  const t = useTranslations()
-  const locale = useLocale()
-
+  const { t, i18n } = useTranslation();
   return (
-    <LocaleSwitcherSelect defaultValue={locale} label="">
+    <LocaleSwitcherSelect defaultValue={i18n.language} label="">
       {locales.map((cur) => (
         <option key={cur} value={cur}>
           {t('locale', { locale: cur })}
         </option>
       ))}
     </LocaleSwitcherSelect>
-  )
+  );
 }

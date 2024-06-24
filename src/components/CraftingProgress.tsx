@@ -1,30 +1,42 @@
-import { forwardRef, useImperativeHandle } from 'react'
+import { forwardRef, useImperativeHandle, useState } from 'react';
 
-type Props = {
-  duration: number
-  onFinish: () => void
+export interface CraftingProgressHandle {
+  start: (duration: number) => Promise<void>;
 }
 
-export type CraftingProgressHandle = {
-  start: () => void
-}
+const CraftingProgress = forwardRef<CraftingProgressHandle>((_, ref) => {
+  const [width, setWidth] = useState(0);
+  const [duration, setDuration] = useState(0);
 
-const CraftingProgress = forwardRef<CraftingProgressHandle, Props>(
-  (props, ref) => {
-    useImperativeHandle(ref, () => ({
-      start: () => {
-        console.log('start')
-      },
-    }))
+  useImperativeHandle(ref, () => ({
+    start: (duration: number) => {
+      console.log('start', duration);
+      setDuration(duration);
+      setWidth(100);
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          console.log('end');
+          setWidth(0);
+          resolve();
+        }, duration * 1000);
+      });
+    },
+  }));
 
-    return (
-      <div className="w-full bg-white">
-        <div className="h-1 transition-width w-0 bg-slate-300" />
-      </div>
-    )
-  },
-)
+  return (
+    <div className="w-full bg-white">
+      <div
+        className="h-1 transition-width w-0 bg-slate-300"
+        style={{
+          transitionDuration: `${duration}s`,
+          transition: 'width',
+          width: `${width}%`,
+        }}
+      />
+    </div>
+  );
+});
 
-CraftingProgress.displayName = 'CraftingProgress'
+CraftingProgress.displayName = 'CraftingProgress';
 
-export default CraftingProgress
+export default CraftingProgress;

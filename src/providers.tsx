@@ -16,10 +16,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       });
 
     storeRef.current = makeStore(savedData);
-
-    // storeRef.current.dispatch(loadMod(dataset));
-    // storeRef.current.dispatch(SET_LANGUAGE(locale as Language));
-    // storeRef.current.dispatch(SET_RESEARCHED_TECHNOLOGIES([]));
   }
 
   return <StoreProvider store={storeRef.current}>{children}</StoreProvider>;

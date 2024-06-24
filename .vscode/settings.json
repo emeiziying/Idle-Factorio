@@ -6,11 +6,6 @@
   "editor.formatOnSaveMode": "file", // required to format on save
   "files.autoSave": "onFocusChange", // optional but recommended
 
-  "editor.codeActionsOnSave": {
-    "source.addMissingImports": "explicit"
-  },
-  "typescript.preferences.importModuleSpecifier": "non-relative",
-
   "i18n-ally.localesPaths": ["public/i18n"],
   "i18n-ally.keystyle": "nested",
   "i18n-ally.displayLanguage": "zh",

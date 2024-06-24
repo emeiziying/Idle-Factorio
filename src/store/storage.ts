@@ -5,7 +5,7 @@ import packageInfo from '@@/package.json';
 const key = `saved_v${packageInfo.version}`;
 
 const storage = {
-  save: (data: RootState) => {
+  save: (data: Partial<RootState>) => {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(key, JSON.stringify(data));
     }

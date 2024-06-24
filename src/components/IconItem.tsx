@@ -1,26 +1,27 @@
-import { useAppSelector } from '@/store/hooks'
-import { getDataset } from '@/store/modules/settingsSlice'
-import { useMemo, type ReactNode } from 'react'
+import icons from '@/data/1.1/icons.webp';
+import { useAppSelector } from '@/store/hooks';
+import { getDataset } from '@/store/modules/settingsSlice';
+import { useMemo, type ReactNode } from 'react';
 
-type Props = {
-  name: string
-  text?: string
-  size?: number | string
-  children?: ReactNode
+interface Props {
+  name: string;
+  text?: string;
+  size?: number | string;
+  children?: ReactNode;
 }
 
 const IconItem = (props: Props) => {
-  const { name, text, size = 32, children } = props
+  const { name, text, size = 32, children } = props;
 
-  const dataset = useAppSelector(getDataset)
+  const dataset = useAppSelector(getDataset);
 
   const style = useMemo(() => {
-    const icon = dataset.iconEntities[name]
-    if (!icon) return
-    return { backgroundPosition: icon.position }
-  }, [name, dataset.iconEntities])
+    const icon = dataset.iconEntities[name];
+    if (!icon) return;
+    return { backgroundPosition: icon.position };
+  }, [name, dataset.iconEntities]);
 
-  const scale = useMemo(() => Number(size) / 64, [size])
+  const scale = useMemo(() => Number(size) / 64, [size]);
 
   return (
     <div
@@ -35,7 +36,7 @@ const IconItem = (props: Props) => {
       <div
         className="absolute left-0 top-0 w-16 h-16 origin-top-left "
         style={{
-          background: 'url(/icons.webp)',
+          background: `url(${icons})`,
           transform: `scale(${scale})`,
           ...style,
         }}
@@ -44,7 +45,7 @@ const IconItem = (props: Props) => {
 
       <div className="absolute w-full text-right bottom-0">{children}</div>
     </div>
-  )
-}
+  );
+};
 
-export default IconItem
+export default IconItem;

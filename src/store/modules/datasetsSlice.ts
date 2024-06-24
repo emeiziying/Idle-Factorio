@@ -17,9 +17,9 @@ import {
 } from '@reduxjs/toolkit';
 
 export interface DatasetPayload {
-  data: IdValuePayload<ModData> | null;
-  hash: IdValuePayload<ModHash> | null;
-  i18n: IdValuePayload<ModI18n> | null;
+  data?: IdValuePayload<ModData> | null;
+  hash?: IdValuePayload<ModHash> | null;
+  i18n?: IdValuePayload<ModI18n> | null;
 }
 
 export interface DatasetsState extends AppData {
