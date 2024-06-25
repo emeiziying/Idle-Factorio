@@ -10,7 +10,7 @@ import {
   subItemStock,
 } from '@/store/modules/recordsSlice';
 import Button from '@mui/material/Button';
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 interface Props {
   id: string;
@@ -20,6 +20,8 @@ const CraftingButton = ({ id }: Props) => {
   const adjustedDataset = useAppSelector(getAdjustedDataset);
   const records = useAppSelector(recordsState);
   const dispatch = useAppDispatch();
+
+  const [crafting, setCrafting] = useState(false);
 
   const craftingProgress = useRef<CraftingProgressHandle>(null);
 
@@ -45,11 +47,13 @@ const CraftingButton = ({ id }: Props) => {
 
   return (
     <Button
-      disabled={!canMake}
+      disabled={!canMake || crafting}
       onClick={() => {
+        setCrafting(true);
         craftingProgress.current
-          ?.start(recipeEntity.time?.toNumber() ?? 0)
+          ?.start()
           .then(() => {
+            setCrafting(false);
             handleManualMake();
           })
           .catch(() => {
@@ -60,7 +64,10 @@ const CraftingButton = ({ id }: Props) => {
     >
       <div>
         Make
-        <CraftingProgress ref={craftingProgress} />
+        <CraftingProgress
+          ref={craftingProgress}
+          duration={recipeEntity.time?.toNumber() ?? 0}
+        />
       </div>
     </Button>
   );
