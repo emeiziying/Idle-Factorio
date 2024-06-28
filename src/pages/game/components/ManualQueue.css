@@ -8,14 +8,18 @@
   --a: 0deg;
 
   background-image: conic-gradient(
-    #4c84ff 0,
-    #4c84ff var(--a),
+    #ffae4c80 0,
+    #ffae4c80 var(--a),
     transparent var(--a),
     transparent 100%
   );
 }
 
-.progress-working {
+.progress.working {
   --a: 360deg;
-  transition: --a linear forwards;
+  transition: --a 1s linear;
+}
+
+.progress.notworking {
+  --a: 0deg;
 }

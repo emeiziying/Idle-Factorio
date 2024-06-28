@@ -28,10 +28,19 @@ export const craftingSlice = createSlice({
         state.manualQueue.push(...payload);
       }
     },
+    updateFirst: (state, action: PayloadAction<Rational>) => {
+      const first = state.manualQueue.at(0);
+      if (first) {
+        first.amount = first.amount.sub(action.payload);
+        if (first.amount.isZero()) {
+          state.manualQueue.shift();
+        }
+      }
+    },
   },
 });
 
-export const { addToQueue } = craftingSlice.actions;
+export const { addToQueue, updateFirst } = craftingSlice.actions;
 
 export const craftingState = (state: RootState) => state.crafting;
 
