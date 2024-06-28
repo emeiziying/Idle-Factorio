@@ -41,6 +41,12 @@ importers:
       d3:
         specifier: ^7.9.0
         version: 7.9.0
+      glpk-ts:
+        specifier: ^0.0.11
+        version: 0.0.11
+      glpk-wasm:
+        specifier: ^0.1.4
+        version: 0.1.4
       i18next:
         specifier: ^23.11.5
         version: 23.11.5
@@ -1827,6 +1833,12 @@ packages:
   globby@11.1.0:
     resolution: {integrity: sha512-jhIXaOzy1sb8IyocaruWSn1TjmnBVs8Ayhcy83rmxNJ8q2uWKCAj3CnJY+KpGSXCueAPc0i05kVvVKtP1t9S3g==}
     engines: {node: '>=10'}
+
+  glpk-ts@0.0.11:
+    resolution: {integrity: sha512-EcARL3PHoWp9dTwGku1d4Kj7cYH7b7QgBbPz7N6/1LeHR843Mr5GxWA174POs0If8JWq4gPw0PxDntnitNKO+g==}
+
+  glpk-wasm@0.1.4:
+    resolution: {integrity: sha512-U9GGe+UMa72IPobxMInrpoKXnwEeLaRtyyeYTT48LhcN07w+hRga9OdWB0n0+qg89hQRIl15tqSHxQCfqI6cRQ==}
 
   gopd@1.0.1:
     resolution: {integrity: sha512-d65bNlIadxvpb/A2abVdlqKqV563juRnZ1Wtk6s1sIR8uNsXR70xqIzVqxVf1eTqDunwT2MkczEeaezCKTZhwA==}
@@ -4881,6 +4893,12 @@ snapshots:
       ignore: 5.3.1
       merge2: 1.4.1
       slash: 3.0.0
+
+  glpk-ts@0.0.11:
+    dependencies:
+      glpk-wasm: 0.1.4
+
+  glpk-wasm@0.1.4: {}
 
   gopd@1.0.1:
     dependencies:

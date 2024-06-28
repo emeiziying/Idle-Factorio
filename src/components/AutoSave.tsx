@@ -1,36 +1,38 @@
-'use client'
-import { useAppSelector } from '@/store/hooks'
-import { recordsState } from '@/store/modules/recordsSlice'
-import storage from '@/store/storage'
-import { useRafInterval } from 'ahooks'
-import { useState } from 'react'
+'use client';
+import { useAppSelector } from '@/store/hooks';
+import { craftingState } from '@/store/modules/craftingSlice';
+import { recordsState } from '@/store/modules/recordsSlice';
+import storage from '@/store/storage';
+import { useRafInterval } from 'ahooks';
+import { useState } from 'react';
 
 const AutoSave = () => {
-  const [saving, setSaving] = useState(false)
-  const [seconds, setSeconds] = useState(10)
+  const [saving, setSaving] = useState(false);
+  const [seconds, setSeconds] = useState(10);
 
-  const records = useAppSelector(recordsState)
+  const records = useAppSelector(recordsState);
+  const crafting = useAppSelector(craftingState);
 
   useRafInterval(() => {
-    const s = seconds - 1
+    const s = seconds - 1;
     if (s <= 0) {
-      setSaving(true)
-      storage.save({ records })
+      setSaving(true);
+      storage.save({ records, crafting });
 
       setTimeout(() => {
-        setSaving(false)
-        setSeconds(10)
-      }, 1000)
+        setSaving(false);
+        setSeconds(10);
+      }, 1000);
     } else {
-      setSeconds(s)
+      setSeconds(s);
     }
-  }, 1000)
+  }, 1000);
 
   return (
     <div className="px-5">
       {saving ? '自动保存中...' : `${seconds}秒后自动保存`}
     </div>
-  )
-}
+  );
+};
 
-export default AutoSave
+export default AutoSave;

@@ -2,6 +2,8 @@ import { fnPropsNotNullish } from '@/helpers';
 import {
   Game,
   ItemId,
+  ObjectiveBase,
+  ObjectiveType,
   PowerUnit,
   StepDetailTab,
   isRecipeObjective,
@@ -34,8 +36,8 @@ import {
   settingsState,
 } from '@/store/modules/settingsSlice';
 import type { RootState } from '@/store/store';
-import { RateUtility, RecipeUtility } from '@/utilities';
-import { createSelector, createSlice } from '@reduxjs/toolkit';
+import { RateUtility, RecipeUtility, SimplexUtility } from '@/utilities';
+import { PayloadAction, createSelector, createSlice } from '@reduxjs/toolkit';
 
 export interface ObjectivesState {
   ids: string[];
@@ -52,8 +54,29 @@ export const initialObjectivesState: ObjectivesState = {
 export const objectivesSlice = createSlice({
   name: 'objectives',
   initialState: initialObjectivesState,
-  reducers: {},
+  reducers: {
+    addObjective: (state, action: PayloadAction<ObjectiveBase>) => {
+      const { targetId, unit } = action.payload;
+
+      let value = rational(1n);
+      if (state.ids.length)
+        value = state.entities[state.ids[state.ids.length - 1]].value;
+      const id = state.index.toString();
+
+      state.ids.push(id);
+      state.entities[state.index] = {
+        id,
+        targetId,
+        value,
+        unit,
+        type: ObjectiveType.Output,
+      };
+      state.index++;
+    },
+  },
 });
+
+export const { addObjective } = objectivesSlice.actions;
 
 /* Base selector functions */
 export const objectivesState = (state: RootState): ObjectivesState =>
@@ -141,20 +164,18 @@ export const getMatrixResult = createSelector(
     costs,
     data,
     paused
-  ) => ({
-    steps: [],
-  })
-  // SimplexUtility.solve(
-  //   objectives,
-  //   itemsSettings,
-  //   recipesSettings,
-  //   researchedTechnologyIds,
-  //   maximizeType,
-  //   surplusMachinesOutput,
-  //   costs,
-  //   data,
-  //   paused,
-  // ),
+  ) =>
+    SimplexUtility.solve(
+      objectives,
+      itemsSettings,
+      recipesSettings,
+      researchedTechnologyIds,
+      maximizeType,
+      surplusMachinesOutput,
+      costs,
+      data,
+      paused
+    )
 );
 
 export const getSteps = createSelector(

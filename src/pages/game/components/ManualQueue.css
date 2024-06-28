@@ -1,0 +1,21 @@
+@property --a {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 90deg;
+}
+
+.progress {
+  --a: 0deg;
+
+  background-image: conic-gradient(
+    #4c84ff 0,
+    #4c84ff var(--a),
+    transparent var(--a),
+    transparent 100%
+  );
+}
+
+.progress-working {
+  --a: 360deg;
+  transition: --a linear forwards;
+}

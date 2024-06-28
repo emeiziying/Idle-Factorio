@@ -14,6 +14,12 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         const v = savedData.records[key].stock as never as string;
         savedData.records[key].stock = new Rational(BigInt(v) || 0n);
       });
+    savedData?.crafting &&
+      savedData.crafting.manualQueue.forEach((item) => {
+        item.amount = new Rational(
+          BigInt(item.amount as never as string) || 0n
+        );
+      });
 
     storeRef.current = makeStore(savedData);
   }

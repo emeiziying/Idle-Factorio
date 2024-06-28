@@ -7,6 +7,7 @@ import {
   isPlain,
 } from '@reduxjs/toolkit';
 import { isCollection } from 'immutable';
+import craftingReducer from './modules/craftingSlice';
 import datasetsReducer from './modules/datasetsSlice';
 import itemsReducer from './modules/itemsSlice';
 import machinesReducer from './modules/machinesSlice';
@@ -35,6 +36,7 @@ const rootReducer = combineReducers({
   preferences: preferencesReducer,
   objectives: objectivesReducer,
   records: recordsReducer,
+  crafting: craftingReducer,
 });
 
 export const makeStore = (preloadedState?: RootState) =>

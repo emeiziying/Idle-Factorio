@@ -1,13 +1,23 @@
 import GameContainer from '@/components/GameContainer';
 import TechnologyPanel from '@/components/TechnologyPanel';
+import { Container } from '@mui/material';
+import ManualQueue from './components/ManualQueue';
+import Steps from './components/Steps';
 
 const Game = () => {
   return (
-    <div>
-      <GameContainer />
-      <div style={{ height: '20px' }} />
-      <TechnologyPanel />
-    </div>
+    <>
+      <Container>
+        <div>
+          <GameContainer />
+          <Steps />
+          <div style={{ height: '20px' }} />
+          <TechnologyPanel />
+        </div>
+      </Container>
+
+      <ManualQueue />
+    </>
   );
 };
 
