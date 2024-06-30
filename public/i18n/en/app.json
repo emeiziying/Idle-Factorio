@@ -452,5 +452,5 @@
     "recipeSettings": "Recipe settings",
     "cost": "Cost"
   },
-  "locale": "{locale, select, de {🇩🇪 Deutsch} en {🇺🇸 English} zh {🇨🇳 中文} other {Unknown}}"
+  "locale": "🇺🇸 English"
 }

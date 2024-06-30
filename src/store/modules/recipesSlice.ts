@@ -1,5 +1,12 @@
 import { coalesce } from '@/helpers';
-import { rational, type Entities, type RecipeSettings } from '@/models';
+import {
+  AdjustedRecipe,
+  Item,
+  Recipe,
+  rational,
+  type Entities,
+  type RecipeSettings,
+} from '@/models';
 import { getItemsState } from '@/store/modules/itemsSlice';
 import { getMachinesState } from '@/store/modules/machinesSlice';
 import {
@@ -15,6 +22,7 @@ import {
   createSlice,
   type PayloadAction,
 } from '@reduxjs/toolkit';
+import { recordsState } from './recordsSlice';
 
 export type RecipesState = Entities<RecipeSettings>;
 
@@ -162,5 +170,58 @@ export const getAdjustedDataset = createSelector(
       data
     )
 );
+
+export const getRecipeEntities = createSelector(
+  getAdjustedDataset,
+  (adjustedDataset) => adjustedDataset.recipeEntities
+);
+
+export const getItemEntities = createSelector(
+  getAdjustedDataset,
+  (adjustedDataset) => adjustedDataset.itemEntities
+);
+
+export const getTechnologyEntities = createSelector(
+  getAdjustedDataset,
+  (adjustedDataset) => adjustedDataset.technologyEntities
+);
+
+export const getAdjustedRecipeById = (id: string) =>
+  createSelector(
+    getAdjustedDataset,
+    (adjustedDataset): AdjustedRecipe | undefined =>
+      adjustedDataset.adjustedRecipe[id]
+  );
+
+export const getRecipeEntityById = (id: string) =>
+  createSelector(
+    getAdjustedDataset,
+    (adjustedDataset): Recipe | undefined => adjustedDataset.recipeEntities[id]
+  );
+
+export const getItemEntityById = (id: string) =>
+  createSelector(
+    getAdjustedDataset,
+    (adjustedDataset): Item | undefined => adjustedDataset.itemEntities[id]
+  );
+
+export const getItemStatus = (id: string) =>
+  createSelector(
+    getRecipeEntityById(id),
+    recordsState,
+    (recipeEntity, records) => {
+      const canManualCrafting =
+        !!recipeEntity &&
+        !['smelting', 'fluids'].includes(recipeEntity.category);
+
+      const canMake =
+        !!recipeEntity &&
+        Object.keys(recipeEntity.in).every((e) =>
+          records[e]?.stock?.gte(recipeEntity.in[e])
+        );
+
+      return { canManualCrafting, canMake };
+    }
+  );
 
 export default recipesSlice.reducer;

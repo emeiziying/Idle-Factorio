@@ -388,5 +388,5 @@
     "recipeSettings": "配方设置",
     "cost": "消耗"
   },
-  "locale": "{locale, select, de {🇩🇪 Deutsch} en {🇺🇸 English} zh {🇨🇳 中文} other {Unknown}}"
+  "locale": "🇨🇳 中文"
 }

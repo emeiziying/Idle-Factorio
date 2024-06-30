@@ -1,6 +1,5 @@
-import IconItem from '@/components/IconItem';
-import ItemEntity from '@/components/ItemEntity';
 import { type Entities } from '@/models';
+import ItemEntity from '@/pages/game/components/ItemEntity';
 import { useAppSelector } from '@/store/hooks';
 import { getItemsState } from '@/store/modules/itemsSlice';
 import { getMachinesState } from '@/store/modules/machinesSlice';
@@ -12,20 +11,21 @@ import { getAvailableRecipes } from '@/store/modules/settingsSlice';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
+import { Card } from '@mui/material';
 import Tab from '@mui/material/Tab';
 import { useWhyDidYouUpdate } from 'ahooks';
+import IconItem from './IconItem';
 
 import { useMemo, useState } from 'react';
+import ItemConfigDialog from './ItemConfigDialog';
 
 const GameContainer = () => {
-  const [value, setValue] = useState('0');
+  const [currentTab, setCurrentTab] = useState('0');
+  const [currentItem, setCurrentItem] = useState('iron-plate');
+  const [configDialogVisible, setConfigDialogVisible] = useState(true);
 
   const adjustedDataset = useAppSelector(getAdjustedDataset);
   const availableRecipes = useAppSelector(getAvailableRecipes);
-
   const itemsState = useAppSelector(getItemsState);
   const machinesState = useAppSelector(getMachinesState);
   const recipesState = useAppSelector(getRecipesState);
@@ -65,43 +65,57 @@ const GameContainer = () => {
   });
 
   return (
-    <Box sx={{ width: '100%', background: 'white' }}>
-      <TabContext value={value}>
-        <TabList aria-label="Options" onChange={(_, v: string) => setValue(v)}>
-          {categoryIds.map((categoryId, index) => (
-            <Tab
-              key={categoryId}
-              label={
-                <div className="flex items-center">
-                  <IconItem name={categoryId} />
-                  {categoryEntities[categoryId].name}
-                </div>
-              }
-              value={`${index}`}
-              className="py-2 px-0"
-            />
-          ))}
-        </TabList>
+    <>
+      <Card sx={{ mb: 2 }}>
+        <TabContext value={currentTab}>
+          <TabList
+            aria-label="Options"
+            onChange={(_, v: string) => setCurrentTab(v)}
+          >
+            {categoryIds.map((categoryId, index) => (
+              <Tab
+                key={categoryId}
+                label={
+                  <div className="flex items-center">
+                    <IconItem name={categoryId} />
+                    {categoryEntities[categoryId].name}
+                  </div>
+                }
+                value={`${index}`}
+                className="px-0 py-2"
+              />
+            ))}
+          </TabList>
 
-        {categoryIds.map((categoryId, index) => (
-          <TabPanel key={categoryId} value={`${index}`} className="py-2 px-0">
-            <Card sx={{ minWidth: 800 }}>
-              <CardContent>
-                <div>
-                  {categoryRows[categoryId].map((ids, index) => (
-                    <div key={index} className="flex flex-wrap ">
-                      {ids.map((id) => (
-                        <ItemEntity key={id} id={id} />
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabPanel>
-        ))}
-      </TabContext>
-    </Box>
+          {categoryIds.map((categoryId, index) => (
+            <TabPanel key={categoryId} value={`${index}`} className="px-0 py-2">
+              <div>
+                {categoryRows[categoryId].map((ids, index) => (
+                  <div key={index} className="flex flex-wrap">
+                    {ids.map((id) => (
+                      <ItemEntity
+                        key={id}
+                        id={id}
+                        onClick={() => {
+                          setCurrentItem(id);
+                          setConfigDialogVisible(true);
+                        }}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </TabPanel>
+          ))}
+        </TabContext>
+      </Card>
+
+      <ItemConfigDialog
+        itemId={currentItem}
+        open={configDialogVisible}
+        onClose={() => setConfigDialogVisible(false)}
+      />
+    </>
   );
 };
 

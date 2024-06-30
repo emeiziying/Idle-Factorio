@@ -1,6 +1,6 @@
+import { locales } from '@/i18n';
 import { useTranslation } from 'react-i18next';
 import LocaleSwitcherSelect from './LocaleSwitcherSelect';
-import { locales } from '@/i18n';
 
 export default function LocaleSwitcher() {
   const { t, i18n } = useTranslation();
@@ -8,7 +8,7 @@ export default function LocaleSwitcher() {
     <LocaleSwitcherSelect defaultValue={i18n.language} label="">
       {locales.map((cur) => (
         <option key={cur} value={cur}>
-          {t('locale', { locale: cur })}
+          {t('locale', { lng: cur })}
         </option>
       ))}
     </LocaleSwitcherSelect>

@@ -1,22 +1,31 @@
-import GameContainer from '@/components/GameContainer';
-import TechnologyPanel from '@/components/TechnologyPanel';
 import { Container } from '@mui/material';
-import ManualQueue from './components/ManualQueue';
-import Steps from './components/Steps';
+import { useRafInterval } from 'ahooks';
+import { useRef } from 'react';
+import GameContainer from './components/GameContainer';
+import ManualQueue, { ManualQueueHandle } from './components/ManualQueue';
+import TechnologyPanel from './components/TechnologyPanel';
+
+let timestamp = 0;
 
 const Game = () => {
+  const manualQueue = useRef<ManualQueueHandle>(null);
+
+  useRafInterval(() => {
+    const now = Date.now();
+    const delta = timestamp ? now - timestamp : 0;
+    timestamp = now;
+
+    manualQueue.current?.update(delta);
+  }, 16);
+
   return (
     <>
       <Container>
-        <div>
-          <GameContainer />
-          <Steps />
-          <div style={{ height: '20px' }} />
-          <TechnologyPanel />
-        </div>
+        <GameContainer />
+        <TechnologyPanel />
       </Container>
 
-      <ManualQueue />
+      <ManualQueue ref={manualQueue} />
     </>
   );
 };

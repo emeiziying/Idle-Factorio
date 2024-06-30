@@ -1,60 +1,38 @@
-import IconItem from '@/components/IconItem';
 import { useMountedState } from '@/hooks/useMountedState';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { getAdjustedDataset } from '@/store/modules/recipesSlice';
+import {
+  getItemEntities,
+  getRecipeEntities,
+} from '@/store/modules/recipesSlice';
 import {
   UNLOCK_TECHNOLOGY,
-  getResearchedTechnologyIds,
   getTechnologyState,
 } from '@/store/modules/settingsSlice';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import { useWhyDidYouUpdate } from 'ahooks';
 import clsx from 'clsx';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import IconItem from './IconItem';
 
 const TechnologyPanel = () => {
   const mounted = useMountedState();
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
 
-  const researchedTechnologyIds = useAppSelector(getResearchedTechnologyIds);
-  const adjustedDataset = useAppSelector(getAdjustedDataset);
   const technologyState = useAppSelector(getTechnologyState);
-
-  const technologyEntities = useMemo(
-    () => adjustedDataset.technologyEntities,
-    [adjustedDataset]
-  );
-
-  const recipeEntities = useMemo(
-    () => adjustedDataset.recipeEntities,
-    [adjustedDataset]
-  );
-
-  const itemEntities = useMemo(
-    () => adjustedDataset.itemEntities,
-    [adjustedDataset]
-  );
+  const recipeEntities = useAppSelector(getRecipeEntities);
+  const itemEntities = useAppSelector(getItemEntities);
 
   const tabs = useMemo(
     () => Object.keys(technologyState) as (keyof typeof technologyState)[],
     [technologyState]
   );
 
-  useWhyDidYouUpdate('TechnologyPanel', {
-    technologyState,
-    technologyEntities,
-    itemEntities,
-    tabs,
-    recipeEntities,
-  });
-
   if (!mounted) return null;
 
   return (
-    <Card>
+    <Card sx={{ mb: 2 }}>
       <CardContent>
         {tabs.map((key) => (
           <div key={key}>
@@ -63,7 +41,7 @@ const TechnologyPanel = () => {
               {technologyState[key].map((id) => (
                 <div
                   key={id}
-                  className={clsx('p-2 flex flex-col items-center w-20', {
+                  className={clsx('flex w-20 flex-col items-center p-2', {
                     'opacity-50': key !== 'available',
                   })}
                   onClick={() =>
@@ -71,7 +49,7 @@ const TechnologyPanel = () => {
                   }
                 >
                   <IconItem
-                    name={itemEntities[id].icon || id}
+                    name={itemEntities[id].icon ?? id}
                     text={itemEntities[id].iconText}
                     size="32"
                   />
@@ -81,7 +59,7 @@ const TechnologyPanel = () => {
                       <IconItem key={inId} name={inId} size="12" />
                     ))}
                     {recipeEntities[id].count && (
-                      <span className="text-[8px] pl-1">
+                      <span className="pl-1 text-[8px]">
                         x{recipeEntities[id].count}
                       </span>
                     )}

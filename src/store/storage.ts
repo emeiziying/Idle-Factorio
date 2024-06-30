@@ -1,4 +1,4 @@
-'use client';
+import { Rational } from '@/models';
 import type { RootState } from '@/store/store';
 import packageInfo from '@@/package.json';
 
@@ -12,7 +12,15 @@ const storage = {
   },
   load: (defaultData?: Partial<RootState>): RootState | undefined => {
     if (typeof localStorage !== 'undefined') {
-      const data = JSON.parse(localStorage.getItem(key) ?? 'null') as RootState;
+      const data = JSON.parse(
+        localStorage.getItem(key) ?? 'null',
+        (_, value: unknown) =>
+          String(value).indexOf('#r-') >= 0
+            ? new Rational(
+                BigInt(String(value).split('#r-')[1] as never as string) || 0n
+              )
+            : value
+      ) as RootState;
       if (!data) return undefined;
       return Object.assign({}, data, defaultData);
     }
