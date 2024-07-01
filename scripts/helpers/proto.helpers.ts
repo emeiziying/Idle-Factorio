@@ -8,6 +8,8 @@ import {
   ModuleEffect,
   SiloJson,
 } from '@/models';
+import { ContainerJson } from '@/models/data/container';
+import { StorageTankJson } from '@/models/data/storageTank';
 import * as D from '../factorio-build.models';
 import * as M from '../factorio.models';
 import { getDisallowedEffects } from './data.helpers';
@@ -36,6 +38,16 @@ export function getCargoWagon(proto: M.CargoWagonPrototype): CargoWagonJson {
 
 export function getFluidWagon(proto: M.FluidWagonPrototype): FluidWagonJson {
   return { capacity: proto.capacity };
+}
+
+export function getContainer(proto: M.ContainerPrototype): ContainerJson {
+  return { size: proto.inventory_size };
+}
+
+export function getStorageTank(
+  _proto: M.StorageTankPrototype
+): StorageTankJson {
+  return { capacity: 25000 };
 }
 
 export function getMachineDisallowedEffects(

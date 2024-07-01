@@ -185,7 +185,9 @@ export type AnyEntityPrototype =
   | M.RocketSiloPrototype
   | M.TransportBeltPrototype
   | M.CargoWagonPrototype
-  | M.FluidWagonPrototype;
+  | M.FluidWagonPrototype
+  | M.ContainerPrototype
+  | M.StorageTankPrototype;
 
 export interface ModDataReport {
   noProducers: string[];
@@ -217,6 +219,8 @@ export const anyEntityKeys = [
   'transport-belt',
   'cargo-wagon',
   'fluid-wagon',
+  'container',
+  'storage-tank',
 ] as const;
 
 export const anyItemKeys = [

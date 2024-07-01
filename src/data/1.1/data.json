@@ -1753,28 +1753,40 @@
       "name": "Wooden chest",
       "category": "logistics",
       "stack": 50,
-      "row": 0
+      "row": 0,
+      "container": {
+        "size": 16
+      }
     },
     {
       "id": "iron-chest",
       "name": "Iron chest",
       "category": "logistics",
       "stack": 50,
-      "row": 0
+      "row": 0,
+      "container": {
+        "size": 32
+      }
     },
     {
       "id": "steel-chest",
       "name": "Steel chest",
       "category": "logistics",
       "stack": 50,
-      "row": 0
+      "row": 0,
+      "container": {
+        "size": 48
+      }
     },
     {
       "id": "storage-tank",
       "name": "Storage tank",
       "category": "logistics",
       "stack": 50,
-      "row": 0
+      "row": 0,
+      "storageTank": {
+        "capacity": 25000
+      }
     },
     {
       "id": "transport-belt",

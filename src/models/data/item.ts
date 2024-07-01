@@ -2,10 +2,12 @@ import { Rational, rational } from '../rational';
 import { Beacon, BeaconJson, parseBeacon } from './beacon';
 import { Belt, BeltJson, parseBelt } from './belt';
 import { CargoWagon, CargoWagonJson, parseCargoWagon } from './cargo-wagon';
+import { Container, ContainerJson, parseContainer } from './container';
 import { FluidWagon, FluidWagonJson, parseFluidWagon } from './fluid-wagon';
 import { Fuel, FuelJson, parseFuel } from './fuel';
 import { Machine, MachineJson, parseMachine } from './machine';
 import { Module, ModuleJson, parseModule } from './module';
+import { StorageTank, StorageTankJson } from './storageTank';
 import { Technology } from './technology';
 
 export interface ItemJson {
@@ -22,6 +24,8 @@ export interface ItemJson {
   fuel?: FuelJson;
   cargoWagon?: CargoWagonJson;
   fluidWagon?: FluidWagonJson;
+  container?: ContainerJson;
+  storageTank?: StorageTankJson;
   technology?: Technology;
   /** Used to link the item to an alternate icon id */
   icon?: string;
@@ -43,6 +47,8 @@ export interface Item {
   fuel?: Fuel;
   cargoWagon?: CargoWagon;
   fluidWagon?: FluidWagon;
+  container?: Container;
+  storageTank?: StorageTank;
   technology?: Technology;
   /** Used to link the item to an alternate icon id */
   icon?: string;
@@ -65,6 +71,7 @@ export function parseItem(json: ItemJson): Item {
     fuel: parseFuel(json.fuel),
     cargoWagon: parseCargoWagon(json.cargoWagon),
     fluidWagon: parseFluidWagon(json.fluidWagon),
+    container: parseContainer(json.container),
     technology: json.technology,
     icon: json.icon,
     iconText: json.iconText,

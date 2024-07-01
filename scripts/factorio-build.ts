@@ -24,6 +24,7 @@ import {
   getBeacon,
   getBelt,
   getCargoWagon,
+  getContainer,
   getEnergyInMJ,
   getEntityMap,
   getEntitySize,
@@ -42,6 +43,7 @@ import {
   getMachineSpeed,
   getMachineType,
   getMachineUsage,
+  getStorageTank,
   getVersion,
   logTime,
   logWarn,
@@ -815,7 +817,11 @@ async function processMod(): Promise<void> {
   }, []);
 
   const entityKeys = D.anyEntityKeys.reduce((result: string[], key) => {
-    result.push(...Object.keys(dataRaw[key]));
+    if (key === 'container') {
+      result.push(...['iron-chest', 'steel-chest', 'wooden-chest']);
+    } else {
+      result.push(...Object.keys(dataRaw[key]));
+    }
     return result;
   }, []);
 
@@ -1111,6 +1117,24 @@ async function processMod(): Promise<void> {
         icon: await getIcon(proto),
         fluidWagon: getFluidWagon(proto),
       });
+    } else if (M.isContainerPrototype(proto)) {
+      modData.items.push({
+        id: proto.name,
+        name: entityLocale.names[proto.name],
+        category: group.name,
+        row: getItemRow(proto),
+        icon: await getIcon(proto),
+        container: getContainer(proto),
+      });
+    } else if (M.isStorageTankPrototype(proto)) {
+      modData.items.push({
+        id: proto.name,
+        name: entityLocale.names[proto.name],
+        category: group.name,
+        row: getItemRow(proto),
+        icon: await getIcon(proto),
+        storageTank: getStorageTank(proto),
+      });
     } else {
       const item: ItemJson = {
         id: proto.name,
@@ -1182,6 +1206,18 @@ async function processMod(): Promise<void> {
         if (dataRaw['fluid-wagon'][result]) {
           const entity = dataRaw['fluid-wagon'][result];
           item.fluidWagon = getFluidWagon(entity);
+        }
+
+        // Parse container
+        if (dataRaw.container[result]) {
+          const entity = dataRaw.container[result];
+          item.container = getContainer(entity);
+        }
+
+        // Parse storage tank
+        if (dataRaw['storage-tank'][result]) {
+          const entity = dataRaw['storage-tank'][result];
+          item.storageTank = getStorageTank(entity);
         }
       }
 
