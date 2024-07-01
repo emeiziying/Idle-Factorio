@@ -1640,6 +1640,36 @@ async function processMod(): Promise<void> {
   }
 
   const resourceHash = new Set<string>();
+
+  const tree = dataRaw.tree['tree-01'];
+  const minable = tree.minable;
+  if (minable) {
+    const [recipeOut, recipeCatalyst, total] = getProducts(
+      minable.results,
+      minable.result,
+      minable.count
+    );
+    const proto = itemMap.wood;
+    const subgroup = dataRaw['item-subgroup'][getSubgroup(proto)];
+    const group = dataRaw['item-group'][subgroup.group];
+
+    const recipe: RecipeJson = {
+      id: 'wood',
+      name: 'Wood',
+      category: group.name,
+      row: getRecipeRow(proto),
+      time: minable.mining_time,
+      in: {},
+      out: recipeOut,
+      catalyst: recipeCatalyst,
+      cost: 100 / total,
+      isMining: true,
+      producers: [],
+    };
+
+    modData.recipes.push(recipe);
+  }
+
   for (const name of Object.keys(dataRaw.resource)) {
     const resource = dataRaw.resource[name];
     if (resource && resource.minable) {
@@ -1839,7 +1869,7 @@ async function processMod(): Promise<void> {
   modData.recipes = modData.recipes.filter((r) => {
     if (!r.producers?.length) {
       modDataReport.noProducers.push(r.id);
-      return false;
+      // return false;
     }
 
     return true;
