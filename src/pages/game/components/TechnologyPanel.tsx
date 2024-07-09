@@ -32,7 +32,7 @@ const TechnologyPanel = () => {
   if (!mounted) return null;
 
   return (
-    <Card sx={{ mb: 2 }}>
+    <Card>
       <CardContent>
         {tabs.map((key) => (
           <div key={key}>

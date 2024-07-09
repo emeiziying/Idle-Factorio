@@ -11,18 +11,17 @@ import { getAvailableRecipes } from '@/store/modules/settingsSlice';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
-import { Card } from '@mui/material';
+import { Box, Card, Stack } from '@mui/material';
 import Tab from '@mui/material/Tab';
 import { useWhyDidYouUpdate } from 'ahooks';
-import IconItem from './IconItem';
-
 import { useMemo, useState } from 'react';
-import ItemConfigDialog from './ItemConfigDialog';
+import IconItem from './IconItem';
+import ItemConfig from './ItemConfig';
+import Settings from './Settings';
 
 const GameContainer = () => {
   const [currentTab, setCurrentTab] = useState('0');
-  const [currentItem, setCurrentItem] = useState('iron-plate');
-  const [configDialogVisible, setConfigDialogVisible] = useState(true);
+  const [currentItem, setCurrentItem] = useState('');
 
   const adjustedDataset = useAppSelector(getAdjustedDataset);
   const availableRecipes = useAppSelector(getAvailableRecipes);
@@ -66,55 +65,61 @@ const GameContainer = () => {
 
   return (
     <>
-      <Card sx={{ mb: 2 }}>
-        <TabContext value={currentTab}>
-          <TabList
-            aria-label="Options"
-            onChange={(_, v: string) => setCurrentTab(v)}
-          >
-            {categoryIds.map((categoryId, index) => (
-              <Tab
-                key={categoryId}
-                label={
-                  <div className="flex items-center">
-                    <IconItem name={categoryId} />
-                    {categoryEntities[categoryId].name}
-                  </div>
-                }
-                value={`${index}`}
-                className="px-0 py-2"
-              />
-            ))}
-          </TabList>
+      <Settings />
 
-          {categoryIds.map((categoryId, index) => (
-            <TabPanel key={categoryId} value={`${index}`} className="px-0 py-2">
-              <div>
-                {categoryRows[categoryId].map((ids, index) => (
-                  <div key={index} className="flex flex-wrap">
-                    {ids.map((id) => (
-                      <ItemEntity
-                        key={id}
-                        id={id}
-                        onClick={() => {
-                          setCurrentItem(id);
-                          setConfigDialogVisible(true);
-                        }}
-                      />
+      <Stack spacing={2} direction="row">
+        <Box flex={1}>
+          <Card>
+            <TabContext value={currentTab}>
+              <TabList
+                aria-label="Options"
+                onChange={(_, v: string) => setCurrentTab(v)}
+              >
+                {categoryIds.map((categoryId, index) => (
+                  <Tab
+                    key={categoryId}
+                    label={
+                      <div className="flex items-center">
+                        <IconItem name={categoryId} />
+                        {categoryEntities[categoryId].name}
+                      </div>
+                    }
+                    value={`${index}`}
+                    className="px-0 py-2"
+                  />
+                ))}
+              </TabList>
+
+              {categoryIds.map((categoryId, index) => (
+                <TabPanel
+                  key={categoryId}
+                  value={`${index}`}
+                  className="px-0 py-2"
+                >
+                  <div>
+                    {categoryRows[categoryId].map((ids, index) => (
+                      <div key={index} className="flex flex-wrap">
+                        {ids.map((id) => (
+                          <ItemEntity
+                            key={id}
+                            id={id}
+                            onClick={() => {
+                              setCurrentItem(id);
+                            }}
+                          />
+                        ))}
+                      </div>
                     ))}
                   </div>
-                ))}
-              </div>
-            </TabPanel>
-          ))}
-        </TabContext>
-      </Card>
-
-      <ItemConfigDialog
-        itemId={currentItem}
-        open={configDialogVisible}
-        onClose={() => setConfigDialogVisible(false)}
-      />
+                </TabPanel>
+              ))}
+            </TabContext>
+          </Card>
+        </Box>
+        <Box flex={1}>
+          <ItemConfig itemId={currentItem} />
+        </Box>
+      </Stack>
     </>
   );
 };

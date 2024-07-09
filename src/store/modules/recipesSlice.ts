@@ -2,6 +2,7 @@ import { coalesce } from '@/helpers';
 import {
   AdjustedRecipe,
   Item,
+  Machine,
   Recipe,
   rational,
   type Entities,
@@ -203,6 +204,13 @@ export const getItemEntityById = (id: string) =>
   createSelector(
     getAdjustedDataset,
     (adjustedDataset): Item | undefined => adjustedDataset.itemEntities[id]
+  );
+
+export const getMachineEntityById = (id: string) =>
+  createSelector(
+    getAdjustedDataset,
+    (adjustedDataset): Machine | undefined =>
+      adjustedDataset.machineEntities[id]
   );
 
 export const getItemStatus = (id: string) =>

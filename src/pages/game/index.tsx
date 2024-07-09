@@ -1,4 +1,4 @@
-import { Container } from '@mui/material';
+import { Container, Stack } from '@mui/material';
 import { useRafInterval } from 'ahooks';
 import { useRef } from 'react';
 import GameContainer from './components/GameContainer';
@@ -20,9 +20,11 @@ const Game = () => {
 
   return (
     <>
-      <Container>
-        <GameContainer />
-        <TechnologyPanel />
+      <Container maxWidth="xl">
+        <Stack spacing={2}>
+          <GameContainer />
+          <TechnologyPanel />
+        </Stack>
       </Container>
 
       <ManualQueue ref={manualQueue} />

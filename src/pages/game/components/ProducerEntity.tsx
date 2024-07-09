@@ -3,6 +3,8 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   getAdjustedRecipeById,
   getItemEntityById,
+  getMachineEntityById,
+  getRecipeEntityById,
 } from '@/store/modules/recipesSlice';
 import {
   addItemStock,
@@ -10,7 +12,7 @@ import {
   getItemRecordById,
   recordsState,
   subItemStock,
-  subProducerToItem,
+  subProducerFromItem,
 } from '@/store/modules/recordsSlice';
 import { Icon } from '@iconify/react';
 import { IconButton } from '@mui/material';
@@ -30,6 +32,9 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
   const records = useAppSelector(recordsState);
   const itemEntity = useAppSelector(getItemEntityById(itemId));
   const adjustedRecipe = useAppSelector(getAdjustedRecipeById(itemId));
+  const recipeEntity = useAppSelector(getRecipeEntityById(itemId));
+
+  const machineEntity = useAppSelector(getMachineEntityById(id));
 
   const producer = useMemo(() => itemRecord?.producers?.[id], [itemRecord, id]);
   const producerAmount = useMemo(() => producer?.toNumber() ?? 0, [producer]);
@@ -43,6 +48,8 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
     adjustedRecipe,
     producer,
     producerAmount,
+    machineEntity,
+    recipeEntity,
   });
 
   return (
@@ -58,7 +65,7 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
           onClick={() => {
             dispatch(addItemStock({ id, stock: new Rational(1n) }));
             dispatch(
-              subProducerToItem({
+              subProducerFromItem({
                 itemId,
                 producerId: id,
                 amount: new Rational(1n),
@@ -87,7 +94,42 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
         </IconButton>
       </div>
 
-      {/* <div></div> */}
+      <div>
+        <div className="flex items-center">
+          <div>In:</div>
+          {adjustedRecipe?.in &&
+            Object.keys(adjustedRecipe.in).map((e) => (
+              <div key={e} className="flex items-center">
+                <IconItem name={e} />
+                <div>{adjustedRecipe.in[e].toNumber()}</div>
+              </div>
+            ))}
+        </div>
+
+        <div className="flex items-center">
+          <div>Out:</div>
+          {adjustedRecipe?.out &&
+            Object.keys(adjustedRecipe.out).map((e) => (
+              <div key={e} className="flex items-center">
+                <IconItem name={e} />
+                <div>{adjustedRecipe.out[e].toNumber()}</div>
+              </div>
+            ))}
+        </div>
+
+        <div>Time: {adjustedRecipe?.time.toNumber()}</div>
+
+        <div className="flex items-center">
+          <div>Output/s:</div>
+          {adjustedRecipe?.output &&
+            Object.keys(adjustedRecipe.output).map((e) => (
+              <div key={e} className="flex items-center">
+                <IconItem name={e} />
+                <div>{adjustedRecipe.output[e].toNumber()}</div>
+              </div>
+            ))}
+        </div>
+      </div>
     </div>
   );
 };

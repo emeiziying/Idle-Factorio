@@ -95,6 +95,7 @@ export const initialSettingsState: SettingsState = {
   surplusMachinesOutput: false,
   beaconReceivers: null,
   proliferatorSprayId: ItemId.Module,
+  fuelRankIds:['coal'],
   flowRate: rational(1200n),
   inserterTarget: InserterTarget.ExpressTransportBelt,
   miningBonus: rational(0n),

@@ -74,7 +74,7 @@ export const recordsSlice = createSlice({
         };
       }
     },
-    subProducerToItem: (
+    subProducerFromItem: (
       state,
       action: PayloadAction<{
         itemId: string;
@@ -103,7 +103,7 @@ export const {
   subItemStock,
   updateItemStock,
   addProducerToItem,
-  subProducerToItem,
+  subProducerFromItem,
 } = recordsSlice.actions;
 
 export const recordsState = (state: RootState): RecordsState => state.records;
