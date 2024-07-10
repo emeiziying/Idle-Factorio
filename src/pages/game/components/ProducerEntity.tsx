@@ -1,5 +1,5 @@
 import { Rational } from '@/models';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { useAppDispatch, useAppSelector, useAppStore } from '@/store/hooks';
 import {
   getAdjustedRecipeById,
   getItemEntityById,
@@ -10,7 +10,7 @@ import {
   addItemStock,
   addProducerToItem,
   getItemRecordById,
-  recordsState,
+  selectEntities,
   subItemStock,
   subProducerFromItem,
 } from '@/store/modules/recordsSlice';
@@ -26,10 +26,14 @@ interface ProducerEntityProps {
 }
 
 const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
+  const appState = useAppStore().getState();
   const dispatch = useAppDispatch();
 
-  const itemRecord = useAppSelector(getItemRecordById(itemId));
-  const records = useAppSelector(recordsState);
+  // const itemRecord = useAppSelector(getItemRecordById, itemId);
+  const itemRecord = getItemRecordById(appState, itemId);
+
+  // const records = useAppSelector(recordsState);
+  const records = selectEntities(appState);
   const itemEntity = useAppSelector(getItemEntityById(itemId));
   const adjustedRecipe = useAppSelector(getAdjustedRecipeById(itemId));
   const recipeEntity = useAppSelector(getRecipeEntityById(itemId));
@@ -63,7 +67,7 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
           className="!p-0"
           disabled={!producerAmount}
           onClick={() => {
-            dispatch(addItemStock({ id, stock: new Rational(1n) }));
+            dispatch(addItemStock({ id, amount: new Rational(1n) }));
             dispatch(
               subProducerFromItem({
                 itemId,
@@ -80,7 +84,7 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
           className="!p-0"
           disabled={!records[id] || records[id].stock.lte(new Rational(0n))}
           onClick={() => {
-            dispatch(subItemStock({ id, stock: new Rational(1n) }));
+            dispatch(subItemStock({ id, amount: new Rational(1n) }));
             dispatch(
               addProducerToItem({
                 itemId,

@@ -46,7 +46,7 @@ const ManualQueue = forwardRef<ManualQueueHandle>((_, ref) => {
         if (duration <= 0) {
           setWorking(false);
           const one = new Rational(1n);
-          dispatch(addItemStock({ id: first.id, stock: one }));
+          dispatch(addItemStock({ id: first.id, amount: one }));
           dispatch(updateFirst(one));
 
           duration = 0;
