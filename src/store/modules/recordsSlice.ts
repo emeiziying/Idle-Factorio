@@ -2,6 +2,7 @@ import { Entities, rational, Rational } from '@/models';
 import type { RootState } from '@/store/store';
 import {
   createEntityAdapter,
+  createSelector,
   createSlice,
   type PayloadAction,
 } from '@reduxjs/toolkit';
@@ -9,7 +10,10 @@ import {
 export interface ItemRecord {
   id: string;
   stock: Rational;
-  producers?: Entities<Rational>;
+  producers?: Entities<{
+    amount: Rational;
+    timestamp?: number;
+  }>;
 }
 
 const recordsAdapter = createEntityAdapter<ItemRecord>();
@@ -31,14 +35,9 @@ export const recordsSlice = createSlice({
       action: PayloadAction<{ id: string; amount: Rational }>
     ) => {
       const { id, amount } = action.payload;
-      const { stock = rational(0) } = state.entities[id];
-      // const result = stock.sub(amount);
-      if (stock.gte(amount)) {
-        recordsAdapter.updateOne(state, {
-          id,
-          changes: { stock: stock.sub(amount) },
-        });
-      }
+      const { stock } = state.entities[id];
+      const result = stock.gte(amount) ? stock.sub(amount) : rational(0);
+      recordsAdapter.updateOne(state, { id, changes: { stock: result } });
     },
 
     addProducerToItem: (
@@ -50,20 +49,15 @@ export const recordsSlice = createSlice({
       }>
     ) => {
       const { itemId, producerId, amount } = action.payload;
+      const { producers } = state.entities[itemId];
+      const result = producers?.producerId.amount.add(amount) ?? amount;
 
-      // if (state[itemId]) {
-      //   const { producers } = state[itemId];
-      //   if (producers) {
-      //     producers[producerId] = producers[producerId]?.add(amount) ?? amount;
-      //   } else {
-      //     state[itemId].producers = { [producerId]: amount };
-      //   }
-      // } else {
-      //   state[itemId] = {
-      //     stock: new Rational(0n),
-      //     producers: { [producerId]: amount },
-      //   };
-      // }
+      recordsAdapter.updateOne(state, {
+        id: itemId,
+        changes: {
+          producers: { ...producers, [producerId]: { amount: result } },
+        },
+      });
     },
     subProducerFromItem: (
       state,
@@ -74,17 +68,17 @@ export const recordsSlice = createSlice({
       }>
     ) => {
       const { itemId, producerId, amount } = action.payload;
+      const { producers } = state.entities[itemId];
+      const result = producers?.producerId?.amount.gte(amount)
+        ? producers.productId.amount.sub(amount)
+        : rational(0);
 
-      // const stock = state[itemId]?.producers?.[producerId];
-      // if (stock?.gte(amount)) {
-      //   Object.assign(state[itemId], {
-      //     ...state[itemId],
-      //     producers: {
-      //       ...state[itemId].producers,
-      //       [producerId]: stock.sub(amount),
-      //     },
-      //   });
-      // }
+      recordsAdapter.updateOne(state, {
+        id: itemId,
+        changes: {
+          producers: { ...producers, [producerId]: { amount: result } },
+        },
+      });
     },
   },
 });
@@ -96,12 +90,13 @@ export const {
   subProducerFromItem,
 } = recordsSlice.actions;
 
-export const { updateOne, upsertOne } = recordsAdapter;
-
 export const recordsState = (state: RootState) => state.records;
 
-export const { selectById: getItemRecordById, selectEntities } =
-  recordsAdapter.getSelectors<RootState>((state) => state.records);
+export const { selectById, selectEntities } = recordsAdapter.getSelectors();
+
+export const getItemRecordById = (id: string) =>
+  createSelector(recordsState, (state) => selectById(state, id));
+export const getRecordEntities = createSelector(recordsState, selectEntities);
 
 // export const takeItem = (id: string, amount: Rational) => {
 //   // const item = useAppSelector(getItemRecordById(id));

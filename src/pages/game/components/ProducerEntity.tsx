@@ -1,5 +1,5 @@
 import { Rational } from '@/models';
-import { useAppDispatch, useAppSelector, useAppStore } from '@/store/hooks';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   getAdjustedRecipeById,
   getItemEntityById,
@@ -10,7 +10,7 @@ import {
   addItemStock,
   addProducerToItem,
   getItemRecordById,
-  selectEntities,
+  getRecordEntities,
   subItemStock,
   subProducerFromItem,
 } from '@/store/modules/recordsSlice';
@@ -26,14 +26,9 @@ interface ProducerEntityProps {
 }
 
 const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
-  const appState = useAppStore().getState();
   const dispatch = useAppDispatch();
-
-  // const itemRecord = useAppSelector(getItemRecordById, itemId);
-  const itemRecord = getItemRecordById(appState, itemId);
-
-  // const records = useAppSelector(recordsState);
-  const records = selectEntities(appState);
+  const itemRecord = useAppSelector(getItemRecordById(itemId));
+  const records = useAppSelector(getRecordEntities);
   const itemEntity = useAppSelector(getItemEntityById(itemId));
   const adjustedRecipe = useAppSelector(getAdjustedRecipeById(itemId));
   const recipeEntity = useAppSelector(getRecipeEntityById(itemId));
@@ -41,7 +36,10 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
   const machineEntity = useAppSelector(getMachineEntityById(id));
 
   const producer = useMemo(() => itemRecord?.producers?.[id], [itemRecord, id]);
-  const producerAmount = useMemo(() => producer?.toNumber() ?? 0, [producer]);
+  const producerAmount = useMemo(
+    () => producer?.amount?.toNumber() ?? 0,
+    [producer]
+  );
 
   useWhyDidYouUpdate('ProducerEntity', {
     id,

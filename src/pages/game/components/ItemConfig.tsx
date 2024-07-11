@@ -9,7 +9,7 @@ import {
 } from '@/store/modules/recipesSlice';
 import {
   getItemRecordById,
-  recordsState,
+  getRecordEntities,
   subItemStock,
 } from '@/store/modules/recordsSlice';
 import { getAvailableRecipes } from '@/store/modules/settingsSlice';
@@ -31,7 +31,7 @@ const ItemConfig = ({ itemId }: ItemConfigProps) => {
   const itemEntity = useAppSelector(getItemEntityById(itemId));
   const { canManualCrafting, canMake } = useAppSelector(getItemStatus(itemId));
   const availableRecipes = useAppSelector(getAvailableRecipes);
-  const records = useAppSelector(recordsState);
+  const records = useAppSelector(getRecordEntities);
   const itemRecord = useAppSelector(getItemRecordById(itemId));
   const recipeEntities = useAppSelector(getRecipeEntities);
 
@@ -105,7 +105,7 @@ const ItemConfig = ({ itemId }: ItemConfigProps) => {
                         );
                         Object.keys(recipeEntity.in).forEach((id) => {
                           dispatch(
-                            subItemStock({ id, stock: recipeEntity.in[id] })
+                            subItemStock({ id, amount: recipeEntity.in[id] })
                           );
                         });
                       }}

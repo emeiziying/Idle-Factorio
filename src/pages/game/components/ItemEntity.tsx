@@ -1,13 +1,11 @@
 import { useAppSelector } from '@/store/hooks';
 import {
-  getAdjustedDataset,
   getItemEntityById,
   getItemStatus,
   getRecipeEntityById,
 } from '@/store/modules/recipesSlice';
-import { getItemRecordById, recordsState } from '@/store/modules/recordsSlice';
+import { getItemRecordById } from '@/store/modules/recordsSlice';
 import clsx from 'clsx';
-import { useTranslation } from 'react-i18next';
 import IconItem from './IconItem';
 
 interface Props {
@@ -16,9 +14,6 @@ interface Props {
 }
 
 const ItemEntity = ({ id, onClick }: Props) => {
-  const { t } = useTranslation();
-  const adjustedDataset = useAppSelector(getAdjustedDataset);
-  const records = useAppSelector(recordsState);
   const recipeEntity = useAppSelector(getRecipeEntityById(id));
   const itemEntity = useAppSelector(getItemEntityById(id));
   const itemRecord = useAppSelector(getItemRecordById(id));
