@@ -16,6 +16,7 @@ import { getAvailableRecipes } from '@/store/modules/settingsSlice';
 import { Button, Card, CardContent, CardHeader, Stack } from '@mui/material';
 import { useWhyDidYouUpdate } from 'ahooks';
 import clsx from 'clsx';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import IconItem from './IconItem';
 import ProducerEntity from './ProducerEntity';
@@ -35,6 +36,16 @@ const ItemConfig = ({ itemId }: ItemConfigProps) => {
   const itemRecord = useAppSelector(getItemRecordById(itemId));
   const recipeEntities = useAppSelector(getRecipeEntities);
 
+  const inIds = useMemo(
+    () => Object.keys(recipeEntity?.in ?? {}),
+    [recipeEntity?.in]
+  );
+
+  const outIds = useMemo(
+    () => Object.keys(recipeEntity?.out ?? {}),
+    [recipeEntity?.out]
+  );
+
   useWhyDidYouUpdate('ItemConfig', { itemRecord });
 
   if (!recipeEntity || !itemEntity) return;
@@ -50,80 +61,74 @@ const ItemConfig = ({ itemId }: ItemConfigProps) => {
           }
         />
         <CardContent>
-          <div className="text-black">
-            <div>
-              <div>{t('data.ingredients')}:</div>
-              <div>
-                {Object.keys(recipeEntity.in).map((inId) => (
+          <Stack spacing={1}>
+            {/* Ingredient */}
+            {inIds.length > 0 && (
+              <Stack direction="row" spacing={1} alignItems="center">
+                <div>{t('data.ingredients')}:</div>
+                {inIds.map((inId) => (
                   <div key={inId} className="flex items-center">
-                    <IconItem name={inId}></IconItem>
                     <div
                       className={clsx({
-                        'text-red-500':
+                        'bg-red-500':
                           !records[inId] ||
                           recipeEntity.in[inId].gt(records[inId].stock),
                       })}
                     >
+                      <IconItem name={inId} />
+                    </div>
+                    <div className="pl-1">
                       {recipeEntity.in[inId].toNumber()}x
                       {recipeEntities[inId]?.name}
                     </div>
                   </div>
                 ))}
-              </div>
-              <div className="flex items-center justify-end">
-                {recipeEntity.time.toNumber()}s time
-              </div>
-            </div>
-
-            <div className="flex items-center">
-              <div className="pr-1">{t('data.producers')}:</div>
-              {recipeEntity.producers.map((id) => (
-                <IconItem key={id} name={id} />
-              ))}
-            </div>
-            {!canManualCrafting && (
-              <div className="text-orange-500">Can&apos;t manual crafting</div>
+              </Stack>
             )}
-          </div>
+            {/* Producer */}
+            {outIds.length > 0 && (
+              <Stack direction="row" spacing={1} alignItems="center">
+                <div className="pr-1">{t('data.producers')}:</div>
+                {recipeEntity.producers.map((id) => (
+                  <IconItem key={id} name={id} />
+                ))}
+                {!canManualCrafting && (
+                  <div className="text-orange-500">
+                    Can&apos;t manual crafting
+                  </div>
+                )}
+              </Stack>
+            )}
+          </Stack>
         </CardContent>
       </Card>
       <Card>
-        <CardContent>
-          <div>
-            <div className="flex">
-              <div>Crafting:</div>
-              <div className="flex flex-wrap items-center">
-                {canManualCrafting && (
-                  <div className="px-3">
-                    <Button
-                      variant="contained"
-                      size="small"
-                      disabled={!canMake}
-                      onClick={() => {
-                        dispatch(
-                          addToQueue([{ id: itemId, amount: new Rational(1n) }])
-                        );
-                        Object.keys(recipeEntity.in).forEach((id) => {
-                          dispatch(
-                            subItemStock({ id, amount: recipeEntity.in[id] })
-                          );
-                        });
-                      }}
-                    >
-                      Manual
-                    </Button>
-                  </div>
-                )}
-                {recipeEntity.producers
-                  .filter((e) => availableRecipes.includes(e))
-                  .map((id) => (
-                    <div key={id} className="items-center2 flex px-3">
-                      <ProducerEntity itemId={itemId} id={id} />
-                    </div>
-                  ))}
-              </div>
-            </div>
-          </div>
+        <CardContent className="flex items-center">
+          <div>Crafting:</div>
+          <Stack spacing={1} className="pl-2">
+            {canManualCrafting && (
+              <Button
+                variant="contained"
+                size="small"
+                disabled={!canMake}
+                onClick={() => {
+                  dispatch(
+                    addToQueue([{ id: itemId, amount: new Rational(1n) }])
+                  );
+                  Object.keys(recipeEntity.in).forEach((id) => {
+                    dispatch(subItemStock({ id, amount: recipeEntity.in[id] }));
+                  });
+                }}
+              >
+                Manual
+              </Button>
+            )}
+            {recipeEntity.producers
+              .filter((e) => availableRecipes.includes(e))
+              .map((id) => (
+                <ProducerEntity key={id} itemId={itemId} id={id} />
+              ))}
+          </Stack>
         </CardContent>
       </Card>
     </Stack>
