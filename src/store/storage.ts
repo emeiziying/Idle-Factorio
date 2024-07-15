@@ -1,4 +1,4 @@
-import { Rational } from '@/models';
+import { rational } from '@/models';
 import type { RootState } from '@/store/store';
 import packageInfo from '@@/package.json';
 
@@ -16,9 +16,7 @@ const storage = {
         localStorage.getItem(key) ?? 'null',
         (_, value: unknown) =>
           String(value).indexOf('#r-') >= 0
-            ? new Rational(
-                BigInt(String(value).split('#r-')[1] as never as string) || 0n
-              )
+            ? rational(String(value).split('#r-').at(1) ?? 0)
             : value
       ) as RootState;
       if (!data) return undefined;

@@ -1,4 +1,4 @@
-import { Rational } from '@/models';
+import { rational } from '@/models';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addToQueue } from '@/store/modules/craftingSlice';
 import {
@@ -112,9 +112,7 @@ const ItemConfig = ({ itemId }: ItemConfigProps) => {
                 size="small"
                 disabled={!canMake}
                 onClick={() => {
-                  dispatch(
-                    addToQueue([{ id: itemId, amount: new Rational(1n) }])
-                  );
+                  dispatch(addToQueue([{ id: itemId, amount: rational(1) }]));
                   Object.keys(recipeEntity.in).forEach((id) => {
                     dispatch(subItemStock({ id, amount: recipeEntity.in[id] }));
                   });

@@ -1,4 +1,4 @@
-import { Rational } from '@/models';
+import { rational } from '@/models';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { manualQueue, updateFirst } from '@/store/modules/craftingSlice';
 import { getRecipeEntities } from '@/store/modules/recipesSlice';
@@ -33,24 +33,22 @@ const ManualQueue = forwardRef<ManualQueueHandle>((_, ref) => {
       }
 
       if (duration === 0) {
-        // wait dom reload
-        duration -= dt;
-      } else if (duration < 0) {
-        // start new
+        // start new work
         duration = recipe.time.toNumber() * 1000;
         setWorking(true);
-      } else {
+      } else if (duration > 0) {
         duration -= dt;
-
-        // finish
         if (duration <= 0) {
+          // finish
           setWorking(false);
-          const one = new Rational(1n);
+          const one = rational(1);
           dispatch(addItemStock({ id: first.id, amount: one }));
           dispatch(updateFirst(one));
-
-          duration = 0;
+          duration = -1;
         }
+      } else {
+        // wait for next tick
+        duration = 0;
       }
     },
   }));

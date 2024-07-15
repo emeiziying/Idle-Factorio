@@ -1,4 +1,4 @@
-import { Rational } from '@/models';
+import { rational } from '@/models';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   getAdjustedRecipeById,
@@ -41,6 +41,11 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
     [producer]
   );
 
+  const isWorking = useMemo(() => {
+    // const {amount,in,} = producer||{}
+    return false;
+  }, []);
+
   useWhyDidYouUpdate('ProducerEntity', {
     id,
     itemId,
@@ -65,12 +70,12 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
           className="!p-0"
           disabled={!producerAmount}
           onClick={() => {
-            dispatch(addItemStock({ id, amount: new Rational(1n) }));
+            dispatch(addItemStock({ id, amount: rational(1) }));
             dispatch(
               subProducerFromItem({
                 itemId,
                 producerId: id,
-                amount: new Rational(1n),
+                amount: rational(1),
               })
             );
           }}
@@ -80,14 +85,14 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
         <span className="px-2">{producerAmount}</span>
         <IconButton
           className="!p-0"
-          disabled={!records[id] || records[id].stock.lte(new Rational(0n))}
+          disabled={!records[id] || records[id].stock.lte(rational(0))}
           onClick={() => {
-            dispatch(subItemStock({ id, amount: new Rational(1n) }));
+            dispatch(subItemStock({ id, amount: rational(1) }));
             dispatch(
               addProducerToItem({
                 itemId,
                 producerId: id,
-                amount: new Rational(1n),
+                amount: rational(1),
               })
             );
           }}

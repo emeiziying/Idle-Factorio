@@ -18,17 +18,9 @@ const Layout = () => {
 
   useEffect(() => {
     const loadI18n = (lng: string) => {
-      fetch(`/i18n/${lng}/data.json`)
-        .then((res) => res.json())
-        .then((i18nJSON) => {
-          dispatch(
-            loadMod({ i18n: { id: `1.1-${lng}`, value: i18nJSON as ModI18n } })
-          );
-          dispatch(SET_LANGUAGE(lng as Language));
-        })
-        .catch((e) => {
-          console.log(e);
-        });
+      const i18nJSON = i18n.getResourceBundle(lng, 'data') as ModI18n;
+      dispatch(loadMod({ i18n: { id: `1.1-${lng}`, value: i18nJSON } }));
+      dispatch(SET_LANGUAGE(lng as Language));
     };
 
     dispatch(

@@ -1,6 +1,11 @@
 import { type Entities } from '@/models';
 import ItemEntity from '@/pages/game/components/ItemEntity';
-import { useAppSelector } from '@/store/hooks';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import {
+  gameState,
+  SET_CURRENT_CATEGORY,
+  SET_CURRENT_ITEM,
+} from '@/store/modules/gameSlice';
 import { getItemsState } from '@/store/modules/itemsSlice';
 import { getMachinesState } from '@/store/modules/machinesSlice';
 import {
@@ -14,20 +19,20 @@ import TabPanel from '@mui/lab/TabPanel';
 import { Box, Card, Stack } from '@mui/material';
 import Tab from '@mui/material/Tab';
 import { useWhyDidYouUpdate } from 'ahooks';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import IconItem from './IconItem';
 import ItemConfig from './ItemConfig';
 import Settings from './Settings';
 
 const GameContainer = () => {
-  const [currentTab, setCurrentTab] = useState('0');
-  const [currentItem, setCurrentItem] = useState('');
+  const dispatch = useAppDispatch();
 
   const adjustedDataset = useAppSelector(getAdjustedDataset);
   const availableRecipes = useAppSelector(getAvailableRecipes);
   const itemsState = useAppSelector(getItemsState);
   const machinesState = useAppSelector(getMachinesState);
   const recipesState = useAppSelector(getRecipesState);
+  const game = useAppSelector(gameState);
 
   const categoryRows = useMemo(() => {
     const allIdsSet = new Set(availableRecipes);
@@ -70,10 +75,10 @@ const GameContainer = () => {
       <Stack spacing={2} direction="row">
         <Box flex={1}>
           <Card>
-            <TabContext value={currentTab}>
+            <TabContext value={game.currentCategory}>
               <TabList
                 aria-label="Options"
-                onChange={(_, v: string) => setCurrentTab(v)}
+                onChange={(_, v: string) => dispatch(SET_CURRENT_CATEGORY(v))}
               >
                 {categoryIds.map((categoryId, index) => (
                   <Tab
@@ -104,7 +109,7 @@ const GameContainer = () => {
                             key={id}
                             id={id}
                             onClick={() => {
-                              setCurrentItem(id);
+                              dispatch(SET_CURRENT_ITEM(id));
                             }}
                           />
                         ))}
@@ -117,7 +122,7 @@ const GameContainer = () => {
           </Card>
         </Box>
         <Box flex={1}>
-          <ItemConfig itemId={currentItem} />
+          <ItemConfig itemId={game.currentItemId} />
         </Box>
       </Stack>
     </>

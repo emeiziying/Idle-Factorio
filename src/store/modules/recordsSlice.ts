@@ -12,7 +12,8 @@ export interface ItemRecord {
   stock: Rational;
   producers?: Entities<{
     amount: Rational;
-    timestamp?: number;
+    duration?: number;
+    in?: Entities<Rational>;
   }>;
 }
 
@@ -27,7 +28,7 @@ export const recordsSlice = createSlice({
       action: PayloadAction<{ id: string; amount: Rational }>
     ) => {
       const { id, amount } = action.payload;
-      const { stock = rational(0) } = state.entities[id];
+      const { stock = rational(0) } = state.entities[id] || {};
       recordsAdapter.upsertOne(state, { id, stock: stock.add(amount) });
     },
     subItemStock: (
@@ -49,14 +50,13 @@ export const recordsSlice = createSlice({
       }>
     ) => {
       const { itemId, producerId, amount } = action.payload;
-      const { producers } = state.entities[itemId];
+      const { producers } = state.entities[itemId] || {};
       const result = producers?.producerId.amount.add(amount) ?? amount;
 
-      recordsAdapter.updateOne(state, {
+      recordsAdapter.upsertOne(state, {
         id: itemId,
-        changes: {
-          producers: { ...producers, [producerId]: { amount: result } },
-        },
+        stock: rational(0),
+        producers: { ...producers, [producerId]: { amount: result } },
       });
     },
     subProducerFromItem: (

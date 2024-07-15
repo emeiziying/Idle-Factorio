@@ -9,6 +9,7 @@ import {
 import { isCollection } from 'immutable';
 import craftingReducer from './modules/craftingSlice';
 import datasetsReducer from './modules/datasetsSlice';
+import gameReducer from './modules/gameSlice';
 import itemsReducer from './modules/itemsSlice';
 import machinesReducer from './modules/machinesSlice';
 import objectivesReducer from './modules/objectivesSlice';
@@ -37,6 +38,7 @@ const rootReducer = combineReducers({
   objectives: objectivesReducer,
   records: recordsReducer,
   crafting: craftingReducer,
+  game: gameReducer,
 });
 
 export const makeStore = (preloadedState?: RootState) =>

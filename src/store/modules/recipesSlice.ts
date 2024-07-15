@@ -225,7 +225,7 @@ export const getItemStatus = (id: string) =>
       const canMake =
         !!recipeEntity &&
         Object.keys(recipeEntity.in).every((e) =>
-          records[e]?.stock?.gte(recipeEntity.in[e])
+          records.entities[e]?.stock?.gte(recipeEntity.in[e])
         );
 
       return { canManualCrafting, canMake };
