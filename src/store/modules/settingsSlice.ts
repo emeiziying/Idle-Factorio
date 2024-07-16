@@ -68,7 +68,6 @@ export interface SettingsState {
   netProductionOnly: boolean;
   surplusMachinesOutput: boolean;
   beaconReceivers: Rational | null;
-  proliferatorSprayId: string;
   beltId?: string;
   pipeId?: string;
   fuelRankIds?: string[];
@@ -94,13 +93,12 @@ export const initialSettingsState: SettingsState = {
   netProductionOnly: false,
   surplusMachinesOutput: false,
   beaconReceivers: null,
-  proliferatorSprayId: ItemId.Module,
-  fuelRankIds:['coal'],
+  fuelRankIds: ['coal'],
   flowRate: rational(1200n),
   inserterTarget: InserterTarget.ExpressTransportBelt,
   miningBonus: rational(0n),
-  researchBonus: researchBonus.speed6,
-  inserterCapacity: InserterCapacity.Capacity7,
+  researchBonus: researchBonus.speed0,
+  inserterCapacity: InserterCapacity.Capacity0,
   displayRate: DisplayRate.PerMinute,
   maximizeType: MaximizeType.Weight,
   costs: {
@@ -150,10 +148,6 @@ export const getNetProductionOnly = createSelector(
 export const getBeaconReceivers = createSelector(
   settingsState,
   (state) => state.beaconReceivers
-);
-export const getProliferatorSprayId = createSelector(
-  settingsState,
-  (state) => state.proliferatorSprayId
 );
 export const getFlowRate = createSelector(
   settingsState,
@@ -233,9 +227,8 @@ export const getDisplayRateInfo = createSelector(
 );
 
 export const getObjectiveUnitOptions = createSelector(
-  getGame,
   getDisplayRateInfo,
-  (game, dispRateInfo) => objectiveUnitOptions(dispRateInfo, game)
+  (dispRateInfo) => objectiveUnitOptions(dispRateInfo)
 );
 
 export const getModOptions = createSelector(
@@ -387,12 +380,7 @@ export const getDataset = createSelector(
       .map((i) => i.id);
     const beltIds = items
       .filter(fnPropsNotNullish('belt'))
-      .sort((a, b) =>
-        /** Don't sort belts in DSP, leave based on stacks */
-        game === Game.DysonSphereProgram
-          ? 0
-          : a.belt.speed.sub(b.belt.speed).toNumber()
-      )
+      .sort((a, b) => a.belt.speed.sub(b.belt.speed).toNumber())
       .map((i) => i.id);
     const pipeIds = items
       .filter(fnPropsNotNullish('pipe'))
@@ -413,9 +401,6 @@ export const getDataset = createSelector(
       .map((i) => i.id);
     const modules = items.filter(fnPropsNotNullish('module'));
     const moduleIds = modules.map((i) => i.id);
-    const proliferatorModuleIds = modules
-      .filter((i) => i.module.sprays != null)
-      .map((i) => i.id);
     const fuels = items
       .filter(fnPropsNotNullish('fuel'))
       .sort((a, b) => a.fuel.value.sub(b.fuel.value).toNumber());
@@ -527,7 +512,6 @@ export const getDataset = createSelector(
       machineIds,
       machineEntities,
       moduleIds,
-      proliferatorModuleIds,
       moduleEntities,
       fuelIds,
       fuelEntities,
@@ -553,11 +537,6 @@ export const getOptions = createSelector(
     pipes: getIdOptions(data.pipeIds, data.itemEntities),
     cargoWagons: getIdOptions(data.cargoWagonIds, data.itemEntities),
     fluidWagons: getIdOptions(data.fluidWagonIds, data.itemEntities),
-    proliferatorModules: getIdOptions(
-      data.proliferatorModuleIds,
-      data.itemEntities,
-      true
-    ),
     fuels: getIdOptions(data.fuelIds, data.itemEntities),
     machines: getIdOptions(data.machineIds, data.itemEntities),
     recipes: getIdOptions(data.recipeIds, data.recipeEntities),
@@ -695,17 +674,10 @@ export const getAvailableRecipes = createSelector(
 
 export const getAdjustmentData = createSelector(
   getNetProductionOnly,
-  getProliferatorSprayId,
   getRationalMiningBonus,
   getResearchFactor,
-  (
+  (netProductionOnly, miningBonus, researchBonus): AdjustmentData => ({
     netProductionOnly,
-    proliferatorSprayId,
-    miningBonus,
-    researchBonus
-  ): AdjustmentData => ({
-    netProductionOnly,
-    proliferatorSprayId,
     miningBonus,
     researchBonus,
   })

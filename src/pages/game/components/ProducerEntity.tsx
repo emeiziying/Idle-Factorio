@@ -1,7 +1,7 @@
 import { rational } from '@/models';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
-  getAdjustedRecipeById,
+  getAdjustedRecipeByIdWithProducer,
   getItemEntityById,
   getMachineEntityById,
   getRecipeEntityById,
@@ -30,7 +30,9 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
   const itemRecord = useAppSelector(getItemRecordById(itemId));
   const records = useAppSelector(getRecordEntities);
   const itemEntity = useAppSelector(getItemEntityById(itemId));
-  const adjustedRecipe = useAppSelector(getAdjustedRecipeById(itemId));
+  const adjustedRecipe = useAppSelector(
+    getAdjustedRecipeByIdWithProducer(itemId, id)
+  );
   const recipeEntity = useAppSelector(getRecipeEntityById(itemId));
 
   const machineEntity = useAppSelector(getMachineEntityById(id));
@@ -41,12 +43,12 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
     [producer]
   );
 
-  const isWorking = useMemo(() => {
-    // const {amount,in,} = producer||{}
-    return false;
-  }, []);
+  // const isWorking = useMemo(() => {
+  //   const {amount,in,} = producer||{}
+  //   return false;
+  // }, []);
 
-  useWhyDidYouUpdate('ProducerEntity', {
+  useWhyDidYouUpdate(`ProducerEntity id:${id} itemId:${itemId}`, {
     id,
     itemId,
     itemRecord,

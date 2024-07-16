@@ -12,8 +12,6 @@ export interface ModuleJson {
   productivity?: number | string;
   speed?: number | string;
   limitation?: string;
-  sprays?: number;
-  proliferator?: string;
 }
 
 export interface Module {
@@ -22,8 +20,6 @@ export interface Module {
   productivity?: Rational;
   speed?: Rational;
   limitation?: string;
-  sprays?: Rational;
-  proliferator?: string;
 }
 
 export function parseModule(json: ModuleJson): Module;
@@ -36,7 +32,5 @@ export function parseModule(json: ModuleJson | undefined): Module | undefined {
     productivity: rational(json.productivity),
     speed: rational(json.speed),
     limitation: json.limitation,
-    sprays: rational(json.sprays),
-    proliferator: json.proliferator,
   };
 }

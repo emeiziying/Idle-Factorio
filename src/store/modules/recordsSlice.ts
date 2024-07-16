@@ -14,6 +14,8 @@ export interface ItemRecord {
     amount: Rational;
     duration?: number;
     in?: Entities<Rational>;
+    working?: boolean;
+    workingAmount?: Rational;
   }>;
 }
 
@@ -78,6 +80,26 @@ export const recordsSlice = createSlice({
         changes: {
           producers: { ...producers, [producerId]: { amount: result } },
         },
+      });
+    },
+    updateProducer(state) {
+      //
+      // this.addProducerToItem(state, action);
+      // addProducerToItem(state, action);
+      const { entities, ids } = state;
+      ids.forEach((id) => {
+        const { producers = {} } = entities[id];
+        Object.keys(producers).forEach((producerId) => {
+          const producer = producers[producerId];
+          const { amount, duration, in: inputs = {}, workingAmount } = producer;
+          if (!amount) return;
+          const inKeys = Object.keys(inputs);
+          if (inKeys.every((e) => inputs[e].gt(rational(0)))) {
+            // inputs enough
+          } else {
+            //
+          }
+        });
       });
     },
   },

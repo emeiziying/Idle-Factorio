@@ -1,4 +1,4 @@
-import { type Entities } from '@/models';
+import { ObjectiveUnit, type Entities } from '@/models';
 import ItemEntity from '@/pages/game/components/ItemEntity';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
@@ -8,9 +8,11 @@ import {
 } from '@/store/modules/gameSlice';
 import { getItemsState } from '@/store/modules/itemsSlice';
 import { getMachinesState } from '@/store/modules/machinesSlice';
+import { addObjective, getSteps } from '@/store/modules/objectivesSlice';
 import {
   getAdjustedDataset,
   getRecipesState,
+  SET_MACHINE,
 } from '@/store/modules/recipesSlice';
 import { getAvailableRecipes } from '@/store/modules/settingsSlice';
 import TabContext from '@mui/lab/TabContext';
@@ -19,7 +21,7 @@ import TabPanel from '@mui/lab/TabPanel';
 import { Box, Card, Stack } from '@mui/material';
 import Tab from '@mui/material/Tab';
 import { useWhyDidYouUpdate } from 'ahooks';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import IconItem from './IconItem';
 import ItemConfig from './ItemConfig';
 import Settings from './Settings';
@@ -33,6 +35,7 @@ const GameContainer = () => {
   const machinesState = useAppSelector(getMachinesState);
   const recipesState = useAppSelector(getRecipesState);
   const game = useAppSelector(gameState);
+  const steps = useAppSelector(getSteps);
 
   const categoryRows = useMemo(() => {
     const allIdsSet = new Set(availableRecipes);
@@ -60,12 +63,20 @@ const GameContainer = () => {
     [adjustedDataset]
   );
 
+  useEffect(() => {
+    dispatch(
+      SET_MACHINE({ recipeId: 'iron-ore', machineId: 'electric-mining-drill' })
+    );
+    dispatch(addObjective({ targetId: 'iron-ore', unit: ObjectiveUnit.Items }));
+  }, [dispatch]);
+
   useWhyDidYouUpdate('GameContainer', {
     itemsState,
     machinesState,
     recipesState,
     adjustedDataset,
     availableRecipes,
+    steps,
   });
 
   return (

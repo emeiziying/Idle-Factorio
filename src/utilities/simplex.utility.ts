@@ -6,7 +6,6 @@ import {
   CostSettings,
   Entities,
   FACTORIO_FLUID_COST_RATIO,
-  Game,
   MatrixResult,
   MaximizeType,
   Objective,
@@ -435,8 +434,7 @@ export class SimplexUtility {
     state: MatrixState
   ): number {
     const base =
-      state.data.itemEntities[itemId].stack == null &&
-      state.data.game === Game.Factorio
+      state.data.itemEntities[itemId].stack == null
         ? FACTORIO_FLUID_COST_RATIO
         : rational(1n);
     const cost = state.cost[costKey];
@@ -989,7 +987,7 @@ export class SimplexUtility {
       );
     }
 
-    RateUtility.adjustPowerPollution(step, recipe, state.data.game);
+    RateUtility.adjustPowerPollution(step, recipe);
   }
   //#endregion
 }

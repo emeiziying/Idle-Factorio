@@ -1,10 +1,8 @@
-import { coalesce } from '@/helpers';
 import {
   AdjustedRecipe,
   Item,
   Machine,
   Recipe,
-  rational,
   type Entities,
   type RecipeSettings,
 } from '@/models';
@@ -36,10 +34,18 @@ export const recipesSlice = createSlice({
     load(state, action: PayloadAction<RecipesState>) {
       Object.assign(state, action.payload);
     },
+
+    SET_MACHINE(
+      state,
+      action: PayloadAction<{ recipeId: string; machineId: string }>
+    ) {
+      const { recipeId, machineId } = action.payload;
+      state[recipeId] = { machineId };
+    },
   },
 });
 
-export const { load } = recipesSlice.actions;
+export const { load, SET_MACHINE } = recipesSlice.actions;
 
 /* Base selector functions */
 export const recipesState = (state: RootState): RecipesState => state.recipes;
@@ -49,92 +55,35 @@ export const getRecipesState = createSelector(
   [recipesState, getMachinesState, getDataset],
   (state, machinesState, data) => {
     const value: Entities<RecipeSettings> = {};
-    const defaultExcludedRecipeIds = new Set(
-      coalesce(data.defaults?.excludedRecipeIds, [])
-    );
 
     for (const recipe of data.recipeIds.map((i) => data.recipeEntities[i])) {
-      const s: RecipeSettings = { ...state[recipe.id] };
-
-      if (s.excluded == null)
-        s.excluded = defaultExcludedRecipeIds.has(recipe.id);
-
-      if (s.machineId == null)
-        s.machineId = RecipeUtility.bestMatch(
-          recipe.producers,
-          machinesState.ids
-        );
-
-      const machine = data.machineEntities[s.machineId];
-      const def = machinesState.entities[s.machineId];
-
-      if (recipe.isBurn) {
-        s.fuelId = Object.keys(recipe.in)[0];
-      } else {
-        s.fuelId = s.fuelId ?? def?.fuelId;
-      }
-
-      s.fuelOptions = def?.fuelOptions;
-
-      if (machine != null && RecipeUtility.allowsModules(recipe, machine)) {
-        s.moduleOptions = RecipeUtility.moduleOptions(machine, recipe.id, data);
-
-        if (s.moduleIds == null)
-          s.moduleIds = RecipeUtility.defaultModules(
-            s.moduleOptions,
-            coalesce(def.moduleRankIds, []),
-            machine.modules ?? rational(0n)
-          );
-
-        if (s.beacons == null) s.beacons = [{}];
-
-        s.beacons = s.beacons.map((b) => ({ ...b }));
-
-        for (const beaconSettings of s.beacons) {
-          beaconSettings.count = beaconSettings.count ?? def.beaconCount;
-          beaconSettings.id = beaconSettings.id ?? def.beaconId;
-
-          if (beaconSettings.id != null) {
-            const beacon = data.beaconEntities[beaconSettings.id];
-            beaconSettings.moduleOptions = RecipeUtility.moduleOptions(
-              beacon,
-              recipe.id,
-              data
-            );
-
-            if (beaconSettings.moduleIds == null)
-              beaconSettings.moduleIds = RecipeUtility.defaultModules(
-                beaconSettings.moduleOptions,
-                coalesce(def.beaconModuleRankIds, []),
-                beacon.modules
-              );
-          }
-        }
-      } else {
-        // Machine doesn't support modules, remove any
-        delete s.moduleIds;
-        delete s.beacons;
-      }
-
-      if (s.beacons) {
-        for (const beaconSettings of s.beacons) {
-          if (
-            beaconSettings.total != null &&
-            (beaconSettings.count == null || beaconSettings.count.isZero())
-          )
-            // No actual beacons, ignore the total beacons
-            delete beaconSettings.total;
-        }
-      }
-
-      s.overclock = s.overclock ?? def?.overclock;
-
-      value[recipe.id] = s;
+      value[recipe.id] = RecipeUtility.adjustSettings(
+        state,
+        machinesState,
+        data,
+        recipe.id
+      );
     }
 
     return value;
   }
 );
+
+export const getRecipeSettingsWithProducer = (
+  recipeId: string,
+  machineId: string
+) =>
+  createSelector(
+    [recipesState, getMachinesState, getDataset],
+    (state, machinesState, data) =>
+      RecipeUtility.adjustSettings(
+        state,
+        machinesState,
+        data,
+        recipeId,
+        machineId
+      )
+  );
 
 export const getExcludedRecipeIds = createSelector(
   getRecipesState,
@@ -230,6 +179,30 @@ export const getItemStatus = (id: string) =>
 
       return { canManualCrafting, canMake };
     }
+  );
+
+export const getAdjustedRecipeByIdWithProducer = (
+  id: string,
+  producer: string
+) =>
+  createSelector(
+    getRecipeSettingsWithProducer(id, producer),
+    getExcludedRecipeIds,
+    getItemsState,
+    getAvailableRecipes,
+    getCosts,
+    getAdjustmentData,
+    getDataset,
+    (
+      settings,
+      excludedRecipeIds,
+      itemsState,
+      recipeIds,
+      costs,
+      adjustmentData,
+      data
+    ): AdjustedRecipe | undefined =>
+      RecipeUtility.adjustRecipe(id, adjustmentData, settings, itemsState, data)
   );
 
 export default recipesSlice.reducer;

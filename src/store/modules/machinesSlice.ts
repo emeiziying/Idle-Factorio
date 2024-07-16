@@ -1,11 +1,5 @@
 import { getIdOptions } from '@/helpers';
-import {
-  EnergyType,
-  Game,
-  rational,
-  type Entities,
-  type MachineSettings,
-} from '@/models';
+import { EnergyType, type Entities, type MachineSettings } from '@/models';
 import {
   getDataset,
   getDefaults,
@@ -43,30 +37,14 @@ export const getMachinesState = createSelector(
     const entities: Entities<MachineSettings> = {};
     const def: MachineSettings = { ...state.entities[''] };
     def.moduleRankIds = def.moduleRankIds ?? defaults?.moduleRankIds ?? [];
-    def.moduleOptions = getIdOptions(
-      data.moduleIds,
-      data.itemEntities,
-      data.game !== Game.Satisfactory && data.game !== Game.FinalFactory
-    );
-    if (data.game === Game.Factorio) {
-      def.beaconCount = def.beaconCount ?? defaults?.beaconCount;
-    }
+    def.moduleOptions = getIdOptions(data.moduleIds, data.itemEntities, true);
+    def.beaconCount = def.beaconCount ?? defaults?.beaconCount;
     def.beaconId = def.beaconId ?? defaults?.beaconId;
     def.beaconModuleRankIds =
       def.beaconModuleRankIds ?? (defaults ? [defaults.beaconModuleId] : []);
     if (def.beaconId) {
       const beacon = data.beaconEntities[def.beaconId];
       def.beaconModuleOptions = RecipeUtility.moduleOptions(beacon, null, data);
-    }
-
-    if (data.game === Game.Satisfactory) {
-      // Default = 100%
-      def.overclock = def.overclock ?? rational(100n);
-    }
-
-    if (data.game === Game.FinalFactory) {
-      // Default = 0
-      def.overclock = def.overclock ?? rational(0n);
     }
 
     entities[''] = def;
@@ -101,8 +79,6 @@ export const getMachinesState = createSelector(
           );
         }
       }
-
-      s.overclock = s.overclock ?? def.overclock;
 
       entities[id] = s;
     }

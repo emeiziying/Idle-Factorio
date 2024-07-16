@@ -12,5 +12,4 @@ export interface MachineSettings {
   beaconModuleRankIds?: string[];
   /** Calculated, not configurable */
   beaconModuleOptions?: SelectItem<string>[];
-  overclock?: Rational;
 }

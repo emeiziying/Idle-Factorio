@@ -1,6 +1,5 @@
 import { fnPropsNotNullish } from '@/helpers';
 import {
-  Game,
   ItemId,
   ObjectiveBase,
   ObjectiveType,
@@ -231,11 +230,7 @@ export const getStepsModified = createSelector(
   recipesState,
   (steps, objectives, itemsSettings, recipesSettings) => ({
     objectives: objectives.reduce((e: Entities<boolean>, p) => {
-      e[p.id] =
-        p.machineId != null ||
-        p.moduleIds != null ||
-        p.beacons != null ||
-        p.overclock != null;
+      e[p.id] = p.machineId != null || p.moduleIds != null || p.beacons != null;
       return e;
     }, {}),
     items: steps.reduce((e: Entities<boolean>, s) => {
@@ -256,8 +251,7 @@ export const getStepsModified = createSelector(
 export const getTotals = createSelector(
   getSteps,
   getItemsState,
-  getAdjustedDataset,
-  (steps, itemsSettings, data) => {
+  (steps, itemsSettings) => {
     const belts: Entities<Rational> = {};
     const wagons: Entities<Rational> = {};
     const machines: Entities<Rational> = {};
@@ -303,14 +297,8 @@ export const getTotals = createSelector(
           // Don't include silos from launch recipes
           if (!recipe.part) {
             const settings = step.recipeSettings;
-            let machine = settings.machineId;
-            if (
-              data.game === Game.DysonSphereProgram &&
-              machine === ItemId.MiningMachine
-            ) {
-              // Use recipe id (vein type) in place of mining machine for DSP mining
-              machine = step.recipeId;
-            }
+            const machine = settings.machineId;
+
             if (machine != null) {
               if (!machines[machine]) {
                 machines[machine] = rational(0n);
@@ -321,19 +309,10 @@ export const getTotals = createSelector(
 
               // Check for modules to add
               if (settings.moduleIds) {
-                let count = value;
-                if (
-                  data.game === Game.FinalFactory &&
-                  step.recipeSettings.overclock
-                ) {
-                  // Multiply by overclock (num of duplicators)
-                  count = count.mul(step.recipeSettings.overclock);
-                }
-
                 addValueToRecordByIds(
                   modules,
                   settings.moduleIds.filter((i) => i !== ItemId.Module),
-                  count
+                  value
                 );
               }
             }
@@ -577,15 +556,10 @@ export const getRecipesModified = createSelector(
         (id) =>
           state[id].fuelId != null ||
           state[id].machineId != null ||
-          state[id].moduleIds != null ||
-          state[id].overclock != null
+          state[id].moduleIds != null
       ) ||
       objectives.some(
-        (p) =>
-          p.fuelId != null ||
-          p.machineId != null ||
-          p.moduleIds != null ||
-          p.overclock != null
+        (p) => p.fuelId != null || p.machineId != null || p.moduleIds != null
       ),
     beacons:
       Object.keys(state).some((id) => state[id].beacons != null) ||

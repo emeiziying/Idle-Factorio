@@ -12,6 +12,5 @@ export interface RecipeSettings {
   /** Calculated, not configurable */
   moduleOptions?: SelectItem<string>[];
   beacons?: BeaconSettings[];
-  overclock?: Rational;
   cost?: Rational;
 }

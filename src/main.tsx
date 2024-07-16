@@ -30,12 +30,7 @@ const router = createBrowserRouter([
   },
 ]);
 
-loadModule('/glpk.all.wasm');
-// glpkWasm().then((mod) => {
-//   const ver = mod._glp_version();
-//   const verStr = mod.UTF8ToString(ver);
-//   console.log('GLPK version:', verStr);
-// });
+await loadModule('/glpk.all.wasm');
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

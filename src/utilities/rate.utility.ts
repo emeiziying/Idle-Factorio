@@ -5,7 +5,6 @@ import {
   DisplayRateInfo,
   EnergyType,
   Entities,
-  Game,
   ItemSettings,
   Objective,
   ObjectiveType,
@@ -94,7 +93,7 @@ export class RateUtility {
     }
   }
 
-  static adjustPowerPollution(step: Step, recipe: Recipe, game: Game): void {
+  static adjustPowerPollution(step: Step, recipe: Recipe): void {
     if (step.machines?.nonzero() && !recipe.part) {
       if (recipe.drain?.nonzero() ?? recipe.consumption?.nonzero()) {
         // Reset power
@@ -102,11 +101,7 @@ export class RateUtility {
 
         // Calculate drain
         if (recipe.drain?.nonzero()) {
-          let machines = step.machines.ceil();
-          if (game === Game.DysonSphereProgram) {
-            // In DSP drain is not cumulative; only add for inactive machines
-            machines = machines.sub(step.machines);
-          }
+          const machines = step.machines.ceil();
 
           step.power = step.power.add(machines.mul(recipe.drain));
         }
