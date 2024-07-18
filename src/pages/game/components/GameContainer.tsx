@@ -88,7 +88,7 @@ const GameContainer = () => {
 
       <Stack spacing={2} direction="row">
         <Box flex={1}>
-          <Card>
+          <Card className="h-full">
             <TabContext value={game.currentCategory}>
               <TabList
                 aria-label="Options"
