@@ -22,6 +22,7 @@ import { Box, Card, Stack } from '@mui/material';
 import Tab from '@mui/material/Tab';
 import { useWhyDidYouUpdate } from 'ahooks';
 import { useEffect, useMemo } from 'react';
+import ElectricityPanel from './ElectricityPanel';
 import IconItem from './IconItem';
 import ItemConfig from './ItemConfig';
 import Settings from './Settings';
@@ -82,6 +83,8 @@ const GameContainer = () => {
   return (
     <>
       <Settings />
+
+      <ElectricityPanel />
 
       <Stack spacing={2} direction="row">
         <Box flex={1}>

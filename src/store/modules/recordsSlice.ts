@@ -1,4 +1,5 @@
-import { Entities, rational, Rational } from '@/models';
+import { rational, Rational } from '@/models';
+import { ItemRecord } from '@/models/record';
 import type { RootState } from '@/store/store';
 import {
   createEntityAdapter,
@@ -6,18 +7,6 @@ import {
   createSlice,
   type PayloadAction,
 } from '@reduxjs/toolkit';
-
-export interface ItemRecord {
-  id: string;
-  stock: Rational;
-  producers?: Entities<{
-    amount: Rational;
-    duration?: number;
-    in?: Entities<Rational>;
-    working?: boolean;
-    workingAmount?: Rational;
-  }>;
-}
 
 const recordsAdapter = createEntityAdapter<ItemRecord>();
 

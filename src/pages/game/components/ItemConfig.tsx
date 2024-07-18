@@ -118,7 +118,7 @@ const ItemConfig = ({ itemId }: ItemConfigProps) => {
                   });
                 }}
               >
-                Manual
+                Manual {recipeEntity.time.toNumber()}s
               </Button>
             )}
             {recipeEntity.producers
