@@ -1,4 +1,4 @@
-import { createAsyncThunk } from '@reduxjs/toolkit';
+import { createAsyncThunk, createDraftSafeSelector } from '@reduxjs/toolkit';
 import { useDispatch, useSelector, useStore } from 'react-redux';
 import type { AppDispatch, AppStore, RootState } from './store';
 
@@ -11,3 +11,6 @@ export const createAppAsyncThunk = createAsyncThunk.withTypes<{
   state: RootState;
   dispatch: AppDispatch;
 }>();
+
+export const createTypedDraftSafeSelector =
+  createDraftSafeSelector.withTypes<RootState>();

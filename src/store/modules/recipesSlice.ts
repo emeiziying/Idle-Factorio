@@ -17,10 +17,12 @@ import {
 import type { RootState } from '@/store/store';
 import { RecipeUtility } from '@/utilities';
 import {
+  createDraftSafeSelector,
   createSelector,
   createSlice,
   type PayloadAction,
 } from '@reduxjs/toolkit';
+import { createTypedDraftSafeSelector } from '../hooks';
 import { recordsState } from './recordsSlice';
 
 export type RecipesState = Entities<RecipeSettings>;
@@ -126,6 +128,11 @@ export const getRecipeEntities = createSelector(
   (adjustedDataset) => adjustedDataset.recipeEntities
 );
 
+export const getDraftRecipeEntities = createTypedDraftSafeSelector(
+  getAdjustedDataset,
+  (adjustedDataset) => adjustedDataset.recipeEntities
+);
+
 export const getItemEntities = createSelector(
   getAdjustedDataset,
   (adjustedDataset) => adjustedDataset.itemEntities
@@ -145,6 +152,18 @@ export const getAdjustedRecipeById = (id: string) =>
 
 export const getRecipeEntityById = (id: string) =>
   createSelector(
+    getAdjustedDataset,
+    (adjustedDataset): Recipe | undefined => adjustedDataset.recipeEntities[id]
+  );
+
+export const selectRecipeEntityById = createSelector(
+  getAdjustedDataset,
+  (_: unknown, id: string) => id,
+  (adjustedDataset, id) => adjustedDataset.recipeEntities[id]
+);
+
+export const getDraftRecipeEntityById = (id: string) =>
+  createDraftSafeSelector(
     getAdjustedDataset,
     (adjustedDataset): Recipe | undefined => adjustedDataset.recipeEntities[id]
   );

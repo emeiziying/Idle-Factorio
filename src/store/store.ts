@@ -7,7 +7,7 @@ import {
   isPlain,
 } from '@reduxjs/toolkit';
 import { isCollection } from 'immutable';
-import craftingReducer from './modules/craftingSlice';
+import craftingsReducer from './modules/craftingsSlice';
 import datasetsReducer from './modules/datasetsSlice';
 import gameReducer from './modules/gameSlice';
 import itemsReducer from './modules/itemsSlice';
@@ -37,7 +37,7 @@ const rootReducer = combineReducers({
   preferences: preferencesReducer,
   objectives: objectivesReducer,
   records: recordsReducer,
-  crafting: craftingReducer,
+  craftings: craftingsReducer,
   game: gameReducer,
 });
 

@@ -1,4 +1,4 @@
-import { ObjectiveUnit, type Entities } from '@/models';
+import { type Entities } from '@/models';
 import ItemEntity from '@/pages/game/components/ItemEntity';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
@@ -8,7 +8,7 @@ import {
 } from '@/store/modules/gameSlice';
 import { getItemsState } from '@/store/modules/itemsSlice';
 import { getMachinesState } from '@/store/modules/machinesSlice';
-import { addObjective, getSteps } from '@/store/modules/objectivesSlice';
+import { getSteps } from '@/store/modules/objectivesSlice';
 import {
   getAdjustedDataset,
   getRecipesState,
@@ -68,7 +68,7 @@ const GameContainer = () => {
     dispatch(
       SET_MACHINE({ recipeId: 'iron-ore', machineId: 'electric-mining-drill' })
     );
-    dispatch(addObjective({ targetId: 'iron-ore', unit: ObjectiveUnit.Items }));
+    // dispatch(addObjective({ targetId: 'iron-ore', unit: ObjectiveUnit.Items }));
   }, [dispatch]);
 
   useWhyDidYouUpdate('GameContainer', {

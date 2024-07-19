@@ -1,6 +1,6 @@
 'use client';
 import { useAppSelector } from '@/store/hooks';
-import { craftingState } from '@/store/modules/craftingSlice';
+import { craftingsState } from '@/store/modules/craftingsSlice';
 import { gameState } from '@/store/modules/gameSlice';
 import { recordsState } from '@/store/modules/recordsSlice';
 import storage from '@/store/storage';
@@ -12,14 +12,14 @@ const AutoSave = () => {
   const [seconds, setSeconds] = useState(10);
 
   const records = useAppSelector(recordsState);
-  const crafting = useAppSelector(craftingState);
+  const craftings = useAppSelector(craftingsState);
   const game = useAppSelector(gameState);
 
   useRafInterval(() => {
     const s = seconds - 1;
     if (s <= 0) {
       setSaving(true);
-      storage.save({ records, crafting, game });
+      storage.save({ records, craftings, game });
 
       setTimeout(() => {
         setSaving(false);

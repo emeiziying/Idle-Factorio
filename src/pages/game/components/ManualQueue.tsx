@@ -1,74 +1,66 @@
 import { rational } from '@/models';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { manualQueue, updateFirst } from '@/store/modules/craftingSlice';
-import { getRecipeEntities } from '@/store/modules/recipesSlice';
+import { useAppDispatch, useAppSelector, useAppStore } from '@/store/hooks';
+import {
+  selectCraftingById,
+  selectCraftingIds,
+  UPDATE_QUEUE_ITEM,
+} from '@/store/modules/craftingsSlice';
+import { selectRecipeEntityById } from '@/store/modules/recipesSlice';
 import { addItemStock } from '@/store/modules/recordsSlice';
-import clsx from 'clsx';
-import { forwardRef, useImperativeHandle, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useWhyDidYouUpdate } from 'ahooks';
+import { forwardRef, useImperativeHandle } from 'react';
 import IconItem from './IconItem';
 import './ManualQueue.css';
+import PieProgress from './PieProgress';
 
 export interface ManualQueueHandle {
   update: (dt: number) => void;
 }
 
-let duration = 0;
-
 const ManualQueue = forwardRef<ManualQueueHandle>((_, ref) => {
-  const recipeEntities = useSelector(getRecipeEntities);
-  const queue = useAppSelector(manualQueue);
+  const craftingIds = useAppSelector(selectCraftingIds);
   const dispatch = useAppDispatch();
-
-  const [working, setWorking] = useState(false);
+  const store = useAppStore();
 
   useImperativeHandle(ref, () => ({
     update: (dt) => {
-      const first = queue.at(0);
-      const recipe = first ? recipeEntities[first.id] : null;
-      if (!first || !recipe) {
-        duration = 0;
-        working && setWorking(false);
+      const state = store.getState();
+      const firstId = craftingIds.at(0);
+      if (!firstId) return;
+      const entity = selectCraftingById(state, firstId);
+      if (!entity) return;
+      const recipe = selectRecipeEntityById(state, entity.itemId);
+
+      if (!recipe) {
+        // no recipe
+        dispatch(UPDATE_QUEUE_ITEM({ ...entity, amount: rational(0) }));
         return;
       }
-
-      if (duration === 0) {
-        // start new work
-        duration = recipe.time.toNumber() * 1000;
-        setWorking(true);
-      } else if (duration > 0) {
-        duration -= dt;
-        if (duration <= 0) {
-          // finish
-          setWorking(false);
-          const one = rational(1);
-          dispatch(addItemStock({ id: first.id, amount: one }));
-          dispatch(updateFirst(one));
-          duration = -1;
-        }
+      const time = recipe.time.toNumber() * 1000;
+      const progress = (entity.progress ?? 0) + (dt / time) * 100;
+      if (progress >= 100) {
+        // finish
+        dispatch(
+          UPDATE_QUEUE_ITEM({
+            ...entity,
+            amount: entity.amount.sub(rational(1)),
+            progress: 0,
+          })
+        );
+        dispatch(addItemStock({ id: entity.itemId, amount: rational(1) }));
       } else {
-        // wait for next tick
-        duration = 0;
+        dispatch(UPDATE_QUEUE_ITEM({ ...entity, progress }));
       }
     },
   }));
 
+  useWhyDidYouUpdate('ManualQueue', { craftingIds });
+
   return (
     <div className="fixed bottom-4 left-4 flex max-w-96 flex-wrap">
-      {queue.map((e, i) => (
-        <div key={i} className="relative p-1">
-          <IconItem name={e.id}>{e.amount.toNumber()}</IconItem>
-          {i === 0 && (
-            <div className="absolute left-0 top-0 inline-block h-full w-full bg-black/30">
-              <div
-                className={clsx('progress h-full w-full', { working })}
-                style={{
-                  transitionDuration: `${recipeEntities[e.id]?.time.toNumber()}s`,
-                }}
-              />
-            </div>
-          )}
-        </div>
+      {void console.log('ManualQueue update')}
+      {craftingIds.map((e, i) => (
+        <QueueItem key={i} id={e} />
       ))}
     </div>
   );
@@ -77,3 +69,16 @@ const ManualQueue = forwardRef<ManualQueueHandle>((_, ref) => {
 ManualQueue.displayName = 'ManualQueue';
 
 export default ManualQueue;
+
+const QueueItem = ({ id }: { id: string }) => {
+  const entity = useAppSelector((state) => selectCraftingById(state, id));
+
+  return (
+    <div className="relative p-1">
+      <IconItem name={entity.itemId}>{entity.amount.toNumber()}</IconItem>
+      <div className="absolute left-0 top-0 h-full w-full">
+        <PieProgress value={entity.progress ?? 0} />
+      </div>
+    </div>
+  );
+};
