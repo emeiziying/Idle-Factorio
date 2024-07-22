@@ -7,10 +7,7 @@ import {
   selectItemStatusById,
   selectRecipeEntityById,
 } from '@/store/modules/recipesSlice';
-import {
-  selectItemRecordEntities,
-  subItemStock,
-} from '@/store/modules/recordsSlice';
+import { subItemStock } from '@/store/modules/recordsSlice';
 import { getAvailableRecipes } from '@/store/modules/settingsSlice';
 import {
   Button,
@@ -39,11 +36,10 @@ const ItemConfig = ({ itemId }: ItemConfigProps) => {
   const itemEntity = useAppSelector((state) =>
     selectItemEntityById(state, itemId)
   );
-  const { canManualCrafting, canMake } = useAppSelector((state) =>
-    selectItemStatusById(state, itemId)
-  );
+  const status = useAppSelector((state) => selectItemStatusById(state, itemId));
   const availableRecipes = useAppSelector(getAvailableRecipes);
-  const records = useAppSelector(selectItemRecordEntities);
+  // const records = useAppSelector(selectItemRecordEntities);
+  const records = useMemo(() => {}, []);
 
   const recipeEntity = useAppSelector((state) =>
     selectRecipeEntityById(state, itemId)
@@ -73,8 +69,7 @@ const ItemConfig = ({ itemId }: ItemConfigProps) => {
   useWhyDidYouUpdate(`ItemConfig id:${itemId}`, {
     recipeEntity,
     itemEntity,
-    canManualCrafting,
-    canMake,
+    status,
     availableRecipes,
     recipeEntities,
     records,
@@ -95,7 +90,7 @@ const ItemConfig = ({ itemId }: ItemConfigProps) => {
           divider={<Divider orientation="horizontal" flexItem />}
         >
           {/* Ingredient */}
-          {inIds.length > 0 && (
+          {inIds.length > 0 && false && (
             <Stack direction="row" spacing={1} alignItems="center">
               <div>{t('data.ingredients')}:</div>
               {inIds.map((inId) => (
@@ -118,7 +113,7 @@ const ItemConfig = ({ itemId }: ItemConfigProps) => {
             </Stack>
           )}
           {/* Producer */}
-          {outIds.length > 0 && (
+          {outIds.length > 0 && false && (
             <Stack direction="row" spacing={1} alignItems="center">
               <div className="pr-1">{t('data.producers')}:</div>
               {recipeEntity.producers.map((id) => (
@@ -135,11 +130,11 @@ const ItemConfig = ({ itemId }: ItemConfigProps) => {
           <div className="flex items-center">
             <div>Crafting:</div>
             <Stack spacing={1} className="flex-1 pl-2">
-              {canManualCrafting && (
+              {status.canManualCrafting && (
                 <Button
                   variant="contained"
                   size="small"
-                  disabled={!canMake}
+                  disabled={!status.canMake}
                   onClick={() => {
                     dispatch(addToQueue([{ itemId, amount: rational(1) }]));
                     Object.keys(recipeEntity.in).forEach((id) => {
@@ -152,11 +147,12 @@ const ItemConfig = ({ itemId }: ItemConfigProps) => {
                   Manual {recipeEntity.time.toNumber()}s
                 </Button>
               )}
-              {recipeEntity.producers
-                .filter((e) => availableRecipes.includes(e))
-                .map((id) => (
-                  <ProducerEntity key={id} itemId={itemId} id={id} />
-                ))}
+              {false &&
+                recipeEntity.producers
+                  .filter((e) => availableRecipes.includes(e))
+                  .map((id) => (
+                    <ProducerEntity key={id} itemId={itemId} id={id} />
+                  ))}
             </Stack>
           </div>
         </Stack>
