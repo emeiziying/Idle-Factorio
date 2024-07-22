@@ -1,15 +1,14 @@
 import { rational } from '@/models';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { ADD_TO_QUEUE } from '@/store/modules/craftingsSlice';
+import { useAppDispatch, useAppSelector, useAppStore } from '@/store/hooks';
+import { addToQueue } from '@/store/modules/craftingsSlice';
 import {
-  getItemEntityById,
-  getItemStatus,
   getRecipeEntities,
-  getRecipeEntityById,
+  selectItemEntityById,
+  selectItemStatusById,
+  selectRecipeEntityById,
 } from '@/store/modules/recipesSlice';
 import {
-  getItemRecordById,
-  getRecordEntities,
+  selectItemRecordEntities,
   subItemStock,
 } from '@/store/modules/recordsSlice';
 import { getAvailableRecipes } from '@/store/modules/settingsSlice';
@@ -34,14 +33,32 @@ interface ItemConfigProps {
 
 const ItemConfig = ({ itemId }: ItemConfigProps) => {
   const { t } = useTranslation();
+  const store = useAppStore();
   const dispatch = useAppDispatch();
-  const recipeEntity = useAppSelector(getRecipeEntityById(itemId));
-  const itemEntity = useAppSelector(getItemEntityById(itemId));
-  const { canManualCrafting, canMake } = useAppSelector(getItemStatus(itemId));
+
+  const itemEntity = useAppSelector((state) =>
+    selectItemEntityById(state, itemId)
+  );
+  const { canManualCrafting, canMake } = useAppSelector((state) =>
+    selectItemStatusById(state, itemId)
+  );
   const availableRecipes = useAppSelector(getAvailableRecipes);
-  const records = useAppSelector(getRecordEntities);
-  const itemRecord = useAppSelector(getItemRecordById(itemId));
+  const records = useAppSelector(selectItemRecordEntities);
+
+  const recipeEntity = useAppSelector((state) =>
+    selectRecipeEntityById(state, itemId)
+  );
   const recipeEntities = useAppSelector(getRecipeEntities);
+
+  // const records = useMemo(() => {
+  //   const state = store.getState();
+  //   const recordEntities = selectItemRecordEntities(state);
+
+  //   return Object.keys(recipeEntity?.in ?? {}).reduce(
+  //     (pre, cur) => (pre[cur] = recordEntities[cur]),
+  //     {} as Record<string, ItemRecord>
+  //   );
+  // }, [recipeEntity, store]);
 
   const inIds = useMemo(
     () => Object.keys(recipeEntity?.in ?? {}),
@@ -53,12 +70,24 @@ const ItemConfig = ({ itemId }: ItemConfigProps) => {
     [recipeEntity?.out]
   );
 
-  useWhyDidYouUpdate('ItemConfig', { itemRecord });
+  useWhyDidYouUpdate(`ItemConfig id:${itemId}`, {
+    recipeEntity,
+    itemEntity,
+    canManualCrafting,
+    canMake,
+    availableRecipes,
+    recipeEntities,
+    records,
+    inIds,
+    outIds,
+    store,
+  });
 
   if (!recipeEntity || !itemEntity) return;
 
   return (
     <Card>
+      {void console.log('ItemConfig update')}
       <CardHeader title={`${itemEntity.name}(${t('data.recipe')})`} />
       <CardContent>
         <Stack
@@ -112,7 +141,7 @@ const ItemConfig = ({ itemId }: ItemConfigProps) => {
                   size="small"
                   disabled={!canMake}
                   onClick={() => {
-                    dispatch(ADD_TO_QUEUE([{ itemId, amount: rational(1) }]));
+                    dispatch(addToQueue([{ itemId, amount: rational(1) }]));
                     Object.keys(recipeEntity.in).forEach((id) => {
                       dispatch(
                         subItemStock({ id, amount: recipeEntity.in[id] })

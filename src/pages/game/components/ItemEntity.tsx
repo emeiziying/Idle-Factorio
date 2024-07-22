@@ -1,10 +1,10 @@
 import { useAppSelector } from '@/store/hooks';
 import {
-  getItemEntityById,
-  getItemStatus,
-  getRecipeEntityById,
+  selectItemEntityById,
+  selectItemStatusById,
+  selectRecipeEntityById,
 } from '@/store/modules/recipesSlice';
-import { getItemRecordById } from '@/store/modules/recordsSlice';
+import { selectItemRecordById } from '@/store/modules/recordsSlice';
 import clsx from 'clsx';
 import IconItem from './IconItem';
 
@@ -14,10 +14,14 @@ interface Props {
 }
 
 const ItemEntity = ({ id, onClick }: Props) => {
-  const recipeEntity = useAppSelector(getRecipeEntityById(id));
-  const itemEntity = useAppSelector(getItemEntityById(id));
-  const itemRecord = useAppSelector(getItemRecordById(id));
-  const { canManualCrafting, canMake } = useAppSelector(getItemStatus(id));
+  const recipeEntity = useAppSelector((state) =>
+    selectRecipeEntityById(state, id)
+  );
+  const itemEntity = useAppSelector((state) => selectItemEntityById(state, id));
+  const itemRecord = useAppSelector((state) => selectItemRecordById(state, id));
+  const { canManualCrafting, canMake } = useAppSelector((state) =>
+    selectItemStatusById(state, id)
+  );
 
   if (!recipeEntity || !itemEntity) return;
 

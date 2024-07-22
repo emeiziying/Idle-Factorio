@@ -3,11 +3,10 @@ import { useAppDispatch, useAppSelector, useAppStore } from '@/store/hooks';
 import {
   selectCraftingById,
   selectCraftingIds,
-  UPDATE_QUEUE_ITEM,
+  updateQueueItem,
 } from '@/store/modules/craftingsSlice';
 import { selectRecipeEntityById } from '@/store/modules/recipesSlice';
 import { addItemStock } from '@/store/modules/recordsSlice';
-import { useWhyDidYouUpdate } from 'ahooks';
 import { forwardRef, useImperativeHandle } from 'react';
 import IconItem from './IconItem';
 import './ManualQueue.css';
@@ -32,16 +31,16 @@ const ManualQueue = forwardRef<ManualQueueHandle>((_, ref) => {
       const recipe = selectRecipeEntityById(state, entity.itemId);
 
       if (!recipe) {
-        // no recipe
-        dispatch(UPDATE_QUEUE_ITEM({ ...entity, amount: rational(0) }));
+        // no recipe, remove from queue
+        dispatch(updateQueueItem({ ...entity, amount: rational(0) }));
         return;
       }
       const time = recipe.time.toNumber() * 1000;
       const progress = (entity.progress ?? 0) + (dt / time) * 100;
       if (progress >= 100) {
-        // finish
+        // finish, update amount, reset progress
         dispatch(
-          UPDATE_QUEUE_ITEM({
+          updateQueueItem({
             ...entity,
             amount: entity.amount.sub(rational(1)),
             progress: 0,
@@ -49,16 +48,14 @@ const ManualQueue = forwardRef<ManualQueueHandle>((_, ref) => {
         );
         dispatch(addItemStock({ id: entity.itemId, amount: rational(1) }));
       } else {
-        dispatch(UPDATE_QUEUE_ITEM({ ...entity, progress }));
+        // update progress
+        dispatch(updateQueueItem({ ...entity, progress }));
       }
     },
   }));
 
-  useWhyDidYouUpdate('ManualQueue', { craftingIds });
-
   return (
     <div className="fixed bottom-4 left-4 flex max-w-96 flex-wrap">
-      {void console.log('ManualQueue update')}
       {craftingIds.map((e, i) => (
         <QueueItem key={i} id={e} />
       ))}

@@ -23,12 +23,10 @@ export const craftingsSlice = createSlice({
   name: 'craftings',
   initialState: craftingsAdapter.getInitialState(),
   reducers: {
-    ADD_TO_QUEUE: (state, action: PayloadAction<ManualQueueItem[]>) => {
+    addToQueue: (state, action: PayloadAction<ManualQueueItem[]>) => {
       const { entities, ids } = state;
-
       const lastId = ids.at(-1);
       const lastOne = lastId ? entities[lastId] : undefined;
-
       craftingsAdapter.upsertMany(
         state,
         action.payload.map<ManualQueueItemEntity>((e, i) =>
@@ -38,10 +36,7 @@ export const craftingsSlice = createSlice({
         )
       );
     },
-    UPDATE_QUEUE_ITEM: (
-      state,
-      action: PayloadAction<ManualQueueItemEntity>
-    ) => {
+    updateQueueItem: (state, action: PayloadAction<ManualQueueItemEntity>) => {
       if (action.payload.amount.gt(rational(0))) {
         craftingsAdapter.updateOne(state, {
           id: action.payload.id,
@@ -55,7 +50,7 @@ export const craftingsSlice = createSlice({
   },
 });
 
-export const { ADD_TO_QUEUE, UPDATE_QUEUE_ITEM } = craftingsSlice.actions;
+export const { addToQueue, updateQueueItem } = craftingsSlice.actions;
 
 export const craftingsState = (state: RootState) => state.craftings;
 

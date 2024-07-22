@@ -1,17 +1,12 @@
 import { rational } from '@/models';
 import { ItemProducerIn } from '@/models/record';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import {
-  getAdjustedRecipeByIdWithProducer,
-  getItemEntityById,
-  getMachineEntityById,
-  getRecipeEntityById,
-} from '@/store/modules/recipesSlice';
+import { selectAdjustedRecipeByIdWithProducer } from '@/store/modules/recipesSlice';
 import {
   addItemStock,
   addProducerToItem,
-  getItemRecordById,
-  getRecordEntities,
+  getRecordStockById,
+  selectProducerFromRecordById,
   subItemStock,
   subProducerFromItem,
 } from '@/store/modules/recordsSlice';
@@ -28,48 +23,35 @@ interface ProducerEntityProps {
 
 const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
   const dispatch = useAppDispatch();
-  const itemRecord = useAppSelector(getItemRecordById(itemId));
-  const records = useAppSelector(getRecordEntities);
-  const itemEntity = useAppSelector(getItemEntityById(itemId));
-  const adjustedRecipe = useAppSelector(
-    getAdjustedRecipeByIdWithProducer(itemId, id)
+  const stock = useAppSelector((state) => getRecordStockById(state, id));
+  const producer = useAppSelector((state) =>
+    selectProducerFromRecordById(state, { itemId, machineId: id })
   );
-  const recipeEntity = useAppSelector(getRecipeEntityById(itemId));
-
-  const machineEntity = useAppSelector(getMachineEntityById(id));
-
-  const producer = useMemo(() => itemRecord?.producers?.[id], [itemRecord, id]);
+  const adjustedRecipe = useAppSelector((state) =>
+    selectAdjustedRecipeByIdWithProducer(state, {
+      recipeId: itemId,
+      machineId: id,
+    })
+  );
   const producerAmount = useMemo(
     () => producer?.amount?.toNumber() ?? 0,
     [producer]
   );
-
   const consumption = useMemo(
     () => adjustedRecipe?.consumption?.toNumber() ?? 0,
     [adjustedRecipe]
   );
-
   const inKeys = useMemo(
     () => Object.keys(adjustedRecipe?.in ?? {}),
     [adjustedRecipe]
   );
 
-  // const isWorking = useMemo(() => {
-  //   const {amount,in,} = producer||{}
-  //   return false;
-  // }, []);
-
   useWhyDidYouUpdate(`ProducerEntity id:${id} itemId:${itemId}`, {
     id,
     itemId,
-    itemRecord,
-    records,
-    itemEntity,
     adjustedRecipe,
     producer,
     producerAmount,
-    machineEntity,
-    recipeEntity,
   });
 
   return (
@@ -97,7 +79,7 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
           </div>
           <IconButton
             className="!p-0"
-            disabled={!records[id] || records[id].stock.lte(rational(0))}
+            disabled={stock?.lte(rational(0))}
             onClick={() => {
               dispatch(subItemStock({ id, amount: rational(1) }));
               dispatch(

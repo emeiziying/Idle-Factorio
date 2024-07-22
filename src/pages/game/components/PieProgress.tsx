@@ -14,7 +14,6 @@ const PieProgress = ({ value }: PieProgressProps) => {
 
   return (
     <div className="relative h-full w-full bg-black/30">
-      {void console.log('PieProgress update')}
       <div className="h-full w-full" style={style} />
     </div>
   );

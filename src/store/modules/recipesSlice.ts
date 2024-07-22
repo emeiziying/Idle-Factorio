@@ -17,12 +17,10 @@ import {
 import type { RootState } from '@/store/store';
 import { RecipeUtility } from '@/utilities';
 import {
-  createDraftSafeSelector,
   createSelector,
   createSlice,
   type PayloadAction,
 } from '@reduxjs/toolkit';
-import { createTypedDraftSafeSelector } from '../hooks';
 import { recordsState } from './recordsSlice';
 
 export type RecipesState = Entities<RecipeSettings>;
@@ -71,21 +69,21 @@ export const getRecipesState = createSelector(
   }
 );
 
-export const getRecipeSettingsWithProducer = (
-  recipeId: string,
-  machineId: string
-) =>
-  createSelector(
-    [recipesState, getMachinesState, getDataset],
-    (state, machinesState, data) =>
-      RecipeUtility.adjustSettings(
-        state,
-        machinesState,
-        data,
-        recipeId,
-        machineId
-      )
-  );
+export const getRecipeSettingsWithProducer = createSelector(
+  (_: unknown, data: { recipeId: string; machineId: string }) => data.recipeId,
+  (_: unknown, data: { recipeId: string; machineId: string }) => data.machineId,
+  recipesState,
+  getMachinesState,
+  getDataset,
+  (recipeId, machineId, state, machinesState, dataset) =>
+    RecipeUtility.adjustSettings(
+      state,
+      machinesState,
+      dataset,
+      recipeId,
+      machineId
+    )
+);
 
 export const getExcludedRecipeIds = createSelector(
   getRecipesState,
@@ -94,15 +92,13 @@ export const getExcludedRecipeIds = createSelector(
 );
 
 export const getAdjustedDataset = createSelector(
-  [
-    getRecipesState,
-    getExcludedRecipeIds,
-    getItemsState,
-    getAvailableRecipes,
-    getCosts,
-    getAdjustmentData,
-    getDataset,
-  ],
+  getRecipesState,
+  getExcludedRecipeIds,
+  getItemsState,
+  getAvailableRecipes,
+  getCosts,
+  getAdjustmentData,
+  getDataset,
   (
     recipesState,
     excludedRecipeIds,
@@ -128,11 +124,6 @@ export const getRecipeEntities = createSelector(
   (adjustedDataset) => adjustedDataset.recipeEntities
 );
 
-export const getDraftRecipeEntities = createTypedDraftSafeSelector(
-  getAdjustedDataset,
-  (adjustedDataset) => adjustedDataset.recipeEntities
-);
-
 export const getItemEntities = createSelector(
   getAdjustedDataset,
   (adjustedDataset) => adjustedDataset.itemEntities
@@ -143,85 +134,73 @@ export const getTechnologyEntities = createSelector(
   (adjustedDataset) => adjustedDataset.technologyEntities
 );
 
-export const getAdjustedRecipeById = (id: string) =>
-  createSelector(
-    getAdjustedDataset,
-    (adjustedDataset): AdjustedRecipe | undefined =>
-      adjustedDataset.adjustedRecipe[id]
-  );
-
-export const getRecipeEntityById = (id: string) =>
-  createSelector(
-    getAdjustedDataset,
-    (adjustedDataset): Recipe | undefined => adjustedDataset.recipeEntities[id]
-  );
-
-export const selectRecipeEntityById = createSelector(
-  getAdjustedDataset,
+export const selectAdjustedRecipeById = createSelector(
   (_: unknown, id: string) => id,
-  (adjustedDataset, id) => adjustedDataset.recipeEntities[id]
+  getAdjustedDataset,
+  (id, adjustedDataset): AdjustedRecipe | undefined =>
+    adjustedDataset.adjustedRecipe[id]
 );
 
-export const getDraftRecipeEntityById = (id: string) =>
-  createDraftSafeSelector(
-    getAdjustedDataset,
-    (adjustedDataset): Recipe | undefined => adjustedDataset.recipeEntities[id]
-  );
+export const selectRecipeEntityById = createSelector(
+  (_: unknown, id: string) => id,
+  getAdjustedDataset,
+  (id, adjustedDataset): Recipe | undefined =>
+    adjustedDataset.recipeEntities[id]
+);
 
-export const getItemEntityById = (id: string) =>
-  createSelector(
-    getAdjustedDataset,
-    (adjustedDataset): Item | undefined => adjustedDataset.itemEntities[id]
-  );
+export const selectItemEntityById = createSelector(
+  (_: unknown, id: string) => id,
+  getAdjustedDataset,
+  (id, adjustedDataset): Item | undefined => adjustedDataset.itemEntities[id]
+);
 
-export const getMachineEntityById = (id: string) =>
-  createSelector(
-    getAdjustedDataset,
-    (adjustedDataset): Machine | undefined =>
-      adjustedDataset.machineEntities[id]
-  );
+export const selectMachineEntityById = createSelector(
+  (_: unknown, id: string) => id,
+  getAdjustedDataset,
+  (id, adjustedDataset): Machine | undefined =>
+    adjustedDataset.machineEntities[id]
+);
 
-export const getItemStatus = (id: string) =>
-  createSelector(
-    getRecipeEntityById(id),
-    recordsState,
-    (recipeEntity, records) => {
-      const canManualCrafting =
-        !!recipeEntity &&
-        !['smelting', 'fluids'].includes(recipeEntity.category);
+export const selectItemStatusById = createSelector(
+  (_: unknown, id: string) => id,
+  getAdjustedDataset,
+  recordsState,
+  (id, adjustedDataset, records) => {
+    const recipeEntity = adjustedDataset.recipeEntities[id];
+    const canManualCrafting =
+      !!recipeEntity && !['smelting', 'fluids'].includes(recipeEntity.category);
 
-      const canMake =
-        !!recipeEntity &&
-        Object.keys(recipeEntity.in).every((e) =>
-          records.entities[e]?.stock?.gte(recipeEntity.in[e])
-        );
+    const canMake =
+      !!recipeEntity &&
+      Object.keys(recipeEntity.in).every((e) =>
+        records.entities[e]?.stock?.gte(recipeEntity.in[e])
+      );
 
-      return { canManualCrafting, canMake };
-    }
-  );
+    return { canManualCrafting, canMake };
+  }
+);
 
-export const getAdjustedRecipeByIdWithProducer = (
-  id: string,
-  producer: string
-) =>
-  createSelector(
-    getRecipeSettingsWithProducer(id, producer),
-    getExcludedRecipeIds,
-    getItemsState,
-    getAvailableRecipes,
-    getCosts,
-    getAdjustmentData,
-    getDataset,
-    (
-      settings,
-      excludedRecipeIds,
-      itemsState,
-      recipeIds,
-      costs,
+export const selectAdjustedRecipeByIdWithProducer = createSelector(
+  (_: unknown, data: { recipeId: string; machineId: string }) => data.recipeId,
+  (state: RootState, data: { recipeId: string; machineId: string }) =>
+    getRecipeSettingsWithProducer(state, data),
+  getDataset,
+  getItemsState,
+  getAdjustmentData,
+  (
+    recipeId,
+    settings,
+    dataset,
+    itemsState,
+    adjustmentData
+  ): AdjustedRecipe | undefined =>
+    RecipeUtility.adjustRecipe(
+      recipeId,
       adjustmentData,
-      data
-    ): AdjustedRecipe | undefined =>
-      RecipeUtility.adjustRecipe(id, adjustmentData, settings, itemsState, data)
-  );
+      settings,
+      itemsState,
+      dataset
+    )
+);
 
 export default recipesSlice.reducer;
