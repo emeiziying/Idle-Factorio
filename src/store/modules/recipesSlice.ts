@@ -176,7 +176,36 @@ export const selectItemStatusById = createSelector(
         records.entities[e]?.stock?.gte(recipeEntity.in[e])
       );
 
-    return { canManualCrafting, canMake };
+    const status = { canManualCrafting, canMake };
+
+    return status;
+  }
+);
+
+export const selectCanManualCraftingById = createSelector(
+  (_: unknown, id: string) => id,
+  getAdjustedDataset,
+  (id, adjustedDataset) => {
+    const recipeEntity = adjustedDataset.recipeEntities[id];
+    return (
+      !!recipeEntity && !['smelting', 'fluids'].includes(recipeEntity.category)
+    );
+  }
+);
+
+export const selectCanMakeById = createSelector(
+  (_: unknown, id: string) => id,
+  getAdjustedDataset,
+  recordsState,
+  (id, adjustedDataset, records) => {
+    const recipeEntity = adjustedDataset.recipeEntities[id];
+
+    return (
+      !!recipeEntity &&
+      Object.keys(recipeEntity.in).every((e) =>
+        records.entities[e]?.stock?.gte(recipeEntity.in[e])
+      )
+    );
   }
 );
 

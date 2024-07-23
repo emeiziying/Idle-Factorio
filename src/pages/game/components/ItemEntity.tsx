@@ -1,10 +1,11 @@
 import { useAppSelector } from '@/store/hooks';
 import {
+  selectCanMakeById,
+  selectCanManualCraftingById,
   selectItemEntityById,
-  selectItemStatusById,
   selectRecipeEntityById,
 } from '@/store/modules/recipesSlice';
-import { selectItemRecordById } from '@/store/modules/recordsSlice';
+import { selectStockFromRecordById } from '@/store/modules/recordsSlice';
 import clsx from 'clsx';
 import IconItem from './IconItem';
 
@@ -18,10 +19,11 @@ const ItemEntity = ({ id, onClick }: Props) => {
     selectRecipeEntityById(state, id)
   );
   const itemEntity = useAppSelector((state) => selectItemEntityById(state, id));
-  const itemRecord = useAppSelector((state) => selectItemRecordById(state, id));
-  const { canManualCrafting, canMake } = useAppSelector((state) =>
-    selectItemStatusById(state, id)
+  const canManualCrafting = useAppSelector((state) =>
+    selectCanManualCraftingById(state, id)
   );
+  const canMake = useAppSelector((state) => selectCanMakeById(state, id));
+  const stock = useAppSelector((state) => selectStockFromRecordById(state, id));
 
   if (!recipeEntity || !itemEntity) return;
 
@@ -34,7 +36,7 @@ const ItemEntity = ({ id, onClick }: Props) => {
       onClick={onClick}
     >
       <IconItem name={itemEntity.icon ?? id} text={itemEntity.iconText}>
-        {itemRecord?.stock.toNumber() ?? 0}
+        {stock?.toNumber() ?? 0}
       </IconItem>
     </div>
   );

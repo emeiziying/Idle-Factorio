@@ -5,8 +5,8 @@ import { selectAdjustedRecipeByIdWithProducer } from '@/store/modules/recipesSli
 import {
   addItemStock,
   addProducerToItem,
-  getRecordStockById,
   selectProducerFromRecordById,
+  selectStockFromRecordById,
   subItemStock,
   subProducerFromItem,
 } from '@/store/modules/recordsSlice';
@@ -23,7 +23,7 @@ interface ProducerEntityProps {
 
 const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
   const dispatch = useAppDispatch();
-  const stock = useAppSelector((state) => getRecordStockById(state, id));
+  const stock = useAppSelector((state) => selectStockFromRecordById(state, id));
   const producer = useAppSelector((state) =>
     selectProducerFromRecordById(state, { itemId, machineId: id })
   );
@@ -56,6 +56,7 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
 
   return (
     <div>
+      {void console.log('ProducerEntity update', id, itemId)}
       <div className="flex items-center">
         <div className="flex items-center pl-2 text-xl">
           <IconButton
