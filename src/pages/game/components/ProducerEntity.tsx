@@ -80,7 +80,7 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
           </div>
           <IconButton
             className="!p-0"
-            disabled={stock?.lte(rational(0))}
+            disabled={!stock?.gte(rational(1))}
             onClick={() => {
               dispatch(subItemStock({ id, amount: rational(1) }));
               dispatch(
@@ -144,9 +144,9 @@ const ProducerInProgress = (props: { name: string; data?: ItemProducerIn }) => {
 
   return (
     <div className="flex items-center">
-      <IconItem name={name}></IconItem>
+      <IconItem name={name}>{data?.amount.toPrecision(2)}</IconItem>
       <div className="flex-1 pl-3">
-        <LinearProgress variant="determinate" value={progress} />
+        <LinearProgress variant="determinate" value={100 - progress} />
       </div>
     </div>
   );
