@@ -1,7 +1,12 @@
 import { rational, Rational } from '@/models';
 import { useAppDispatch, useAppStore } from '@/store/hooks';
 import { selectAdjustedRecipeByIdWithProducer } from '@/store/modules/recipesSlice';
-import { updateProducerInItem } from '@/store/modules/recordsSlice';
+import {
+  addItemStock,
+  subItemStock,
+  updateProducerInItem,
+  updateProducerOutItem,
+} from '@/store/modules/recordsSlice';
 import { Container, Stack } from '@mui/material';
 import { useRafInterval } from 'ahooks';
 import { useRef } from 'react';
@@ -21,72 +26,115 @@ const Game = () => {
     const delta = timestamp.current ? now - timestamp.current : 0;
     timestamp.current = now;
 
+    if (delta > 1000) return;
+
     manualQueue.current?.update(delta);
     // update producer
 
+    const zero = rational(0);
+    const one = rational(1);
     const state = store.getState();
     const { ids, entities: records } = state.records;
-    ids.forEach((id) => {
-      const { producers } = records[id];
+    ids.forEach((itemId) => {
+      const { producers } = records[itemId];
       if (!producers) return;
       Object.keys(producers).forEach((producerId) => {
         const recipe = selectAdjustedRecipeByIdWithProducer(state, {
-          recipeId: id,
+          recipeId: itemId,
           machineId: producerId,
         });
         if (!recipe) return;
+        const ratio = new Rational(BigInt(delta), BigInt(1000)).div(
+          recipe.time
+        );
 
         const producer = producers[producerId];
         const inKeys = Object.keys(recipe.in);
+        const outKeys = Object.keys(recipe.out);
 
         if (producer.amount.lte(rational(0))) return;
 
+        if (
+          inKeys.length > 0 &&
+          inKeys.some(
+            (e) =>
+              records[e].stock.lte(zero) &&
+              (!producer.in || producer.in[e].amount.lte(zero))
+          )
+        )
+          return;
+
         inKeys.forEach((inId) => {
           const recipeAmount = recipe.in[inId];
-          const diffAmount = new Rational(BigInt(delta), BigInt(1000))
-            .div(recipe.time)
-            .mul(recipeAmount)
-            .mul(producer.amount);
-          const inAmount = producer.in?.[inId]?.amount ?? rational(0);
+          const diffAmount = recipeAmount.mul(ratio).mul(producer.amount);
+          const inAmount = producer.in?.[inId]?.amount ?? zero;
+          const vv = (recipeAmount.gt(one) ? recipeAmount : one).mul(
+            producer.amount
+          );
 
-          // not enough amount
-          if (inAmount.lt(diffAmount)) {
-            // get from stock
+          if (inAmount.lte(zero)) {
             if (records[inId].stock.gte(recipeAmount)) {
-              console.log('diffAmount', inId, diffAmount.toNumber());
-
               // get from stock
-              // dispatch(subItemStock({ id: inId, amount: recipeAmount }));
+              dispatch(subItemStock({ id: inId, amount: vv }));
               dispatch(
                 updateProducerInItem({
-                  itemId: id,
+                  itemId,
                   producerId,
                   inId,
-                  data: {
-                    stock: rational(1),
-                    amount: inAmount.add(recipeAmount),
-                  },
+                  data: { stock: vv, amount: inAmount.add(vv) },
                 })
               );
             }
-          } else {
-            // update amount
+            return;
+          }
+
+          // update amount
+          const amount = inAmount.lt(diffAmount)
+            ? zero
+            : inAmount.sub(diffAmount);
+          dispatch(
+            updateProducerInItem({
+              itemId,
+              producerId,
+              inId,
+              data: { stock: vv, amount },
+            })
+          );
+        });
+
+        outKeys.forEach((outId) => {
+          const recipeAmount = recipe.out[outId];
+          const diffAmount = recipeAmount.mul(ratio).mul(producer.amount);
+          const outAmount = producer.out?.[outId]?.amount ?? zero;
+
+          const vv = producer.amount;
+          if (outAmount.gte(vv)) {
+            dispatch(addItemStock({ id: outId, amount: vv }));
             dispatch(
-              updateProducerInItem({
-                itemId: id,
+              updateProducerOutItem({
+                itemId,
                 producerId,
-                inId,
-                data: {
-                  stock: rational(1),
-                  amount: inAmount.sub(diffAmount),
-                },
+                outId,
+                data: { stock: vv, amount: outAmount.sub(vv) },
               })
             );
+
+            return;
           }
+
+          // update amount
+          dispatch(
+            updateProducerOutItem({
+              itemId,
+              producerId,
+              outId,
+              data: { stock: vv, amount: outAmount.add(diffAmount) },
+            })
+          );
         });
       });
     });
-  }, 100);
+  }, 33);
 
   return (
     <>

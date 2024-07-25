@@ -6,6 +6,7 @@ import {
   Category,
   FluidWagon,
   Fuel,
+  Generator,
   Icon,
   Item,
   Machine,
@@ -44,6 +45,8 @@ export interface Dataset {
   moduleEntities: Entities<Module>;
   fuelIds: string[];
   fuelEntities: Entities<Fuel>;
+  generatorIds: string[];
+  generatorEntities: Entities<Generator>;
   recipeIds: string[];
   recipeEntities: Entities<Recipe>;
   technologyIds: string[];

@@ -10,9 +10,15 @@ export interface ItemRecord {
 export interface ItemProducer {
   amount: Rational;
   in?: Entities<ItemProducerIn>;
+  out?: Entities<ItemProducerOut>;
 }
 
 export interface ItemProducerIn {
+  stock: Rational;
+  amount: Rational;
+}
+
+export interface ItemProducerOut {
   stock: Rational;
   amount: Rational;
 }

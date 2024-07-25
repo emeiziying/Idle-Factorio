@@ -5,9 +5,10 @@ import { CargoWagon, CargoWagonJson, parseCargoWagon } from './cargo-wagon';
 import { Container, ContainerJson, parseContainer } from './container';
 import { FluidWagon, FluidWagonJson, parseFluidWagon } from './fluid-wagon';
 import { Fuel, FuelJson, parseFuel } from './fuel';
+import { Generator, GeneratorJson, parseGenerator } from './generator';
 import { Machine, MachineJson, parseMachine } from './machine';
 import { Module, ModuleJson, parseModule } from './module';
-import { StorageTank, StorageTankJson } from './storageTank';
+import { parseStorageTank, StorageTank, StorageTankJson } from './storageTank';
 import { Technology } from './technology';
 
 export interface ItemJson {
@@ -26,6 +27,7 @@ export interface ItemJson {
   fluidWagon?: FluidWagonJson;
   container?: ContainerJson;
   storageTank?: StorageTankJson;
+  generator?: GeneratorJson;
   technology?: Technology;
   /** Used to link the item to an alternate icon id */
   icon?: string;
@@ -49,6 +51,7 @@ export interface Item {
   fluidWagon?: FluidWagon;
   container?: Container;
   storageTank?: StorageTank;
+  generator?: Generator;
   technology?: Technology;
   /** Used to link the item to an alternate icon id */
   icon?: string;
@@ -72,6 +75,8 @@ export function parseItem(json: ItemJson): Item {
     cargoWagon: parseCargoWagon(json.cargoWagon),
     fluidWagon: parseFluidWagon(json.fluidWagon),
     container: parseContainer(json.container),
+    storageTank: parseStorageTank(json.storageTank),
+    generator: parseGenerator(json.generator),
     technology: json.technology,
     icon: json.icon,
     iconText: json.iconText,

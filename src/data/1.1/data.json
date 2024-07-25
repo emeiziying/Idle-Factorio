@@ -2241,7 +2241,10 @@
       "name": "Steam engine",
       "category": "production",
       "stack": 10,
-      "row": 1
+      "row": 1,
+      "generator": {
+        "usage": 0.5
+      }
     },
     {
       "id": "solar-panel",
@@ -2303,7 +2306,10 @@
       "name": "Steam turbine",
       "category": "production",
       "stack": 10,
-      "row": 1
+      "row": 1,
+      "generator": {
+        "usage": 1
+      }
     },
     {
       "id": "burner-mining-drill",

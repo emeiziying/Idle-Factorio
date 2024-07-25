@@ -3,6 +3,7 @@ import { coalesce, fnPropsNotNullish, getIdOptions } from '@/helpers';
 import {
   DisplayRate,
   Game,
+  Generator,
   InserterCapacity,
   InserterData,
   InserterTarget,
@@ -408,6 +409,9 @@ export const getDataset = createSelector(
     const technologyIds = items
       .filter(fnPropsNotNullish('technology'))
       .map((r) => r.id);
+    const generatorIds = items
+      .filter(fnPropsNotNullish('generator'))
+      .map((r) => r.id);
 
     // Calculate missing implicit recipe icons
     // For recipes with no icon, use icon of first output item
@@ -468,6 +472,7 @@ export const getDataset = createSelector(
     const moduleEntities: Entities<Module> = {};
     const fuelEntities: Entities<Fuel> = {};
     const technologyEntities: Entities<Technology> = {};
+    const generatorEntities: Entities<Generator> = {};
     const itemEntities = items.reduce((e: Entities<Item>, i) => {
       if (i.beacon) beaconEntities[i.id] = i.beacon;
 
@@ -480,6 +485,7 @@ export const getDataset = createSelector(
       if (i.module) moduleEntities[i.id] = i.module;
       if (i.fuel) fuelEntities[i.id] = i.fuel;
       if (i.technology) technologyEntities[i.id] = i.technology;
+      if (i.generator) generatorEntities[i.id] = i.generator;
 
       e[i.id] = i;
       return e;
@@ -515,6 +521,8 @@ export const getDataset = createSelector(
       moduleEntities,
       fuelIds,
       fuelEntities,
+      generatorIds,
+      generatorEntities,
       recipeIds,
       recipeEntities,
       technologyIds,

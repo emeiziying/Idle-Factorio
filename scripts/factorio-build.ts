@@ -29,6 +29,7 @@ import {
   getEntityMap,
   getEntitySize,
   getFluidWagon,
+  getGenerator,
   getIconText,
   getIngredients,
   getItemMap,
@@ -1135,6 +1136,15 @@ async function processMod(): Promise<void> {
         icon: await getIcon(proto),
         storageTank: getStorageTank(proto),
       });
+    } else if (M.isGeneratorPrototype(proto)) {
+      modData.items.push({
+        id: proto.name,
+        name: entityLocale.names[proto.name],
+        category: group.name,
+        row: getItemRow(proto),
+        icon: await getIcon(proto),
+        generator: getGenerator(proto),
+      });
     } else {
       const item: ItemJson = {
         id: proto.name,
@@ -1218,6 +1228,12 @@ async function processMod(): Promise<void> {
         if (dataRaw['storage-tank'][result]) {
           const entity = dataRaw['storage-tank'][result];
           item.storageTank = getStorageTank(entity);
+        }
+
+        // Parse generate
+        if (dataRaw.generator[result]) {
+          const entity = dataRaw.generator[result];
+          item.generator = getGenerator(entity);
         }
       }
 

@@ -2,6 +2,7 @@ import {
   AdjustedRecipe,
   Item,
   Machine,
+  Rational,
   Recipe,
   type Entities,
   type RecipeSettings,
@@ -146,6 +147,14 @@ export const selectRecipeEntityById = createSelector(
   getAdjustedDataset,
   (id, adjustedDataset): Recipe | undefined =>
     adjustedDataset.recipeEntities[id]
+);
+
+export const selectRecipeInById = createSelector(
+  (_: unknown, data: { recipeId: string; inId: string }) => data.recipeId,
+  (_: unknown, data: { recipeId: string; inId: string }) => data.inId,
+  getAdjustedDataset,
+  (recipeId, inId, adjustedDataset): Rational | undefined =>
+    adjustedDataset.recipeEntities[recipeId]?.in[inId]
 );
 
 export const selectItemEntityById = createSelector(

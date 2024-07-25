@@ -3,6 +3,7 @@ import { useAppSelector } from '@/store/hooks';
 import { craftingsState } from '@/store/modules/craftingsSlice';
 import { gameState } from '@/store/modules/gameSlice';
 import { recordsState } from '@/store/modules/recordsSlice';
+import { settingsState } from '@/store/modules/settingsSlice';
 import storage from '@/store/storage';
 import { useRafInterval } from 'ahooks';
 import { useState } from 'react';
@@ -14,12 +15,13 @@ const AutoSave = () => {
   const records = useAppSelector(recordsState);
   const craftings = useAppSelector(craftingsState);
   const game = useAppSelector(gameState);
+  const settings = useAppSelector(settingsState);
 
   useRafInterval(() => {
     const s = seconds - 1;
     if (s <= 0) {
       setSaving(true);
-      storage.save({ records, craftings, game });
+      storage.save({ records, craftings, game, settings });
 
       setTimeout(() => {
         setSaving(false);

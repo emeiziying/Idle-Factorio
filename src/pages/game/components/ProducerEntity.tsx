@@ -1,20 +1,21 @@
 import { rational } from '@/models';
-import { ItemProducerIn } from '@/models/record';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { selectAdjustedRecipeByIdWithProducer } from '@/store/modules/recipesSlice';
 import {
   addItemStock,
   addProducerToItem,
+  selectProducerAmountFromRecordById,
   selectProducerFromRecordById,
   selectStockFromRecordById,
   subItemStock,
   subProducerFromItem,
 } from '@/store/modules/recordsSlice';
 import { Icon } from '@iconify/react';
-import { IconButton, LinearProgress, Stack } from '@mui/material';
+import { IconButton, Stack } from '@mui/material';
 import { useWhyDidYouUpdate } from 'ahooks';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import IconItem from './IconItem';
+import LinearProgress from './LinearProgress';
 
 interface ProducerEntityProps {
   id: string;
@@ -24,8 +25,8 @@ interface ProducerEntityProps {
 const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
   const dispatch = useAppDispatch();
   const stock = useAppSelector((state) => selectStockFromRecordById(state, id));
-  const producer = useAppSelector((state) =>
-    selectProducerFromRecordById(state, { itemId, machineId: id })
+  const producerAmount = useAppSelector((state) =>
+    selectProducerAmountFromRecordById(state, { itemId, machineId: id })
   );
   const adjustedRecipe = useAppSelector((state) =>
     selectAdjustedRecipeByIdWithProducer(state, {
@@ -33,10 +34,7 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
       machineId: id,
     })
   );
-  const producerAmount = useMemo(
-    () => producer?.amount?.toNumber() ?? 0,
-    [producer]
-  );
+
   const consumption = useMemo(
     () => adjustedRecipe?.consumption?.toNumber() ?? 0,
     [adjustedRecipe]
@@ -45,14 +43,34 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
     () => Object.keys(adjustedRecipe?.in ?? {}),
     [adjustedRecipe]
   );
+  const outKeys = useMemo(
+    () => Object.keys(adjustedRecipe?.out ?? {}),
+    [adjustedRecipe]
+  );
 
-  useWhyDidYouUpdate(`ProducerEntity id:${id} itemId:${itemId}`, {
-    id,
-    itemId,
-    adjustedRecipe,
-    producer,
-    producerAmount,
-  });
+  const handleSub = useCallback(() => {
+    dispatch(addItemStock({ id, amount: rational(1) }));
+    dispatch(
+      subProducerFromItem({
+        itemId,
+        producerId: id,
+        amount: rational(1),
+      })
+    );
+  }, [dispatch, id, itemId]);
+
+  const handleAdd = useCallback(() => {
+    dispatch(subItemStock({ id, amount: rational(1) }));
+    dispatch(
+      addProducerToItem({
+        itemId,
+        producerId: id,
+        amount: rational(1),
+      })
+    );
+  }, [dispatch, id, itemId]);
+
+  useWhyDidYouUpdate(`ProducerEntity id:${id}`, { adjustedRecipe });
 
   return (
     <div>
@@ -62,35 +80,17 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
           <IconButton
             className="!p-0"
             disabled={!producerAmount}
-            onClick={() => {
-              dispatch(addItemStock({ id, amount: rational(1) }));
-              dispatch(
-                subProducerFromItem({
-                  itemId,
-                  producerId: id,
-                  amount: rational(1),
-                })
-              );
-            }}
+            onClick={handleSub}
           >
             <Icon icon="streamline:subtract-circle-solid" />
           </IconButton>
           <div className="px-2">
-            <IconItem name={id}>{producerAmount}</IconItem>
+            <IconItem name={id}>{producerAmount?.toNumber()}</IconItem>
           </div>
           <IconButton
             className="!p-0"
             disabled={!stock?.gte(rational(1))}
-            onClick={() => {
-              dispatch(subItemStock({ id, amount: rational(1) }));
-              dispatch(
-                addProducerToItem({
-                  itemId,
-                  producerId: id,
-                  amount: rational(1),
-                })
-              );
-            }}
+            onClick={handleAdd}
           >
             <Icon icon="streamline:add-circle-solid" />
           </IconButton>
@@ -125,7 +125,24 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
 
       <div className="">
         {inKeys.map((e) => (
-          <ProducerInProgress key={e} name={e} data={producer?.in?.[e]} />
+          <ProducerProgress
+            key={e}
+            id={e}
+            itemId={itemId}
+            machineId={id}
+            type="in"
+          />
+        ))}
+      </div>
+      <div className="">
+        {outKeys.map((e) => (
+          <ProducerProgress
+            key={e}
+            id={e}
+            itemId={itemId}
+            machineId={id}
+            type="out"
+          />
         ))}
       </div>
     </div>
@@ -134,19 +151,29 @@ const ProducerEntity = ({ id, itemId }: ProducerEntityProps) => {
 
 export default ProducerEntity;
 
-const ProducerInProgress = (props: { name: string; data?: ItemProducerIn }) => {
-  const { name, data } = props;
+const ProducerProgress = (props: {
+  id: string;
+  itemId: string;
+  machineId: string;
+  type: 'in' | 'out';
+}) => {
+  const { id, itemId, machineId, type } = props;
 
+  const producer = useAppSelector((state) =>
+    selectProducerFromRecordById(state, { itemId, machineId })
+  );
+
+  const item = useMemo(() => producer?.[type]?.[id], [id, producer, type]);
   const progress = useMemo(
-    () => data?.amount.div(data.stock).mul(rational(100)).toNumber() ?? 0,
-    [data]
+    () => item?.amount.div(item.stock).mul(rational(100)).toNumber() ?? 0,
+    [item]
   );
 
   return (
     <div className="flex items-center">
-      <IconItem name={name}>{data?.amount.toPrecision(2)}</IconItem>
+      <IconItem name={id}>{item?.amount.toPrecision(2)}</IconItem>
       <div className="flex-1 pl-3">
-        <LinearProgress variant="determinate" value={100 - progress} />
+        <LinearProgress value={progress} />
       </div>
     </div>
   );

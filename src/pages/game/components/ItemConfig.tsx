@@ -7,9 +7,10 @@ import {
   selectCanManualCraftingById,
   selectItemEntityById,
   selectRecipeEntityById,
+  selectRecipeInById,
 } from '@/store/modules/recipesSlice';
 import {
-  selectItemRecordEntities,
+  selectStockFromRecordById,
   subItemStock,
 } from '@/store/modules/recordsSlice';
 import { getAvailableRecipes } from '@/store/modules/settingsSlice';
@@ -45,7 +46,6 @@ const ItemConfig = ({ itemId }: ItemConfigProps) => {
   );
   const canMake = useAppSelector((state) => selectCanMakeById(state, itemId));
   const availableRecipes = useAppSelector(getAvailableRecipes);
-  const records = useAppSelector(selectItemRecordEntities);
   const recipeEntity = useAppSelector((state) =>
     selectRecipeEntityById(state, itemId)
   );
@@ -65,7 +65,7 @@ const ItemConfig = ({ itemId }: ItemConfigProps) => {
 
     availableRecipes,
     recipeEntities,
-    records,
+
     inIds,
     outIds,
     store,
@@ -89,21 +89,7 @@ const ItemConfig = ({ itemId }: ItemConfigProps) => {
             <Stack direction="row" spacing={1} alignItems="center">
               <div>{t('data.ingredients')}:</div>
               {inIds.map((inId) => (
-                <div key={inId} className="flex items-center">
-                  <div
-                    className={clsx({
-                      'bg-red-500':
-                        !records[inId] ||
-                        recipeEntity?.in[inId].gt(records[inId].stock),
-                    })}
-                  >
-                    <IconItem name={inId} />
-                  </div>
-                  <div className="pl-1">
-                    {recipeEntity?.in[inId].toNumber()}x
-                    {recipeEntities[inId]?.name}
-                  </div>
-                </div>
+                <InItem key={inId} itemId={itemId} inId={inId} />
               ))}
             </Stack>
           )}
@@ -156,3 +142,32 @@ const ItemConfig = ({ itemId }: ItemConfigProps) => {
 };
 
 export default ItemConfig;
+
+const InItem = (props: { itemId: string; inId: string }) => {
+  const { itemId, inId } = props;
+
+  const itemEntity = useAppSelector((state) =>
+    selectItemEntityById(state, inId)
+  );
+  const stock = useAppSelector((state) =>
+    selectStockFromRecordById(state, inId)
+  );
+  const recipeIn = useAppSelector((state) =>
+    selectRecipeInById(state, { recipeId: itemId, inId })
+  );
+
+  return (
+    <div className="flex items-center">
+      <div
+        className={clsx({
+          'bg-red-500': !stock?.gte(recipeIn ?? rational(0)),
+        })}
+      >
+        <IconItem name={inId} />
+      </div>
+      <div className="pl-1">
+        {recipeIn?.toNumber()}x{itemEntity?.name}
+      </div>
+    </div>
+  );
+};

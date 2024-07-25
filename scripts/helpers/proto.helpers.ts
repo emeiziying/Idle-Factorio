@@ -9,6 +9,7 @@ import {
   SiloJson,
 } from '@/models';
 import { ContainerJson } from '@/models/data/container';
+import { GeneratorJson } from '@/models/data/generator';
 import { StorageTankJson } from '@/models/data/storageTank';
 import * as D from '../factorio-build.models';
 import * as M from '../factorio.models';
@@ -44,10 +45,12 @@ export function getContainer(proto: M.ContainerPrototype): ContainerJson {
   return { size: proto.inventory_size };
 }
 
-export function getStorageTank(
-  _proto: M.StorageTankPrototype
-): StorageTankJson {
+export function getStorageTank(_: M.StorageTankPrototype): StorageTankJson {
   return { capacity: 25000 };
+}
+
+export function getGenerator(proto: M.GeneratorPrototype): GeneratorJson {
+  return { usage: proto.fluid_usage_per_tick };
 }
 
 export function getMachineDisallowedEffects(
