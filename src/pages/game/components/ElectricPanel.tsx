@@ -1,8 +1,19 @@
-import { useAppSelector } from '@/store/hooks';
+import { rational } from '@/models';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import {
+  addElectricStock,
+  selectElectricById,
+  subElectricStock,
+} from '@/store/modules/electricsSlice';
 import {
   getAdjustedDataset,
   getRecipeEntities,
 } from '@/store/modules/recipesSlice';
+import {
+  addItemStock,
+  selectStockFromRecordById,
+  subItemStock,
+} from '@/store/modules/recordsSlice';
 import { getAvailableRecipes } from '@/store/modules/settingsSlice';
 import { Icon } from '@iconify/react';
 import Card from '@mui/material/Card';
@@ -36,19 +47,7 @@ const ElectricPanel = () => {
         <div>Electric:</div>
         <div>
           {generatorIds.map((id) => (
-            <div key={id}>
-              <div className="flex items-center pl-2 text-xl">
-                <IconButton className="!p-0">
-                  <Icon icon="streamline:subtract-circle-solid" />
-                </IconButton>
-                <div className="px-2">
-                  <IconItem name={id}></IconItem>
-                </div>
-                <IconButton className="!p-0">
-                  <Icon icon="streamline:add-circle-solid" />
-                </IconButton>
-              </div>
-            </div>
+            <GeneratorItem key={id} id={id} />
           ))}
         </div>
       </CardContent>
@@ -57,3 +56,48 @@ const ElectricPanel = () => {
 };
 
 export default ElectricPanel;
+
+const GeneratorItem = ({ id }: { id: string }) => {
+  const dispatch = useAppDispatch();
+  const electric = useAppSelector((state) => selectElectricById(state, id));
+  const stock = useAppSelector((state) => selectStockFromRecordById(state, id));
+
+  const power = useMemo(() => {
+    const v = rational(200)
+      .mul(rational(25000))
+      .mul(rational(165).sub(rational(10)));
+    return electric.stock.mul(v);
+  }, [electric.stock]);
+
+  return (
+    <div>
+      <div className="flex items-center pl-2 text-xl">
+        <IconButton
+          className="!p-0"
+          disabled={!electric?.stock.gte(rational(1))}
+          onClick={() => {
+            dispatch(subElectricStock({ id, amount: rational(1) }));
+            dispatch(addItemStock({ id, amount: rational(1) }));
+          }}
+        >
+          <Icon icon="streamline:subtract-circle-solid" />
+        </IconButton>
+        <div className="px-2">
+          <IconItem name={id}>{electric?.stock.toNumber()}</IconItem>
+        </div>
+        <IconButton
+          className="!p-0"
+          disabled={!stock?.gte(rational(1))}
+          onClick={() => {
+            dispatch(addElectricStock({ id, amount: rational(1) }));
+            dispatch(subItemStock({ id, amount: rational(1) }));
+          }}
+        >
+          <Icon icon="streamline:add-circle-solid" />
+        </IconButton>
+
+        <div></div>
+      </div>
+    </div>
+  );
+};
