@@ -36,7 +36,9 @@ interface DataType {
   value: string;
 }
 
-const API_PATH = 'https://lua-api.factorio.com/latest/prototype-api.json';
+const version = process.argv[2] ?? 'latest';
+
+const API_PATH = `https://lua-api.factorio.com/${version}/prototype-api.json`;
 
 function getPrototypeApi(): Promise<M.PrototypeApi> {
   return new Promise((resolve, reject) => {
@@ -88,7 +90,7 @@ function parseType(type: M.DataType, structName?: string): string {
     case 'dictionary':
       return `Record<${parseType(type.key, structName)}, ${parseType(
         type.value,
-        structName,
+        structName
       )}>`;
     case 'literal': {
       if (typeof type.value === 'string') {
@@ -227,7 +229,8 @@ const generate = async function (): Promise<void> {
 
   const api = await getPrototypeApi();
   const data = parsePrototypeApi(api);
-  const modelsSource = `/** Generated file, do not edit. See scripts/factorio-api.ts for generator. */
+  const modelsSource = `/* eslint-disable */
+/** Generated file, do not edit. See scripts/factorio-api.ts for generator. */
 
 /**
  * Application: {{app}}
@@ -281,4 +284,4 @@ export type {{name}} = {{{value}}};
   console.log(`Generated ${api.prototypes.length} models`);
 };
 
-generate();
+void generate();

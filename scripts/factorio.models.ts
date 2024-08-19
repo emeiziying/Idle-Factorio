@@ -1,3 +1,4 @@
+/* eslint-disable */
 /** Generated file, do not edit. See scripts/factorio-api.ts for generator. */
 
 /**
@@ -38,7 +39,7 @@ export type AccumulatorPrototype = _AccumulatorPrototype &
   Omit<EntityWithOwnerPrototype, keyof _AccumulatorPrototype>;
 
 export function isAccumulatorPrototype(
-  value: unknown,
+  value: unknown
 ): value is AccumulatorPrototype {
   return (value as { type: string }).type === 'accumulator';
 }
@@ -69,7 +70,7 @@ export type AchievementPrototype = _AchievementPrototype &
   Omit<PrototypeBase, keyof _AchievementPrototype>;
 
 export function isAchievementPrototype(
-  value: unknown,
+  value: unknown
 ): value is AchievementPrototype {
   return (value as { type: string }).type === 'achievement';
 }
@@ -85,7 +86,7 @@ export type ActiveDefenseEquipmentPrototype = _ActiveDefenseEquipmentPrototype &
   Omit<EquipmentPrototype, keyof _ActiveDefenseEquipmentPrototype>;
 
 export function isActiveDefenseEquipmentPrototype(
-  value: unknown,
+  value: unknown
 ): value is ActiveDefenseEquipmentPrototype {
   return (value as { type: string }).type === 'active-defense-equipment';
 }
@@ -142,7 +143,7 @@ export type AmmoItemPrototype = _AmmoItemPrototype &
   Omit<ItemPrototype, keyof _AmmoItemPrototype>;
 
 export function isAmmoItemPrototype(
-  value: unknown,
+  value: unknown
 ): value is AmmoItemPrototype {
   return (value as { type: string }).type === 'ammo';
 }
@@ -160,7 +161,7 @@ export type AmmoTurretPrototype = _AmmoTurretPrototype &
   Omit<TurretPrototype, keyof _AmmoTurretPrototype>;
 
 export function isAmmoTurretPrototype(
-  value: unknown,
+  value: unknown
 ): value is AmmoTurretPrototype {
   return (value as { type: string }).type === 'ammo-turret';
 }
@@ -297,7 +298,7 @@ Vertical position of the animation in the source file in pixels. */
 }
 
 export function isAnimationPrototype(
-  value: unknown,
+  value: unknown
 ): value is AnimationPrototype {
   return (value as { type: string }).type === 'animation';
 }
@@ -322,7 +323,7 @@ export type ArithmeticCombinatorPrototype = _ArithmeticCombinatorPrototype &
   Omit<CombinatorPrototype, keyof _ArithmeticCombinatorPrototype>;
 
 export function isArithmeticCombinatorPrototype(
-  value: unknown,
+  value: unknown
 ): value is ArithmeticCombinatorPrototype {
   return (value as { type: string }).type === 'arithmetic-combinator';
 }
@@ -398,7 +399,7 @@ export type ArtilleryFlarePrototype = _ArtilleryFlarePrototype &
   Omit<EntityPrototype, keyof _ArtilleryFlarePrototype>;
 
 export function isArtilleryFlarePrototype(
-  value: unknown,
+  value: unknown
 ): value is ArtilleryFlarePrototype {
   return (value as { type: string }).type === 'artillery-flare';
 }
@@ -426,7 +427,7 @@ export type ArtilleryProjectilePrototype = _ArtilleryProjectilePrototype &
   Omit<EntityPrototype, keyof _ArtilleryProjectilePrototype>;
 
 export function isArtilleryProjectilePrototype(
-  value: unknown,
+  value: unknown
 ): value is ArtilleryProjectilePrototype {
   return (value as { type: string }).type === 'artillery-projectile';
 }
@@ -470,7 +471,7 @@ export type ArtilleryTurretPrototype = _ArtilleryTurretPrototype &
   Omit<EntityWithOwnerPrototype, keyof _ArtilleryTurretPrototype>;
 
 export function isArtilleryTurretPrototype(
-  value: unknown,
+  value: unknown
 ): value is ArtilleryTurretPrototype {
   return (value as { type: string }).type === 'artillery-turret';
 }
@@ -508,7 +509,7 @@ export type ArtilleryWagonPrototype = _ArtilleryWagonPrototype &
   Omit<RollingStockPrototype, keyof _ArtilleryWagonPrototype>;
 
 export function isArtilleryWagonPrototype(
-  value: unknown,
+  value: unknown
 ): value is ArtilleryWagonPrototype {
   return (value as { type: string }).type === 'artillery-wagon';
 }
@@ -532,7 +533,7 @@ export type AssemblingMachinePrototype = _AssemblingMachinePrototype &
   Omit<CraftingMachinePrototype, keyof _AssemblingMachinePrototype>;
 
 export function isAssemblingMachinePrototype(
-  value: unknown,
+  value: unknown
 ): value is AssemblingMachinePrototype {
   return (value as { type: string }).type === 'assembling-machine';
 }
@@ -567,7 +568,7 @@ export type BatteryEquipmentPrototype = _BatteryEquipmentPrototype &
   Omit<EquipmentPrototype, keyof _BatteryEquipmentPrototype>;
 
 export function isBatteryEquipmentPrototype(
-  value: unknown,
+  value: unknown
 ): value is BatteryEquipmentPrototype {
   return (value as { type: string }).type === 'battery-equipment';
 }
@@ -664,7 +665,7 @@ export type BeltImmunityEquipmentPrototype = _BeltImmunityEquipmentPrototype &
   Omit<EquipmentPrototype, keyof _BeltImmunityEquipmentPrototype>;
 
 export function isBeltImmunityEquipmentPrototype(
-  value: unknown,
+  value: unknown
 ): value is BeltImmunityEquipmentPrototype {
   return (value as { type: string }).type === 'belt-immunity-equipment';
 }
@@ -684,7 +685,7 @@ export type BlueprintBookPrototype = _BlueprintBookPrototype &
   Omit<ItemWithInventoryPrototype, keyof _BlueprintBookPrototype>;
 
 export function isBlueprintBookPrototype(
-  value: unknown,
+  value: unknown
 ): value is BlueprintBookPrototype {
   return (value as { type: string }).type === 'blueprint-book';
 }
@@ -728,7 +729,7 @@ export type BlueprintItemPrototype = _BlueprintItemPrototype &
   Omit<SelectionToolPrototype, keyof _BlueprintItemPrototype>;
 
 export function isBlueprintItemPrototype(
-  value: unknown,
+  value: unknown
 ): value is BlueprintItemPrototype {
   return (value as { type: string }).type === 'blueprint';
 }
@@ -801,7 +802,7 @@ export type BuildEntityAchievementPrototype = _BuildEntityAchievementPrototype &
   Omit<AchievementPrototype, keyof _BuildEntityAchievementPrototype>;
 
 export function isBuildEntityAchievementPrototype(
-  value: unknown,
+  value: unknown
 ): value is BuildEntityAchievementPrototype {
   return (value as { type: string }).type === 'build-entity-achievement';
 }
@@ -830,7 +831,7 @@ export type BurnerGeneratorPrototype = _BurnerGeneratorPrototype &
   Omit<EntityWithOwnerPrototype, keyof _BurnerGeneratorPrototype>;
 
 export function isBurnerGeneratorPrototype(
-  value: unknown,
+  value: unknown
 ): value is BurnerGeneratorPrototype {
   return (value as { type: string }).type === 'burner-generator';
 }
@@ -909,7 +910,7 @@ export type CargoWagonPrototype = _CargoWagonPrototype &
   Omit<RollingStockPrototype, keyof _CargoWagonPrototype>;
 
 export function isCargoWagonPrototype(
-  value: unknown,
+  value: unknown
 ): value is CargoWagonPrototype {
   return (value as { type: string }).type === 'cargo-wagon';
 }
@@ -933,7 +934,7 @@ export type CharacterCorpsePrototype = _CharacterCorpsePrototype &
   Omit<EntityPrototype, keyof _CharacterCorpsePrototype>;
 
 export function isCharacterCorpsePrototype(
-  value: unknown,
+  value: unknown
 ): value is CharacterCorpsePrototype {
   return (value as { type: string }).type === 'character-corpse';
 }
@@ -1005,7 +1006,7 @@ export type CharacterPrototype = _CharacterPrototype &
   Omit<EntityWithOwnerPrototype, keyof _CharacterPrototype>;
 
 export function isCharacterPrototype(
-  value: unknown,
+  value: unknown
 ): value is CharacterPrototype {
   return (value as { type: string }).type === 'character';
 }
@@ -1042,7 +1043,7 @@ export type CombatRobotCountAchievementPrototype =
     Omit<AchievementPrototype, keyof _CombatRobotCountAchievementPrototype>;
 
 export function isCombatRobotCountAchievementPrototype(
-  value: unknown,
+  value: unknown
 ): value is CombatRobotCountAchievementPrototype {
   return (value as { type: string }).type === 'combat-robot-count';
 }
@@ -1068,7 +1069,7 @@ export type CombatRobotPrototype = _CombatRobotPrototype &
   Omit<FlyingRobotPrototype, keyof _CombatRobotPrototype>;
 
 export function isCombatRobotPrototype(
-  value: unknown,
+  value: unknown
 ): value is CombatRobotPrototype {
   return (value as { type: string }).type === 'combat-robot';
 }
@@ -1130,7 +1131,7 @@ export type ConstantCombinatorPrototype = _ConstantCombinatorPrototype &
   Omit<EntityWithOwnerPrototype, keyof _ConstantCombinatorPrototype>;
 
 export function isConstantCombinatorPrototype(
-  value: unknown,
+  value: unknown
 ): value is ConstantCombinatorPrototype {
   return (value as { type: string }).type === 'constant-combinator';
 }
@@ -1150,7 +1151,7 @@ export type ConstructWithRobotsAchievementPrototype =
     Omit<AchievementPrototype, keyof _ConstructWithRobotsAchievementPrototype>;
 
 export function isConstructWithRobotsAchievementPrototype(
-  value: unknown,
+  value: unknown
 ): value is ConstructWithRobotsAchievementPrototype {
   return (
     (value as { type: string }).type === 'construct-with-robots-achievement'
@@ -1175,7 +1176,7 @@ export type ConstructionRobotPrototype = _ConstructionRobotPrototype &
   Omit<RobotWithLogisticInterfacePrototype, keyof _ConstructionRobotPrototype>;
 
 export function isConstructionRobotPrototype(
-  value: unknown,
+  value: unknown
 ): value is ConstructionRobotPrototype {
   return (value as { type: string }).type === 'construction-robot';
 }
@@ -1207,7 +1208,7 @@ export type ContainerPrototype = _ContainerPrototype &
   Omit<EntityWithOwnerPrototype, keyof _ContainerPrototype>;
 
 export function isContainerPrototype(
-  value: unknown,
+  value: unknown
 ): value is ContainerPrototype {
   return (value as { type: string }).type === 'container';
 }
@@ -1246,7 +1247,7 @@ export type CopyPasteToolPrototype = _CopyPasteToolPrototype &
   Omit<SelectionToolPrototype, keyof _CopyPasteToolPrototype>;
 
 export function isCopyPasteToolPrototype(
-  value: unknown,
+  value: unknown
 ): value is CopyPasteToolPrototype {
   return (value as { type: string }).type === 'copy-paste-tool';
 }
@@ -1383,7 +1384,7 @@ export type CurvedRailPrototype = _CurvedRailPrototype &
   Omit<RailPrototype, keyof _CurvedRailPrototype>;
 
 export function isCurvedRailPrototype(
-  value: unknown,
+  value: unknown
 ): value is CurvedRailPrototype {
   return (value as { type: string }).type === 'curved-rail';
 }
@@ -1446,7 +1447,7 @@ export type CustomInputPrototype = _CustomInputPrototype &
   Omit<PrototypeBase, keyof _CustomInputPrototype>;
 
 export function isCustomInputPrototype(
-  value: unknown,
+  value: unknown
 ): value is CustomInputPrototype {
   return (value as { type: string }).type === 'custom-input';
 }
@@ -1478,7 +1479,7 @@ export type DeciderCombinatorPrototype = _DeciderCombinatorPrototype &
   Omit<CombinatorPrototype, keyof _DeciderCombinatorPrototype>;
 
 export function isDeciderCombinatorPrototype(
-  value: unknown,
+  value: unknown
 ): value is DeciderCombinatorPrototype {
   return (value as { type: string }).type === 'decider-combinator';
 }
@@ -1498,7 +1499,7 @@ export type DeconstructWithRobotsAchievementPrototype =
     >;
 
 export function isDeconstructWithRobotsAchievementPrototype(
-  value: unknown,
+  value: unknown
 ): value is DeconstructWithRobotsAchievementPrototype {
   return (
     (value as { type: string }).type === 'deconstruct-with-robots-achievement'
@@ -1517,7 +1518,7 @@ export type DeconstructibleTileProxyPrototype =
     Omit<EntityPrototype, keyof _DeconstructibleTileProxyPrototype>;
 
 export function isDeconstructibleTileProxyPrototype(
-  value: unknown,
+  value: unknown
 ): value is DeconstructibleTileProxyPrototype {
   return (value as { type: string }).type === 'deconstructible-tile-proxy';
 }
@@ -1563,7 +1564,7 @@ export type DeconstructionItemPrototype = _DeconstructionItemPrototype &
   Omit<SelectionToolPrototype, keyof _DeconstructionItemPrototype>;
 
 export function isDeconstructionItemPrototype(
-  value: unknown,
+  value: unknown
 ): value is DeconstructionItemPrototype {
   return (value as { type: string }).type === 'deconstruction-item';
 }
@@ -1592,7 +1593,7 @@ export type DecorativePrototype = _DecorativePrototype &
   Omit<PrototypeBase, keyof _DecorativePrototype>;
 
 export function isDecorativePrototype(
-  value: unknown,
+  value: unknown
 ): value is DecorativePrototype {
   return (value as { type: string }).type === 'optimized-decorative';
 }
@@ -1609,7 +1610,7 @@ export type DeliverByRobotsAchievementPrototype =
     Omit<AchievementPrototype, keyof _DeliverByRobotsAchievementPrototype>;
 
 export function isDeliverByRobotsAchievementPrototype(
-  value: unknown,
+  value: unknown
 ): value is DeliverByRobotsAchievementPrototype {
   return (value as { type: string }).type === 'deliver-by-robots-achievement';
 }
@@ -1627,7 +1628,7 @@ export type DontBuildEntityAchievementPrototype =
     Omit<AchievementPrototype, keyof _DontBuildEntityAchievementPrototype>;
 
 export function isDontBuildEntityAchievementPrototype(
-  value: unknown,
+  value: unknown
 ): value is DontBuildEntityAchievementPrototype {
   return (value as { type: string }).type === 'dont-build-entity-achievement';
 }
@@ -1644,7 +1645,7 @@ export type DontCraftManuallyAchievementPrototype =
     Omit<AchievementPrototype, keyof _DontCraftManuallyAchievementPrototype>;
 
 export function isDontCraftManuallyAchievementPrototype(
-  value: unknown,
+  value: unknown
 ): value is DontCraftManuallyAchievementPrototype {
   return (value as { type: string }).type === 'dont-craft-manually-achievement';
 }
@@ -1668,7 +1669,7 @@ export type DontUseEntityInEnergyProductionAchievementPrototype =
     >;
 
 export function isDontUseEntityInEnergyProductionAchievementPrototype(
-  value: unknown,
+  value: unknown
 ): value is DontUseEntityInEnergyProductionAchievementPrototype {
   return (
     (value as { type: string }).type ===
@@ -1708,7 +1709,7 @@ export interface EditorControllerPrototype {
 }
 
 export function isEditorControllerPrototype(
-  value: unknown,
+  value: unknown
 ): value is EditorControllerPrototype {
   return (value as { type: string }).type === 'editor-controller';
 }
@@ -1740,7 +1741,7 @@ export type ElectricEnergyInterfacePrototype =
     Omit<EntityWithOwnerPrototype, keyof _ElectricEnergyInterfacePrototype>;
 
 export function isElectricEnergyInterfacePrototype(
-  value: unknown,
+  value: unknown
 ): value is ElectricEnergyInterfacePrototype {
   return (value as { type: string }).type === 'electric-energy-interface';
 }
@@ -1772,7 +1773,7 @@ export type ElectricPolePrototype = _ElectricPolePrototype &
   Omit<EntityWithOwnerPrototype, keyof _ElectricPolePrototype>;
 
 export function isElectricPolePrototype(
-  value: unknown,
+  value: unknown
 ): value is ElectricPolePrototype {
   return (value as { type: string }).type === 'electric-pole';
 }
@@ -1787,7 +1788,7 @@ export type ElectricTurretPrototype = _ElectricTurretPrototype &
   Omit<TurretPrototype, keyof _ElectricTurretPrototype>;
 
 export function isElectricTurretPrototype(
-  value: unknown,
+  value: unknown
 ): value is ElectricTurretPrototype {
   return (value as { type: string }).type === 'electric-turret';
 }
@@ -1836,7 +1837,7 @@ export type EnemySpawnerPrototype = _EnemySpawnerPrototype &
   Omit<EntityWithOwnerPrototype, keyof _EnemySpawnerPrototype>;
 
 export function isEnemySpawnerPrototype(
-  value: unknown,
+  value: unknown
 ): value is EnemySpawnerPrototype {
   return (value as { type: string }).type === 'unit-spawner';
 }
@@ -1852,7 +1853,7 @@ export type EnergyShieldEquipmentPrototype = _EnergyShieldEquipmentPrototype &
   Omit<EquipmentPrototype, keyof _EnergyShieldEquipmentPrototype>;
 
 export function isEnergyShieldEquipmentPrototype(
-  value: unknown,
+  value: unknown
 ): value is EnergyShieldEquipmentPrototype {
   return (value as { type: string }).type === 'energy-shield-equipment';
 }
@@ -1870,7 +1871,7 @@ export type EntityGhostPrototype = _EntityGhostPrototype &
   Omit<EntityPrototype, keyof _EntityGhostPrototype>;
 
 export function isEntityGhostPrototype(
-  value: unknown,
+  value: unknown
 ): value is EntityGhostPrototype {
   return (value as { type: string }).type === 'entity-ghost';
 }
@@ -1886,7 +1887,7 @@ export type EntityParticlePrototype = _EntityParticlePrototype &
   Omit<EntityPrototype, keyof _EntityParticlePrototype>;
 
 export function isEntityParticlePrototype(
-  value: unknown,
+  value: unknown
 ): value is EntityParticlePrototype {
   return (value as { type: string }).type === 'particle';
 }
@@ -2065,7 +2066,7 @@ export type EquipmentCategory = _EquipmentCategory &
   Omit<PrototypeBase, keyof _EquipmentCategory>;
 
 export function isEquipmentCategory(
-  value: unknown,
+  value: unknown
 ): value is EquipmentCategory {
   return (value as { type: string }).type === 'equipment-category';
 }
@@ -2085,7 +2086,7 @@ export type EquipmentGridPrototype = _EquipmentGridPrototype &
   Omit<PrototypeBase, keyof _EquipmentGridPrototype>;
 
 export function isEquipmentGridPrototype(
-  value: unknown,
+  value: unknown
 ): value is EquipmentGridPrototype {
   return (value as { type: string }).type === 'equipment-grid';
 }
@@ -2157,7 +2158,7 @@ export type ExplosionPrototype = _ExplosionPrototype &
   Omit<EntityPrototype, keyof _ExplosionPrototype>;
 
 export function isExplosionPrototype(
-  value: unknown,
+  value: unknown
 ): value is ExplosionPrototype {
   return (value as { type: string }).type === 'explosion';
 }
@@ -2174,7 +2175,7 @@ export type FinishTheGameAchievementPrototype =
     Omit<AchievementPrototype, keyof _FinishTheGameAchievementPrototype>;
 
 export function isFinishTheGameAchievementPrototype(
-  value: unknown,
+  value: unknown
 ): value is FinishTheGameAchievementPrototype {
   return (value as { type: string }).type === 'finish-the-game-achievement';
 }
@@ -2244,7 +2245,7 @@ export type FireFlamePrototype = _FireFlamePrototype &
   Omit<EntityPrototype, keyof _FireFlamePrototype>;
 
 export function isFireFlamePrototype(
-  value: unknown,
+  value: unknown
 ): value is FireFlamePrototype {
   return (value as { type: string }).type === 'fire';
 }
@@ -2276,7 +2277,7 @@ export type FlameThrowerExplosionPrototype = _FlameThrowerExplosionPrototype &
   Omit<ExplosionPrototype, keyof _FlameThrowerExplosionPrototype>;
 
 export function isFlameThrowerExplosionPrototype(
-  value: unknown,
+  value: unknown
 ): value is FlameThrowerExplosionPrototype {
   return (value as { type: string }).type === 'flame-thrower-explosion';
 }
@@ -2378,7 +2379,7 @@ export type FluidStreamPrototype = _FluidStreamPrototype &
   Omit<EntityPrototype, keyof _FluidStreamPrototype>;
 
 export function isFluidStreamPrototype(
-  value: unknown,
+  value: unknown
 ): value is FluidStreamPrototype {
   return (value as { type: string }).type === 'stream';
 }
@@ -2415,7 +2416,7 @@ export type FluidTurretPrototype = _FluidTurretPrototype &
   Omit<TurretPrototype, keyof _FluidTurretPrototype>;
 
 export function isFluidTurretPrototype(
-  value: unknown,
+  value: unknown
 ): value is FluidTurretPrototype {
   return (value as { type: string }).type === 'fluid-turret';
 }
@@ -2432,7 +2433,7 @@ export type FluidWagonPrototype = _FluidWagonPrototype &
   Omit<RollingStockPrototype, keyof _FluidWagonPrototype>;
 
 export function isFluidWagonPrototype(
-  value: unknown,
+  value: unknown
 ): value is FluidWagonPrototype {
   return (value as { type: string }).type === 'fluid-wagon';
 }
@@ -2491,7 +2492,7 @@ export type FlyingTextPrototype = _FlyingTextPrototype &
   Omit<EntityPrototype, keyof _FlyingTextPrototype>;
 
 export function isFlyingTextPrototype(
-  value: unknown,
+  value: unknown
 ): value is FlyingTextPrototype {
   return (value as { type: string }).type === 'flying-text';
 }
@@ -2596,7 +2597,7 @@ export type GeneratorEquipmentPrototype = _GeneratorEquipmentPrototype &
   Omit<EquipmentPrototype, keyof _GeneratorEquipmentPrototype>;
 
 export function isGeneratorEquipmentPrototype(
-  value: unknown,
+  value: unknown
 ): value is GeneratorEquipmentPrototype {
   return (value as { type: string }).type === 'generator-equipment';
 }
@@ -2645,7 +2646,7 @@ export type GeneratorPrototype = _GeneratorPrototype &
   Omit<EntityWithOwnerPrototype, keyof _GeneratorPrototype>;
 
 export function isGeneratorPrototype(
-  value: unknown,
+  value: unknown
 ): value is GeneratorPrototype {
   return (value as { type: string }).type === 'generator';
 }
@@ -2668,7 +2669,7 @@ export interface GodControllerPrototype {
 }
 
 export function isGodControllerPrototype(
-  value: unknown,
+  value: unknown
 ): value is GodControllerPrototype {
   return (value as { type: string }).type === 'god-controller';
 }
@@ -2684,7 +2685,7 @@ export type GroupAttackAchievementPrototype = _GroupAttackAchievementPrototype &
   Omit<AchievementPrototype, keyof _GroupAttackAchievementPrototype>;
 
 export function isGroupAttackAchievementPrototype(
-  value: unknown,
+  value: unknown
 ): value is GroupAttackAchievementPrototype {
   return (value as { type: string }).type === 'group-attack-achievement';
 }
@@ -2729,7 +2730,7 @@ export type HeatInterfacePrototype = _HeatInterfacePrototype &
   Omit<EntityWithOwnerPrototype, keyof _HeatInterfacePrototype>;
 
 export function isHeatInterfacePrototype(
-  value: unknown,
+  value: unknown
 ): value is HeatInterfacePrototype {
   return (value as { type: string }).type === 'heat-interface';
 }
@@ -2748,7 +2749,7 @@ export type HeatPipePrototype = _HeatPipePrototype &
   Omit<EntityWithOwnerPrototype, keyof _HeatPipePrototype>;
 
 export function isHeatPipePrototype(
-  value: unknown,
+  value: unknown
 ): value is HeatPipePrototype {
   return (value as { type: string }).type === 'heat-pipe';
 }
@@ -2766,7 +2767,7 @@ export type HighlightBoxEntityPrototype = _HighlightBoxEntityPrototype &
   Omit<EntityPrototype, keyof _HighlightBoxEntityPrototype>;
 
 export function isHighlightBoxEntityPrototype(
-  value: unknown,
+  value: unknown
 ): value is HighlightBoxEntityPrototype {
   return (value as { type: string }).type === 'highlight-box';
 }
@@ -2794,7 +2795,7 @@ export type InfinityContainerPrototype = _InfinityContainerPrototype &
   Omit<LogisticContainerPrototype, keyof _InfinityContainerPrototype>;
 
 export function isInfinityContainerPrototype(
-  value: unknown,
+  value: unknown
 ): value is InfinityContainerPrototype {
   return (value as { type: string }).type === 'infinity-container';
 }
@@ -2809,7 +2810,7 @@ export type InfinityPipePrototype = _InfinityPipePrototype &
   Omit<PipePrototype, keyof _InfinityPipePrototype>;
 
 export function isInfinityPipePrototype(
-  value: unknown,
+  value: unknown
 ): value is InfinityPipePrototype {
   return (value as { type: string }).type === 'infinity-pipe';
 }
@@ -2875,7 +2876,7 @@ export type InserterPrototype = _InserterPrototype &
   Omit<EntityWithOwnerPrototype, keyof _InserterPrototype>;
 
 export function isInserterPrototype(
-  value: unknown,
+  value: unknown
 ): value is InserterPrototype {
   return (value as { type: string }).type === 'inserter';
 }
@@ -2899,7 +2900,7 @@ export type ItemEntityPrototype = _ItemEntityPrototype &
   Omit<EntityPrototype, keyof _ItemEntityPrototype>;
 
 export function isItemEntityPrototype(
-  value: unknown,
+  value: unknown
 ): value is ItemEntityPrototype {
   return (value as { type: string }).type === 'item-entity';
 }
@@ -3023,7 +3024,7 @@ export type ItemRequestProxyPrototype = _ItemRequestProxyPrototype &
   Omit<EntityPrototype, keyof _ItemRequestProxyPrototype>;
 
 export function isItemRequestProxyPrototype(
-  value: unknown,
+  value: unknown
 ): value is ItemRequestProxyPrototype {
   return (value as { type: string }).type === 'item-request-proxy';
 }
@@ -3077,7 +3078,7 @@ export type ItemWithEntityDataPrototype = _ItemWithEntityDataPrototype &
   Omit<ItemPrototype, keyof _ItemWithEntityDataPrototype>;
 
 export function isItemWithEntityDataPrototype(
-  value: unknown,
+  value: unknown
 ): value is ItemWithEntityDataPrototype {
   return (value as { type: string }).type === 'item-with-entity-data';
 }
@@ -3113,7 +3114,7 @@ export type ItemWithInventoryPrototype = _ItemWithInventoryPrototype &
   Omit<ItemWithLabelPrototype, keyof _ItemWithInventoryPrototype>;
 
 export function isItemWithInventoryPrototype(
-  value: unknown,
+  value: unknown
 ): value is ItemWithInventoryPrototype {
   return (value as { type: string }).type === 'item-with-inventory';
 }
@@ -3131,7 +3132,7 @@ export type ItemWithLabelPrototype = _ItemWithLabelPrototype &
   Omit<ItemPrototype, keyof _ItemWithLabelPrototype>;
 
 export function isItemWithLabelPrototype(
-  value: unknown,
+  value: unknown
 ): value is ItemWithLabelPrototype {
   return (value as { type: string }).type === 'item-with-label';
 }
@@ -3146,7 +3147,7 @@ export type ItemWithTagsPrototype = _ItemWithTagsPrototype &
   Omit<ItemWithLabelPrototype, keyof _ItemWithTagsPrototype>;
 
 export function isItemWithTagsPrototype(
-  value: unknown,
+  value: unknown
 ): value is ItemWithTagsPrototype {
   return (value as { type: string }).type === 'item-with-tags';
 }
@@ -3172,7 +3173,7 @@ export type KillAchievementPrototype = _KillAchievementPrototype &
   Omit<AchievementPrototype, keyof _KillAchievementPrototype>;
 
 export function isKillAchievementPrototype(
-  value: unknown,
+  value: unknown
 ): value is KillAchievementPrototype {
   return (value as { type: string }).type === 'kill-achievement';
 }
@@ -3282,7 +3283,7 @@ export type LandMinePrototype = _LandMinePrototype &
   Omit<EntityWithOwnerPrototype, keyof _LandMinePrototype>;
 
 export function isLandMinePrototype(
-  value: unknown,
+  value: unknown
 ): value is LandMinePrototype {
   return (value as { type: string }).type === 'land-mine';
 }
@@ -3297,7 +3298,7 @@ export type LeafParticlePrototype = _LeafParticlePrototype &
   Omit<EntityParticlePrototype, keyof _LeafParticlePrototype>;
 
 export function isLeafParticlePrototype(
-  value: unknown,
+  value: unknown
 ): value is LeafParticlePrototype {
   return (value as { type: string }).type === 'leaf-particle';
 }
@@ -3318,7 +3319,7 @@ export type LinkedBeltPrototype = _LinkedBeltPrototype &
   Omit<TransportBeltConnectablePrototype, keyof _LinkedBeltPrototype>;
 
 export function isLinkedBeltPrototype(
-  value: unknown,
+  value: unknown
 ): value is LinkedBeltPrototype {
   return (value as { type: string }).type === 'linked-belt';
 }
@@ -3348,7 +3349,7 @@ export type LinkedContainerPrototype = _LinkedContainerPrototype &
   Omit<EntityWithOwnerPrototype, keyof _LinkedContainerPrototype>;
 
 export function isLinkedContainerPrototype(
-  value: unknown,
+  value: unknown
 ): value is LinkedContainerPrototype {
   return (value as { type: string }).type === 'linked-container';
 }
@@ -3367,7 +3368,7 @@ export type Loader1x1Prototype = _Loader1x1Prototype &
   Omit<LoaderPrototype, keyof _Loader1x1Prototype>;
 
 export function isLoader1x1Prototype(
-  value: unknown,
+  value: unknown
 ): value is Loader1x1Prototype {
   return (value as { type: string }).type === 'loader-1x1';
 }
@@ -3386,7 +3387,7 @@ export type Loader1x2Prototype = _Loader1x2Prototype &
   Omit<LoaderPrototype, keyof _Loader1x2Prototype>;
 
 export function isLoader1x2Prototype(
-  value: unknown,
+  value: unknown
 ): value is Loader1x2Prototype {
   return (value as { type: string }).type === 'loader';
 }
@@ -3436,7 +3437,7 @@ export type LocomotivePrototype = _LocomotivePrototype &
   Omit<RollingStockPrototype, keyof _LocomotivePrototype>;
 
 export function isLocomotivePrototype(
-  value: unknown,
+  value: unknown
 ): value is LocomotivePrototype {
   return (value as { type: string }).type === 'locomotive';
 }
@@ -3472,7 +3473,7 @@ export type LogisticContainerPrototype = _LogisticContainerPrototype &
   Omit<ContainerPrototype, keyof _LogisticContainerPrototype>;
 
 export function isLogisticContainerPrototype(
-  value: unknown,
+  value: unknown
 ): value is LogisticContainerPrototype {
   return (value as { type: string }).type === 'logistic-container';
 }
@@ -3496,7 +3497,7 @@ export type LogisticRobotPrototype = _LogisticRobotPrototype &
   Omit<RobotWithLogisticInterfacePrototype, keyof _LogisticRobotPrototype>;
 
 export function isLogisticRobotPrototype(
-  value: unknown,
+  value: unknown
 ): value is LogisticRobotPrototype {
   return (value as { type: string }).type === 'logistic-robot';
 }
@@ -3608,7 +3609,7 @@ export type MiningDrillPrototype = _MiningDrillPrototype &
   Omit<EntityWithOwnerPrototype, keyof _MiningDrillPrototype>;
 
 export function isMiningDrillPrototype(
-  value: unknown,
+  value: unknown
 ): value is MiningDrillPrototype {
   return (value as { type: string }).type === 'mining-drill';
 }
@@ -3623,7 +3624,7 @@ export type MiningToolPrototype = _MiningToolPrototype &
   Omit<ToolPrototype, keyof _MiningToolPrototype>;
 
 export function isMiningToolPrototype(
-  value: unknown,
+  value: unknown
 ): value is MiningToolPrototype {
   return (value as { type: string }).type === 'mining-tool';
 }
@@ -3709,7 +3710,7 @@ export type MovementBonusEquipmentPrototype = _MovementBonusEquipmentPrototype &
   Omit<EquipmentPrototype, keyof _MovementBonusEquipmentPrototype>;
 
 export function isMovementBonusEquipmentPrototype(
-  value: unknown,
+  value: unknown
 ): value is MovementBonusEquipmentPrototype {
   return (value as { type: string }).type === 'movement-bonus-equipment';
 }
@@ -3789,7 +3790,7 @@ export type NamedNoiseExpression = _NamedNoiseExpression &
   Omit<PrototypeBase, keyof _NamedNoiseExpression>;
 
 export function isNamedNoiseExpression(
-  value: unknown,
+  value: unknown
 ): value is NamedNoiseExpression {
   return (value as { type: string }).type === 'noise-expression';
 }
@@ -3809,7 +3810,7 @@ export type NightVisionEquipmentPrototype = _NightVisionEquipmentPrototype &
   Omit<EquipmentPrototype, keyof _NightVisionEquipmentPrototype>;
 
 export function isNightVisionEquipmentPrototype(
-  value: unknown,
+  value: unknown
 ): value is NightVisionEquipmentPrototype {
   return (value as { type: string }).type === 'night-vision-equipment';
 }
@@ -3881,7 +3882,7 @@ export type OffshorePumpPrototype = _OffshorePumpPrototype &
   Omit<EntityWithOwnerPrototype, keyof _OffshorePumpPrototype>;
 
 export function isOffshorePumpPrototype(
-  value: unknown,
+  value: unknown
 ): value is OffshorePumpPrototype {
   return (value as { type: string }).type === 'offshore-pump';
 }
@@ -3916,7 +3917,7 @@ export type ParticlePrototype = _ParticlePrototype &
   Omit<PrototypeBase, keyof _ParticlePrototype>;
 
 export function isParticlePrototype(
-  value: unknown,
+  value: unknown
 ): value is ParticlePrototype {
   return (value as { type: string }).type === 'optimized-particle';
 }
@@ -3946,7 +3947,7 @@ export type ParticleSourcePrototype = _ParticleSourcePrototype &
   Omit<EntityPrototype, keyof _ParticleSourcePrototype>;
 
 export function isParticleSourcePrototype(
-  value: unknown,
+  value: unknown
 ): value is ParticleSourcePrototype {
   return (value as { type: string }).type === 'particle-source';
 }
@@ -3982,7 +3983,7 @@ export type PipeToGroundPrototype = _PipeToGroundPrototype &
   Omit<EntityWithOwnerPrototype, keyof _PipeToGroundPrototype>;
 
 export function isPipeToGroundPrototype(
-  value: unknown,
+  value: unknown
 ): value is PipeToGroundPrototype {
   return (value as { type: string }).type === 'pipe-to-ground';
 }
@@ -4003,7 +4004,7 @@ export type PlayerDamagedAchievementPrototype =
     Omit<AchievementPrototype, keyof _PlayerDamagedAchievementPrototype>;
 
 export function isPlayerDamagedAchievementPrototype(
-  value: unknown,
+  value: unknown
 ): value is PlayerDamagedAchievementPrototype {
   return (value as { type: string }).type === 'player-damaged-achievement';
 }
@@ -4022,7 +4023,7 @@ export type PlayerPortPrototype = _PlayerPortPrototype &
   Omit<EntityWithOwnerPrototype, keyof _PlayerPortPrototype>;
 
 export function isPlayerPortPrototype(
-  value: unknown,
+  value: unknown
 ): value is PlayerPortPrototype {
   return (value as { type: string }).type === 'player-port';
 }
@@ -4048,7 +4049,7 @@ export type PowerSwitchPrototype = _PowerSwitchPrototype &
   Omit<EntityWithOwnerPrototype, keyof _PowerSwitchPrototype>;
 
 export function isPowerSwitchPrototype(
-  value: unknown,
+  value: unknown
 ): value is PowerSwitchPrototype {
   return (value as { type: string }).type === 'power-switch';
 }
@@ -4074,7 +4075,7 @@ export type ProduceAchievementPrototype = _ProduceAchievementPrototype &
   Omit<AchievementPrototype, keyof _ProduceAchievementPrototype>;
 
 export function isProduceAchievementPrototype(
-  value: unknown,
+  value: unknown
 ): value is ProduceAchievementPrototype {
   return (value as { type: string }).type === 'produce-achievement';
 }
@@ -4099,7 +4100,7 @@ export type ProducePerHourAchievementPrototype =
     Omit<AchievementPrototype, keyof _ProducePerHourAchievementPrototype>;
 
 export function isProducePerHourAchievementPrototype(
-  value: unknown,
+  value: unknown
 ): value is ProducePerHourAchievementPrototype {
   return (value as { type: string }).type === 'produce-per-hour-achievement';
 }
@@ -4124,7 +4125,7 @@ export type ProgrammableSpeakerPrototype = _ProgrammableSpeakerPrototype &
   Omit<EntityWithOwnerPrototype, keyof _ProgrammableSpeakerPrototype>;
 
 export function isProgrammableSpeakerPrototype(
-  value: unknown,
+  value: unknown
 ): value is ProgrammableSpeakerPrototype {
   return (value as { type: string }).type === 'programmable-speaker';
 }
@@ -4168,7 +4169,7 @@ export type ProjectilePrototype = _ProjectilePrototype &
   Omit<EntityPrototype, keyof _ProjectilePrototype>;
 
 export function isProjectilePrototype(
-  value: unknown,
+  value: unknown
 ): value is ProjectilePrototype {
   return (value as { type: string }).type === 'projectile';
 }
@@ -4279,7 +4280,7 @@ export type RailChainSignalPrototype = _RailChainSignalPrototype &
   Omit<RailSignalBasePrototype, keyof _RailChainSignalPrototype>;
 
 export function isRailChainSignalPrototype(
-  value: unknown,
+  value: unknown
 ): value is RailChainSignalPrototype {
   return (value as { type: string }).type === 'rail-chain-signal';
 }
@@ -4297,7 +4298,7 @@ export type RailPlannerPrototype = _RailPlannerPrototype &
   Omit<ItemPrototype, keyof _RailPlannerPrototype>;
 
 export function isRailPlannerPrototype(
-  value: unknown,
+  value: unknown
 ): value is RailPlannerPrototype {
   return (value as { type: string }).type === 'rail-planner';
 }
@@ -4336,7 +4337,7 @@ export type RailRemnantsPrototype = _RailRemnantsPrototype &
   Omit<CorpsePrototype, keyof _RailRemnantsPrototype>;
 
 export function isRailRemnantsPrototype(
-  value: unknown,
+  value: unknown
 ): value is RailRemnantsPrototype {
   return (value as { type: string }).type === 'rail-remnants';
 }
@@ -4381,7 +4382,7 @@ export type RailSignalPrototype = _RailSignalPrototype &
   Omit<RailSignalBasePrototype, keyof _RailSignalPrototype>;
 
 export function isRailSignalPrototype(
-  value: unknown,
+  value: unknown
 ): value is RailSignalPrototype {
   return (value as { type: string }).type === 'rail-signal';
 }
@@ -4591,7 +4592,7 @@ export type RepairToolPrototype = _RepairToolPrototype &
   Omit<ToolPrototype, keyof _RepairToolPrototype>;
 
 export function isRepairToolPrototype(
-  value: unknown,
+  value: unknown
 ): value is RepairToolPrototype {
   return (value as { type: string }).type === 'repair-tool';
 }
@@ -4613,7 +4614,7 @@ export type ResearchAchievementPrototype = _ResearchAchievementPrototype &
   Omit<AchievementPrototype, keyof _ResearchAchievementPrototype>;
 
 export function isResearchAchievementPrototype(
-  value: unknown,
+  value: unknown
 ): value is ResearchAchievementPrototype {
   return (value as { type: string }).type === 'research-achievement';
 }
@@ -4688,7 +4689,7 @@ export type ResourceEntityPrototype = _ResourceEntityPrototype &
   Omit<EntityPrototype, keyof _ResourceEntityPrototype>;
 
 export function isResourceEntityPrototype(
-  value: unknown,
+  value: unknown
 ): value is ResourceEntityPrototype {
   return (value as { type: string }).type === 'resource';
 }
@@ -4739,7 +4740,7 @@ export type RoboportEquipmentPrototype = _RoboportEquipmentPrototype &
   Omit<EquipmentPrototype, keyof _RoboportEquipmentPrototype>;
 
 export function isRoboportEquipmentPrototype(
-  value: unknown,
+  value: unknown
 ): value is RoboportEquipmentPrototype {
   return (value as { type: string }).type === 'roboport-equipment';
 }
@@ -4817,7 +4818,7 @@ export type RoboportPrototype = _RoboportPrototype &
   Omit<EntityWithOwnerPrototype, keyof _RoboportPrototype>;
 
 export function isRoboportPrototype(
-  value: unknown,
+  value: unknown
 ): value is RoboportPrototype {
   return (value as { type: string }).type === 'roboport';
 }
@@ -4923,7 +4924,7 @@ export type RocketSiloPrototype = _RocketSiloPrototype &
   Omit<AssemblingMachinePrototype, keyof _RocketSiloPrototype>;
 
 export function isRocketSiloPrototype(
-  value: unknown,
+  value: unknown
 ): value is RocketSiloPrototype {
   return (value as { type: string }).type === 'rocket-silo';
 }
@@ -4971,7 +4972,7 @@ export type RocketSiloRocketPrototype = _RocketSiloRocketPrototype &
   Omit<EntityPrototype, keyof _RocketSiloRocketPrototype>;
 
 export function isRocketSiloRocketPrototype(
-  value: unknown,
+  value: unknown
 ): value is RocketSiloRocketPrototype {
   return (value as { type: string }).type === 'rocket-silo-rocket';
 }
@@ -4986,7 +4987,7 @@ export type RocketSiloRocketShadowPrototype = _RocketSiloRocketShadowPrototype &
   Omit<EntityPrototype, keyof _RocketSiloRocketShadowPrototype>;
 
 export function isRocketSiloRocketShadowPrototype(
-  value: unknown,
+  value: unknown
 ): value is RocketSiloRocketShadowPrototype {
   return (value as { type: string }).type === 'rocket-silo-rocket-shadow';
 }
@@ -5088,7 +5089,7 @@ export type SelectionToolPrototype = _SelectionToolPrototype &
   Omit<ItemWithLabelPrototype, keyof _SelectionToolPrototype>;
 
 export function isSelectionToolPrototype(
-  value: unknown,
+  value: unknown
 ): value is SelectionToolPrototype {
   return (value as { type: string }).type === 'selection-tool';
 }
@@ -5143,7 +5144,7 @@ export type ShortcutPrototype = _ShortcutPrototype &
   Omit<PrototypeBase, keyof _ShortcutPrototype>;
 
 export function isShortcutPrototype(
-  value: unknown,
+  value: unknown
 ): value is ShortcutPrototype {
   return (value as { type: string }).type === 'shortcut';
 }
@@ -5170,7 +5171,7 @@ export type SimpleEntityPrototype = _SimpleEntityPrototype &
   Omit<EntityWithHealthPrototype, keyof _SimpleEntityPrototype>;
 
 export function isSimpleEntityPrototype(
-  value: unknown,
+  value: unknown
 ): value is SimpleEntityPrototype {
   return (value as { type: string }).type === 'simple-entity';
 }
@@ -5186,7 +5187,7 @@ export type SimpleEntityWithForcePrototype = _SimpleEntityWithForcePrototype &
   Omit<SimpleEntityWithOwnerPrototype, keyof _SimpleEntityWithForcePrototype>;
 
 export function isSimpleEntityWithForcePrototype(
-  value: unknown,
+  value: unknown
 ): value is SimpleEntityWithForcePrototype {
   return (value as { type: string }).type === 'simple-entity-with-force';
 }
@@ -5215,7 +5216,7 @@ export type SimpleEntityWithOwnerPrototype = _SimpleEntityWithOwnerPrototype &
   Omit<EntityWithOwnerPrototype, keyof _SimpleEntityWithOwnerPrototype>;
 
 export function isSimpleEntityWithOwnerPrototype(
-  value: unknown,
+  value: unknown
 ): value is SimpleEntityWithOwnerPrototype {
   return (value as { type: string }).type === 'simple-entity-with-owner';
 }
@@ -5230,7 +5231,7 @@ export type SimpleSmokePrototype = _SimpleSmokePrototype &
   Omit<SmokePrototype, keyof _SimpleSmokePrototype>;
 
 export function isSimpleSmokePrototype(
-  value: unknown,
+  value: unknown
 ): value is SimpleSmokePrototype {
   return (value as { type: string }).type === 'smoke';
 }
@@ -5285,7 +5286,7 @@ export type SmokeWithTriggerPrototype = _SmokeWithTriggerPrototype &
   Omit<SmokePrototype, keyof _SmokeWithTriggerPrototype>;
 
 export function isSmokeWithTriggerPrototype(
-  value: unknown,
+  value: unknown
 ): value is SmokeWithTriggerPrototype {
   return (value as { type: string }).type === 'smoke-with-trigger';
 }
@@ -5301,7 +5302,7 @@ export type SolarPanelEquipmentPrototype = _SolarPanelEquipmentPrototype &
   Omit<EquipmentPrototype, keyof _SolarPanelEquipmentPrototype>;
 
 export function isSolarPanelEquipmentPrototype(
-  value: unknown,
+  value: unknown
 ): value is SolarPanelEquipmentPrototype {
   return (value as { type: string }).type === 'solar-panel-equipment';
 }
@@ -5323,7 +5324,7 @@ export type SolarPanelPrototype = _SolarPanelPrototype &
   Omit<EntityWithOwnerPrototype, keyof _SolarPanelPrototype>;
 
 export function isSolarPanelPrototype(
-  value: unknown,
+  value: unknown
 ): value is SolarPanelPrototype {
   return (value as { type: string }).type === 'solar-panel';
 }
@@ -5376,7 +5377,7 @@ export interface SpectatorControllerPrototype {
 }
 
 export function isSpectatorControllerPrototype(
-  value: unknown,
+  value: unknown
 ): value is SpectatorControllerPrototype {
   return (value as { type: string }).type === 'spectator-controller';
 }
@@ -5398,7 +5399,7 @@ export type SpeechBubblePrototype = _SpeechBubblePrototype &
   Omit<EntityPrototype, keyof _SpeechBubblePrototype>;
 
 export function isSpeechBubblePrototype(
-  value: unknown,
+  value: unknown
 ): value is SpeechBubblePrototype {
   return (value as { type: string }).type === 'speech-bubble';
 }
@@ -5423,7 +5424,7 @@ export type SpiderLegPrototype = _SpiderLegPrototype &
   Omit<EntityWithHealthPrototype, keyof _SpiderLegPrototype>;
 
 export function isSpiderLegPrototype(
-  value: unknown,
+  value: unknown
 ): value is SpiderLegPrototype {
   return (value as { type: string }).type === 'spider-leg';
 }
@@ -5459,7 +5460,7 @@ export type SpiderVehiclePrototype = _SpiderVehiclePrototype &
   Omit<VehiclePrototype, keyof _SpiderVehiclePrototype>;
 
 export function isSpiderVehiclePrototype(
-  value: unknown,
+  value: unknown
 ): value is SpiderVehiclePrototype {
   return (value as { type: string }).type === 'spider-vehicle';
 }
@@ -5485,7 +5486,7 @@ export type SpidertronRemotePrototype = _SpidertronRemotePrototype &
   Omit<ItemPrototype, keyof _SpidertronRemotePrototype>;
 
 export function isSpidertronRemotePrototype(
-  value: unknown,
+  value: unknown
 ): value is SpidertronRemotePrototype {
   return (value as { type: string }).type === 'spidertron-remote';
 }
@@ -5506,7 +5507,7 @@ export type SplitterPrototype = _SplitterPrototype &
   Omit<TransportBeltConnectablePrototype, keyof _SplitterPrototype>;
 
 export function isSplitterPrototype(
-  value: unknown,
+  value: unknown
 ): value is SplitterPrototype {
   return (value as { type: string }).type === 'splitter';
 }
@@ -5706,7 +5707,7 @@ export type StorageTankPrototype = _StorageTankPrototype &
   Omit<EntityWithOwnerPrototype, keyof _StorageTankPrototype>;
 
 export function isStorageTankPrototype(
-  value: unknown,
+  value: unknown
 ): value is StorageTankPrototype {
   return (value as { type: string }).type === 'storage-tank';
 }
@@ -5721,7 +5722,7 @@ export type StraightRailPrototype = _StraightRailPrototype &
   Omit<RailPrototype, keyof _StraightRailPrototype>;
 
 export function isStraightRailPrototype(
-  value: unknown,
+  value: unknown
 ): value is StraightRailPrototype {
   return (value as { type: string }).type === 'straight-rail';
 }
@@ -5795,7 +5796,7 @@ export type TechnologyPrototype = _TechnologyPrototype &
   Omit<PrototypeBase, keyof _TechnologyPrototype>;
 
 export function isTechnologyPrototype(
-  value: unknown,
+  value: unknown
 ): value is TechnologyPrototype {
   return (value as { type: string }).type === 'technology';
 }
@@ -5821,7 +5822,7 @@ export interface TileEffectDefinition {
 }
 
 export function isTileEffectDefinition(
-  value: unknown,
+  value: unknown
 ): value is TileEffectDefinition {
   return (value as { type: string }).type === 'tile-effect';
 }
@@ -5837,7 +5838,7 @@ export type TileGhostPrototype = _TileGhostPrototype &
   Omit<EntityPrototype, keyof _TileGhostPrototype>;
 
 export function isTileGhostPrototype(
-  value: unknown,
+  value: unknown
 ): value is TileGhostPrototype {
   return (value as { type: string }).type === 'tile-ghost';
 }
@@ -5940,7 +5941,7 @@ export type TipsAndTricksItem = _TipsAndTricksItem &
   Omit<PrototypeBase, keyof _TipsAndTricksItem>;
 
 export function isTipsAndTricksItem(
-  value: unknown,
+  value: unknown
 ): value is TipsAndTricksItem {
   return (value as { type: string }).type === 'tips-and-tricks-item';
 }
@@ -5954,7 +5955,7 @@ export interface TipsAndTricksItemCategory {
 }
 
 export function isTipsAndTricksItemCategory(
-  value: unknown,
+  value: unknown
 ): value is TipsAndTricksItemCategory {
   return (value as { type: string }).type === 'tips-and-tricks-item-category';
 }
@@ -6006,7 +6007,7 @@ export type TrainPathAchievementPrototype = _TrainPathAchievementPrototype &
   Omit<AchievementPrototype, keyof _TrainPathAchievementPrototype>;
 
 export function isTrainPathAchievementPrototype(
-  value: unknown,
+  value: unknown
 ): value is TrainPathAchievementPrototype {
   return (value as { type: string }).type === 'train-path-achievement';
 }
@@ -6051,7 +6052,7 @@ export type TrainStopPrototype = _TrainStopPrototype &
   Omit<EntityWithOwnerPrototype, keyof _TrainStopPrototype>;
 
 export function isTrainStopPrototype(
-  value: unknown,
+  value: unknown
 ): value is TrainStopPrototype {
   return (value as { type: string }).type === 'train-stop';
 }
@@ -6125,7 +6126,7 @@ export type TransportBeltPrototype = _TransportBeltPrototype &
   Omit<TransportBeltConnectablePrototype, keyof _TransportBeltPrototype>;
 
 export function isTransportBeltPrototype(
-  value: unknown,
+  value: unknown
 ): value is TransportBeltPrototype {
   return (value as { type: string }).type === 'transport-belt';
 }
@@ -6159,7 +6160,7 @@ export interface TriggerTargetType {
 }
 
 export function isTriggerTargetType(
-  value: unknown,
+  value: unknown
 ): value is TriggerTargetType {
   return (value as { type: string }).type === 'trigger-target-type';
 }
@@ -6193,7 +6194,7 @@ export type TrivialSmokePrototype = _TrivialSmokePrototype &
   Omit<PrototypeBase, keyof _TrivialSmokePrototype>;
 
 export function isTrivialSmokePrototype(
-  value: unknown,
+  value: unknown
 ): value is TrivialSmokePrototype {
   return (value as { type: string }).type === 'trivial-smoke';
 }
@@ -6307,7 +6308,7 @@ export type TutorialDefinition = _TutorialDefinition &
   Omit<PrototypeBase, keyof _TutorialDefinition>;
 
 export function isTutorialDefinition(
-  value: unknown,
+  value: unknown
 ): value is TutorialDefinition {
   return (value as { type: string }).type === 'tutorial';
 }
@@ -6327,7 +6328,7 @@ export type UndergroundBeltPrototype = _UndergroundBeltPrototype &
   Omit<TransportBeltConnectablePrototype, keyof _UndergroundBeltPrototype>;
 
 export function isUndergroundBeltPrototype(
-  value: unknown,
+  value: unknown
 ): value is UndergroundBeltPrototype {
   return (value as { type: string }).type === 'underground-belt';
 }
@@ -6425,7 +6426,7 @@ export type UpgradeItemPrototype = _UpgradeItemPrototype &
   Omit<SelectionToolPrototype, keyof _UpgradeItemPrototype>;
 
 export function isUpgradeItemPrototype(
-  value: unknown,
+  value: unknown
 ): value is UpgradeItemPrototype {
   return (value as { type: string }).type === 'upgrade-item';
 }
@@ -7230,7 +7231,7 @@ export type VirtualSignalPrototype = _VirtualSignalPrototype &
   Omit<PrototypeBase, keyof _VirtualSignalPrototype>;
 
 export function isVirtualSignalPrototype(
-  value: unknown,
+  value: unknown
 ): value is VirtualSignalPrototype {
   return (value as { type: string }).type === 'virtual-signal';
 }
@@ -7289,7 +7290,7 @@ export interface ActivateEquipmentCapsuleAction {
 }
 
 export function isActivateEquipmentCapsuleAction(
-  value: unknown,
+  value: unknown
 ): value is ActivateEquipmentCapsuleAction {
   return (value as { type: string }).type === 'equipment-remote';
 }
@@ -7308,7 +7309,7 @@ export type ActivityBarStyleSpecification = _ActivityBarStyleSpecification &
   Omit<BaseStyleSpecification, keyof _ActivityBarStyleSpecification>;
 
 export function isActivityBarStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is ActivityBarStyleSpecification {
   return (value as { type: string }).type === 'activity_bar_style';
 }
@@ -7343,7 +7344,7 @@ export type AmmoDamageModifier = _AmmoDamageModifier &
   Omit<BaseModifier, keyof _AmmoDamageModifier>;
 
 export function isAmmoDamageModifier(
-  value: unknown,
+  value: unknown
 ): value is AmmoDamageModifier {
   return (value as { type: string }).type === 'ammo-damage';
 }
@@ -7516,7 +7517,7 @@ export type ArtilleryRangeModifier = _ArtilleryRangeModifier &
   Omit<SimpleModifier, keyof _ArtilleryRangeModifier>;
 
 export function isArtilleryRangeModifier(
-  value: unknown,
+  value: unknown
 ): value is ArtilleryRangeModifier {
   return (value as { type: string }).type === 'artillery-range';
 }
@@ -7529,7 +7530,7 @@ export interface ArtilleryRemoteCapsuleAction {
 }
 
 export function isArtilleryRemoteCapsuleAction(
-  value: unknown,
+  value: unknown
 ): value is ArtilleryRemoteCapsuleAction {
   return (value as { type: string }).type === 'artillery-remote';
 }
@@ -7550,7 +7551,7 @@ export type ArtilleryTriggerDelivery = _ArtilleryTriggerDelivery &
   Omit<TriggerDeliveryItem, keyof _ArtilleryTriggerDelivery>;
 
 export function isArtilleryTriggerDelivery(
-  value: unknown,
+  value: unknown
 ): value is ArtilleryTriggerDelivery {
   return (value as { type: string }).type === 'artillery';
 }
@@ -7949,7 +7950,7 @@ export type BeamAttackParameters = _BeamAttackParameters &
   Omit<BaseAttackParameters, keyof _BeamAttackParameters>;
 
 export function isBeamAttackParameters(
-  value: unknown,
+  value: unknown
 ): value is BeamAttackParameters {
   return (value as { type: string }).type === 'beam';
 }
@@ -7968,7 +7969,7 @@ export type BeamTriggerDelivery = _BeamTriggerDelivery &
   Omit<TriggerDeliveryItem, keyof _BeamTriggerDelivery>;
 
 export function isBeamTriggerDelivery(
-  value: unknown,
+  value: unknown
 ): value is BeamTriggerDelivery {
   return (value as { type: string }).type === 'beam';
 }
@@ -7979,7 +7980,7 @@ export interface BeltTraverseTipTrigger {
 }
 
 export function isBeltTraverseTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is BeltTraverseTipTrigger {
   return (value as { type: string }).type === 'belt-traverse';
 }
@@ -8073,7 +8074,7 @@ export interface BuildEntityTipTrigger {
 }
 
 export function isBuildEntityTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is BuildEntityTipTrigger {
   return (value as { type: string }).type === 'build-entity';
 }
@@ -8099,7 +8100,7 @@ export type BurnerEnergySource = _BurnerEnergySource &
   Omit<BaseEnergySource, keyof _BurnerEnergySource>;
 
 export function isBurnerEnergySource(
-  value: unknown,
+  value: unknown
 ): value is BurnerEnergySource {
   return (value as { type: string }).type === 'burner';
 }
@@ -8130,7 +8131,7 @@ export type ButtonStyleSpecification = _ButtonStyleSpecification &
   >;
 
 export function isButtonStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is ButtonStyleSpecification {
   return (value as { type: string }).type === 'button_style';
 }
@@ -8152,7 +8153,7 @@ export type CameraEffectTriggerEffectItem = _CameraEffectTriggerEffectItem &
   Omit<TriggerEffectItem, keyof _CameraEffectTriggerEffectItem>;
 
 export function isCameraEffectTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is CameraEffectTriggerEffectItem {
   return (value as { type: string }).type === 'camera-effect';
 }
@@ -8165,7 +8166,7 @@ export type CameraStyleSpecification = _CameraStyleSpecification &
   Omit<EmptyWidgetStyleSpecification, keyof _CameraStyleSpecification>;
 
 export function isCameraStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is CameraStyleSpecification {
   return (value as { type: string }).type === 'camera_style';
 }
@@ -8193,7 +8194,7 @@ export type CharacterBuildDistanceModifier = _CharacterBuildDistanceModifier &
   Omit<SimpleModifier, keyof _CharacterBuildDistanceModifier>;
 
 export function isCharacterBuildDistanceModifier(
-  value: unknown,
+  value: unknown
 ): value is CharacterBuildDistanceModifier {
   return (value as { type: string }).type === 'character-build-distance';
 }
@@ -8208,7 +8209,7 @@ export type CharacterCraftingSpeedModifier = _CharacterCraftingSpeedModifier &
   Omit<SimpleModifier, keyof _CharacterCraftingSpeedModifier>;
 
 export function isCharacterCraftingSpeedModifier(
-  value: unknown,
+  value: unknown
 ): value is CharacterCraftingSpeedModifier {
   return (value as { type: string }).type === 'character-crafting-speed';
 }
@@ -8223,7 +8224,7 @@ export type CharacterHealthBonusModifier = _CharacterHealthBonusModifier &
   Omit<SimpleModifier, keyof _CharacterHealthBonusModifier>;
 
 export function isCharacterHealthBonusModifier(
-  value: unknown,
+  value: unknown
 ): value is CharacterHealthBonusModifier {
   return (value as { type: string }).type === 'character-health-bonus';
 }
@@ -8239,7 +8240,7 @@ export type CharacterInventorySlotsBonusModifier =
     Omit<SimpleModifier, keyof _CharacterInventorySlotsBonusModifier>;
 
 export function isCharacterInventorySlotsBonusModifier(
-  value: unknown,
+  value: unknown
 ): value is CharacterInventorySlotsBonusModifier {
   return (value as { type: string }).type === 'character-inventory-slots-bonus';
 }
@@ -8255,7 +8256,7 @@ export type CharacterItemDropDistanceModifier =
     Omit<SimpleModifier, keyof _CharacterItemDropDistanceModifier>;
 
 export function isCharacterItemDropDistanceModifier(
-  value: unknown,
+  value: unknown
 ): value is CharacterItemDropDistanceModifier {
   return (value as { type: string }).type === 'character-item-drop-distance';
 }
@@ -8271,7 +8272,7 @@ export type CharacterItemPickupDistanceModifier =
     Omit<SimpleModifier, keyof _CharacterItemPickupDistanceModifier>;
 
 export function isCharacterItemPickupDistanceModifier(
-  value: unknown,
+  value: unknown
 ): value is CharacterItemPickupDistanceModifier {
   return (value as { type: string }).type === 'character-item-pickup-distance';
 }
@@ -8287,7 +8288,7 @@ export type CharacterLogisticRequestsModifier =
     Omit<BoolModifier, keyof _CharacterLogisticRequestsModifier>;
 
 export function isCharacterLogisticRequestsModifier(
-  value: unknown,
+  value: unknown
 ): value is CharacterLogisticRequestsModifier {
   return (value as { type: string }).type === 'character-logistic-requests';
 }
@@ -8303,7 +8304,7 @@ export type CharacterLogisticTrashSlotsModifier =
     Omit<SimpleModifier, keyof _CharacterLogisticTrashSlotsModifier>;
 
 export function isCharacterLogisticTrashSlotsModifier(
-  value: unknown,
+  value: unknown
 ): value is CharacterLogisticTrashSlotsModifier {
   return (value as { type: string }).type === 'character-logistic-trash-slots';
 }
@@ -8319,7 +8320,7 @@ export type CharacterLootPickupDistanceModifier =
     Omit<SimpleModifier, keyof _CharacterLootPickupDistanceModifier>;
 
 export function isCharacterLootPickupDistanceModifier(
-  value: unknown,
+  value: unknown
 ): value is CharacterLootPickupDistanceModifier {
   return (value as { type: string }).type === 'character-loot-pickup-distance';
 }
@@ -8334,7 +8335,7 @@ export type CharacterMiningSpeedModifier = _CharacterMiningSpeedModifier &
   Omit<SimpleModifier, keyof _CharacterMiningSpeedModifier>;
 
 export function isCharacterMiningSpeedModifier(
-  value: unknown,
+  value: unknown
 ): value is CharacterMiningSpeedModifier {
   return (value as { type: string }).type === 'character-mining-speed';
 }
@@ -8349,7 +8350,7 @@ export type CharacterReachDistanceModifier = _CharacterReachDistanceModifier &
   Omit<SimpleModifier, keyof _CharacterReachDistanceModifier>;
 
 export function isCharacterReachDistanceModifier(
-  value: unknown,
+  value: unknown
 ): value is CharacterReachDistanceModifier {
   return (value as { type: string }).type === 'character-reach-distance';
 }
@@ -8365,7 +8366,7 @@ export type CharacterResourceReachDistanceModifier =
     Omit<SimpleModifier, keyof _CharacterResourceReachDistanceModifier>;
 
 export function isCharacterResourceReachDistanceModifier(
-  value: unknown,
+  value: unknown
 ): value is CharacterResourceReachDistanceModifier {
   return (
     (value as { type: string }).type === 'character-resource-reach-distance'
@@ -8382,7 +8383,7 @@ export type CharacterRunningSpeedModifier = _CharacterRunningSpeedModifier &
   Omit<SimpleModifier, keyof _CharacterRunningSpeedModifier>;
 
 export function isCharacterRunningSpeedModifier(
-  value: unknown,
+  value: unknown
 ): value is CharacterRunningSpeedModifier {
   return (value as { type: string }).type === 'character-running-speed';
 }
@@ -8450,7 +8451,7 @@ export type CheckBoxStyleSpecification = _CheckBoxStyleSpecification &
   >;
 
 export function isCheckBoxStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is CheckBoxStyleSpecification {
   return (value as { type: string }).type === 'checkbox_style';
 }
@@ -8507,7 +8508,7 @@ export interface ClearCursorTipTrigger {
 }
 
 export function isClearCursorTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is ClearCursorTipTrigger {
   return (value as { type: string }).type === 'clear-cursor';
 }
@@ -8534,7 +8535,7 @@ export type ClusterTriggerItem = _ClusterTriggerItem &
   Omit<TriggerItem, keyof _ClusterTriggerItem>;
 
 export function isClusterTriggerItem(
-  value: unknown,
+  value: unknown
 ): value is ClusterTriggerItem {
   return (value as { type: string }).type === 'cluster';
 }
@@ -8617,7 +8618,7 @@ export interface CraftItemTipTrigger {
 }
 
 export function isCraftItemTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is CraftItemTipTrigger {
   return (value as { type: string }).type === 'craft-item';
 }
@@ -8647,7 +8648,7 @@ export type CreateDecorativesTriggerEffectItem =
     Omit<TriggerEffectItem, keyof _CreateDecorativesTriggerEffectItem>;
 
 export function isCreateDecorativesTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is CreateDecorativesTriggerEffectItem {
   return (value as { type: string }).type === 'create-decorative';
 }
@@ -8671,7 +8672,7 @@ export type CreateEntityTriggerEffectItem = _CreateEntityTriggerEffectItem &
   Omit<TriggerEffectItem, keyof _CreateEntityTriggerEffectItem>;
 
 export function isCreateEntityTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is CreateEntityTriggerEffectItem {
   return (value as { type: string }).type === 'create-entity';
 }
@@ -8692,7 +8693,7 @@ export type CreateExplosionTriggerEffectItem =
     >;
 
 export function isCreateExplosionTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is CreateExplosionTriggerEffectItem {
   return (value as { type: string }).type === 'create-explosion';
 }
@@ -8706,7 +8707,7 @@ export type CreateFireTriggerEffectItem = _CreateFireTriggerEffectItem &
   Omit<CreateEntityTriggerEffectItem, keyof _CreateFireTriggerEffectItem>;
 
 export function isCreateFireTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is CreateFireTriggerEffectItem {
   return (value as { type: string }).type === 'create-fire';
 }
@@ -8738,7 +8739,7 @@ export type CreateParticleTriggerEffectItem = _CreateParticleTriggerEffectItem &
   Omit<TriggerEffectItem, keyof _CreateParticleTriggerEffectItem>;
 
 export function isCreateParticleTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is CreateParticleTriggerEffectItem {
   return (value as { type: string }).type === 'create-particle';
 }
@@ -8761,7 +8762,7 @@ export type CreateSmokeTriggerEffectItem = _CreateSmokeTriggerEffectItem &
   Omit<CreateEntityTriggerEffectItem, keyof _CreateSmokeTriggerEffectItem>;
 
 export function isCreateSmokeTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is CreateSmokeTriggerEffectItem {
   return (value as { type: string }).type === 'create-smoke';
 }
@@ -8779,7 +8780,7 @@ export type CreateStickerTriggerEffectItem = _CreateStickerTriggerEffectItem &
   Omit<TriggerEffectItem, keyof _CreateStickerTriggerEffectItem>;
 
 export function isCreateStickerTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is CreateStickerTriggerEffectItem {
   return (value as { type: string }).type === 'create-sticker';
 }
@@ -8806,7 +8807,7 @@ export type CreateTrivialSmokeEffectItem = _CreateTrivialSmokeEffectItem &
   Omit<TriggerEffectItem, keyof _CreateTrivialSmokeEffectItem>;
 
 export function isCreateTrivialSmokeEffectItem(
-  value: unknown,
+  value: unknown
 ): value is CreateTrivialSmokeEffectItem {
   return (value as { type: string }).type === 'create-trivial-smoke';
 }
@@ -8852,7 +8853,7 @@ export type DamageTriggerEffectItem = _DamageTriggerEffectItem &
   Omit<TriggerEffectItem, keyof _DamageTriggerEffectItem>;
 
 export function isDamageTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is DamageTriggerEffectItem {
   return (value as { type: string }).type === 'damage';
 }
@@ -8889,7 +8890,7 @@ export type DeconstructionTimeToLiveModifier =
     Omit<SimpleModifier, keyof _DeconstructionTimeToLiveModifier>;
 
 export function isDeconstructionTimeToLiveModifier(
-  value: unknown,
+  value: unknown
 ): value is DeconstructionTimeToLiveModifier {
   return (value as { type: string }).type === 'deconstruction-time-to-live';
 }
@@ -8906,7 +8907,7 @@ export interface DependenciesMetTipTrigger {
 }
 
 export function isDependenciesMetTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is DependenciesMetTipTrigger {
   return (value as { type: string }).type === 'dependencies-met';
 }
@@ -8922,7 +8923,7 @@ export interface DestroyCliffsCapsuleAction {
 }
 
 export function isDestroyCliffsCapsuleAction(
-  value: unknown,
+  value: unknown
 ): value is DestroyCliffsCapsuleAction {
   return (value as { type: string }).type === 'destroy-cliffs';
 }
@@ -8937,7 +8938,7 @@ export type DestroyCliffsTriggerEffectItem = _DestroyCliffsTriggerEffectItem &
   Omit<TriggerEffectItem, keyof _DestroyCliffsTriggerEffectItem>;
 
 export function isDestroyCliffsTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is DestroyCliffsTriggerEffectItem {
   return (value as { type: string }).type === 'destroy-cliffs';
 }
@@ -8960,7 +8961,7 @@ export type DestroyDecorativesTriggerEffectItem =
     Omit<TriggerEffectItem, keyof _DestroyDecorativesTriggerEffectItem>;
 
 export function isDestroyDecorativesTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is DestroyDecorativesTriggerEffectItem {
   return (value as { type: string }).type === 'destroy-decoratives';
 }
@@ -8983,7 +8984,7 @@ export type DirectTriggerItem = _DirectTriggerItem &
   Omit<TriggerItem, keyof _DirectTriggerItem>;
 
 export function isDirectTriggerItem(
-  value: unknown,
+  value: unknown
 ): value is DirectTriggerItem {
   return (value as { type: string }).type === 'direct';
 }
@@ -9008,7 +9009,7 @@ export type DoubleSliderStyleSpecification = _DoubleSliderStyleSpecification &
   Omit<SliderStyleSpecification, keyof _DoubleSliderStyleSpecification>;
 
 export function isDoubleSliderStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is DoubleSliderStyleSpecification {
   return (value as { type: string }).type === 'double_slider_style';
 }
@@ -9026,7 +9027,7 @@ export type DropDownStyleSpecification = _DropDownStyleSpecification &
   Omit<BaseStyleSpecification, keyof _DropDownStyleSpecification>;
 
 export function isDropDownStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is DropDownStyleSpecification {
   return (value as { type: string }).type === 'dropdown_style';
 }
@@ -9064,7 +9065,7 @@ export type ElectricEnergySource = _ElectricEnergySource &
   Omit<BaseEnergySource, keyof _ElectricEnergySource>;
 
 export function isElectricEnergySource(
-  value: unknown,
+  value: unknown
 ): value is ElectricEnergySource {
   return (value as { type: string }).type === 'electric';
 }
@@ -9170,7 +9171,7 @@ export type EmptyWidgetStyleSpecification = _EmptyWidgetStyleSpecification &
   Omit<BaseStyleSpecification, keyof _EmptyWidgetStyleSpecification>;
 
 export function isEmptyWidgetStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is EmptyWidgetStyleSpecification {
   return (value as { type: string }).type === 'empty_widget_style';
 }
@@ -9221,7 +9222,7 @@ export interface EntityTransferTipTrigger {
 }
 
 export function isEntityTransferTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is EntityTransferTipTrigger {
   return (value as { type: string }).type === 'entity-transfer';
 }
@@ -9285,7 +9286,7 @@ export interface FastBeltBendTipTrigger {
 }
 
 export function isFastBeltBendTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is FastBeltBendTipTrigger {
   return (value as { type: string }).type === 'fast-belt-bend';
 }
@@ -9299,7 +9300,7 @@ export interface FastReplaceTipTrigger {
 }
 
 export function isFastReplaceTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is FastReplaceTipTrigger {
   return (value as { type: string }).type === 'fast-replace';
 }
@@ -9320,7 +9321,7 @@ export type FlameThrowerExplosionTriggerDelivery =
     Omit<TriggerDeliveryItem, keyof _FlameThrowerExplosionTriggerDelivery>;
 
 export function isFlameThrowerExplosionTriggerDelivery(
-  value: unknown,
+  value: unknown
 ): value is FlameThrowerExplosionTriggerDelivery {
   return (value as { type: string }).type === 'flame-thrower';
 }
@@ -9336,7 +9337,7 @@ export type FlowStyleSpecification = _FlowStyleSpecification &
   Omit<BaseStyleSpecification, keyof _FlowStyleSpecification>;
 
 export function isFlowStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is FlowStyleSpecification {
   return (value as { type: string }).type === 'flow_style';
 }
@@ -9415,7 +9416,7 @@ export type FluidEnergySource = _FluidEnergySource &
   Omit<BaseEnergySource, keyof _FluidEnergySource>;
 
 export function isFluidEnergySource(
-  value: unknown,
+  value: unknown
 ): value is FluidEnergySource {
   return (value as { type: string }).type === 'fluid';
 }
@@ -9442,7 +9443,7 @@ If this FluidIngredientPrototype is used in a recipe, the `catalyst_amount` is c
 }
 
 export function isFluidIngredientPrototype(
-  value: unknown,
+  value: unknown
 ): value is FluidIngredientPrototype {
   return (value as { type: string }).type === 'fluid';
 }
@@ -9481,7 +9482,7 @@ When `amount_min` and `amount_max` are not provided, `amount` applies as min and
 }
 
 export function isFluidProductPrototype(
-  value: unknown,
+  value: unknown
 ): value is FluidProductPrototype {
   return (value as { type: string }).type === 'fluid';
 }
@@ -9502,7 +9503,7 @@ export type FollowerRobotLifetimeModifier = _FollowerRobotLifetimeModifier &
   Omit<SimpleModifier, keyof _FollowerRobotLifetimeModifier>;
 
 export function isFollowerRobotLifetimeModifier(
-  value: unknown,
+  value: unknown
 ): value is FollowerRobotLifetimeModifier {
   return (value as { type: string }).type === 'follower-robot-lifetime';
 }
@@ -9544,7 +9545,7 @@ export type FrameStyleSpecification = _FrameStyleSpecification &
   Omit<BaseStyleSpecification, keyof _FrameStyleSpecification>;
 
 export function isFrameStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is FrameStyleSpecification {
   return (value as { type: string }).type === 'frame_style';
 }
@@ -9569,7 +9570,7 @@ export interface GateOverRailBuildTipTrigger {
 }
 
 export function isGateOverRailBuildTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is GateOverRailBuildTipTrigger {
   return (value as { type: string }).type === 'gate-over-rail-build';
 }
@@ -9584,7 +9585,7 @@ export type GhostTimeToLiveModifier = _GhostTimeToLiveModifier &
   Omit<SimpleModifier, keyof _GhostTimeToLiveModifier>;
 
 export function isGhostTimeToLiveModifier(
-  value: unknown,
+  value: unknown
 ): value is GhostTimeToLiveModifier {
   return (value as { type: string }).type === 'ghost-time-to-live';
 }
@@ -9614,7 +9615,7 @@ export type GlowStyleSpecification = _GlowStyleSpecification &
   Omit<BaseStyleSpecification, keyof _GlowStyleSpecification>;
 
 export function isGlowStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is GlowStyleSpecification {
   return (value as { type: string }).type === 'glow_style';
 }
@@ -9641,7 +9642,7 @@ export type GraphStyleSpecification = _GraphStyleSpecification &
   Omit<BaseStyleSpecification, keyof _GraphStyleSpecification>;
 
 export function isGraphStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is GraphStyleSpecification {
   return (value as { type: string }).type === 'graph_style';
 }
@@ -9652,7 +9653,7 @@ export interface GroupAttackTipTrigger {
 }
 
 export function isGroupAttackTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is GroupAttackTipTrigger {
   return (value as { type: string }).type === 'group-attack';
 }
@@ -9743,7 +9744,7 @@ export type HorizontalFlowStyleSpecification =
     Omit<BaseStyleSpecification, keyof _HorizontalFlowStyleSpecification>;
 
 export function isHorizontalFlowStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is HorizontalFlowStyleSpecification {
   return (value as { type: string }).type === 'horizontal_flow_style';
 }
@@ -9760,7 +9761,7 @@ export type HorizontalScrollBarStyleSpecification =
     >;
 
 export function isHorizontalScrollBarStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is HorizontalScrollBarStyleSpecification {
   return (value as { type: string }).type === 'horizontal_scrollbar_style';
 }
@@ -9804,7 +9805,7 @@ export type ImageStyleSpecification = _ImageStyleSpecification &
   Omit<BaseStyleSpecification, keyof _ImageStyleSpecification>;
 
 export function isImageStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is ImageStyleSpecification {
   return (value as { type: string }).type === 'image_style';
 }
@@ -9820,7 +9821,7 @@ export type InsertItemTriggerEffectItem = _InsertItemTriggerEffectItem &
   Omit<TriggerEffectItem, keyof _InsertItemTriggerEffectItem>;
 
 export function isInsertItemTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is InsertItemTriggerEffectItem {
   return (value as { type: string }).type === 'insert-item';
 }
@@ -9837,7 +9838,7 @@ export type InserterStackSizeBonusModifier = _InserterStackSizeBonusModifier &
   Omit<SimpleModifier, keyof _InserterStackSizeBonusModifier>;
 
 export function isInserterStackSizeBonusModifier(
-  value: unknown,
+  value: unknown
 ): value is InserterStackSizeBonusModifier {
   return (value as { type: string }).type === 'inserter-stack-size-bonus';
 }
@@ -9850,7 +9851,7 @@ export type InstantTriggerDelivery = _InstantTriggerDelivery &
   Omit<TriggerDeliveryItem, keyof _InstantTriggerDelivery>;
 
 export function isInstantTriggerDelivery(
-  value: unknown,
+  value: unknown
 ): value is InstantTriggerDelivery {
   return (value as { type: string }).type === 'instant';
 }
@@ -9869,7 +9870,7 @@ export type InvokeTileEffectTriggerEffectItem =
     Omit<TriggerEffectItem, keyof _InvokeTileEffectTriggerEffectItem>;
 
 export function isInvokeTileEffectTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is InvokeTileEffectTriggerEffectItem {
   return (value as { type: string }).type === 'invoke-tile-trigger';
 }
@@ -9937,7 +9938,7 @@ export type LabelStyleSpecification = _LabelStyleSpecification &
   Omit<BaseStyleSpecification, keyof _LabelStyleSpecification>;
 
 export function isLabelStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is LabelStyleSpecification {
   return (value as { type: string }).type === 'label_style';
 }
@@ -9954,7 +9955,7 @@ export type LaboratoryProductivityModifier = _LaboratoryProductivityModifier &
   Omit<SimpleModifier, keyof _LaboratoryProductivityModifier>;
 
 export function isLaboratoryProductivityModifier(
-  value: unknown,
+  value: unknown
 ): value is LaboratoryProductivityModifier {
   return (value as { type: string }).type === 'laboratory-productivity';
 }
@@ -9971,7 +9972,7 @@ export type LaboratorySpeedModifier = _LaboratorySpeedModifier &
   Omit<SimpleModifier, keyof _LaboratorySpeedModifier>;
 
 export function isLaboratorySpeedModifier(
-  value: unknown,
+  value: unknown
 ): value is LaboratorySpeedModifier {
   return (value as { type: string }).type === 'laboratory-speed';
 }
@@ -10018,7 +10019,7 @@ export interface LimitChestTipTrigger {
 }
 
 export function isLimitChestTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is LimitChestTipTrigger {
   return (value as { type: string }).type === 'limit-chest';
 }
@@ -10032,7 +10033,7 @@ export type LineStyleSpecification = _LineStyleSpecification &
   Omit<BaseStyleSpecification, keyof _LineStyleSpecification>;
 
 export function isLineStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is LineStyleSpecification {
   return (value as { type: string }).type === 'line_style';
 }
@@ -10069,7 +10070,7 @@ export type ListBoxStyleSpecification = _ListBoxStyleSpecification &
   Omit<BaseStyleSpecification, keyof _ListBoxStyleSpecification>;
 
 export function isListBoxStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is ListBoxStyleSpecification {
   return (value as { type: string }).type === 'list_box_style';
 }
@@ -10096,7 +10097,7 @@ export interface LowPowerTipTrigger {
 }
 
 export function isLowPowerTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is LowPowerTipTrigger {
   return (value as { type: string }).type === 'low-power';
 }
@@ -10107,7 +10108,7 @@ export interface ManualTransferTipTrigger {
 }
 
 export function isManualTransferTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is ManualTransferTipTrigger {
   return (value as { type: string }).type === 'manual-transfer';
 }
@@ -10118,7 +10119,7 @@ export interface ManualWireDragTipTrigger {
 }
 
 export function isManualWireDragTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is ManualWireDragTipTrigger {
   return (value as { type: string }).type === 'manual-wire-drag';
 }
@@ -10243,7 +10244,7 @@ export type MaxFailedAttemptsPerTickPerConstructionQueueModifier =
     >;
 
 export function isMaxFailedAttemptsPerTickPerConstructionQueueModifier(
-  value: unknown,
+  value: unknown
 ): value is MaxFailedAttemptsPerTickPerConstructionQueueModifier {
   return (
     (value as { type: string }).type ===
@@ -10265,7 +10266,7 @@ export type MaxSuccessfulAttemptsPerTickPerConstructionQueueModifier =
     >;
 
 export function isMaxSuccessfulAttemptsPerTickPerConstructionQueueModifier(
-  value: unknown,
+  value: unknown
 ): value is MaxSuccessfulAttemptsPerTickPerConstructionQueueModifier {
   return (
     (value as { type: string }).type ===
@@ -10286,7 +10287,7 @@ export type MaximumFollowingRobotsCountModifier =
     Omit<SimpleModifier, keyof _MaximumFollowingRobotsCountModifier>;
 
 export function isMaximumFollowingRobotsCountModifier(
-  value: unknown,
+  value: unknown
 ): value is MaximumFollowingRobotsCountModifier {
   return (value as { type: string }).type === 'maximum-following-robots-count';
 }
@@ -10321,7 +10322,7 @@ export type MinimapStyleSpecification = _MinimapStyleSpecification &
   Omit<EmptyWidgetStyleSpecification, keyof _MinimapStyleSpecification>;
 
 export function isMinimapStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is MinimapStyleSpecification {
   return (value as { type: string }).type === 'minimap_style';
 }
@@ -10367,7 +10368,7 @@ export type MiningDrillProductivityBonusModifier =
     Omit<SimpleModifier, keyof _MiningDrillProductivityBonusModifier>;
 
 export function isMiningDrillProductivityBonusModifier(
-  value: unknown,
+  value: unknown
 ): value is MiningDrillProductivityBonusModifier {
   return (value as { type: string }).type === 'mining-drill-productivity-bonus';
 }
@@ -10397,7 +10398,7 @@ export type NestedTriggerEffectItem = _NestedTriggerEffectItem &
   Omit<TriggerEffectItem, keyof _NestedTriggerEffectItem>;
 
 export function isNestedTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is NestedTriggerEffectItem {
   return (value as { type: string }).type === 'nested-result';
 }
@@ -10411,7 +10412,7 @@ export interface NoiseArrayConstruction {
 }
 
 export function isNoiseArrayConstruction(
-  value: unknown,
+  value: unknown
 ): value is NoiseArrayConstruction {
   return (value as { type: string }).type === 'array-construction';
 }
@@ -10424,7 +10425,7 @@ export interface NoiseFunctionAbsoluteValue {
 }
 
 export function isNoiseFunctionAbsoluteValue(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionAbsoluteValue {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10449,7 +10450,7 @@ export interface NoiseFunctionAtan2 {
 }
 
 export function isNoiseFunctionAtan2(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionAtan2 {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10461,7 +10462,7 @@ export interface NoiseFunctionAutoplaceProbability {
 }
 
 export function isNoiseFunctionAutoplaceProbability(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionAutoplaceProbability {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10473,7 +10474,7 @@ export interface NoiseFunctionAutoplaceRichness {
 }
 
 export function isNoiseFunctionAutoplaceRichness(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionAutoplaceRichness {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10486,7 +10487,7 @@ export interface NoiseFunctionBitwiseAnd {
 }
 
 export function isNoiseFunctionBitwiseAnd(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionBitwiseAnd {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10499,7 +10500,7 @@ export interface NoiseFunctionBitwiseNot {
 }
 
 export function isNoiseFunctionBitwiseNot(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionBitwiseNot {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10512,7 +10513,7 @@ export interface NoiseFunctionBitwiseOr {
 }
 
 export function isNoiseFunctionBitwiseOr(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionBitwiseOr {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10525,7 +10526,7 @@ export interface NoiseFunctionBitwiseXor {
 }
 
 export function isNoiseFunctionBitwiseXor(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionBitwiseXor {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10538,7 +10539,7 @@ export interface NoiseFunctionCeil {
 }
 
 export function isNoiseFunctionCeil(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionCeil {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10551,7 +10552,7 @@ export interface NoiseFunctionClamp {
 }
 
 export function isNoiseFunctionClamp(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionClamp {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10564,7 +10565,7 @@ export interface NoiseFunctionCompileTimeLog {
 }
 
 export function isNoiseFunctionCompileTimeLog(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionCompileTimeLog {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10588,7 +10589,7 @@ export interface NoiseFunctionDistanceFromNearestPoint {
 }
 
 export function isNoiseFunctionDistanceFromNearestPoint(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionDistanceFromNearestPoint {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10601,7 +10602,7 @@ export interface NoiseFunctionDivide {
 }
 
 export function isNoiseFunctionDivide(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionDivide {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10614,7 +10615,7 @@ export interface NoiseFunctionEquals {
 }
 
 export function isNoiseFunctionEquals(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionEquals {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10627,7 +10628,7 @@ export interface NoiseFunctionExponentiate {
 }
 
 export function isNoiseFunctionExponentiate(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionExponentiate {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10640,7 +10641,7 @@ export interface NoiseFunctionFactorioBasisNoise {
 }
 
 export function isNoiseFunctionFactorioBasisNoise(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionFactorioBasisNoise {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10652,7 +10653,7 @@ export interface NoiseFunctionFactorioMultioctaveNoise {
 }
 
 export function isNoiseFunctionFactorioMultioctaveNoise(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionFactorioMultioctaveNoise {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10664,7 +10665,7 @@ export interface NoiseFunctionFactorioQuickMultioctaveNoise {
 }
 
 export function isNoiseFunctionFactorioQuickMultioctaveNoise(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionFactorioQuickMultioctaveNoise {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10677,7 +10678,7 @@ export interface NoiseFunctionFloor {
 }
 
 export function isNoiseFunctionFloor(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionFloor {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10690,7 +10691,7 @@ export interface NoiseFunctionLessOrEqual {
 }
 
 export function isNoiseFunctionLessOrEqual(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionLessOrEqual {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10703,7 +10704,7 @@ export interface NoiseFunctionLessThan {
 }
 
 export function isNoiseFunctionLessThan(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionLessThan {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10715,7 +10716,7 @@ export interface NoiseFunctionLog2 {
 }
 
 export function isNoiseFunctionLog2(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionLog2 {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10728,7 +10729,7 @@ export interface NoiseFunctionModulo {
 }
 
 export function isNoiseFunctionModulo(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionModulo {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10741,7 +10742,7 @@ export interface NoiseFunctionMultiply {
 }
 
 export function isNoiseFunctionMultiply(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionMultiply {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10753,7 +10754,7 @@ export interface NoiseFunctionNoiseLayerNameToID {
 }
 
 export function isNoiseFunctionNoiseLayerNameToID(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionNoiseLayerNameToID {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10766,7 +10767,7 @@ export interface NoiseFunctionOffsetPoints {
 }
 
 export function isNoiseFunctionOffsetPoints(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionOffsetPoints {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10779,7 +10780,7 @@ export interface NoiseFunctionRandomPenalty {
 }
 
 export function isNoiseFunctionRandomPenalty(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionRandomPenalty {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10793,7 +10794,7 @@ export interface NoiseFunctionRidge {
 }
 
 export function isNoiseFunctionRidge(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionRidge {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10823,7 +10824,7 @@ export interface NoiseFunctionSpotNoise {
 }
 
 export function isNoiseFunctionSpotNoise(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionSpotNoise {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10836,7 +10837,7 @@ export interface NoiseFunctionSubtract {
 }
 
 export function isNoiseFunctionSubtract(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionSubtract {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10854,7 +10855,7 @@ export interface NoiseFunctionTerrace {
 }
 
 export function isNoiseFunctionTerrace(
-  value: unknown,
+  value: unknown
 ): value is NoiseFunctionTerrace {
   return (value as { type: string }).type === 'function-application';
 }
@@ -10890,7 +10891,7 @@ export interface NoiseLiteralBoolean {
 }
 
 export function isNoiseLiteralBoolean(
-  value: unknown,
+  value: unknown
 ): value is NoiseLiteralBoolean {
   return (value as { type: string }).type === 'literal-boolean';
 }
@@ -10902,7 +10903,7 @@ export interface NoiseLiteralExpression {
 }
 
 export function isNoiseLiteralExpression(
-  value: unknown,
+  value: unknown
 ): value is NoiseLiteralExpression {
   return (value as { type: string }).type === 'literal-expression';
 }
@@ -10914,7 +10915,7 @@ export interface NoiseLiteralNumber {
 }
 
 export function isNoiseLiteralNumber(
-  value: unknown,
+  value: unknown
 ): value is NoiseLiteralNumber {
   return (value as { type: string }).type === 'literal-number';
 }
@@ -10926,7 +10927,7 @@ export interface NoiseLiteralObject {
 }
 
 export function isNoiseLiteralObject(
-  value: unknown,
+  value: unknown
 ): value is NoiseLiteralObject {
   return (value as { type: string }).type === 'literal-object';
 }
@@ -10938,7 +10939,7 @@ export interface NoiseLiteralString {
 }
 
 export function isNoiseLiteralString(
-  value: unknown,
+  value: unknown
 ): value is NoiseLiteralString {
   return (value as { type: string }).type === 'literal-string';
 }
@@ -10952,7 +10953,7 @@ export interface NoiseProcedureDelimiter {
 }
 
 export function isNoiseProcedureDelimiter(
-  value: unknown,
+  value: unknown
 ): value is NoiseProcedureDelimiter {
   return (value as { type: string }).type === 'procedure-delimiter';
 }
@@ -11059,7 +11060,7 @@ export interface PasteEntitySettingsTipTrigger {
 }
 
 export function isPasteEntitySettingsTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is PasteEntitySettingsTipTrigger {
   return (value as { type: string }).type === 'paste-entity-settings';
 }
@@ -11187,7 +11188,7 @@ export interface PlaceEquipmentTipTrigger {
 }
 
 export function isPlaceEquipmentTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is PlaceEquipmentTipTrigger {
   return (value as { type: string }).type === 'place-equipment';
 }
@@ -11210,7 +11211,7 @@ export type PlaySoundTriggerEffectItem = _PlaySoundTriggerEffectItem &
   Omit<TriggerEffectItem, keyof _PlaySoundTriggerEffectItem>;
 
 export function isPlaySoundTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is PlaySoundTriggerEffectItem {
   return (value as { type: string }).type === 'play-sound';
 }
@@ -11267,7 +11268,7 @@ export type ProgressBarStyleSpecification = _ProgressBarStyleSpecification &
   Omit<BaseStyleSpecification, keyof _ProgressBarStyleSpecification>;
 
 export function isProgressBarStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is ProgressBarStyleSpecification {
   return (value as { type: string }).type === 'progressbar_style';
 }
@@ -11291,7 +11292,7 @@ export type ProjectileAttackParameters = _ProjectileAttackParameters &
   Omit<BaseAttackParameters, keyof _ProjectileAttackParameters>;
 
 export function isProjectileAttackParameters(
-  value: unknown,
+  value: unknown
 ): value is ProjectileAttackParameters {
   return (value as { type: string }).type === 'projectile';
 }
@@ -11315,7 +11316,7 @@ export type ProjectileTriggerDelivery = _ProjectileTriggerDelivery &
   Omit<TriggerDeliveryItem, keyof _ProjectileTriggerDelivery>;
 
 export function isProjectileTriggerDelivery(
-  value: unknown,
+  value: unknown
 ): value is ProjectileTriggerDelivery {
   return (value as { type: string }).type === 'projectile';
 }
@@ -11350,7 +11351,7 @@ export type PushBackTriggerEffectItem = _PushBackTriggerEffectItem &
   Omit<TriggerEffectItem, keyof _PushBackTriggerEffectItem>;
 
 export function isPushBackTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is PushBackTriggerEffectItem {
   return (value as { type: string }).type === 'push-back';
 }
@@ -11371,7 +11372,7 @@ export type RadioButtonStyleSpecification = _RadioButtonStyleSpecification &
   >;
 
 export function isRadioButtonStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is RadioButtonStyleSpecification {
   return (value as { type: string }).type === 'radiobutton_style';
 }
@@ -11496,7 +11497,7 @@ export interface ResearchTechnologyTipTrigger {
 }
 
 export function isResearchTechnologyTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is ResearchTechnologyTipTrigger {
   return (value as { type: string }).type === 'research';
 }
@@ -11644,7 +11645,7 @@ export type ScriptTriggerEffectItem = _ScriptTriggerEffectItem &
   Omit<TriggerEffectItem, keyof _ScriptTriggerEffectItem>;
 
 export function isScriptTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is ScriptTriggerEffectItem {
   return (value as { type: string }).type === 'script';
 }
@@ -11682,7 +11683,7 @@ export type ScrollPaneStyleSpecification = _ScrollPaneStyleSpecification &
   Omit<BaseStyleSpecification, keyof _ScrollPaneStyleSpecification>;
 
 export function isScrollPaneStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is ScrollPaneStyleSpecification {
   return (value as { type: string }).type === 'scroll_pane_style';
 }
@@ -11694,7 +11695,7 @@ export interface SequenceTipTrigger {
 }
 
 export function isSequenceTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is SequenceTipTrigger {
   return (value as { type: string }).type === 'sequence';
 }
@@ -11708,7 +11709,7 @@ export interface SetFilterTipTrigger {
 }
 
 export function isSetFilterTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is SetFilterTipTrigger {
   return (value as { type: string }).type === 'set-filter';
 }
@@ -11720,7 +11721,7 @@ export interface SetLogisticRequestTipTrigger {
 }
 
 export function isSetLogisticRequestTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is SetLogisticRequestTipTrigger {
   return (value as { type: string }).type === 'set-logistic-request';
 }
@@ -11734,7 +11735,7 @@ export interface SetRecipeTipTrigger {
 }
 
 export function isSetRecipeTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is SetRecipeTipTrigger {
   return (value as { type: string }).type === 'set-recipe';
 }
@@ -11751,7 +11752,7 @@ export type SetTileTriggerEffectItem = _SetTileTriggerEffectItem &
   Omit<TriggerEffectItem, keyof _SetTileTriggerEffectItem>;
 
 export function isSetTileTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is SetTileTriggerEffectItem {
   return (value as { type: string }).type === 'set-tile';
 }
@@ -11773,7 +11774,7 @@ export interface ShiftBuildTipTrigger {
 }
 
 export function isShiftBuildTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is ShiftBuildTipTrigger {
   return (value as { type: string }).type === 'shift-build';
 }
@@ -11788,7 +11789,7 @@ export type ShowExplosionOnChartTriggerEffectItem =
     Omit<TriggerEffectItem, keyof _ShowExplosionOnChartTriggerEffectItem>;
 
 export function isShowExplosionOnChartTriggerEffectItem(
-  value: unknown,
+  value: unknown
 ): value is ShowExplosionOnChartTriggerEffectItem {
   return (value as { type: string }).type === 'show-explosion-on-chart';
 }
@@ -11882,7 +11883,7 @@ export type SliderStyleSpecification = _SliderStyleSpecification &
   Omit<BaseStyleSpecification, keyof _SliderStyleSpecification>;
 
 export function isSliderStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is SliderStyleSpecification {
   return (value as { type: string }).type === 'slider_style';
 }
@@ -11977,7 +11978,7 @@ export type SpeechBubbleStyleSpecification = _SpeechBubbleStyleSpecification &
   Omit<BaseStyleSpecification, keyof _SpeechBubbleStyleSpecification>;
 
 export function isSpeechBubbleStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is SpeechBubbleStyleSpecification {
   return (value as { type: string }).type === 'speech_bubble_style';
 }
@@ -12230,7 +12231,7 @@ export type StackInserterCapacityBonusModifier =
     Omit<SimpleModifier, keyof _StackInserterCapacityBonusModifier>;
 
 export function isStackInserterCapacityBonusModifier(
-  value: unknown,
+  value: unknown
 ): value is StackInserterCapacityBonusModifier {
   return (value as { type: string }).type === 'stack-inserter-capacity-bonus';
 }
@@ -12242,7 +12243,7 @@ export interface StackTransferTipTrigger {
 }
 
 export function isStackTransferTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is StackTransferTipTrigger {
   return (value as { type: string }).type === 'stack-transfer';
 }
@@ -12290,7 +12291,7 @@ export type StreamAttackParameters = _StreamAttackParameters &
   Omit<BaseAttackParameters, keyof _StreamAttackParameters>;
 
 export function isStreamAttackParameters(
-  value: unknown,
+  value: unknown
 ): value is StreamAttackParameters {
   return (value as { type: string }).type === 'stream';
 }
@@ -12310,7 +12311,7 @@ export type StreamTriggerDelivery = _StreamTriggerDelivery &
   Omit<TriggerDeliveryItem, keyof _StreamTriggerDelivery>;
 
 export function isStreamTriggerDelivery(
-  value: unknown,
+  value: unknown
 ): value is StreamTriggerDelivery {
   return (value as { type: string }).type === 'stream';
 }
@@ -12360,7 +12361,7 @@ export type SwitchStyleSpecification = _SwitchStyleSpecification &
   Omit<BaseStyleSpecification, keyof _SwitchStyleSpecification>;
 
 export function isSwitchStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is SwitchStyleSpecification {
   return (value as { type: string }).type === 'switch_style';
 }
@@ -12400,7 +12401,7 @@ export type TabStyleSpecification = _TabStyleSpecification &
   Omit<BaseStyleSpecification, keyof _TabStyleSpecification>;
 
 export function isTabStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is TabStyleSpecification {
   return (value as { type: string }).type === 'tab_style';
 }
@@ -12416,7 +12417,7 @@ export type TabbedPaneStyleSpecification = _TabbedPaneStyleSpecification &
   Omit<BaseStyleSpecification, keyof _TabbedPaneStyleSpecification>;
 
 export function isTabbedPaneStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is TabbedPaneStyleSpecification {
   return (value as { type: string }).type === 'tabbed_pane_style';
 }
@@ -12459,7 +12460,7 @@ export type TableStyleSpecification = _TableStyleSpecification &
   Omit<BaseStyleSpecification, keyof _TableStyleSpecification>;
 
 export function isTableStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is TableStyleSpecification {
   return (value as { type: string }).type === 'table_style';
 }
@@ -12530,7 +12531,7 @@ export type TechnologySlotStyleSpecification =
     Omit<ButtonStyleSpecification, keyof _TechnologySlotStyleSpecification>;
 
 export function isTechnologySlotStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is TechnologySlotStyleSpecification {
   return (value as { type: string }).type === 'technology_slot_style';
 }
@@ -12596,7 +12597,7 @@ export type TextBoxStyleSpecification = _TextBoxStyleSpecification &
   Omit<BaseStyleSpecification, keyof _TextBoxStyleSpecification>;
 
 export function isTextBoxStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is TextBoxStyleSpecification {
   return (value as { type: string }).type === 'textbox_style';
 }
@@ -12609,7 +12610,7 @@ export interface ThrowCapsuleAction {
 }
 
 export function isThrowCapsuleAction(
-  value: unknown,
+  value: unknown
 ): value is ThrowCapsuleAction {
   return (value as { type: string }).type === 'throw';
 }
@@ -12745,7 +12746,7 @@ export interface TimeElapsedTipTrigger {
 }
 
 export function isTimeElapsedTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is TimeElapsedTipTrigger {
   return (value as { type: string }).type === 'time-elapsed';
 }
@@ -12762,7 +12763,7 @@ export type TrainBrakingForceBonusModifier = _TrainBrakingForceBonusModifier &
   Omit<SimpleModifier, keyof _TrainBrakingForceBonusModifier>;
 
 export function isTrainBrakingForceBonusModifier(
-  value: unknown,
+  value: unknown
 ): value is TrainBrakingForceBonusModifier {
   return (value as { type: string }).type === 'train-braking-force-bonus';
 }
@@ -12919,7 +12920,7 @@ export type TurretAttackModifier = _TurretAttackModifier &
   Omit<BaseModifier, keyof _TurretAttackModifier>;
 
 export function isTurretAttackModifier(
-  value: unknown,
+  value: unknown
 ): value is TurretAttackModifier {
   return (value as { type: string }).type === 'turret-attack';
 }
@@ -13013,7 +13014,7 @@ export type UnlockRecipeModifier = _UnlockRecipeModifier &
   Omit<BaseModifier, keyof _UnlockRecipeModifier>;
 
 export function isUnlockRecipeModifier(
-  value: unknown,
+  value: unknown
 ): value is UnlockRecipeModifier {
   return (value as { type: string }).type === 'unlock-recipe';
 }
@@ -13024,7 +13025,7 @@ export interface UnlockRecipeTipTrigger {
 }
 
 export function isUnlockRecipeTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is UnlockRecipeTipTrigger {
   return (value as { type: string }).type === 'unlock-recipe';
 }
@@ -13035,7 +13036,7 @@ export interface UseConfirmTipTrigger {
 }
 
 export function isUseConfirmTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is UseConfirmTipTrigger {
   return (value as { type: string }).type === 'use-confirm';
 }
@@ -13048,7 +13049,7 @@ export interface UseOnSelfCapsuleAction {
 }
 
 export function isUseOnSelfCapsuleAction(
-  value: unknown,
+  value: unknown
 ): value is UseOnSelfCapsuleAction {
   return (value as { type: string }).type === 'use-on-self';
 }
@@ -13059,7 +13060,7 @@ export interface UsePipetteTipTrigger {
 }
 
 export function isUsePipetteTipTrigger(
-  value: unknown,
+  value: unknown
 ): value is UsePipetteTipTrigger {
   return (value as { type: string }).type === 'use-pipette';
 }
@@ -13089,7 +13090,7 @@ export type VerticalFlowStyleSpecification = _VerticalFlowStyleSpecification &
   Omit<BaseStyleSpecification, keyof _VerticalFlowStyleSpecification>;
 
 export function isVerticalFlowStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is VerticalFlowStyleSpecification {
   return (value as { type: string }).type === 'vertical_flow_style';
 }
@@ -13106,7 +13107,7 @@ export type VerticalScrollBarStyleSpecification =
     >;
 
 export function isVerticalScrollBarStyleSpecification(
-  value: unknown,
+  value: unknown
 ): value is VerticalScrollBarStyleSpecification {
   return (value as { type: string }).type === 'vertical_scrollbar_style';
 }
@@ -13165,7 +13166,7 @@ export type WorkerRobotBatteryModifier = _WorkerRobotBatteryModifier &
   Omit<SimpleModifier, keyof _WorkerRobotBatteryModifier>;
 
 export function isWorkerRobotBatteryModifier(
-  value: unknown,
+  value: unknown
 ): value is WorkerRobotBatteryModifier {
   return (value as { type: string }).type === 'worker-robot-battery';
 }
@@ -13182,7 +13183,7 @@ export type WorkerRobotSpeedModifier = _WorkerRobotSpeedModifier &
   Omit<SimpleModifier, keyof _WorkerRobotSpeedModifier>;
 
 export function isWorkerRobotSpeedModifier(
-  value: unknown,
+  value: unknown
 ): value is WorkerRobotSpeedModifier {
   return (value as { type: string }).type === 'worker-robot-speed';
 }
@@ -13199,7 +13200,7 @@ export type WorkerRobotStorageModifier = _WorkerRobotStorageModifier &
   Omit<SimpleModifier, keyof _WorkerRobotStorageModifier>;
 
 export function isWorkerRobotStorageModifier(
-  value: unknown,
+  value: unknown
 ): value is WorkerRobotStorageModifier {
   return (value as { type: string }).type === 'worker-robot-storage';
 }
@@ -13287,7 +13288,7 @@ export type ZoomToWorldBlueprintEnabledModifier =
     Omit<BoolModifier, keyof _ZoomToWorldBlueprintEnabledModifier>;
 
 export function isZoomToWorldBlueprintEnabledModifier(
-  value: unknown,
+  value: unknown
 ): value is ZoomToWorldBlueprintEnabledModifier {
   return (value as { type: string }).type === 'zoom-to-world-blueprint-enabled';
 }
@@ -13303,7 +13304,7 @@ export type ZoomToWorldDeconstructionPlannerEnabledModifier =
     Omit<BoolModifier, keyof _ZoomToWorldDeconstructionPlannerEnabledModifier>;
 
 export function isZoomToWorldDeconstructionPlannerEnabledModifier(
-  value: unknown,
+  value: unknown
 ): value is ZoomToWorldDeconstructionPlannerEnabledModifier {
   return (
     (value as { type: string }).type ===
@@ -13321,7 +13322,7 @@ export type ZoomToWorldEnabledModifier = _ZoomToWorldEnabledModifier &
   Omit<BoolModifier, keyof _ZoomToWorldEnabledModifier>;
 
 export function isZoomToWorldEnabledModifier(
-  value: unknown,
+  value: unknown
 ): value is ZoomToWorldEnabledModifier {
   return (value as { type: string }).type === 'zoom-to-world-enabled';
 }
@@ -13337,7 +13338,7 @@ export type ZoomToWorldGhostBuildingEnabledModifier =
     Omit<BoolModifier, keyof _ZoomToWorldGhostBuildingEnabledModifier>;
 
 export function isZoomToWorldGhostBuildingEnabledModifier(
-  value: unknown,
+  value: unknown
 ): value is ZoomToWorldGhostBuildingEnabledModifier {
   return (
     (value as { type: string }).type === 'zoom-to-world-ghost-building-enabled'
@@ -13355,7 +13356,7 @@ export type ZoomToWorldSelectionToolEnabledModifier =
     Omit<BoolModifier, keyof _ZoomToWorldSelectionToolEnabledModifier>;
 
 export function isZoomToWorldSelectionToolEnabledModifier(
-  value: unknown,
+  value: unknown
 ): value is ZoomToWorldSelectionToolEnabledModifier {
   return (
     (value as { type: string }).type === 'zoom-to-world-selection-tool-enabled'
@@ -13373,7 +13374,7 @@ export type ZoomToWorldUpgradePlannerEnabledModifier =
     Omit<BoolModifier, keyof _ZoomToWorldUpgradePlannerEnabledModifier>;
 
 export function isZoomToWorldUpgradePlannerEnabledModifier(
-  value: unknown,
+  value: unknown
 ): value is ZoomToWorldUpgradePlannerEnabledModifier {
   return (
     (value as { type: string }).type === 'zoom-to-world-upgrade-planner-enabled'

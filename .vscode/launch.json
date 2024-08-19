@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "command": "npm run factorio-build",
+      "command": "npm run factorio-build 1.1",
       "name": "factorio-build",
       "request": "launch",
       "type": "node-terminal"

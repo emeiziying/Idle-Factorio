@@ -8,8 +8,7 @@ export function getJsonData<T>(file: string): T {
 }
 
 const appDataPath =
-  process.env['AppData'] ||
-  `${process.env['HOME']}/Library/Application Support`;
+  process.env.AppData ?? `${process.env.HOME}/Library/Application Support`;
 const scriptOutputPath = `${appDataPath}/Factorio/script-output`;
 export function getLocale(file: string): D.Locale {
   const path = `${scriptOutputPath}/${file}`;

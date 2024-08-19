@@ -1,6 +1,6 @@
 import fs from 'fs';
 
-import { Entities, ModHash } from '~/models';
+import { Entities, ModHash } from '@/models';
 import * as D from '../factorio-build.models';
 import * as M from '../factorio.models';
 import { getJsonData } from './file.helpers';
@@ -8,7 +8,7 @@ import { getJsonData } from './file.helpers';
 export function addEntityValue(
   e: Entities<number>,
   id: string,
-  val: number,
+  val: number
 ): void {
   if (e[id] == null) {
     e[id] = val;
@@ -18,7 +18,7 @@ export function addEntityValue(
 }
 
 export function coerceArray<T>(
-  value: T[] | Record<string, T> | null | undefined,
+  value: T[] | Record<string, T> | null | undefined
 ): T[] {
   if (value == null) return [];
 
@@ -29,14 +29,14 @@ export function coerceArray<T>(
 }
 
 export function coerceString(
-  value: string | number | null | undefined,
+  value: string | number | null | undefined
 ): string {
   if (value == null) return '';
   return value.toString();
 }
 
 export function getEntityMap(
-  dataRaw: D.DataRawDump,
+  dataRaw: D.DataRawDump
 ): Record<string, D.AnyEntityPrototype> {
   return D.anyEntityKeys.reduce(
     (result: Record<string, D.AnyEntityPrototype>, key) =>
@@ -44,12 +44,12 @@ export function getEntityMap(
         result[name] = dataRaw[key][name];
         return result;
       }, result),
-    {},
+    {}
   );
 }
 
 export function getItemMap(
-  dataRaw: D.DataRawDump,
+  dataRaw: D.DataRawDump
 ): Record<string, D.AnyItemPrototype | M.FluidPrototype> {
   return D.anyItemKeys.reduce(
     (result: Record<string, D.AnyItemPrototype | M.FluidPrototype>, key) =>
@@ -57,13 +57,13 @@ export function getItemMap(
         result[name] = dataRaw[key][name];
         return result;
       }, result),
-    {},
+    {}
   );
 }
 
 export function getDisallowedEffects(
   allowedEffects?: M.EffectTypeLimitation,
-  defaultDisallow = false,
+  defaultDisallow = false
 ): D.EffectType[] | undefined {
   if (allowedEffects == null) {
     return defaultDisallow ? D.allEffects : undefined;
@@ -85,7 +85,7 @@ export function getIconText(proto: M.PrototypeBase): string | undefined {
 }
 
 export function getIngredients(
-  ingredients: M.IngredientPrototype[] | Record<string, M.IngredientPrototype>,
+  ingredients: M.IngredientPrototype[] | Record<string, M.IngredientPrototype>
 ): [
   // Ingredients
   Record<string, number>,
@@ -121,7 +121,7 @@ export function getIngredients(
 }
 
 export function getLastIngredient(
-  ingredients: M.IngredientPrototype[],
+  ingredients: M.IngredientPrototype[]
 ): string {
   if (ingredients.length === 0) return '';
 
@@ -135,7 +135,7 @@ export function getLastIngredient(
 
 export function getVersion(
   modsPath: string,
-  factorioPath: string,
+  factorioPath: string
 ): Record<string, string> {
   const modListPath = `${modsPath}/mod-list.json`;
   const modList = getJsonData<D.ModList>(modListPath);
