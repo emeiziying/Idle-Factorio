@@ -30,12 +30,16 @@ const router = createBrowserRouter([
   },
 ]);
 
-await loadModule('/glpk.all.wasm');
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <Providers>
-      <RouterProvider router={router} />
-    </Providers>
-  </React.StrictMode>
-);
+loadModule('/glpk.all.wasm')
+  .then(() => {
+    ReactDOM.createRoot(document.getElementById('root')!).render(
+      <React.StrictMode>
+        <Providers>
+          <RouterProvider router={router} />
+        </Providers>
+      </React.StrictMode>
+    );
+  })
+  .catch(() => {
+    //
+  });

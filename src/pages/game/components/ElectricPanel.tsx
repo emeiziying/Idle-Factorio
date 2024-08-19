@@ -62,12 +62,12 @@ const GeneratorItem = ({ id }: { id: string }) => {
   const electric = useAppSelector((state) => selectElectricById(state, id));
   const stock = useAppSelector((state) => selectStockFromRecordById(state, id));
 
-  const power = useMemo(() => {
-    const v = rational(200)
-      .mul(rational(25000))
-      .mul(rational(165).sub(rational(10)));
-    return electric.stock.mul(v);
-  }, [electric.stock]);
+  // const power = useMemo(() => {
+  //   const v = rational(200)
+  //     .mul(rational(25000))
+  //     .mul(rational(165).sub(rational(10)));
+  //   return electric.stock.mul(v);
+  // }, [electric.stock]);
 
   return (
     <div>

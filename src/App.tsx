@@ -18,8 +18,6 @@ function App() {
   return (
     <>
       <h1>{t('app.error')}</h1>
-      <h1>{t('items.accumulator')}</h1>
-      <h1>{t('categories.production')}</h1>
 
       <div>
         <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
