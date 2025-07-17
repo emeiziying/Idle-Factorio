@@ -19,7 +19,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { closeModal } from '../../store/slices/uiSlice';
 import { addToQueue } from '../../store/slices/craftingSlice';
-import { itemsById, getRecipesForItem } from '../../data';
+import { itemsById, getRecipesForItem, recipesById } from '../../data';
 import { formatNumber, formatRate, formatTime, formatPercentage } from '../../utils/format';
 
 export const ItemDetailModal: React.FC = () => {
