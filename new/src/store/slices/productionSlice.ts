@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { ProducerInfo, ConsumerInfo, ProductionRate, MachineType } from '../../types';
 
 interface ProductionState {
