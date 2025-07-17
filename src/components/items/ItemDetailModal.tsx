@@ -54,8 +54,31 @@ export const ItemDetailModal: React.FC = () => {
     dispatch(closeModal());
   };
   
-  const handleCraft = (recipeId: string) => {
-    dispatch(addToQueue({ recipeId, quantity: 1 }));
+  const handleCraft = (recipeId: string, quantity: number = 1) => {
+    const recipe = recipesById[recipeId];
+    if (!recipe) return;
+    
+    // 检查原料是否充足
+    let hasEnoughMaterials = true;
+    let missingMaterial = '';
+    
+    for (const ingredient of recipe.ingredients) {
+      const required = ingredient.amount * quantity;
+      const available = inventory[ingredient.itemId] || 0;
+      if (available < required) {
+        hasEnoughMaterials = false;
+        missingMaterial = itemsById[ingredient.itemId]?.name || ingredient.itemId;
+        break;
+      }
+    }
+    
+    if (!hasEnoughMaterials) {
+      // TODO: 显示错误提示
+      console.warn(`材料不足: ${missingMaterial}`);
+      return;
+    }
+    
+    dispatch(addToQueue({ recipeId, quantity }));
   };
   
   if (!item) return null;
