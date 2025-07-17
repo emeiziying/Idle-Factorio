@@ -1,45 +1,121 @@
-import { useAppSelector } from '@/store/hooks';
-import { recordsState } from '@/store/modules/recordsSlice';
-import { useWhyDidYouUpdate } from 'ahooks';
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import './App.css';
-import reactLogo from './assets/react.svg';
-import viteLogo from '/vite.svg';
+import React, { useEffect } from 'react';
+import {
+  Container,
+  Box,
+  Tabs,
+  Tab,
+  Typography,
+  Grid,
+  AppBar,
+  Toolbar,
+  ThemeProvider,
+  createTheme,
+  CssBaseline
+} from '@mui/material';
+import { Provider } from 'react-redux';
+import { store } from './store';
+import { useAppSelector, useAppDispatch, useGameLoop } from './hooks';
+import { setSelectedTab } from './store/slices/uiSlice';
+import { ItemCategory } from './types';
+import { allItems } from './data';
+import { ItemGrid } from './components/items/ItemGrid';
+import { ItemDetailModal } from './components/items/ItemDetailModal';
+import { CraftingQueue } from './components/crafting/CraftingQueue';
+
+const theme = createTheme({
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#FF6B00', // Factorio orange
+    },
+    secondary: {
+      main: '#2E7D32',
+    },
+  },
+});
+
+// Tab 标签映射
+const tabLabels: Record<ItemCategory, string> = {
+  [ItemCategory.RESOURCES]: '资源',
+  [ItemCategory.MATERIALS]: '材料',
+  [ItemCategory.COMPONENTS]: '组件',
+  [ItemCategory.PRODUCTS]: '产品',
+  [ItemCategory.SCIENCE]: '科技',
+  [ItemCategory.MILITARY]: '军事',
+  [ItemCategory.LOGISTICS]: '物流',
+  [ItemCategory.PRODUCTION]: '生产',
+  [ItemCategory.POWER]: '电力',
+};
+
+function GameContent() {
+  const dispatch = useAppDispatch();
+  const selectedTab = useAppSelector(state => state.ui.selectedTab);
+  
+  // 启动游戏循环
+  useGameLoop();
+  
+  const handleTabChange = (_: React.SyntheticEvent, newValue: ItemCategory) => {
+    dispatch(setSelectedTab(newValue));
+  };
+  
+  // 获取当前分类的物品
+  const currentItems = allItems.filter(item => item.category === selectedTab);
+  
+  return (
+    <Box sx={{ flexGrow: 1 }}>
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            Factorio Idle
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      
+      <Container maxWidth="xl" sx={{ mt: 2 }}>
+        <Grid container spacing={2}>
+          {/* 主要内容区域 */}
+          <Grid item xs={12} md={9}>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+              <Tabs
+                value={selectedTab}
+                onChange={handleTabChange}
+                variant="scrollable"
+                scrollButtons="auto"
+              >
+                {Object.entries(tabLabels).map(([category, label]) => (
+                  <Tab
+                    key={category}
+                    label={label}
+                    value={category}
+                  />
+                ))}
+              </Tabs>
+            </Box>
+            
+            <ItemGrid items={currentItems} />
+          </Grid>
+          
+          {/* 侧边栏 - 制作队列 */}
+          <Grid item xs={12} md={3}>
+            <CraftingQueue />
+          </Grid>
+        </Grid>
+      </Container>
+      
+      {/* 物品详情模态框 */}
+      <ItemDetailModal />
+    </Box>
+  );
+}
 
 function App() {
-  const [count, setCount] = useState(0);
-  const { t } = useTranslation('app');
-
-  const records = useAppSelector(recordsState);
-
-  useWhyDidYouUpdate('App', { records });
-
   return (
-    <>
-      <h1>{t('app.error')}</h1>
-
-      <div>
-        <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank" rel="noreferrer">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <Provider store={store}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <GameContent />
+      </ThemeProvider>
+    </Provider>
   );
 }
 
