@@ -1,13 +1,16 @@
-// 格式化大数字
+// 格式化大数字（用于库存显示）
 export const formatNumber = (n: number): string => {
-  if (n >= 1000000000) {
-    return `${(n / 1000000000).toFixed(1)}B`;
-  } else if (n >= 1000000) {
-    return `${(n / 1000000).toFixed(1)}M`;
-  } else if (n >= 1000) {
-    return `${(n / 1000).toFixed(1)}K`;
+  // 先取整
+  const rounded = Math.floor(n);
+  
+  if (rounded >= 1000000000) {
+    return `${(rounded / 1000000000).toFixed(1)}B`;
+  } else if (rounded >= 1000000) {
+    return `${(rounded / 1000000).toFixed(1)}M`;
+  } else if (rounded >= 1000) {
+    return `${(rounded / 1000).toFixed(1)}K`;
   }
-  return n.toFixed(1);
+  return rounded.toString();
 };
 
 // 格式化精确数字

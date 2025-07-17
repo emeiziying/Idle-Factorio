@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { CraftingQueueItem } from '../../types';
+import type { CraftingQueueItem } from '../../types';
 
 interface CraftingState {
   queue: CraftingQueueItem[];
