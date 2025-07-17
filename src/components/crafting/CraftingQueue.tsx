@@ -43,9 +43,20 @@ export const CraftingQueue: React.FC = () => {
             
             const product = recipe.products[0];
             const productItem = itemsById[product.itemId];
-            const totalTime = recipe.time * item.quantity;
+            const timePerItem = recipe.time;
+            const totalTime = timePerItem * item.quantity;
+            
+            // 计算当前物品的进度
+            const completedItems = Math.floor((item.progress / 100) * item.quantity);
+            const currentItemProgress = ((item.progress / 100) * item.quantity - completedItems) * 100;
+            
+            // 计算剩余时间
+            const remainingItems = item.quantity - completedItems;
+            const currentItemRemainingTime = item.status === 'crafting' && currentItemProgress > 0
+              ? timePerItem * (1 - currentItemProgress / 100)
+              : timePerItem;
             const remainingTime = item.status === 'crafting' 
-              ? totalTime * (1 - item.progress / 100) 
+              ? currentItemRemainingTime + (remainingItems - 1) * timePerItem
               : totalTime;
             
             return (
@@ -62,6 +73,11 @@ export const CraftingQueue: React.FC = () => {
                     <Box display="flex" alignItems="center" gap={1}>
                       <Typography variant="body1">
                         {productItem?.name || product.itemId} x{item.quantity}
+                        {item.status === 'crafting' && completedItems > 0 && (
+                          <Typography component="span" variant="caption" color="text.secondary">
+                            {' '}({completedItems} 已完成)
+                          </Typography>
+                        )}
                       </Typography>
                       <Chip
                         label={
@@ -84,7 +100,7 @@ export const CraftingQueue: React.FC = () => {
                       {item.status === 'crafting' && (
                         <LinearProgress
                           variant="determinate"
-                          value={item.progress}
+                          value={currentItemProgress}
                           sx={{ mt: 1 }}
                         />
                       )}

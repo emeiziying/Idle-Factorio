@@ -37,44 +37,34 @@ export const useGameLoop = () => {
         const recipe = recipesById[activeCrafting.recipeId];
         if (recipe) {
           const timePerItem = recipe.time * 1000; // 转换为毫秒
-          const totalTime = timePerItem * activeCrafting.quantity;
           const elapsed = now - activeCrafting.startTime;
-          const progress = Math.min(100, (elapsed / totalTime) * 100);
           
-          dispatch(updateProgress({ id: activeCrafting.id, progress }));
+          // 计算已完成的物品数量
+          const completedItems = Math.floor(elapsed / timePerItem);
+          const remainingItems = activeCrafting.quantity - completedItems;
           
-          // 检查是否完成
-          if (progress >= 100) {
-            // 检查原料是否充足
-            let canComplete = true;
-            for (const ingredient of recipe.ingredients) {
-              const required = ingredient.amount * activeCrafting.quantity;
-              if ((inventory[ingredient.itemId] || 0) < required) {
-                canComplete = false;
-                break;
-              }
-            }
+          if (remainingItems > 0) {
+            // 计算当前物品的进度
+            const currentItemElapsed = elapsed % timePerItem;
+            const currentItemProgress = (currentItemElapsed / timePerItem) * 100;
             
-            if (canComplete) {
-              // 消耗原料
-              recipe.ingredients.forEach(ingredient => {
-                dispatch(removeItem({
-                  itemId: ingredient.itemId,
-                  amount: ingredient.amount * activeCrafting.quantity
-                }));
-              });
-              
-              // 添加产品
-              recipe.products.forEach(product => {
-                dispatch(addItem({
-                  itemId: product.itemId,
-                  amount: product.amount * activeCrafting.quantity
-                }));
-              });
-              
-              // 完成制作
-              dispatch(completeCrafting(activeCrafting.id));
-            }
+            // 总进度 = (已完成数量 + 当前进度) / 总数量
+            const totalProgress = ((completedItems + currentItemProgress / 100) / activeCrafting.quantity) * 100;
+            dispatch(updateProgress({ id: activeCrafting.id, progress: totalProgress }));
+          } else {
+            // 所有物品已完成
+            dispatch(updateProgress({ id: activeCrafting.id, progress: 100 }));
+            
+            // 添加产品
+            recipe.products.forEach(product => {
+              dispatch(addItem({
+                itemId: product.itemId,
+                amount: product.amount * activeCrafting.quantity
+              }));
+            });
+            
+            // 完成制作
+            dispatch(completeCrafting(activeCrafting.id));
           }
         }
       } else {
@@ -83,16 +73,25 @@ export const useGameLoop = () => {
         if (nextItem) {
           const recipe = recipesById[nextItem.recipeId];
           if (recipe) {
-            // 检查原料是否充足
+            // 检查原料是否充足（需要检查整个数量）
             let canStart = true;
             for (const ingredient of recipe.ingredients) {
-              if ((inventory[ingredient.itemId] || 0) < ingredient.amount) {
+              const required = ingredient.amount * nextItem.quantity;
+              if ((inventory[ingredient.itemId] || 0) < required) {
                 canStart = false;
                 break;
               }
             }
             
             if (canStart) {
+              // 开始制作前先扣减原料
+              recipe.ingredients.forEach(ingredient => {
+                dispatch(removeItem({
+                  itemId: ingredient.itemId,
+                  amount: ingredient.amount * nextItem.quantity
+                }));
+              });
+              
               dispatch(startCrafting(nextItem.id));
             }
           }
