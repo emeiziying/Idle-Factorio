@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { ProducerInfo, ConsumerInfo, ProductionRate } from '../../types';
 import { MachineType } from '../../types';
+import { recipesById } from '../../data';
 
 interface ProductionState {
   producers: Record<string, ProducerInfo[]>;  // itemId -> producers
@@ -116,19 +117,42 @@ function updateRates(state: ProductionState, itemId: string) {
   const producers = state.producers[itemId] || [];
   const consumers = state.consumers[itemId] || [];
   
-  const production = producers.reduce((sum, p) => sum + p.rate * p.count, 0);
+  const production = producers.reduce((sum, p) => sum + p.rate * p.count * (p.efficiency / 100), 0);
   const consumption = consumers.reduce((sum, c) => sum + c.rate, 0);
+  
+  // 计算基于配方的原料消耗
+  let materialConsumption = 0;
+  producers.forEach(producer => {
+    // 找到对应的配方
+    const recipe = Object.values(recipesById).find(r => 
+      r.products.some(p => p.itemId === itemId) && 
+      r.allowedMachines.includes(producer.machineType)
+    );
+    
+    if (recipe) {
+      const productionRate = producer.rate * producer.count * (producer.efficiency / 100);
+      // 为每个原料添加消耗
+      recipe.ingredients.forEach(ingredient => {
+        if (ingredient.itemId === itemId) {
+          // 如果这个物品本身也是原料（比如钢板制作消耗铁板）
+          materialConsumption += ingredient.amount * productionRate;
+        }
+      });
+    }
+  });
+  
+  const totalConsumption = consumption + materialConsumption;
   
   state.rates[itemId] = {
     production,
-    consumption,
-    net: production - consumption
+    consumption: totalConsumption,
+    net: production - totalConsumption
   };
   
   // 更新消费者百分比
-  if (consumption > 0) {
+  if (totalConsumption > 0) {
     consumers.forEach(consumer => {
-      consumer.percentage = (consumer.rate / consumption) * 100;
+      consumer.percentage = (consumer.rate / totalConsumption) * 100;
     });
   }
 }

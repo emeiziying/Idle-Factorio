@@ -8,7 +8,7 @@ export const useGameLoop = () => {
   const dispatch = useAppDispatch();
   const craftingQueue = useAppSelector(state => state.crafting.queue);
   const inventory = useAppSelector(state => state.inventory.stocks);
-  const productionRates = useAppSelector(state => state.production.rates);
+  const productionData = useAppSelector(state => state.production);
   
   const lastUpdateRef = useRef(Date.now());
   const animationFrameRef = useRef<number | null>(null);
@@ -19,16 +19,48 @@ export const useGameLoop = () => {
       const deltaTime = now - lastUpdateRef.current;
       lastUpdateRef.current = now;
       
-      // 更新生产
-      Object.entries(productionRates).forEach(([itemId, rate]) => {
-        if (rate.net !== 0) {
-          const deltaAmount = (rate.net * deltaTime) / 1000;
-          if (deltaAmount > 0) {
-            dispatch(addItem({ itemId, amount: deltaAmount }));
-          } else {
-            dispatch(removeItem({ itemId, amount: -deltaAmount }));
+      // 更新自动生产 - 基于生产者和配方
+      Object.entries(productionData.producers).forEach(([itemId, producers]) => {
+        producers.forEach(producer => {
+          // 找到生产这个物品的配方
+          const recipe = Object.values(recipesById).find(r => 
+            r.products.some(p => p.itemId === itemId) && 
+            r.allowedMachines.includes(producer.machineType)
+          );
+          
+          if (recipe) {
+            const productionPerSecond = producer.rate * producer.count * (producer.efficiency / 100);
+            const productionThisTick = (productionPerSecond * deltaTime) / 1000;
+            
+            // 检查是否有足够的原料
+            let canProduce = true;
+            const requiredMaterials: { itemId: string; amount: number }[] = [];
+            
+            recipe.ingredients.forEach(ingredient => {
+              const requiredAmount = ingredient.amount * productionThisTick;
+              const availableAmount = inventory[ingredient.itemId] || 0;
+              
+              if (availableAmount < requiredAmount) {
+                canProduce = false;
+              } else {
+                requiredMaterials.push({ itemId: ingredient.itemId, amount: requiredAmount });
+              }
+            });
+            
+            if (canProduce && productionThisTick > 0) {
+              // 扣减原料
+              requiredMaterials.forEach(material => {
+                dispatch(removeItem({ itemId: material.itemId, amount: material.amount }));
+              });
+              
+              // 添加产品
+              recipe.products.forEach(product => {
+                const productAmount = product.amount * productionThisTick;
+                dispatch(addItem({ itemId: product.itemId, amount: productAmount }));
+              });
+            }
           }
-        }
+        });
       });
       
       // 更新制作队列
@@ -108,5 +140,5 @@ export const useGameLoop = () => {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [dispatch, craftingQueue, inventory, productionRates]);
+  }, [dispatch, craftingQueue, inventory, productionData]);
 };
