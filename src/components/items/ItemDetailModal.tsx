@@ -6,22 +6,20 @@ import {
   IconButton,
   Typography,
   Box,
-  Grid,
-  Divider,
   Button,
   Table,
   TableBody,
   TableRow,
   TableCell,
-  Chip,
-  Paper
+  Paper,
+  Grid
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { closeModal } from '../../store/slices/uiSlice';
 import { addToQueue } from '../../store/slices/craftingSlice';
-import { itemsById, getRecipesForItem, getRecipesUsingItem } from '../../data';
+import { itemsById, getRecipesForItem } from '../../data';
 import { formatNumber, formatRate, formatTime, formatPercentage } from '../../utils/format';
 
 export const ItemDetailModal: React.FC = () => {
@@ -42,10 +40,10 @@ export const ItemDetailModal: React.FC = () => {
     return getRecipesForItem(selectedItemId);
   }, [selectedItemId]);
   
-  const usedInRecipes = useMemo(() => {
-    if (!selectedItemId) return [];
-    return getRecipesUsingItem(selectedItemId);
-  }, [selectedItemId]);
+  // const usedInRecipes = useMemo(() => {
+  //   if (!selectedItemId) return [];
+  //   return getRecipesUsingItem(selectedItemId);
+  // }, [selectedItemId]);
   
   const timeToEmpty = useMemo(() => {
     if (!rate || rate.net >= 0) return -1;
@@ -81,7 +79,7 @@ export const ItemDetailModal: React.FC = () => {
       <DialogContent>
         <Grid container spacing={3}>
           {/* 基础信息 */}
-          <Grid item xs={12} md={6}>
+          <Grid xs={12} md={6}>
             <Paper variant="outlined" sx={{ p: 2 }}>
               <Typography variant="subtitle2" gutterBottom>基础信息</Typography>
               <Table size="small">
@@ -106,7 +104,7 @@ export const ItemDetailModal: React.FC = () => {
           </Grid>
           
           {/* 生产统计 */}
-          <Grid item xs={12} md={6}>
+          <Grid xs={12} md={6}>
             <Paper variant="outlined" sx={{ p: 2 }}>
               <Typography variant="subtitle2" gutterBottom>生产统计</Typography>
               <Table size="small">
@@ -148,9 +146,9 @@ export const ItemDetailModal: React.FC = () => {
             </Paper>
           </Grid>
           
-          {/* 配方信息 */}
-          {recipes.length > 0 && (
-            <Grid item xs={12}>
+                      {/* 配方信息 */}
+            {recipes.length > 0 && (
+              <Grid xs={12}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Typography variant="subtitle2" gutterBottom>配方</Typography>
                 {recipes.map(recipe => (
@@ -187,15 +185,15 @@ export const ItemDetailModal: React.FC = () => {
                         </Button>
                       )}
                     </Box>
-                  </Box>
-                ))}
-              </Paper>
-            </Grid>
-          )}
-          
-          {/* 生产者列表 */}
-          {producers.length > 0 && (
-            <Grid item xs={12}>
+                                                                     </Box>
+               ))}
+             </Paper>
+           </Grid>
+         )}
+         
+                                       {/* 生产者列表 */}
+           {producers.length > 0 && (
+             <Grid xs={12}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Typography variant="subtitle2" gutterBottom>生产者</Typography>
                 <Table size="small">
@@ -208,15 +206,15 @@ export const ItemDetailModal: React.FC = () => {
                         <TableCell>{formatPercentage(producer.efficiency)}</TableCell>
                       </TableRow>
                     ))}
-                  </TableBody>
-                </Table>
-              </Paper>
-            </Grid>
-          )}
-          
-          {/* 消费者列表 */}
-          {consumers.length > 0 && (
-            <Grid item xs={12}>
+                                                                     </TableBody>
+               </Table>
+             </Paper>
+           </Grid>
+         )}
+         
+                                       {/* 消费者列表 */}
+           {consumers.length > 0 && (
+             <Grid xs={12}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Typography variant="subtitle2" gutterBottom>消耗明细</Typography>
                 <Table size="small">
@@ -229,12 +227,12 @@ export const ItemDetailModal: React.FC = () => {
                         <TableCell>{formatPercentage(consumer.percentage)}</TableCell>
                       </TableRow>
                     ))}
-                  </TableBody>
-                </Table>
-              </Paper>
-            </Grid>
-          )}
-        </Grid>
+                                                                     </TableBody>
+               </Table>
+             </Paper>
+           </Grid>
+         )}
+       </Grid>
       </DialogContent>
     </Dialog>
   );

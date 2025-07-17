@@ -1,16 +1,16 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   Container,
   Box,
   Tabs,
   Tab,
   Typography,
-  Grid,
   AppBar,
   Toolbar,
   ThemeProvider,
   createTheme,
-  CssBaseline
+  CssBaseline,
+  Grid
 } from '@mui/material';
 import { Provider } from 'react-redux';
 import { store } from './store';
@@ -74,7 +74,7 @@ function GameContent() {
       <Container maxWidth="xl" sx={{ mt: 2 }}>
         <Grid container spacing={2}>
           {/* 主要内容区域 */}
-          <Grid item xs={12} md={9}>
+          <Grid xs={12} md={9}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
               <Tabs
                 value={selectedTab}
@@ -96,7 +96,7 @@ function GameContent() {
           </Grid>
           
           {/* 侧边栏 - 制作队列 */}
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <CraftingQueue />
           </Grid>
         </Grid>

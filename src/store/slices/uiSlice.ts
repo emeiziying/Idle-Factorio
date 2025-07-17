@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { ItemCategory } from '../../types';
+import { ItemCategory } from '../../types';
 
 interface UIState {
   selectedTab: ItemCategory;

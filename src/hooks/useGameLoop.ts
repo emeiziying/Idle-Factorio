@@ -11,7 +11,7 @@ export const useGameLoop = () => {
   const productionRates = useAppSelector(state => state.production.rates);
   
   const lastUpdateRef = useRef(Date.now());
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number | null>(null);
   
   useEffect(() => {
     const gameLoop = () => {

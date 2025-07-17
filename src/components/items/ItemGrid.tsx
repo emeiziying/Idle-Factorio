@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Paper, Typography, Box, Badge } from '@mui/material';
+import { Paper, Typography, Box, Badge, Grid } from '@mui/material';
 import type { Item } from '../../types';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { selectItem } from '../../store/slices/uiSlice';
@@ -26,7 +26,7 @@ export const ItemGrid: React.FC<ItemGridProps> = ({ items }) => {
         const hasProduction = rate && (rate.production > 0 || rate.consumption > 0);
         
         return (
-          <Grid item xs={6} sm={4} md={3} lg={2} key={item.id}>
+          <Grid xs={6} sm={4} md={3} lg={2} key={item.id}>
             <Paper
               sx={{
                 p: 2,

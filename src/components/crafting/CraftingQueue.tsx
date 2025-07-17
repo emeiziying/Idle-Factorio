@@ -37,7 +37,7 @@ export const CraftingQueue: React.FC = () => {
         </Typography>
       ) : (
         <List>
-          {queue.map((item, index) => {
+          {queue.map((item) => {
             const recipe = recipesById[item.recipeId];
             if (!recipe) return null;
             
