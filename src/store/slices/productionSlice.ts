@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { ProducerInfo, ConsumerInfo, ProductionRate, MachineType } from '../../types';
+import type { ProducerInfo, ConsumerInfo, ProductionRate } from '../../types';
+import { MachineType } from '../../types';
 
 interface ProductionState {
   producers: Record<string, ProducerInfo[]>;  // itemId -> producers

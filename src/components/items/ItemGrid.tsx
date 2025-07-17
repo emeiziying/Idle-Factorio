@@ -1,6 +1,6 @@
 import React from 'react';
 import { Grid, Paper, Typography, Box, Badge } from '@mui/material';
-import { Item } from '../../types';
+import type { Item } from '../../types';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { selectItem } from '../../store/slices/uiSlice';
 import { formatNumber } from '../../utils/format';

@@ -1,4 +1,5 @@
-import { Item, ItemCategory } from '../../types';
+import type { Item } from '../../types';
+import { ItemCategory } from '../../types';
 
 export const resources: Item[] = [
   {

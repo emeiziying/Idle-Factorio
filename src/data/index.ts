@@ -3,7 +3,7 @@ import { materials } from './items/materials';
 import { components } from './items/components';
 import { smeltingRecipes } from './recipes/smelting';
 import { craftingRecipes } from './recipes/crafting';
-import { Item, Recipe } from '../types';
+import type { Item, Recipe } from '../types';
 
 // 汇总所有物品
 export const allItems: Item[] = [

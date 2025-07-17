@@ -1,4 +1,5 @@
-import { Recipe, RecipeCategory, MachineType } from '../../types';
+import type { Recipe } from '../../types';
+import { RecipeCategory, MachineType } from '../../types';
 
 export const smeltingRecipes: Recipe[] = [
   {
