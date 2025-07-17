@@ -703,6 +703,357 @@ const architecture = {
 }
 ```
 
+## 🖥️ UI设计与交互详细方案
+
+### 1. 界面布局设计
+```typescript
+interface UILayout {
+  header: {
+    logo: '游戏Logo',
+    globalStats: '全局统计信息 (电力、污染等)',
+    settings: '设置按钮'
+  },
+  
+  mainContent: {
+    tabs: {
+      resources: '资源',      // 原材料 (铁矿石、铜矿石等)
+      materials: '材料',      // 基础材料 (铁板、铜板等)
+      components: '组件',     // 中间产品 (齿轮、电路板等)
+      products: '产品',       // 最终产品
+      science: '科技',        // 科学包
+      military: '军事',       // 军事物品
+      logistics: '物流',      // 传送带、机械臂等
+      production: '生产',     // 制造设备
+      power: '电力'          // 发电设备
+    },
+    
+    itemGrid: '物品网格显示',
+    detailPanel: '物品详情面板'
+  },
+  
+  bottomPanel: {
+    craftingQueue: '手动制作队列',
+    notifications: '通知消息'
+  }
+}
+```
+
+### 2. 物品详情界面
+```typescript
+interface ItemDetailModal {
+  basicInfo: {
+    icon: '物品图标',
+    name: '物品名称',
+    description: '物品描述',
+    category: '物品类别'
+  },
+  
+  productionStats: {
+    production: '产量/秒',
+    consumption: '消耗量/秒',
+    netGain: '净增量/秒',
+    currentStock: '当前库存',
+    timeToEmpty: '剩余可用时间', // 动态单位: 秒/分钟/小时/天
+    storageCapacity: '存储容量'
+  },
+  
+  crafting: {
+    canHandCraft: boolean,
+    handCraftButton: '手动制作按钮',
+    recipe: {
+      ingredients: '原料列表',
+      output: '产出数量',
+      time: '制作时间'
+    },
+    
+    automationOptions: {
+      availableMachines: Machine[],  // 可用的自动化设备
+      addMachineButton: '添加设备按钮'
+    }
+  },
+  
+  consumptionBreakdown: {
+    title: '消耗明细',
+    consumers: [
+      {
+        product: '齿轮',
+        machine: '组装机1型',
+        rate: '100/秒',
+        percentage: '33.3%'
+      },
+      {
+        product: '钢板',
+        machine: '熔炉',
+        rate: '200/秒',
+        percentage: '66.7%'
+      }
+    ]
+  },
+  
+  productionBreakdown: {
+    title: '生产明细',
+    producers: [
+      {
+        machine: '电熔炉',
+        count: 10,
+        rate: '300/秒',
+        efficiency: '100%'
+      }
+    ]
+  }
+}
+```
+
+### 3. 手动制作队列系统
+```typescript
+interface CraftingQueue {
+  maxSlots: 5,  // 初始5个队列槽位
+  
+  queueItem: {
+    id: string,
+    itemId: string,
+    itemName: string,
+    quantity: number,
+    timePerUnit: number,
+    totalTime: number,
+    progress: number,  // 0-100%
+    status: 'waiting' | 'crafting' | 'completed'
+  },
+  
+  features: {
+    dragToReorder: true,      // 拖拽重排
+    cancelCrafting: true,     // 取消制作
+    bulkCrafting: true,       // 批量制作
+    queueUpgrade: true        // 队列槽位升级
+  }
+}
+```
+
+### 4. 物品制作限制
+```typescript
+interface CraftingRestrictions {
+  // 只能在熔炉中制作的物品
+  furnaceOnly: [
+    'iron_plate',
+    'copper_plate', 
+    'steel_plate',
+    'stone_brick'
+  ],
+  
+  // 只能在化工厂制作的物品
+  chemicalPlantOnly: [
+    'plastic_bar',
+    'sulfur',
+    'sulfuric_acid',
+    'lubricant'
+  ],
+  
+  // 只能在精炼厂制作的物品
+  refineryOnly: [
+    'petroleum_gas',
+    'light_oil',
+    'heavy_oil'
+  ],
+  
+  // 可以手动制作的物品
+  handCraftable: [
+    'wood_plank',
+    'iron_gear_wheel',
+    'copper_cable',
+    'electronic_circuit',
+    'inserter',
+    'transport_belt',
+    'assembling_machine_1'
+  ]
+}
+```
+
+### 5. 实时更新机制
+```typescript
+interface RealtimeUpdates {
+  updateInterval: 100,  // 100ms更新一次
+  
+  updates: {
+    production: '实时生产计算',
+    consumption: '实时消耗计算',
+    stockLevels: '库存水平更新',
+    craftingProgress: '制作进度更新',
+    powerGrid: '电网状态更新'
+  },
+  
+  optimization: {
+    batchUpdates: true,        // 批量DOM更新
+    virtualScrolling: true,    // 虚拟滚动
+    memoization: true,         // 计算结果缓存
+    webWorkers: true          // 后台计算线程
+  }
+}
+```
+
+### 6. 数据显示格式化
+```typescript
+interface DisplayFormatting {
+  numbers: {
+    large: (n: number) => string,  // 1.5K, 2.3M, 4.7B
+    precise: (n: number) => string, // 1,234.56
+    percentage: (n: number) => string // 85.3%
+  },
+  
+  time: {
+    dynamic: (seconds: number) => {
+      if (seconds < 60) return `${seconds}秒`;
+      if (seconds < 3600) return `${Math.floor(seconds/60)}分${seconds%60}秒`;
+      if (seconds < 86400) return `${Math.floor(seconds/3600)}小时${Math.floor((seconds%3600)/60)}分`;
+      return `${Math.floor(seconds/86400)}天${Math.floor((seconds%86400)/3600)}小时`;
+    }
+  },
+  
+  rate: {
+    perSecond: (n: number) => `${n}/秒`,
+    perMinute: (n: number) => `${n}/分钟`,
+    perHour: (n: number) => `${n}/小时`
+  }
+}
+```
+
+## 🔧 技术实现规格
+
+### 1. 项目结构
+```
+new/
+├── src/
+│   ├── components/           # React组件
+│   │   ├── common/          # 通用组件
+│   │   ├── items/           # 物品相关组件
+│   │   ├── crafting/        # 制作相关组件
+│   │   └── production/      # 生产相关组件
+│   ├── features/            # 功能模块
+│   │   ├── inventory/       # 库存管理
+│   │   ├── production/      # 生产管理
+│   │   └── crafting/        # 制作管理
+│   ├── hooks/               # 自定义Hooks
+│   ├── store/               # Redux状态管理
+│   ├── data/                # 游戏数据
+│   │   ├── items/           # 物品数据
+│   │   ├── recipes/         # 配方数据
+│   │   └── machines/        # 设备数据
+│   ├── utils/               # 工具函数
+│   └── types/               # TypeScript类型定义
+```
+
+### 2. 核心数据模型
+```typescript
+// 物品数据模型
+interface Item {
+  id: string;
+  name: string;
+  category: ItemCategory;
+  stackSize: number;
+  icon: string;
+  description?: string;
+}
+
+// 配方数据模型
+interface Recipe {
+  id: string;
+  name: string;
+  ingredients: Ingredient[];
+  products: Product[];
+  time: number;  // 秒
+  category: RecipeCategory;
+  allowedMachines: MachineType[];
+  handCraftable: boolean;
+}
+
+// 生产数据模型
+interface ProductionData {
+  itemId: string;
+  producers: ProducerInfo[];
+  consumers: ConsumerInfo[];
+  productionRate: number;
+  consumptionRate: number;
+  currentStock: number;
+  storageCapacity: number;
+}
+
+// 制作队列模型
+interface CraftingQueueItem {
+  id: string;
+  recipeId: string;
+  quantity: number;
+  startTime: number;
+  progress: number;
+  status: 'waiting' | 'crafting' | 'completed';
+}
+```
+
+### 3. 状态管理设计
+```typescript
+interface RootState {
+  items: {
+    byId: Record<string, Item>;
+    allIds: string[];
+  };
+  
+  inventory: {
+    stocks: Record<string, number>;  // itemId -> quantity
+    capacity: Record<string, number>; // itemId -> max capacity
+  };
+  
+  production: {
+    producers: Record<string, ProducerState[]>;  // itemId -> producers
+    consumers: Record<string, ConsumerState[]>;  // itemId -> consumers
+    rates: Record<string, ProductionRate>;       // itemId -> rates
+  };
+  
+  crafting: {
+    queue: CraftingQueueItem[];
+    activeSlot: number;
+    maxSlots: number;
+  };
+  
+  machines: {
+    byId: Record<string, Machine>;
+    placed: PlacedMachine[];
+  };
+  
+  ui: {
+    selectedTab: TabType;
+    selectedItem: string | null;
+    modalOpen: boolean;
+  };
+}
+```
+
+### 4. 性能优化策略
+```typescript
+const performanceOptimizations = {
+  // React优化
+  react: {
+    useMemo: '缓存计算结果',
+    useCallback: '缓存回调函数',
+    React.memo: '组件记忆化',
+    virtualization: '长列表虚拟化'
+  },
+  
+  // 状态优化
+  state: {
+    normalization: '状态规范化',
+    selectors: 'Reselect缓存选择器',
+    immer: '不可变状态更新',
+    rtk: 'Redux Toolkit优化'
+  },
+  
+  // 计算优化
+  computation: {
+    webWorkers: '后台线程计算',
+    requestIdleCallback: '空闲时计算',
+    throttling: '节流更新',
+    debouncing: '防抖输入'
+  }
+};
+```
+
 ---
 
 **文档版本**: v1.0  
