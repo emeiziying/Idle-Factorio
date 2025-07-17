@@ -13,6 +13,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useAppSelector, useAppDispatch } from '../../hooks';
 import { removeFromQueue } from '../../store/slices/craftingSlice';
+import { addItem } from '../../store/slices/inventorySlice';
 import { recipesById, itemsById } from '../../data';
 import { formatTime } from '../../utils/format';
 
@@ -22,6 +23,35 @@ export const CraftingQueue: React.FC = () => {
   const maxSlots = useAppSelector(state => state.crafting.maxSlots);
   
   const handleRemove = (id: string) => {
+    // 找到要取消的物品
+    const item = queue.find(q => q.id === id);
+    if (!item) return;
+    
+    const recipe = recipesById[item.recipeId];
+    if (!recipe) {
+      dispatch(removeFromQueue(id));
+      return;
+    }
+    
+    // 如果物品正在制作或等待，返还原料
+    if (item.status === 'crafting' || item.status === 'waiting') {
+      // 计算已完成的数量
+      const completedItems = item.status === 'crafting' 
+        ? Math.floor((item.progress / 100) * item.quantity)
+        : 0;
+      
+      // 返还未完成部分的原料
+      const remainingQuantity = item.quantity - completedItems;
+      if (remainingQuantity > 0) {
+        recipe.ingredients.forEach(ingredient => {
+          dispatch(addItem({
+            itemId: ingredient.itemId,
+            amount: ingredient.amount * remainingQuantity
+          }));
+        });
+      }
+    }
+    
     dispatch(removeFromQueue(id));
   };
   

@@ -174,43 +174,58 @@ export const ItemDetailModal: React.FC = () => {
               <Grid xs={12}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Typography variant="subtitle2" gutterBottom>配方</Typography>
-                {recipes.map(recipe => (
-                  <Box key={recipe.id} sx={{ mb: 2 }}>
-                    <Box display="flex" alignItems="center" justifyContent="space-between">
-                      <Box>
-                        <Typography variant="body2">
-                          {recipe.ingredients.map((ing, idx) => (
-                            <span key={ing.itemId}>
-                              {idx > 0 && ' + '}
-                              {ing.amount} {itemsById[ing.itemId]?.name || ing.itemId}
-                            </span>
-                          ))}
-                          {' → '}
-                          {recipe.products.map((prod, idx) => (
-                            <span key={prod.itemId}>
-                              {idx > 0 && ' + '}
-                              {prod.amount} {itemsById[prod.itemId]?.name || prod.itemId}
-                            </span>
-                          ))}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          时间: {recipe.time}秒
-                        </Typography>
+                {recipes.map(recipe => {
+                  // 检查是否有足够的材料
+                  const hasEnoughMaterials = recipe.ingredients.every(
+                    ing => (inventory[ing.itemId] || 0) >= ing.amount
+                  );
+                  
+                  return (
+                    <Box key={recipe.id} sx={{ mb: 2 }}>
+                      <Box display="flex" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2">
+                            {recipe.ingredients.map((ing, idx) => {
+                              const hasEnough = (inventory[ing.itemId] || 0) >= ing.amount;
+                              return (
+                                <span 
+                                  key={ing.itemId}
+                                  style={{ color: hasEnough ? 'inherit' : '#f44336' }}
+                                >
+                                  {idx > 0 && ' + '}
+                                  {ing.amount} {itemsById[ing.itemId]?.name || ing.itemId}
+                                  {!hasEnough && ` (缺少 ${ing.amount - (inventory[ing.itemId] || 0)})`}
+                                </span>
+                              );
+                            })}
+                            {' → '}
+                            {recipe.products.map((prod, idx) => (
+                              <span key={prod.itemId}>
+                                {idx > 0 && ' + '}
+                                {prod.amount} {itemsById[prod.itemId]?.name || prod.itemId}
+                              </span>
+                            ))}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            时间: {recipe.time}秒
+                          </Typography>
+                        </Box>
+                        {recipe.handCraftable && (
+                          <Button
+                            size="small"
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={() => handleCraft(recipe.id)}
+                            disabled={!hasEnoughMaterials}
+                          >
+                            手动制作
+                          </Button>
+                        )}
                       </Box>
-                      {recipe.handCraftable && (
-                        <Button
-                          size="small"
-                          variant="contained"
-                          startIcon={<AddIcon />}
-                          onClick={() => handleCraft(recipe.id)}
-                        >
-                          手动制作
-                        </Button>
-                      )}
                     </Box>
-                                                                     </Box>
-               ))}
-             </Paper>
+                  );
+                })}
+              </Paper>
            </Grid>
          )}
          
