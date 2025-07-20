@@ -17,8 +17,11 @@ import { dataService } from '../services/DataService';
 const FacilityCard = styled(Box)(({ theme }) => ({
   backgroundColor: '#f8f9fa',
   borderRadius: '8px',
-  padding: '16px',
-  marginBottom: '12px',
+  padding: theme.spacing(2),
+  marginBottom: theme.spacing(1.5),
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(1.5),
+  },
 }));
 
 const LogisticsRow = styled(Box)(({ theme }) => ({

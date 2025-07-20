@@ -17,6 +17,7 @@ import { Item, InventoryItem } from '../types';
 import { dataService } from '../services/DataService';
 import { facilityService } from '../services/FacilityService';
 import FacilityLogisticsPanel from './FacilityLogisticsPanel';
+import ProductionChainAnalyzer from './ProductionChainAnalyzer';
 
 const ItemIcon = styled(Box)<{ 
   iconposition: string; 
@@ -307,6 +308,17 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
             </Box>
           </Box>
         </Box>
+
+        {/* 生产链分析 */}
+        {inventory && inventory.status === 'producing' && (
+          <>
+            <Divider sx={{ my: 2 }} />
+            <ProductionChainAnalyzer 
+              itemId={item.id}
+              targetRate={inventory.productionRate}
+            />
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

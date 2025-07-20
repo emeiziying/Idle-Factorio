@@ -124,7 +124,43 @@ class PersistenceService {
   enableAutoSave(intervalMs: number = 30000): () => void {
     const interval = setInterval(() => {
       console.log('Auto-saving game state...');
-      // 这里需要从各个服务收集状态并保存
+      
+      try {
+        // 从各个服务收集当前状态
+        const inventory: Record<string, InventoryItem> = {};
+        const facilities: Record<string, Facility[]> = {};
+        
+        // 获取库存数据
+        const dataService = require('./DataService').dataService;
+        const inventoryItems = dataService.getAllInventoryItems();
+        inventoryItems.forEach((item: InventoryItem) => {
+          inventory[item.itemId] = item;
+        });
+        
+        // 获取设施数据
+        const facilityService = require('./FacilityService').facilityService;
+        const allFacilities = facilityService.getAllFacilities();
+        allFacilities.forEach((facility: Facility) => {
+          if (!facilities[facility.itemId]) {
+            facilities[facility.itemId] = [];
+          }
+          facilities[facility.itemId].push(facility);
+        });
+        
+        // 获取制作队列
+        const craftingQueue = dataService.getCraftingQueue();
+        
+        // 保存状态
+        this.saveGameState({
+          inventory,
+          facilities,
+          craftingQueue,
+        });
+        
+        console.log('Game state saved successfully');
+      } catch (error) {
+        console.error('Failed to auto-save:', error);
+      }
     }, intervalMs);
 
     return () => clearInterval(interval);
