@@ -168,12 +168,74 @@ class SimpleLogisticsService {
     hasEnough: boolean;
     missing: { item: string; required: number; available: number }[];
   } {
-    // 这里需要与DataService集成来检查实际库存
-    // 简化版本暂时返回true
+    const missing: { item: string; required: number; available: number }[] = [];
+    
+    // 导入dataService以检查库存
+    const { dataService } = require('./DataService');
+    
+    // 检查传送带库存
+    if (config.conveyors > 0) {
+      const conveyorInventory = dataService.getInventoryItem(config.conveyorType);
+      const available = conveyorInventory?.currentAmount || 0;
+      if (available < config.conveyors) {
+        missing.push({
+          item: config.conveyorType,
+          required: config.conveyors,
+          available
+        });
+      }
+    }
+    
+    // 检查机械臂库存
+    if (config.inserters > 0) {
+      const inserterInventory = dataService.getInventoryItem(config.inserterType);
+      const available = inserterInventory?.currentAmount || 0;
+      if (available < config.inserters) {
+        missing.push({
+          item: config.inserterType,
+          required: config.inserters,
+          available
+        });
+      }
+    }
+    
     return {
-      hasEnough: true,
-      missing: []
+      hasEnough: missing.length === 0,
+      missing
     };
+  }
+  
+  // 消耗物流设备库存
+  consumeLogisticsInventory(config: LogisticsConfig): boolean {
+    const { dataService } = require('./DataService');
+    
+    // 先检查库存
+    const check = this.checkLogisticsInventory(config);
+    if (!check.hasEnough) {
+      return false;
+    }
+    
+    // 消耗传送带
+    if (config.conveyors > 0) {
+      const conveyorInventory = dataService.getInventoryItem(config.conveyorType);
+      if (conveyorInventory) {
+        dataService.updateInventory(config.conveyorType, {
+          currentAmount: conveyorInventory.currentAmount - config.conveyors
+        });
+      }
+    }
+    
+    // 消耗机械臂
+    if (config.inserters > 0) {
+      const inserterInventory = dataService.getInventoryItem(config.inserterType);
+      if (inserterInventory) {
+        dataService.updateInventory(config.inserterType, {
+          currentAmount: inserterInventory.currentAmount - config.inserters
+        });
+      }
+    }
+    
+    return true;
   }
 }
 
