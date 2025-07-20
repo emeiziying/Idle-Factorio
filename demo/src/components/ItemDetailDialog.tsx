@@ -15,6 +15,7 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { Item, InventoryItem } from '../types';
 import { dataService } from '../services/DataService';
+import { facilityService } from '../services/FacilityService';
 import FacilityLogisticsPanel from './FacilityLogisticsPanel';
 
 const ItemIcon = styled(Box)<{ 
@@ -241,24 +242,42 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
         </DataCard>
 
         {/* 生产设施管理 */}
-        {inventory && inventory.status === 'producing' && (
-          <>
-            <Divider sx={{ my: 2 }} />
-            <FacilityLogisticsPanel
-              itemId={item.id}
-              facilityType="电力采掘机"  // 这里应该从实际数据获取
-              facilityCount={3}  // 这里应该从实际数据获取
-              baseProductionRate={inventory.productionRate / 3}  // 单台产能
-              baseConsumptionRate={0}  // 采掘机不消耗原料
-              onProductionChange={(actualRate) => {
-                // 更新实际产量
-                dataService.updateInventory(item.id, {
-                  productionRate: actualRate
-                });
-              }}
-            />
-          </>
-        )}
+        {inventory && inventory.status === 'producing' && (() => {
+          // 获取该物品的生产设施
+          const facilities = facilityService.getFacilitiesForItem(item.id);
+          
+          return (
+            <>
+              <Divider sx={{ my: 2 }} />
+              {facilities.map((facility) => {
+                const facilityType = facilityService.getFacilityType(facility.type);
+                const production = facilityService.calculateFacilityProduction(facility);
+                
+                return (
+                  <FacilityLogisticsPanel
+                    key={facility.id}
+                    itemId={item.id}
+                    facilityType={facilityType?.name || facility.type}
+                    facilityCount={facility.count}
+                    baseProductionRate={facility.baseOutputRate}
+                    baseConsumptionRate={Object.values(facility.baseInputRate).reduce((a, b) => a + b, 0)}
+                    onProductionChange={(actualRate) => {
+                      // 更新实际产量
+                      dataService.updateInventory(item.id, {
+                        productionRate: actualRate
+                      });
+                    }}
+                  />
+                );
+              })}
+              {facilities.length === 0 && (
+                <Typography variant="body2" color="text.secondary" textAlign="center" py={2}>
+                  未配置生产设施
+                </Typography>
+              )}
+            </>
+          );
+        })()}
 
         {/* 物品信息 */}
         <Box mt={2}>
