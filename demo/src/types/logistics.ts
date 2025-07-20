@@ -1,57 +1,87 @@
-// 物流系统类型定义
+// 简化版物流系统类型定义
 
-export interface LogisticsConnection {
-  id: string;
-  type: 'conveyor' | 'inserter';
-  fromDevice: string;      // 起始设备ID
-  toDevice: string;        // 目标设备ID
-  itemType?: string;       // 可选的物品过滤
-  flow: number;            // 当前流量（物品/秒）
-  status: 'active' | 'idle' | 'blocked';
-}
-
-export interface ConveyorConnection extends LogisticsConnection {
-  type: 'conveyor';
-  conveyorType: 'transport-belt' | 'fast-transport-belt' | 'express-transport-belt';
-  length: number;          // 传送带段数
-  capacity: number;        // 最大流量
-}
-
-export interface InserterConnection extends LogisticsConnection {
-  type: 'inserter';
-  inserterType: 'inserter' | 'fast-inserter' | 'stack-inserter';
-  speed: number;           // 搬运速度（物品/秒）
-  progress: number;        // 当前搬运进度 0-1
-  currentItem?: string;    // 当前搬运的物品ID
-}
-
-// 物流设备属性
+// 物流设备规格
 export const LOGISTICS_SPECS = {
   conveyors: {
-    'transport-belt': { speed: 15, color: '#716358' },
-    'fast-transport-belt': { speed: 30, color: '#735a57' },
-    'express-transport-belt': { speed: 45, color: '#626469' }
+    'transport-belt': { 
+      speed: 15, 
+      name: '基础传送带',
+      color: '#716358' 
+    },
+    'fast-transport-belt': { 
+      speed: 30, 
+      name: '快速传送带',
+      color: '#735a57' 
+    },
+    'express-transport-belt': { 
+      speed: 45, 
+      name: '极速传送带',
+      color: '#626469' 
+    }
   },
   inserters: {
-    'inserter': { speed: 0.83, range: 1, stack: 1, color: '#a18459' },
-    'fast-inserter': { speed: 2.31, range: 1, stack: 1, color: '#5c8b9d' },
-    'stack-inserter': { speed: 6.92, range: 1, stack: 3, color: '#80995c' }
+    'inserter': { 
+      speed: 0.83, 
+      name: '基础机械臂',
+      color: '#a18459' 
+    },
+    'fast-inserter': { 
+      speed: 2.31, 
+      name: '快速机械臂',
+      color: '#5c8b9d' 
+    },
+    'stack-inserter': { 
+      speed: 6.92, 
+      name: '极速机械臂',
+      color: '#80995c' 
+    }
   }
 };
 
-// 设备的物流接口
-export interface DeviceLogistics {
-  deviceId: string;
-  inputs: LogisticsConnection[];
-  outputs: LogisticsConnection[];
-  maxInputRate?: number;   // 最大输入速率
-  maxOutputRate?: number;  // 最大输出速率
+// 物流配置
+export interface LogisticsConfig {
+  conveyors: number;         // 传送带数量
+  conveyorType: keyof typeof LOGISTICS_SPECS.conveyors;
+  inserters: number;         // 机械臂数量
+  inserterType: keyof typeof LOGISTICS_SPECS.inserters;
 }
 
-// 物流网络状态
-export interface LogisticsNetwork {
-  connections: LogisticsConnection[];
-  devices: Map<string, DeviceLogistics>;
-  totalFlow: number;
-  efficiency: number;
+// 设施的物流配置
+export interface FacilityLogistics {
+  facilityId: string;
+  facilityType: string;      // 设施类型（如电力采掘机）
+  facilityCount: number;     // 设施数量
+  
+  // 基础能力（单台设施）
+  baseInputRate: number;     // 基础输入速率（物品/秒）
+  baseOutputRate: number;    // 基础输出速率（物品/秒）
+  
+  // 物流配置
+  inputLogistics: LogisticsConfig;
+  outputLogistics: LogisticsConfig;
+  
+  // 计算后的实际能力
+  actualInputCapacity: number;   // 实际输入能力
+  actualOutputCapacity: number;  // 实际输出能力
+  actualProductionRate: number;  // 实际生产速率
+  efficiency: number;            // 效率（0-1）
+  bottleneck: 'input' | 'output' | 'none';
+}
+
+// 物流推荐
+export interface LogisticsRecommendation {
+  type: 'input' | 'output';
+  currentCapacity: number;
+  requiredCapacity: number;
+  deficit: number;
+  suggestions: {
+    conveyors?: {
+      type: keyof typeof LOGISTICS_SPECS.conveyors;
+      count: number;
+    };
+    inserters?: {
+      type: keyof typeof LOGISTICS_SPECS.inserters;
+      count: number;
+    };
+  }[];
 }

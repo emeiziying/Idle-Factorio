@@ -15,7 +15,7 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { Item, InventoryItem } from '../types';
 import { dataService } from '../services/DataService';
-import LogisticsPanel from './LogisticsPanel';
+import FacilityLogisticsPanel from './FacilityLogisticsPanel';
 
 const ItemIcon = styled(Box)<{ 
   iconposition: string; 
@@ -240,9 +240,25 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
           </Typography>
         </DataCard>
 
-        {/* 物流连接管理 */}
-        <Divider sx={{ my: 2 }} />
-        <LogisticsPanel itemId={item.id} onUpdate={() => {}} />
+        {/* 生产设施管理 */}
+        {inventory && inventory.status === 'producing' && (
+          <>
+            <Divider sx={{ my: 2 }} />
+            <FacilityLogisticsPanel
+              itemId={item.id}
+              facilityType="电力采掘机"  // 这里应该从实际数据获取
+              facilityCount={3}  // 这里应该从实际数据获取
+              baseProductionRate={inventory.productionRate / 3}  // 单台产能
+              baseConsumptionRate={0}  // 采掘机不消耗原料
+              onProductionChange={(actualRate) => {
+                // 更新实际产量
+                dataService.updateInventory(item.id, {
+                  productionRate: actualRate
+                });
+              }}
+            />
+          </>
+        )}
 
         {/* 物品信息 */}
         <Box mt={2}>
