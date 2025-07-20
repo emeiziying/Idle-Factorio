@@ -113,6 +113,13 @@ export const categoryTabs = [
     color: "#8B5CF6",
     description: "科技包、实验室等研究设施",
   },
+  {
+    id: "facilities",
+    name: "设施管理",
+    icon: "🏭",
+    color: "#EC4899",
+    description: "查看和管理所有生产设施",
+  },
 ];
 
 export interface GameData {

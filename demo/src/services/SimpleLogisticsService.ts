@@ -4,10 +4,36 @@ import {
   LogisticsRecommendation,
   LOGISTICS_SPECS 
 } from '../types/logistics';
+import { persistenceService } from './PersistenceService';
+import { dataService } from './DataService';
 
 class SimpleLogisticsService {
   // 存储每个物品的设施物流配置
   private facilityLogistics: Map<string, FacilityLogistics> = new Map();
+
+  constructor() {
+    // 加载保存的物流配置
+    this.loadSavedLogistics();
+  }
+
+  // 加载保存的物流配置
+  private loadSavedLogistics() {
+    const savedState = persistenceService.loadGameState();
+    if (savedState?.logistics) {
+      Object.entries(savedState.logistics).forEach(([key, logistics]) => {
+        this.facilityLogistics.set(key, logistics);
+      });
+    }
+  }
+
+  // 保存物流配置
+  private saveLogistics() {
+    const logisticsObj: Record<string, FacilityLogistics> = {};
+    this.facilityLogistics.forEach((value, key) => {
+      logisticsObj[key] = value;
+    });
+    persistenceService.saveLogistics(logisticsObj);
+  }
 
   // 计算物流配置的总运输能力
   calculateLogisticsCapacity(config: LogisticsConfig): number {
@@ -70,6 +96,10 @@ class SimpleLogisticsService {
     };
 
     this.facilityLogistics.set(itemId, logistics);
+    
+    // 保存更新后的配置
+    this.saveLogistics();
+    
     return logistics;
   }
 

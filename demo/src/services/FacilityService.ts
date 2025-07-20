@@ -17,51 +17,84 @@ class FacilityService {
 
   // 初始化示例设施
   private initializeSampleFacilities() {
-    // 铁矿开采
-    this.addFacility('iron-ore', {
-      id: 'iron-ore-mining-1',
-      itemId: 'iron-ore',
-      type: 'electric-mining-drill',
-      category: 'mining',
-      count: 3,
-      baseSpeed: 0.5,
-      baseInputRate: {}, // 采矿不需要输入
-      baseOutputRate: 0.5, // 每秒0.5个铁矿
-      powerType: 'electric',
-      powerConsumption: 90,
-      canProduce: ['iron-ore'],
+    if (!this.gameData) return;
+    
+    // 基于配方数据自动创建设施
+    this.recipes.forEach(recipe => {
+      // 获取配方的主要产出物品
+      const mainProduct = Object.keys(recipe.out)[0];
+      if (!mainProduct) return;
+      
+      // 根据配方类别创建合适的设施
+      const facilityType = this.getDefaultFacilityForRecipe(recipe);
+      if (!facilityType) return;
+      
+      const facilityTemplate = FACILITY_TYPES[facilityType];
+      if (!facilityTemplate) return;
+      
+      // 计算基础输入输出率
+      const craftTime = recipe.time || 0.5;
+      const baseInputRate: Record<string, number> = {};
+      for (const [item, amount] of Object.entries(recipe.in)) {
+        baseInputRate[item] = amount / craftTime;
+      }
+      const baseOutputRate = (recipe.out[mainProduct] || 1) / craftTime;
+      
+      // 创建设施
+      this.addFacility(mainProduct, {
+        id: `${mainProduct}-facility-1`,
+        itemId: mainProduct,
+        type: facilityType,
+        category: facilityTemplate.category,
+        count: 1, // 默认1台设施
+        baseSpeed: facilityTemplate.baseSpeed,
+        baseInputRate,
+        baseOutputRate,
+        powerType: facilityTemplate.powerType,
+        powerConsumption: facilityTemplate.powerConsumption,
+        recipeId: recipe.id,
+        canProduce: [mainProduct],
+      });
     });
-
-    // 铜矿开采
-    this.addFacility('copper-ore', {
-      id: 'copper-ore-mining-1',
-      itemId: 'copper-ore',
-      type: 'electric-mining-drill',
-      category: 'mining',
-      count: 2,
-      baseSpeed: 0.5,
-      baseInputRate: {},
-      baseOutputRate: 0.5,
-      powerType: 'electric',
-      powerConsumption: 90,
-      canProduce: ['copper-ore'],
+    
+    // 为采矿物品创建采矿设施
+    const miningItems = ['iron-ore', 'copper-ore', 'coal', 'stone'];
+    miningItems.forEach(itemId => {
+      const item = this.gameData?.items.find(i => i.id === itemId);
+      if (!item) return;
+      
+      this.addFacility(itemId, {
+        id: `${itemId}-mining-1`,
+        itemId: itemId,
+        type: 'electric-mining-drill',
+        category: 'mining',
+        count: itemId === 'iron-ore' ? 3 : itemId === 'copper-ore' ? 2 : 1,
+        baseSpeed: 0.5,
+        baseInputRate: {},
+        baseOutputRate: 0.5,
+        powerType: 'electric',
+        powerConsumption: 90,
+        canProduce: [itemId],
+      });
     });
-
-    // 铁板冶炼
-    this.addFacility('iron-plate', {
-      id: 'iron-plate-smelting-1',
-      itemId: 'iron-plate',
-      type: 'electric-furnace',
-      category: 'smelting',
-      count: 2,
-      baseSpeed: 2,
-      baseInputRate: { 'iron-ore': 1 }, // 每秒1个铁矿
-      baseOutputRate: 1, // 每秒1个铁板
-      powerType: 'electric',
-      powerConsumption: 180,
-      recipeId: 'iron-plate',
-      canProduce: ['iron-plate'],
-    });
+  }
+  
+  // 根据配方获取默认设施类型
+  private getDefaultFacilityForRecipe(recipe: Recipe): string | null {
+    switch (recipe.category) {
+      case 'smelting':
+        return 'electric-furnace';
+      case 'crafting':
+        return 'assembling-machine-2';
+      case 'advanced-crafting':
+        return 'assembling-machine-3';
+      case 'chemistry':
+        return 'chemical-plant';
+      case 'oil-processing':
+        return 'oil-refinery';
+      default:
+        return null;
+    }
   }
 
   // 添加设施

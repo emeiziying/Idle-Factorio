@@ -18,6 +18,7 @@ import CategoryTabs from './components/CategoryTabs';
 import ItemGrid from './components/ItemGrid';
 import ItemDetailDialog from './components/ItemDetailDialog';
 import CraftingQueue from './components/CraftingQueue';
+import FacilityOverview from './components/FacilityOverview';
 
 // 创建移动端友好的主题
 const theme = createTheme({
@@ -225,11 +226,15 @@ function App() {
           onCategoryChange={handleCategoryChange}
         />
         
-        <ItemGrid
-          items={categoryItems}
-          inventory={inventoryMap}
-          onItemClick={handleItemClick}
-        />
+        {selectedCategory === 'facilities' ? (
+          <FacilityOverview />
+        ) : (
+          <ItemGrid
+            items={categoryItems}
+            inventory={inventoryMap}
+            onItemClick={handleItemClick}
+          />
+        )}
         
         <ItemDetailDialog
           open={!!selectedItem}
