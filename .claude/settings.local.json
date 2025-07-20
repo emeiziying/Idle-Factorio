@@ -1,0 +1,9 @@
+{
+  "enabledMcpjsonServers": [
+    "context7",
+    "mcp-feedback-enhanced",
+    "sequential-thinking",
+    "promptx",
+    "serena"
+  ]
+}

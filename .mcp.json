@@ -1,0 +1,34 @@
+{
+    "mcpServers": {
+      "context7": {
+        "command": "npx",
+        "args": ["-y", "@upstash/context7-mcp"]
+      },
+      "mcp-feedback-enhanced": {
+        "command": "uvx",
+        "args": ["mcp-feedback-enhanced@latest"],
+        "timeout": 600,
+        "autoApprove": ["interactive_feedback"]
+      },
+      "sequential-thinking": {
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+      },
+      "promptx": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "-f",
+          "--registry",
+          "https://registry.npmjs.org",
+          "dpml-prompt@latest",
+          "mcp-server"
+        ]
+      },
+      "serena": {
+        "command": "uvx",
+        "args": ["--from", "git+https://github.com/oraios/serena", "serena-mcp-server"]
+      }
+    }
+  }
+  
