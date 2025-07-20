@@ -1,200 +1,234 @@
-# 异星工厂移动版 Demo
+# 异星工厂 v2 - 物流驱动生产管理系统
 
-基于 React + TypeScript 的异星工厂移动端游戏demo，展示以物品为中心的工厂自动化管理系统。
+基于 React + TypeScript 的异星工厂游戏，实现了完整的物流驱动生产系统。玩家需要通过配置传送带和机械臂来优化生产效率。
 
-## 功能特性
+## 🎮 游戏特色
 
-### 🎯 核心功能
-- **六大分类系统**: 物流、生产、中间产品、战斗、流体、科技
-- **物流驱动生产**: 传送带和机械臂决定设施实际产能
-- **物流配置界面**: 直观配置每个设施的输入输出物流
-- **效率可视化**: 实时显示瓶颈和优化建议
-- **物品网格展示**: 4列网格布局，适配移动端
-- **实时库存管理**: 显示物品数量、生产速率、消耗速率
-- **状态指示系统**: 生产中、停产、缺料、库存满等状态
-- **物品详情页面**: 核心数据、存储管理、物流配置、手动制作
-- **制作队列系统**: 浮动气泡式队列管理
+### 核心机制：物流驱动生产
+与传统自动化不同，本游戏中：
+- **生产效率 = MIN(基础产能, 输入物流能力, 输出物流能力)**
+- 物流设备（传送带、机械臂）是生产的必要条件
+- 需要合理配置物流以达到最大效率
 
-### 📱 移动端优化
-- **响应式设计**: 适配不同屏幕尺寸
-- **触控友好**: 80x100px物品卡片，适合手指点击
-- **浮动队列**: 空间效率高的制作队列展示
-- **Material-UI**: 现代化的移动端UI组件
+## 🚀 功能特性
 
-### 🎮 基于Factorio数据
-- **真实数据**: 基于Factorio 1.1.107游戏数据
-- **图标系统**: 使用官方图标精灵图
-- **分类体系**: 完全基于Factorio的物品分类
-- **生产逻辑**: 模拟真实的生产和消耗机制
+### 物流系统
+- **多级物流设备**
+  - 传送带：黄色(15/s)、红色(30/s)、蓝色(45/s)
+  - 机械臂：基础(0.83/s)、快速(2.31/s)、极速(5.0/s)
+- **实时效率计算**: 动态显示当前效率和瓶颈
+- **智能优化建议**: 自动推荐最佳物流配置
+- **库存消耗机制**: 配置物流时消耗对应物品库存
 
-## 技术栈
+### 生产管理
+- **设施系统**: 基于真实配方数据的生产设施
+- **生产链分析**: 可视化显示完整生产链和瓶颈
+- **批量操作**: 支持批量配置多个设施的物流
+- **设施总览**: 集中查看所有设施状态和效率
 
-- **前端框架**: React 18 + TypeScript
-- **UI组件**: Material-UI (MUI) v5
-- **状态管理**: React Hooks (useState, useEffect)
-- **数据加载**: Fetch API + JSON
-- **样式系统**: Emotion (MUI内置)
+### 数据持久化
+- **自动保存**: 每30秒自动保存游戏进度
+- **存档管理**: 支持导入/导出存档
+- **配置保存**: 物流配置和设施状态持久化
 
-## 项目结构
+### 用户界面
+- **响应式设计**: 完美适配移动端和桌面端
+- **直观的效率指示**: 
+  - 🟢 绿色（90%+）：高效运行
+  - 🟠 橙色（70-90%）：效率低下
+  - 🔴 红色（<70%）：严重瓶颈
+- **Material-UI**: 现代化的界面设计
+
+## 📁 项目结构
 
 ```
 demo/
 ├── public/
-│   ├── data/1.1/           # Factorio游戏数据
-│   │   ├── data.json       # 物品和分类数据
-│   │   ├── icons.webp      # 物品图标精灵图
-│   │   └── hash.json       # 数据校验
-│   └── 异星工厂v2.md        # 产品需求文档
+│   ├── data/1.1/                     # Factorio游戏数据
+│   │   ├── data.json                 # 物品、配方、分类数据
+│   │   ├── icons.webp                # 物品图标精灵图
+│   │   └── hash.json                 # 数据校验
+│   └── 异星工厂v2.md                  # 产品需求文档
 ├── src/
-│   ├── components/         # React组件
-│   │   ├── CategoryTabs.tsx          # 分类标签
+│   ├── components/                   # React组件
+│   │   ├── CategoryTabs.tsx          # 分类标签导航
 │   │   ├── ItemCard.tsx              # 物品卡片
-│   │   ├── ItemGrid.tsx              # 物品网格
-│   │   ├── ItemDetailDialog.tsx      # 物品详情
+│   │   ├── ItemGrid.tsx              # 物品网格布局
+│   │   ├── ItemDetailDialog.tsx      # 物品详情对话框
 │   │   ├── CraftingQueue.tsx         # 制作队列
-│   │   └── FacilityLogisticsPanel.tsx # 设施物流配置
-│   ├── services/
+│   │   ├── FacilityLogisticsPanel.tsx # 设施物流配置面板
+│   │   ├── FacilityOverview.tsx      # 设施总览页面
+│   │   ├── ProductionChainAnalyzer.tsx # 生产链分析器
+│   │   └── BatchOperations.tsx       # 批量操作对话框
+│   ├── services/                     # 业务服务
 │   │   ├── DataService.ts            # 数据加载和管理
-│   │   └── SimpleLogisticsService.ts # 物流计算服务
-│   ├── types/
-│   │   ├── index.ts                  # 基础类型定义
-│   │   └── logistics.ts              # 物流系统类型
+│   │   ├── SimpleLogisticsService.ts # 物流计算服务
+│   │   ├── FacilityService.ts        # 设施管理服务
+│   │   └── PersistenceService.ts     # 数据持久化服务
+│   ├── types/                        # TypeScript类型定义
+│   │   ├── index.ts                  # 基础类型
+│   │   ├── logistics.ts              # 物流系统类型
+│   │   └── facilities.ts             # 设施系统类型
+│   ├── hooks/                        # 自定义React Hooks
+│   │   └── useEfficiencyCalculation.ts # 效率计算优化Hook
 │   └── App.tsx                       # 主应用组件
+├── QUICKSTART.md                     # 快速入门指南
+└── README.md                         # 项目说明文档
 ```
 
-## 快速开始
+## 🛠 技术栈
 
-1. **安装依赖**
-   ```bash
-   npm install
-   ```
+- **前端框架**: React 18 + TypeScript 4.9
+- **UI组件库**: Material-UI (MUI) v5
+- **状态管理**: React Hooks + Context
+- **数据处理**: 基于Service的架构模式
+- **性能优化**: useMemo, useCallback, 防抖
+- **持久化**: LocalStorage + 自动保存
 
-2. **启动开发服务器**
-   ```bash
-   npm start
-   ```
+## 🎯 快速开始
 
-3. **访问应用**
-   ```
-   http://localhost:3000
-   ```
+### 安装依赖
+```bash
+npm install
+```
 
-## 核心组件说明
+### 启动开发服务器
+```bash
+npm start
+```
 
-### CategoryTabs - 分类标签
-- 六大分类的横向滚动标签
-- 彩色图标和描述文本
-- 响应式设计，支持滑动
+### 访问应用
+```
+http://localhost:3000
+```
 
-### ItemCard - 物品卡片
-- 80x100px移动端友好尺寸
-- 状态徽章显示生产状态
-- 库存数量和生产速率显示
-- 悬停和点击交互效果
+## 📖 核心概念说明
 
-### ItemGrid - 物品网格
-- CSS Grid布局，4列设计
-- 自适应间距和对齐
-- 空数据状态处理
-
-### ItemDetailDialog - 物品详情
-- 核心数据展示（库存、产量、消耗、净增长）
-- 存储管理（箱子添加/移除）
-- 物流配置（设施的传送带和机械臂配置）
-- 手动制作（1个、5个、最多制造）
-- 物品基础信息
-
-### FacilityLogisticsPanel - 设施物流配置
-- 实时效率计算和显示
-- 输入/输出物流配置
-- 传送带和机械臂数量调整
-- 瓶颈识别（输入/输出/无）
-- 智能优化建议
-
-### CraftingQueue - 制作队列
-- 浮动气泡按钮（右下角）
-- 底部抽屉式队列详情
-- 进度条和状态显示
-- 点击取消制作功能
-
-## 数据结构
-
-### 物品数据
+### 物流计算模型
 ```typescript
-interface Item {
-  id: string;           // 物品ID
-  name: string;         // 显示名称
-  category: string;     // 分类ID
-  stack_size?: number;  // 堆叠大小
-  description?: string; // 描述
+// 物流能力计算
+conveyorCapacity = conveyorCount * conveyorSpeed
+inserterCapacity = inserterCount * inserterSpeed
+logisticsCapacity = min(conveyorCapacity, inserterCapacity)
+
+// 实际产能计算
+actualProduction = min(
+  baseProduction,
+  inputLogisticsCapacity,
+  outputLogisticsCapacity
+)
+
+// 效率计算
+efficiency = actualProduction / baseProduction
+```
+
+### 设施数据结构
+```typescript
+interface Facility {
+  id: string;
+  itemId: string;              // 生产的物品
+  type: string;                // 设施类型
+  count: number;               // 设施数量
+  baseSpeed: number;           // 基础速度
+  baseInputRate: Record<string, number>;  // 输入需求
+  baseOutputRate: number;      // 输出速率
+  powerType: 'electric' | 'fuel' | 'none';
+  powerConsumption?: number;   // 电力消耗
 }
 ```
 
-### 库存数据
+### 物流配置结构
 ```typescript
-interface InventoryItem {
-  itemId: string;           // 物品ID
-  currentAmount: number;    // 当前数量
-  maxCapacity: number;      // 最大容量
-  productionRate: number;   // 生产速率(/秒)
-  consumptionRate: number;  // 消耗速率(/秒)
-  status: ItemStatus;       // 状态
+interface LogisticsConfig {
+  conveyors: number;           // 传送带数量
+  conveyorType: string;        // 传送带类型
+  inserters: number;           // 机械臂数量
+  inserterType: string;        // 机械臂类型
 }
 ```
 
-### 制作任务
-```typescript
-interface CraftingTask {
-  id: string;           // 任务ID
-  itemId: string;       // 物品ID
-  quantity: number;     // 制作数量
-  progress: number;     // 进度(秒)
-  totalTime: number;    // 总时间(秒)
-  status: TaskStatus;   // 状态
-}
-```
+## 🌟 特色功能详解
 
-## 特色功能
+### 1. 生产链分析器
+- 递归分析物品的完整生产链
+- 可视化显示每个节点的效率和瓶颈
+- 支持展开/折叠查看详细信息
+- 统计整体生产链健康状况
 
-### 🎨 状态徽章系统
-- **生产中**: 绿色圆点 ● 
-- **停产中**: 灰色圆点 ○
-- **缺料中**: 橙色圆点 ⚠
-- **库存满**: 红色圆点 🔴
-- **研究中**: 紫色圆点 🔬
+### 2. 批量物流配置
+- 选择多个设施进行批量配置
+- 支持"设置为"、"增加"、"自动优化"三种模式
+- 智能库存检查，防止过度消耗
+- 实时反馈操作结果
 
-### 📊 实时数据更新
-- 每秒更新库存数量
-- 模拟生产和消耗
-- 制作队列进度更新
-- 状态变化反馈
+### 3. 设施总览面板
+- 按物品分组显示所有设施
+- 显示总产能、平均效率等关键指标
+- 颜色编码快速识别问题设施
+- 支持快速跳转到配置界面
 
-### 🔧 制作队列管理
-- 最多10个并发任务
-- 进度条实时更新
-- 点击图标取消制作
-- 智能队列状态管理
+### 4. 性能优化机制
+- 使用React.memo避免不必要的重渲染
+- 防抖机制减少频繁计算
+- 智能缓存计算结果
+- 懒加载大型组件
 
-## 设计理念
+## 📊 游戏数据
 
-基于产品需求文档中的设计原则：
+### 物流设备规格
+| 设备类型 | 名称 | 速度(/秒) | 颜色 |
+|---------|------|----------|------|
+| 传送带 | 黄色传送带 | 15 | #FFD700 |
+| 传送带 | 红色传送带 | 30 | #FF4444 |
+| 传送带 | 蓝色传送带 | 45 | #4444FF |
+| 机械臂 | 基础机械臂 | 0.83 | #FFD700 |
+| 机械臂 | 快速机械臂 | 2.31 | #FF4444 |
+| 机械臂 | 极速机械臂 | 5.00 | #4444FF |
 
-1. **以物品为中心**: 所有界面围绕物品展开
-2. **物流驱动生产**: 传送带和机械臂成为生产的必要条件
-3. **移动端优化**: 适配手机屏幕和触控操作
-4. **简化界面**: 专注核心数据和操作
-5. **效率可视化**: 清晰显示瓶颈和优化方向
-6. **Factorio忠实**: 基于真实游戏数据和机制
+### 设施类型
+- **采矿设施**: 电力采掘机、热力采掘机
+- **冶炼设施**: 石质熔炉、钢质熔炉、电炉
+- **装配设施**: 装配机1/2/3型
+- **化工设施**: 化工厂、炼油厂
+- **研究设施**: 研究实验室
 
-## 后续扩展
+## 🚧 已知限制
 
-- [ ] 设备管理系统
-- [ ] 科技研究系统
-- [ ] 流体处理系统
-- [ ] 配方管理系统
-- [ ] 存档系统
+1. **设施数据**: 目前使用示例数据，未来将从游戏文件完整加载
+2. **配方系统**: 简化了部分复杂配方的处理
+3. **模块系统**: 尚未实现生产力/效能模块
+4. **电力系统**: 暂未实现电力需求计算
+
+## 🔮 后续计划
+
+- [ ] 完整的模块系统（生产力、效能、速度）
+- [ ] 电力网络管理
+- [ ] 物流网络可视化
+- [ ] 生产统计和图表
 - [ ] 多语言支持
+- [ ] PWA支持（离线使用）
 
-## 许可证
+## 📝 更新日志
+
+### v2.0.0 (2024-01)
+- ✅ 实现完整的物流驱动生产系统
+- ✅ 添加生产链分析功能
+- ✅ 实现数据持久化和自动保存
+- ✅ 添加批量操作功能
+- ✅ 优化性能和用户体验
+- ✅ 完善文档和快速入门指南
+
+### v1.0.0 (2024-01)
+- 初始版本发布
+- 基础物品管理系统
+- 简单的制作队列
+
+## 📄 许可证
 
 MIT License
+
+## 🙏 致谢
+
+- Factorio 游戏数据来自 [Wube Software](https://factorio.com/)
+- UI组件使用 [Material-UI](https://mui.com/)
+- 图标资源来自 Factorio 游戏文件
