@@ -10,6 +10,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { dataService } from './services/DataService';
+import { logisticsService } from './services/LogisticsService';
 import { GameData, Item, InventoryItem, CraftingTask } from './types';
 import CategoryTabs from './components/CategoryTabs';
 import ItemGrid from './components/ItemGrid';
@@ -65,6 +66,9 @@ function App() {
         
         // 启动制作模拟
         dataService.startCraftingSimulation();
+        
+        // 启动物流系统
+        logisticsService.startLogisticsSystem();
         
       } catch (error) {
         console.error('Failed to load game data:', error);

@@ -15,6 +15,7 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { Item, InventoryItem } from '../types';
 import { dataService } from '../services/DataService';
+import LogisticsPanel from './LogisticsPanel';
 
 const ItemIcon = styled(Box)<{ 
   iconposition: string; 
@@ -239,8 +240,12 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
           </Typography>
         </DataCard>
 
+        {/* 物流连接管理 */}
+        <Divider sx={{ my: 2 }} />
+        <LogisticsPanel itemId={item.id} onUpdate={() => {}} />
+
         {/* 物品信息 */}
-        <Box>
+        <Box mt={2}>
           <Typography variant="subtitle2" color="primary" gutterBottom>
             📋 物品信息
           </Typography>
