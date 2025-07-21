@@ -1,0 +1,239 @@
+[
+  {
+    "id": "iron-plate",
+    "name": "铁板",
+    "category": "smelting",
+    "time": 3.2,
+    "in": {
+      "iron-ore": 1
+    },
+    "out": {
+      "iron-plate": 1
+    },
+    "unlocked": true
+  },
+  {
+    "id": "copper-plate",
+    "name": "铜板",
+    "category": "smelting",
+    "time": 3.2,
+    "in": {
+      "copper-ore": 1
+    },
+    "out": {
+      "copper-plate": 1
+    },
+    "unlocked": true
+  },
+  {
+    "id": "steel-plate",
+    "name": "钢板",
+    "category": "smelting",
+    "time": 16,
+    "in": {
+      "iron-plate": 5
+    },
+    "out": {
+      "steel-plate": 1
+    },
+    "unlocked": true
+  },
+  {
+    "id": "iron-gear-wheel",
+    "name": "铁齿轮",
+    "category": "crafting",
+    "time": 0.5,
+    "in": {
+      "iron-plate": 2
+    },
+    "out": {
+      "iron-gear-wheel": 1
+    },
+    "unlocked": true
+  },
+  {
+    "id": "electronic-circuit",
+    "name": "电路板",
+    "category": "crafting",
+    "time": 0.5,
+    "in": {
+      "iron-plate": 1,
+      "copper-cable": 3
+    },
+    "out": {
+      "electronic-circuit": 1
+    },
+    "unlocked": true
+  },
+  {
+    "id": "copper-cable",
+    "name": "铜线",
+    "category": "crafting",
+    "time": 0.5,
+    "in": {
+      "copper-plate": 1
+    },
+    "out": {
+      "copper-cable": 2
+    },
+    "unlocked": true
+  },
+  {
+    "id": "automation-science-pack",
+    "name": "自动化科学包",
+    "category": "crafting",
+    "time": 5,
+    "in": {
+      "copper-plate": 1,
+      "iron-gear-wheel": 1
+    },
+    "out": {
+      "automation-science-pack": 1
+    },
+    "unlocked": true
+  },
+  {
+    "id": "burner-mining-drill",
+    "name": "热力采掘机",
+    "category": "crafting",
+    "time": 2,
+    "in": {
+      "iron-gear-wheel": 3,
+      "stone-furnace": 1,
+      "iron-plate": 3
+    },
+    "out": {
+      "burner-mining-drill": 1
+    },
+    "unlocked": true
+  },
+  {
+    "id": "electric-mining-drill",
+    "name": "电力采掘机",
+    "category": "crafting",
+    "time": 2,
+    "in": {
+      "electronic-circuit": 3,
+      "iron-gear-wheel": 5,
+      "iron-plate": 10
+    },
+    "out": {
+      "electric-mining-drill": 1
+    },
+    "unlocked": true
+  },
+  {
+    "id": "stone-furnace",
+    "name": "石炉",
+    "category": "crafting",
+    "time": 0.5,
+    "in": {
+      "stone": 5
+    },
+    "out": {
+      "stone-furnace": 1
+    },
+    "unlocked": true
+  },
+  {
+    "id": "assembling-machine-1",
+    "name": "装配机1型",
+    "category": "crafting",
+    "time": 0.5,
+    "in": {
+      "electronic-circuit": 3,
+      "iron-gear-wheel": 5,
+      "iron-plate": 9
+    },
+    "out": {
+      "assembling-machine-1": 1
+    },
+    "unlocked": true
+  },
+  {
+    "id": "boiler",
+    "name": "锅炉",
+    "category": "crafting",
+    "time": 0.5,
+    "in": {
+      "stone-furnace": 1,
+      "pipe": 4
+    },
+    "out": {
+      "boiler": 1
+    },
+    "unlocked": true
+  },
+  {
+    "id": "steam-engine",
+    "name": "蒸汽机",
+    "category": "crafting",
+    "time": 0.5,
+    "in": {
+      "iron-gear-wheel": 8,
+      "pipe": 5,
+      "iron-plate": 10
+    },
+    "out": {
+      "steam-engine": 1
+    },
+    "unlocked": true
+  },
+  {
+    "id": "offshore-pump",
+    "name": "海水泵",
+    "category": "crafting",
+    "time": 0.5,
+    "in": {
+      "electronic-circuit": 2,
+      "pipe": 1,
+      "iron-gear-wheel": 1
+    },
+    "out": {
+      "offshore-pump": 1
+    },
+    "unlocked": true
+  },
+  {
+    "id": "pipe",
+    "name": "管道",
+    "category": "crafting",
+    "time": 0.5,
+    "in": {
+      "iron-plate": 1
+    },
+    "out": {
+      "pipe": 1
+    },
+    "unlocked": true
+  },
+  {
+    "id": "lab",
+    "name": "研究实验室",
+    "category": "crafting",
+    "time": 2,
+    "in": {
+      "electronic-circuit": 10,
+      "iron-gear-wheel": 10,
+      "transport-belt": 4
+    },
+    "out": {
+      "lab": 1
+    },
+    "unlocked": true
+  },
+  {
+    "id": "transport-belt",
+    "name": "传送带",
+    "category": "crafting",
+    "time": 0.5,
+    "in": {
+      "iron-plate": 1,
+      "iron-gear-wheel": 1
+    },
+    "out": {
+      "transport-belt": 2
+    },
+    "unlocked": true
+  }
+]
