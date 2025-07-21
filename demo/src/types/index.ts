@@ -22,6 +22,7 @@ export interface Item {
   stack_size?: number;
   fuel_value?: string;
   type?: string;
+  unlocked?: boolean; // 是否已解锁，默认为false
 }
 
 export interface Recipe {

@@ -1,9 +1,15 @@
 import { GameData, Item, InventoryItem, CraftingTask } from '../types';
+import UserProgressService from './UserProgressService';
 
 class DataService {
   private gameData: GameData | null = null;
   private inventory: Map<string, InventoryItem> = new Map();
   private craftingQueue: CraftingTask[] = [];
+  private userProgress: UserProgressService;
+
+  constructor() {
+    this.userProgress = UserProgressService.getInstance();
+  }
 
   async loadGameData(): Promise<GameData> {
     if (this.gameData) {
@@ -54,8 +60,20 @@ class DataService {
     if (!this.gameData) return [];
     
     return this.gameData.items?.filter(item => 
+      item.category === categoryId && this.userProgress.isItemUnlocked(item.id)
+    ) || [];
+  }
+
+  getAllItemsByCategory(categoryId: string): Item[] {
+    if (!this.gameData) return [];
+    
+    return this.gameData.items?.filter(item => 
       item.category === categoryId
     ) || [];
+  }
+
+  isItemUnlocked(itemId: string): boolean {
+    return this.userProgress.isItemUnlocked(itemId);
   }
 
   getItemIcon(itemId: string): string {
@@ -161,4 +179,5 @@ class DataService {
   }
 }
 
-export const dataService = new DataService(); 
+const instance = new DataService();
+export const dataService = instance; 

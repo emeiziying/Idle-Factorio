@@ -47,9 +47,9 @@ class PowerService {
     allFacilities.forEach(facility => {
       const facilityType = facilityService.getFacilityType(facility.type);
       
-      if (facilityType?.powerGeneration) {
-        // 发电设备
-        totalGeneration += facilityType.powerGeneration * facility.count;
+      if (facilityType?.category === 'power-generation' && facility.type === 'steam-engine') {
+        // 发电设备 - 目前只有蒸汽机产生电力
+        totalGeneration += 900 * facility.count; // 900kW per steam engine
       }
       
       if (facilityType?.powerConsumption) {
@@ -86,8 +86,8 @@ class PowerService {
     allFacilities.forEach(facility => {
       const facilityType = facilityService.getFacilityType(facility.type);
       
-      if (facilityType?.powerGeneration || facilityType?.category === 'power-generation') {
-        const powerGeneration = (facilityType.powerGeneration || 0) * facility.count;
+      if (facilityType?.category === 'power-generation') {
+        const powerGeneration = facility.type === 'steam-engine' ? 900 * facility.count : 0;
         const powerConsumption = (facilityType.powerConsumption || 0) * facility.count;
         
         // 计算燃料消耗 (蒸汽机消耗蒸汽，锅炉消耗煤炭)
@@ -166,7 +166,7 @@ class PowerService {
         baseOutputRate,
         powerType: facilityTemplate.powerType,
         powerConsumption: facilityTemplate.powerConsumption,
-        powerGeneration: facilityTemplate.powerGeneration,
+        powerGeneration: facilityType === 'steam-engine' ? 900 : undefined,
         canProduce: [itemId],
       });
 

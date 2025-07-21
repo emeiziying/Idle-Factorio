@@ -10,11 +10,11 @@ import {
   IconButton,
   LinearProgress,
   styled,
-  Grid,
   Card,
   CardContent,
   Button,
 } from '@mui/material';
+import GridLegacy from '@mui/material/GridLegacy';
 import AddIcon from '@mui/icons-material/Add';
 import BoltIcon from '@mui/icons-material/Bolt';
 import FireplaceIcon from '@mui/icons-material/Fireplace';
@@ -105,8 +105,8 @@ const PowerManagementPanel: React.FC<PowerManagementPanelProps> = ({ onBack }) =
       </Box>
 
       {/* 电力状态总览 */}
-      <Grid container spacing={2} mb={3}>
-        <Grid item xs={12} md={4}>
+      <GridLegacy container spacing={2} sx={{ mb: 3 }}>
+        <GridLegacy item xs={12} md={4}>
           <PowerCard>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -117,9 +117,9 @@ const PowerManagementPanel: React.FC<PowerManagementPanelProps> = ({ onBack }) =
               </Typography>
             </CardContent>
           </PowerCard>
-        </Grid>
+        </GridLegacy>
         
-        <Grid item xs={12} md={4}>
+        <GridLegacy item xs={12} md={4}>
           <PowerCard>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -130,9 +130,9 @@ const PowerManagementPanel: React.FC<PowerManagementPanelProps> = ({ onBack }) =
               </Typography>
             </CardContent>
           </PowerCard>
-        </Grid>
+        </GridLegacy>
         
-        <Grid item xs={12} md={4}>
+        <GridLegacy item xs={12} md={4}>
           <PowerCard>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -155,8 +155,8 @@ const PowerManagementPanel: React.FC<PowerManagementPanelProps> = ({ onBack }) =
               />
             </CardContent>
           </PowerCard>
-        </Grid>
-      </Grid>
+        </GridLegacy>
+      </GridLegacy>
 
       {/* 电力效率指示器 */}
       <StatusCard>

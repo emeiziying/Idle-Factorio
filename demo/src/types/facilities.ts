@@ -38,7 +38,17 @@ export interface FacilityTemplate {
 }
 
 // 常见设施类型
-export const FACILITY_TYPES = {
+export const FACILITY_TYPES: Record<string, {
+  name: string;
+  category: 'mining' | 'smelting' | 'crafting' | 'chemical' | 'research' | 'power-generation';
+  baseSpeed: number;
+  powerType: 'electric' | 'fuel' | 'none';
+  powerConsumption?: number;
+  powerGeneration?: number;
+  fuelTypes?: string[];
+  moduleSlots?: number;
+  craftingCategories?: string[];
+}> = {
   // 采矿设施
   'burner-mining-drill': {
     name: '热力采掘机',
