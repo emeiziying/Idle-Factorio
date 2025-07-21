@@ -5,7 +5,6 @@ import {
   LOGISTICS_SPECS 
 } from '../types/logistics';
 import { persistenceService } from './PersistenceService';
-import { dataService } from './DataService';
 
 class SimpleLogisticsService {
   // 存储每个物品的设施物流配置
@@ -146,7 +145,6 @@ class SimpleLogisticsService {
     const suggestions: LogisticsRecommendation['suggestions'] = [];
 
     // 方案1：只用传送带
-    const basicBelts = Math.ceil(requiredCapacity / LOGISTICS_SPECS.conveyors['transport-belt'].speed);
     const fastBelts = Math.ceil(requiredCapacity / LOGISTICS_SPECS.conveyors['fast-transport-belt'].speed);
     const expressBelts = Math.ceil(requiredCapacity / LOGISTICS_SPECS.conveyors['express-transport-belt'].speed);
 
@@ -163,7 +161,6 @@ class SimpleLogisticsService {
     }
 
     // 方案2：只用机械臂
-    const basicInserters = Math.ceil(requiredCapacity / LOGISTICS_SPECS.inserters['inserter'].speed);
     const fastInserters = Math.ceil(requiredCapacity / LOGISTICS_SPECS.inserters['fast-inserter'].speed);
     const stackInserters = Math.ceil(requiredCapacity / LOGISTICS_SPECS.inserters['stack-inserter'].speed);
 

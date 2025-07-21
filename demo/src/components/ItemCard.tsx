@@ -5,10 +5,9 @@ import {
   CardContent,
   Typography,
   styled,
-  CircularProgress,
 } from '@mui/material';
 import { Item, InventoryItem } from '../types';
-import { dataService } from '../services/DataService';
+import GameIcon from './GameIcon';
 
 const StyledCard = styled(Card)<{ status?: string }>(({ theme, status }) => ({
   width: 80,
@@ -27,19 +26,6 @@ const StyledCard = styled(Card)<{ status?: string }>(({ theme, status }) => ({
   },
 }));
 
-const ItemIcon = styled(Box)<{ 
-  iconposition: string; 
-  backgroundcolor: string; 
-}>(({ iconposition, backgroundcolor }) => ({
-  width: 32,
-  height: 32,
-  borderRadius: '4px',
-  backgroundColor: backgroundcolor,
-  backgroundImage: 'url(/data/1.1/icons.webp)',
-  backgroundPosition: iconposition,
-  backgroundSize: 'auto',
-  margin: '0 auto',
-}));
 
 const StatusBadge = styled(Box)<{ status: string }>(({ status }) => {
   const getStatusColor = (status: string) => {
@@ -96,8 +82,6 @@ const ItemCard: React.FC<ItemCardProps> = ({
   inventory,
   onClick,
 }) => {
-  const iconPosition = dataService.getItemIconPosition(item.id);
-  const iconColor = dataService.getItemIconColor(item.id);
 
   const handleClick = () => {
     onClick?.(item);
@@ -130,9 +114,9 @@ const ItemCard: React.FC<ItemCardProps> = ({
         '&:last-child': { pb: 1 }
       }}>
         {/* 物品图标 */}
-        <ItemIcon 
-          iconposition={iconPosition}
-          backgroundcolor={iconColor}
+        <GameIcon 
+          itemId={item.id}
+          size={32}
         />
 
         {/* 物品名称 */}

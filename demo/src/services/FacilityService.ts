@@ -29,7 +29,7 @@ class FacilityService {
       const facilityType = this.getDefaultFacilityForRecipe(recipe);
       if (!facilityType) return;
       
-      const facilityTemplate = FACILITY_TYPES[facilityType];
+      const facilityTemplate = FACILITY_TYPES[facilityType as keyof typeof FACILITY_TYPES];
       if (!facilityTemplate) return;
       
       // 计算基础输入输出率
@@ -51,7 +51,7 @@ class FacilityService {
         baseInputRate,
         baseOutputRate,
         powerType: facilityTemplate.powerType,
-        powerConsumption: facilityTemplate.powerConsumption,
+        powerConsumption: (facilityTemplate as any).powerConsumption || 0,
         recipeId: recipe.id,
         canProduce: [mainProduct],
       });
@@ -112,7 +112,7 @@ class FacilityService {
 
   // 获取设施类型信息
   getFacilityType(typeId: string) {
-    return FACILITY_TYPES[typeId] || null;
+    return FACILITY_TYPES[typeId as keyof typeof FACILITY_TYPES] || null;
   }
 
   // 计算设施的实际产能（考虑基础速度和设施数量）
@@ -162,8 +162,8 @@ class FacilityService {
 
   // 更新设施数量
   updateFacilityCount(facilityId: string, newCount: number) {
-    for (const facilities of this.facilities.values()) {
-      const facility = facilities.find(f => f.id === facilityId);
+    for (const facilities of Array.from(this.facilities.values())) {
+      const facility = facilities.find((f: any) => f.id === facilityId);
       if (facility) {
         facility.count = Math.max(0, newCount);
         break;
@@ -174,7 +174,7 @@ class FacilityService {
   // 获取所有设施的总览
   getAllFacilities(): Facility[] {
     const allFacilities: Facility[] = [];
-    for (const facilities of this.facilities.values()) {
+    for (const facilities of Array.from(this.facilities.values())) {
       allFacilities.push(...facilities);
     }
     return allFacilities;
@@ -198,7 +198,7 @@ class FacilityService {
     let totalConsumption = 0;
     
     // 遍历所有设施，查找消耗该物品的设施
-    for (const facilities of this.facilities.values()) {
+    for (const facilities of Array.from(this.facilities.values())) {
       for (const facility of facilities) {
         const { inputRate } = this.calculateFacilityProduction(facility);
         if (inputRate[itemId]) {

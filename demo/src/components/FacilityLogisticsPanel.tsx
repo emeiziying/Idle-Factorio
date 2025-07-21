@@ -87,7 +87,7 @@ const FacilityLogisticsPanel: React.FC<FacilityLogisticsPanelProps> = ({
     
     setLogistics(updatedLogistics);
     onProductionChange?.(updatedLogistics.actualProductionRate);
-  }, [itemId, facilityType, facilityCount, baseProductionRate, baseConsumptionRate, inputConfig, outputConfig]);
+  }, [itemId, facilityType, facilityCount, baseProductionRate, baseConsumptionRate, inputConfig, outputConfig, onProductionChange]);
 
   const getInventoryAmount = (itemType: string): number => {
     const inventory = dataService.getInventoryItem(itemType);

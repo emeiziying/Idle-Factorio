@@ -252,7 +252,6 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
               <Divider sx={{ my: 2 }} />
               {facilities.map((facility) => {
                 const facilityType = facilityService.getFacilityType(facility.type);
-                const production = facilityService.calculateFacilityProduction(facility);
                 
                 return (
                   <FacilityLogisticsPanel

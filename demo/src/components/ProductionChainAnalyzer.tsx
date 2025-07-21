@@ -1,26 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Paper,
   Typography,
-  List,
-  ListItem,
-  ListItemText,
   Chip,
   styled,
   Collapse,
   IconButton,
   Alert,
   LinearProgress,
-  Tooltip,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import WarningIcon from '@mui/icons-material/Warning';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
-import { Item, Recipe } from '../types';
-import { dataService } from '../services/DataService';
 import { facilityService } from '../services/FacilityService';
 import { simpleLogisticsService } from '../services/SimpleLogisticsService';
 
@@ -68,34 +62,7 @@ const ProductionChainAnalyzer: React.FC<ProductionChainAnalyzerProps> = ({
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    analyzeProductionChain();
-  }, [itemId, targetRate]);
-
-  const analyzeProductionChain = () => {
-    setLoading(true);
-    try {
-      const node = buildProductionNode(itemId, targetRate, 0, new Set());
-      setRootNode(node);
-      
-      // 默认展开前两层
-      const toExpand = new Set<string>();
-      const expandToDepth = (node: ProductionNode, maxDepth: number) => {
-        if (node.depth < maxDepth) {
-          toExpand.add(node.itemId);
-          node.children.forEach(child => expandToDepth(child, maxDepth));
-        }
-      };
-      if (node) {
-        expandToDepth(node, 2);
-      }
-      setExpandedNodes(toExpand);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const buildProductionNode = (
+  const buildProductionNode = useCallback((
     itemId: string,
     requiredRate: number,
     depth: number,
@@ -109,7 +76,7 @@ const ProductionChainAnalyzer: React.FC<ProductionChainAnalyzerProps> = ({
         requiredRate,
         actualRate: 0,
         efficiency: 0,
-        bottleneck: 'error',
+        bottleneck: 'production',
         children: [],
         depth,
       };
@@ -117,8 +84,8 @@ const ProductionChainAnalyzer: React.FC<ProductionChainAnalyzerProps> = ({
 
     visited.add(itemId);
 
-    const item = dataService.getGameData()?.items.find(i => i.id === itemId);
-    const itemName = item?.name || itemId;
+    // 简化处理，直接使用itemId作为名称
+    const itemName = itemId;
     
     // 获取生产信息
     const facilities = facilityService.getFacilitiesForItem(itemId);
@@ -171,7 +138,34 @@ const ProductionChainAnalyzer: React.FC<ProductionChainAnalyzerProps> = ({
       children,
       depth,
     };
-  };
+  }, []);
+
+  const analyzeProductionChain = useCallback(() => {
+    setLoading(true);
+    try {
+      const node = buildProductionNode(itemId, targetRate, 0, new Set());
+      setRootNode(node);
+      
+      // 默认展开前两层
+      const toExpand = new Set<string>();
+      const expandToDepth = (node: ProductionNode, maxDepth: number) => {
+        if (node.depth < maxDepth) {
+          toExpand.add(node.itemId);
+          node.children.forEach(child => expandToDepth(child, maxDepth));
+        }
+      };
+      if (node) {
+        expandToDepth(node, 2);
+      }
+      setExpandedNodes(toExpand);
+    } finally {
+      setLoading(false);
+    }
+  }, [itemId, targetRate, buildProductionNode]);
+
+  useEffect(() => {
+    analyzeProductionChain();
+  }, [analyzeProductionChain]);
 
   const toggleNode = (nodeId: string) => {
     const newExpanded = new Set(expandedNodes);

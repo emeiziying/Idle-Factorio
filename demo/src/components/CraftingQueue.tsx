@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Fab,
@@ -63,7 +63,7 @@ const TaskIcon = styled(Box)<{
   backgroundColor: backgroundcolor,
   backgroundImage: 'url(/data/1.1/icons.webp)',
   backgroundPosition: iconposition,
-  backgroundSize: 'auto',
+  backgroundSize: '40px 40px',
   flexShrink: 0,
   cursor: 'pointer',
   transition: 'transform 0.2s ease',

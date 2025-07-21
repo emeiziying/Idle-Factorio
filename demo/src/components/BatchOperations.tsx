@@ -15,7 +15,7 @@ import {
   Chip,
   Alert,
 } from '@mui/material';
-import { LOGISTICS_SPECS } from '../types/logistics';
+import { LOGISTICS_SPECS, LogisticsConfig } from '../types/logistics';
 import { facilityService } from '../services/FacilityService';
 import { simpleLogisticsService } from '../services/SimpleLogisticsService';
 import { dataService } from '../services/DataService';
@@ -96,12 +96,12 @@ const BatchOperations: React.FC<BatchOperationsProps> = ({
             // 设置或增加物流设备
             const logistics = simpleLogisticsService.getFacilityLogistics(itemId);
             if (logistics) {
-              const newConfig = {
-                conveyors: operation === 'set' ? amount : logistics.inputLogistics.conveyors + amount,
-                conveyorType: conveyorType,
-                inserters: operation === 'set' ? amount : logistics.inputLogistics.inserters + amount,
-                inserterType: inserterType,
-              };
+                          const newConfig: LogisticsConfig = {
+              conveyors: operation === 'set' ? amount : logistics.inputLogistics.conveyors + amount,
+              conveyorType: conveyorType as keyof typeof LOGISTICS_SPECS.conveyors,
+              inserters: operation === 'set' ? amount : logistics.inputLogistics.inserters + amount,
+              inserterType: inserterType as keyof typeof LOGISTICS_SPECS.inserters,
+            };
               
               simpleLogisticsService.updateFacilityLogistics(
                 itemId,

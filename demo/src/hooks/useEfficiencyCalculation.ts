@@ -33,8 +33,8 @@ export function useEfficiencyCalculation({
   outputConfig,
 }: EfficiencyCalculationProps) {
   const [logistics, setLogistics] = useState<FacilityLogistics | null>(null);
-  const prevPropsRef = useRef<EfficiencyCalculationProps>();
-  const calculationTimeoutRef = useRef<NodeJS.Timeout>();
+  const prevPropsRef = useRef<EfficiencyCalculationProps | undefined>(undefined);
+  const calculationTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // 使用memo缓存计算结果
   const calculatedLogistics = useMemo(() => {
