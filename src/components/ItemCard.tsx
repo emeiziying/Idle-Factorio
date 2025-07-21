@@ -3,6 +3,7 @@ import { Card, CardContent, Typography, Box, Chip } from '@mui/material';
 import { Item, InventoryItem } from '../types';
 import { useGameStore } from '../store/gameStore';
 import GameIcon from './GameIcon';
+import { formatNumber, getStatusText } from '../utils/format';
 
 interface ItemCardProps {
   item: Item;
@@ -56,18 +57,12 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onClick }) => {
         </Typography>
         
         <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
-          {amount.toLocaleString()}
+          {formatNumber(amount)}
         </Typography>
         
         {inventoryItem?.status && inventoryItem.status !== 'normal' && (
           <Chip
-            label={
-              inventoryItem.status === 'producing' ? '生产中' :
-              inventoryItem.status === 'stopped' ? '已停止' :
-              inventoryItem.status === 'insufficient' ? '原料不足' :
-              inventoryItem.status === 'inventory_full' ? '库存已满' :
-              inventoryItem.status === 'researching' ? '研究中' : ''
-            }
+            label={getStatusText(inventoryItem.status)}
             color={getStatusColor(inventoryItem.status)}
             size="small"
             sx={{ mt: 1 }}

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress, Typography, Grid, useMediaQuery, useTheme } from '@mui/material';
 import CategoryTabs from './CategoryTabs';
 import ItemGrid from './ItemGrid';
+import ProductionStats from './ProductionStats';
 import { DataService } from '../services/DataService';
 import { Category, Item } from '../types';
 
@@ -13,6 +14,8 @@ const ProductionModule: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const dataService = DataService.getInstance();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   useEffect(() => {
     loadData();
@@ -73,7 +76,16 @@ const ProductionModule: React.FC = () => {
         onCategoryChange={setSelectedCategory}
       />
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-        <ItemGrid items={items} />
+        <Grid container spacing={2}>
+          {!isMobile && (
+            <Grid item xs={12} md={3}>
+              <ProductionStats />
+            </Grid>
+          )}
+          <Grid item xs={12} md={isMobile ? 12 : 9}>
+            <ItemGrid items={items} />
+          </Grid>
+        </Grid>
       </Box>
     </Box>
   );

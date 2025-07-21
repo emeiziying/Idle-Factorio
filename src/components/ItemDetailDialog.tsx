@@ -19,8 +19,11 @@ import {
 import { Close as CloseIcon, Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import { Item, Recipe } from '../types';
 import { DataService } from '../services/DataService';
+import { CraftingService } from '../services/CraftingService';
 import { useGameStore } from '../store/gameStore';
 import GameIcon from './GameIcon';
+import QuickCraftButtons from './QuickCraftButtons';
+import { formatNumber, formatTime } from '../utils/format';
 
 interface ItemDetailDialogProps {
   open: boolean;
@@ -35,9 +38,9 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({ open, item, onClose
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   
   const dataService = DataService.getInstance();
+  const craftingService = CraftingService.getInstance();
   const inventory = useGameStore(state => state.inventory);
   const updateInventory = useGameStore(state => state.updateInventory);
-  const addCraftingTask = useGameStore(state => state.addCraftingTask);
   const getInventoryItem = useGameStore(state => state.getInventoryItem);
 
   useEffect(() => {
@@ -55,52 +58,19 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({ open, item, onClose
     }
   };
 
-  const handleCraft = () => {
+  const handleCraft = async () => {
     if (!selectedRecipe) return;
 
-    // 检查原料是否充足
-    let canCraft = true;
-    let missingItems: string[] = [];
-
-    Object.entries(selectedRecipe.in).forEach(([itemId, requiredAmount]) => {
-      const inventoryItem = getInventoryItem(itemId);
-      const available = inventoryItem?.currentAmount || 0;
-      if (available < requiredAmount * craftAmount) {
-        canCraft = false;
-        missingItems.push(itemId);
-      }
+    const result = await craftingService.startCrafting(selectedRecipe.id, craftAmount);
+    setMessage({ 
+      type: result.success ? 'success' : 'error', 
+      text: result.message 
     });
 
-    if (!canCraft) {
-      setMessage({ type: 'error', text: `原料不足: ${missingItems.join(', ')}` });
-      return;
+    if (result.success) {
+      // 重置制作数量
+      setCraftAmount(1);
     }
-
-    // 消耗原料
-    Object.entries(selectedRecipe.in).forEach(([itemId, requiredAmount]) => {
-      updateInventory(itemId, -requiredAmount * craftAmount);
-    });
-
-    // 添加到制作队列
-    const task = {
-      id: `craft-${Date.now()}`,
-      recipeId: selectedRecipe.id,
-      quantity: craftAmount,
-      progress: 0,
-      startTime: Date.now()
-    };
-    
-    addCraftingTask(task);
-    
-    // 模拟立即完成（后续可以改为实际的制作时间）
-    setTimeout(() => {
-      Object.entries(selectedRecipe.out).forEach(([outputId, outputAmount]) => {
-        updateInventory(outputId, outputAmount * craftAmount);
-      });
-      useGameStore.getState().removeCraftingTask(task.id);
-    }, selectedRecipe.time * 1000);
-
-    setMessage({ type: 'success', text: `开始制作 ${craftAmount} 个 ${item.name}` });
   };
 
   const handleAmountChange = (delta: number) => {
@@ -171,11 +141,16 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({ open, item, onClose
       <DialogContent>
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            库存: {getInventoryItem(item.id)?.currentAmount || 0} / {item.stack_size || 999}
+            库存: {formatNumber(getInventoryItem(item.id)?.currentAmount || 0)} / {formatNumber(item.stack_size || 999)}
           </Typography>
           {item.description && (
             <Typography variant="body2" sx={{ mt: 1 }}>
               {item.description}
+            </Typography>
+          )}
+          {item.fuel_value && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              燃料值: {item.fuel_value}
             </Typography>
           )}
         </Box>
@@ -206,14 +181,27 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({ open, item, onClose
                     primary={recipe.name}
                     secondary={
                       <Box>
-                        <Typography variant="caption" display="block">
-                          原料: {Object.entries(recipe.in).map(([id, amount]) => `${id} x${amount}`).join(', ')}
-                        </Typography>
-                        <Typography variant="caption" display="block">
+                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
+                          {Object.entries(recipe.in).map(([itemId, amount]) => {
+                            const inventoryItem = getInventoryItem(itemId);
+                            const available = inventoryItem?.currentAmount || 0;
+                            const hasEnough = available >= amount * craftAmount;
+                            return (
+                              <Chip
+                                key={itemId}
+                                label={`${itemId} x${amount} (${formatNumber(available)})`}
+                                size="small"
+                                color={hasEnough ? 'success' : 'error'}
+                                variant="outlined"
+                              />
+                            );
+                          })}
+                        </Box>
+                        <Typography variant="caption" display="block" sx={{ mt: 1 }}>
                           产出: {Object.entries(recipe.out).map(([id, amount]) => `${id} x${amount}`).join(', ')}
                         </Typography>
                         <Typography variant="caption" display="block">
-                          时间: {recipe.time}秒
+                          时间: {recipe.time}秒 | 效率: {(60 / recipe.time).toFixed(1)}/分钟
                         </Typography>
                       </Box>
                     }
@@ -224,9 +212,13 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({ open, item, onClose
 
             {selectedRecipe && (
               <Box sx={{ mt: 2 }}>
-                <Box display="flex" alignItems="center" gap={2}>
-                  <Typography variant="subtitle2">制作数量:</Typography>
-                  <Box display="flex" alignItems="center" gap={1}>
+                <Typography variant="subtitle2" gutterBottom>制作数量:</Typography>
+                <QuickCraftButtons 
+                  currentAmount={craftAmount}
+                  onSelectAmount={setCraftAmount}
+                />
+                <Box display="flex" alignItems="center" gap={2} sx={{ mt: 1 }}>
+                  <Box display="flex" alignItems="center" gap={1} sx={{ flex: 1 }}>
                     <IconButton size="small" onClick={() => handleAmountChange(-1)}>
                       <RemoveIcon />
                     </IconButton>
@@ -235,12 +227,16 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({ open, item, onClose
                       onChange={(e) => setCraftAmount(Math.max(1, Math.min(999, parseInt(e.target.value) || 1)))}
                       size="small"
                       type="number"
-                      sx={{ width: 80 }}
+                      sx={{ width: 100 }}
+                      fullWidth
                     />
                     <IconButton size="small" onClick={() => handleAmountChange(1)}>
                       <AddIcon />
                     </IconButton>
                   </Box>
+                  <Typography variant="caption" color="text.secondary">
+                    总时间: {formatTime(selectedRecipe.time * craftAmount)}
+                  </Typography>
                 </Box>
               </Box>
             )}

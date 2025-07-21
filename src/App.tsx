@@ -15,7 +15,9 @@ import {
 import ProductionModule from './components/ProductionModule';
 import FacilitiesModule from './components/FacilitiesModule';
 import TechnologyModule from './components/TechnologyModule';
+import CraftingQueue from './components/CraftingQueue';
 import { useGameStore } from './store/gameStore';
+import { CraftingService } from './services/CraftingService';
 import './App.css';
 
 const theme = createTheme({
@@ -43,13 +45,20 @@ function App() {
   useEffect(() => {
     initializeGame();
     
+    // 初始化制作服务
+    const craftingService = CraftingService.getInstance();
+    craftingService.initialize();
+    
     // 设置自动保存
     const saveInterval = setInterval(() => {
       saveGame();
       console.log('Game saved');
     }, 30000); // 每30秒保存一次
 
-    return () => clearInterval(saveInterval);
+    return () => {
+      clearInterval(saveInterval);
+      craftingService.cleanup();
+    };
   }, [initializeGame, saveGame]);
 
   return (
@@ -92,6 +101,9 @@ function App() {
           />
         </BottomNavigation>
       </Box>
+      
+      {/* 制作队列悬浮窗 */}
+      <CraftingQueue />
     </ThemeProvider>
   );
 }
