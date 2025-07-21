@@ -15,6 +15,9 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { Item, InventoryItem } from '../types';
 import { dataService } from '../services/DataService';
+import { facilityService } from '../services/FacilityService';
+import FacilityLogisticsPanel from './FacilityLogisticsPanel';
+import ProductionChainAnalyzer from './ProductionChainAnalyzer';
 
 const ItemIcon = styled(Box)<{ 
   iconposition: string; 
@@ -239,8 +242,46 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
           </Typography>
         </DataCard>
 
+        {/* 生产设施管理 */}
+        {inventory && inventory.status === 'producing' && (() => {
+          // 获取该物品的生产设施
+          const facilities = facilityService.getFacilitiesForItem(item.id);
+          
+          return (
+            <>
+              <Divider sx={{ my: 2 }} />
+              {facilities.map((facility) => {
+                const facilityType = facilityService.getFacilityType(facility.type);
+                const production = facilityService.calculateFacilityProduction(facility);
+                
+                return (
+                  <FacilityLogisticsPanel
+                    key={facility.id}
+                    itemId={item.id}
+                    facilityType={facilityType?.name || facility.type}
+                    facilityCount={facility.count}
+                    baseProductionRate={facility.baseOutputRate}
+                    baseConsumptionRate={Object.values(facility.baseInputRate).reduce((a, b) => a + b, 0)}
+                    onProductionChange={(actualRate) => {
+                      // 更新实际产量
+                      dataService.updateInventory(item.id, {
+                        productionRate: actualRate
+                      });
+                    }}
+                  />
+                );
+              })}
+              {facilities.length === 0 && (
+                <Typography variant="body2" color="text.secondary" textAlign="center" py={2}>
+                  未配置生产设施
+                </Typography>
+              )}
+            </>
+          );
+        })()}
+
         {/* 物品信息 */}
-        <Box>
+        <Box mt={2}>
           <Typography variant="subtitle2" color="primary" gutterBottom>
             📋 物品信息
           </Typography>
@@ -267,6 +308,17 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
             </Box>
           </Box>
         </Box>
+
+        {/* 生产链分析 */}
+        {inventory && inventory.status === 'producing' && (
+          <>
+            <Divider sx={{ my: 2 }} />
+            <ProductionChainAnalyzer 
+              itemId={item.id}
+              targetRate={inventory.productionRate}
+            />
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -8,13 +8,18 @@ import {
   Toolbar,
   Typography,
   CircularProgress,
+  Alert,
+  Snackbar,
 } from '@mui/material';
 import { dataService } from './services/DataService';
+import { facilityService } from './services/FacilityService';
+import { persistenceService } from './services/PersistenceService';
 import { GameData, Item, InventoryItem, CraftingTask } from './types';
 import CategoryTabs from './components/CategoryTabs';
 import ItemGrid from './components/ItemGrid';
 import ItemDetailDialog from './components/ItemDetailDialog';
 import CraftingQueue from './components/CraftingQueue';
+import FacilityOverview from './components/FacilityOverview';
 
 // 创建移动端友好的主题
 const theme = createTheme({
@@ -30,7 +35,15 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: [
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Roboto',
+      '"Helvetica Neue"',
+      'Arial',
+      'sans-serif',
+    ].join(','),
   },
   components: {
     MuiButton: {
@@ -47,12 +60,12 @@ function App() {
   const [gameData, setGameData] = useState<GameData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('logistics');
-  const [inventory, setInventory] = useState<Map<string, InventoryItem>>(new Map());
-  const [craftingTasks, setCraftingTasks] = useState<CraftingTask[]>([]);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
-  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [craftingQueue, setCraftingQueue] = useState<CraftingTask[]>([]);
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
 
-  // 加载游戏数据
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -60,14 +73,26 @@ function App() {
         const data = await dataService.loadGameData();
         setGameData(data);
         
+        // 初始化设施服务
+        facilityService.initialize(data);
+        
         // 初始化库存数据
         updateInventory();
         
         // 启动制作模拟
         dataService.startCraftingSimulation();
         
+        // 启动自动保存（每30秒保存一次）
+        const stopAutoSave = persistenceService.enableAutoSave(30000);
+        
+        // 清理函数
+        return () => {
+          stopAutoSave();
+        };
+        
       } catch (error) {
         console.error('Failed to load game data:', error);
+        setError('加载游戏数据失败，请刷新页面重试');
       } finally {
         setLoading(false);
       }
@@ -87,63 +112,85 @@ function App() {
   }, []);
 
   const updateInventory = () => {
-    const inventoryItems = dataService.getAllInventoryItems();
-    const inventoryMap = new Map();
-    inventoryItems.forEach(item => {
-      inventoryMap.set(item.itemId, item);
-    });
-    setInventory(inventoryMap);
+    try {
+      const items = dataService.getAllInventoryItems();
+      setInventory(items);
+      
+      // 更新设施的总产能和消耗
+      items.forEach(item => {
+        const production = facilityService.getTotalProductionForItem(item.itemId);
+        const consumption = facilityService.getTotalConsumptionForItem(item.itemId);
+        
+        if (production !== item.productionRate || consumption !== item.consumptionRate) {
+          dataService.updateInventory(item.itemId, {
+            productionRate: production,
+            consumptionRate: consumption,
+          });
+        }
+      });
+    } catch (error) {
+      console.error('更新库存失败:', error);
+    }
   };
 
   const updateCraftingQueue = () => {
-    const tasks = dataService.getCraftingQueue();
-    setCraftingTasks(tasks);
+    try {
+      const queue = dataService.getCraftingQueue();
+      setCraftingQueue(queue);
+    } catch (error) {
+      console.error('更新制作队列失败:', error);
+    }
   };
 
-  const handleCategoryChange = (categoryId: string) => {
-    setSelectedCategory(categoryId);
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
   };
 
   const handleItemClick = (item: Item) => {
     setSelectedItem(item);
-    setDetailDialogOpen(true);
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedItem(null);
   };
 
   const handleCraft = (itemId: string, quantity: number) => {
-    const success = dataService.addToCraftingQueue(itemId, quantity);
-    if (success) {
-      updateCraftingQueue();
+    try {
+      const success = dataService.addToCraftingQueue(itemId, quantity);
+      if (success) {
+        setSuccess(`已添加到制作队列：${quantity}个`);
+        updateCraftingQueue();
+      } else {
+        setError('制作队列已满（最多10个任务）');
+      }
+    } catch (error) {
+      setError('添加到制作队列失败');
+      console.error('制作失败:', error);
     }
   };
 
-  const handleCancelTask = (taskId: string) => {
-    const success = dataService.removeCraftingTask(taskId);
-    if (success) {
-      updateCraftingQueue();
+  const handleCancelCraft = (taskId: string) => {
+    try {
+      const success = dataService.removeCraftingTask(taskId);
+      if (success) {
+        updateCraftingQueue();
+      }
+    } catch (error) {
+      console.error('取消制作失败:', error);
     }
-  };
-
-  const handleCloseDetailDialog = () => {
-    setDetailDialogOpen(false);
-    setSelectedItem(null);
   };
 
   if (loading) {
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Box 
-          display="flex" 
-          justifyContent="center" 
-          alignItems="center" 
-          height="100vh"
-          flexDirection="column"
-          gap={2}
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="100vh"
         >
-          <CircularProgress size={60} />
-          <Typography variant="h6" color="text.secondary">
-            加载异星工厂数据中...
-          </Typography>
+          <CircularProgress />
         </Box>
       </ThemeProvider>
     );
@@ -153,68 +200,87 @@ function App() {
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Box 
-          display="flex" 
-          justifyContent="center" 
-          alignItems="center" 
-          height="100vh"
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="100vh"
+          p={2}
         >
-          <Typography variant="h6" color="error">
-            加载失败，请刷新页面重试
-          </Typography>
+          <Alert severity="error">
+            加载游戏数据失败，请刷新页面重试
+          </Alert>
         </Box>
       </ThemeProvider>
     );
   }
 
   const categoryItems = dataService.getItemsByCategory(selectedCategory);
-  const selectedInventory = selectedItem ? inventory.get(selectedItem.id) : undefined;
+  const inventoryMap = new Map(inventory.map(item => [item.itemId, item]));
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-        {/* 应用标题栏 */}
-        <AppBar position="static" elevation={1}>
+      <Box sx={{ flexGrow: 1, minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+        <AppBar position="static" elevation={0}>
           <Toolbar>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              异星工厂移动版 Demo
-            </Typography>
-            <Typography variant="body2" color="inherit" sx={{ opacity: 0.8 }}>
-              v{gameData.version.base}
+              异星工厂
             </Typography>
           </Toolbar>
         </AppBar>
-
-        {/* 分类标签 */}
+        
         <CategoryTabs
           selectedCategory={selectedCategory}
           onCategoryChange={handleCategoryChange}
         />
-
-        {/* 物品网格 */}
-        <Box sx={{ flex: 1, overflow: 'auto', backgroundColor: 'background.default' }}>
+        
+        {selectedCategory === 'facilities' ? (
+          <FacilityOverview />
+        ) : (
           <ItemGrid
             items={categoryItems}
-            inventory={inventory}
+            inventory={inventoryMap}
             onItemClick={handleItemClick}
           />
-        </Box>
-
-        {/* 物品详情对话框 */}
+        )}
+        
         <ItemDetailDialog
-          open={detailDialogOpen}
+          open={!!selectedItem}
           item={selectedItem}
-          inventory={selectedInventory}
-          onClose={handleCloseDetailDialog}
+          inventory={selectedItem ? inventoryMap.get(selectedItem.id) : undefined}
+          onClose={handleCloseDetail}
           onCraft={handleCraft}
         />
-
-        {/* 制作队列浮动按钮 */}
+        
         <CraftingQueue
-          tasks={craftingTasks}
-          onCancelTask={handleCancelTask}
+          tasks={craftingQueue}
+          onCancelTask={handleCancelCraft}
         />
+        
+        {/* 错误提示 */}
+        <Snackbar
+          open={!!error}
+          autoHideDuration={4000}
+          onClose={() => setError('')}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <Alert onClose={() => setError('')} severity="error" sx={{ width: '100%' }}>
+            {error}
+          </Alert>
+        </Snackbar>
+        
+        {/* 成功提示 */}
+        <Snackbar
+          open={!!success}
+          autoHideDuration={2000}
+          onClose={() => setSuccess('')}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <Alert onClose={() => setSuccess('')} severity="success" sx={{ width: '100%' }}>
+            {success}
+          </Alert>
+        </Snackbar>
       </Box>
     </ThemeProvider>
   );
