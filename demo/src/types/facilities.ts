@@ -4,7 +4,7 @@ export interface Facility {
   id: string;
   itemId: string;           // 生产的物品ID
   type: string;             // 设施类型（如"电力采掘机"）
-  category: 'mining' | 'smelting' | 'crafting' | 'chemical' | 'research';
+  category: 'mining' | 'smelting' | 'crafting' | 'chemical' | 'research' | 'power-generation';
   count: number;            // 设施数量
   
   // 基础能力（单台设施）
@@ -15,6 +15,7 @@ export interface Facility {
   // 能源需求
   powerType: 'electric' | 'fuel' | 'none';
   powerConsumption?: number; // 电力消耗（kW）
+  powerGeneration?: number;  // 电力产生（kW）
   fuelType?: string;        // 燃料类型
   
   // 配方信息
@@ -30,6 +31,7 @@ export interface FacilityTemplate {
   baseSpeed: number;
   powerType: 'electric' | 'fuel' | 'none';
   powerConsumption?: number;
+  powerGeneration?: number;
   fuelTypes?: string[];
   moduleSlots?: number;
   craftingCategories?: string[];
@@ -122,5 +124,28 @@ export const FACILITY_TYPES = {
     baseSpeed: 1,
     powerType: 'electric' as const,
     powerConsumption: 60,
+  },
+
+  // 发电设施
+  'offshore-pump': {
+    name: '海水泵',
+    category: 'power-generation' as const,
+    baseSpeed: 1,
+    powerType: 'electric' as const,
+    powerConsumption: 30,
+  },
+  'boiler': {
+    name: '锅炉',
+    category: 'power-generation' as const,
+    baseSpeed: 1,
+    powerType: 'fuel' as const,
+    fuelTypes: ['coal', 'wood', 'solid-fuel'],
+  },
+  'steam-engine': {
+    name: '蒸汽机',
+    category: 'power-generation' as const,
+    baseSpeed: 1,
+    powerType: 'none' as const,
+    powerGeneration: 900, // 产生900kW电力
   },
 };
