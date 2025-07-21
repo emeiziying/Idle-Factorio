@@ -1,0 +1,10 @@
+{
+  "version": "1.1",
+  "hash": "test-hash-v1",
+  "files": {
+    "categories": "categories.json",
+    "items": "items.json",
+    "recipes": "recipes.json",
+    "technologies": "technologies.json"
+  }
+}
