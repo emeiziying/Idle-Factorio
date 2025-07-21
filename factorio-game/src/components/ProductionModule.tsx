@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, CircularProgress, Typography, Grid, useMediaQuery, useTheme } from '@mui/material';
+import { Box, CircularProgress, Typography, useMediaQuery, useTheme } from '@mui/material';
 import CategoryTabs from './CategoryTabs';
 import ItemGrid from './ItemGrid';
 import ProductionStats from './ProductionStats';
@@ -76,16 +76,16 @@ const ProductionModule: React.FC = () => {
         onCategoryChange={setSelectedCategory}
       />
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-        <Grid container spacing={2}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
           {!isMobile && (
-            <Grid item xs={12} md={3}>
+            <Box sx={{ width: '25%', minWidth: 280 }}>
               <ProductionStats />
-            </Grid>
+            </Box>
           )}
-          <Grid item xs={12} md={isMobile ? 12 : 9}>
+          <Box sx={{ flex: 1 }}>
             <ItemGrid items={items} />
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Box>
     </Box>
   );

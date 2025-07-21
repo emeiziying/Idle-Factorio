@@ -3,7 +3,6 @@ import {
   Paper,
   Typography,
   Box,
-  Grid,
   Divider,
   LinearProgress
 } from '@mui/material';
@@ -77,9 +76,9 @@ const ProductionStats: React.FC = () => {
         生产统计
       </Typography>
       
-      <Grid container spacing={2}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
         {/* 库存总览 */}
-        <Grid item xs={12} md={6}>
+        <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <InventoryIcon color="primary" />
             <Box sx={{ flex: 1 }}>
@@ -94,10 +93,10 @@ const ProductionStats: React.FC = () => {
               </Typography>
             </Box>
           </Box>
-        </Grid>
+        </Box>
 
         {/* 制作队列 */}
-        <Grid item xs={12} md={6}>
+        <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <BuildIcon color="primary" />
             <Box sx={{ flex: 1 }}>
@@ -116,8 +115,8 @@ const ProductionStats: React.FC = () => {
               )}
             </Box>
           </Box>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       {stats.length > 0 && (
         <>

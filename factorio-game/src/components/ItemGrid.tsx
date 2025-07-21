@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Grid, Container } from '@mui/material';
+import { Box } from '@mui/material';
 import ItemCard from './ItemCard';
 import ItemDetailDialog from './ItemDetailDialog';
 import { Item } from '../types';
@@ -23,15 +23,22 @@ const ItemGrid: React.FC<ItemGridProps> = ({ items }) => {
 
   return (
     <>
-      <Container maxWidth="lg">
-        <Grid container spacing={2}>
+      <Box sx={{ width: '100%' }}>
+        <Box sx={{ 
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: 'repeat(2, 1fr)',
+            sm: 'repeat(3, 1fr)',
+            md: 'repeat(4, 1fr)',
+            lg: 'repeat(4, 1fr)'
+          },
+          gap: 2
+        }}>
           {items.map((item) => (
-            <Grid item xs={6} sm={4} md={3} key={item.id}>
-              <ItemCard item={item} onClick={() => handleItemClick(item)} />
-            </Grid>
+            <ItemCard key={item.id} item={item} onClick={() => handleItemClick(item)} />
           ))}
-        </Grid>
-      </Container>
+        </Box>
+      </Box>
       
       {selectedItem && (
         <ItemDetailDialog

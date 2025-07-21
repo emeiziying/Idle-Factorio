@@ -9,7 +9,7 @@ import {
   Box,
   Divider,
   List,
-  ListItem,
+  ListItemButton,
   ListItemText,
   TextField,
   IconButton,
@@ -165,9 +165,8 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({ open, item, onClose
             
             <List>
               {recipes.map((recipe) => (
-                <ListItem
+                <ListItemButton
                   key={recipe.id}
-                  button
                   selected={selectedRecipe?.id === recipe.id}
                   onClick={() => setSelectedRecipe(recipe)}
                   sx={{ 
@@ -206,7 +205,7 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({ open, item, onClose
                       </Box>
                     }
                   />
-                </ListItem>
+                </ListItemButton>
               ))}
             </List>
 
