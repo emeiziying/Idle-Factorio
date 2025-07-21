@@ -22,10 +22,13 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import SettingsIcon from '@mui/icons-material/Settings';
 import FactoryIcon from '@mui/icons-material/Factory';
+import BoltIcon from '@mui/icons-material/Bolt';
 import { facilityService } from '../services/FacilityService';
 import { simpleLogisticsService } from '../services/SimpleLogisticsService';
+import { powerService } from '../services/PowerService';
 import { Facility } from '../types/facilities';
 import FacilityLogisticsPanel from './FacilityLogisticsPanel';
+import PowerManagementPanel from './PowerManagementPanel';
 
 const OverviewCard = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
@@ -65,10 +68,15 @@ const FacilityOverview: React.FC = () => {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
+  const [showPowerManagement, setShowPowerManagement] = useState(false);
 
   useEffect(() => {
     updateFacilityGroups();
-    const interval = setInterval(updateFacilityGroups, 5000);
+    const interval = setInterval(() => {
+      updateFacilityGroups();
+      // 同时更新电力系统
+      powerService.simulatePowerProduction();
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -137,12 +145,25 @@ const FacilityOverview: React.FC = () => {
     }
   };
 
+  if (showPowerManagement) {
+    return <PowerManagementPanel onBack={() => setShowPowerManagement(false)} />;
+  }
+
   return (
     <Box p={2}>
-      <Typography variant="h5" gutterBottom>
-        <FactoryIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-        设施总览
-      </Typography>
+      <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+        <Typography variant="h5">
+          <FactoryIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+          设施总览
+        </Typography>
+        <Button
+          variant="outlined"
+          onClick={() => setShowPowerManagement(true)}
+          startIcon={<BoltIcon />}
+        >
+          电力管理
+        </Button>
+      </Box>
 
       <OverviewCard elevation={0}>
         <Typography variant="subtitle2" color="text.secondary" gutterBottom>

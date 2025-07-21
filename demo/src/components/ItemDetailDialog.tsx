@@ -16,6 +16,7 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import { Item, InventoryItem } from '../types';
 import { dataService } from '../services/DataService';
 import { facilityService } from '../services/FacilityService';
+import { powerService } from '../services/PowerService';
 import FacilityLogisticsPanel from './FacilityLogisticsPanel';
 import ProductionChainAnalyzer from './ProductionChainAnalyzer';
 
@@ -95,6 +96,90 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
 
   const netGrowth = inventory ? 
     inventory.productionRate - inventory.consumptionRate : 0;
+
+  // 获取电力生产面板
+  const getPowerProductionPanel = () => {
+    if (!item) return null;
+
+    // 水 -> 海水泵
+    if (item.id === 'water') {
+      return (
+        <DataCard>
+          <Typography variant="subtitle2" color="primary" gutterBottom>
+            💧 水泵设施
+          </Typography>
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+            <Typography variant="body2">
+              海水泵可以无限产生水源
+            </Typography>
+            <ActionButton 
+              variant="contained" 
+              size="small"
+              onClick={() => {
+                const success = powerService.addPowerFacility('offshore-pump', 'water', 1);
+                if (success) {
+                  showSuccessMessage('已添加海水泵设施');
+                } else {
+                  showErrorMessage('添加海水泵失败');
+                }
+              }}
+            >
+              ➕ 添加海水泵
+            </ActionButton>
+          </Box>
+          <Typography variant="caption" color="text.secondary">
+            产出: 20单位/秒水 | 消耗: 30kW电力
+          </Typography>
+        </DataCard>
+      );
+    }
+
+    // 蒸汽 -> 锅炉
+    if (item.id === 'steam') {
+      return (
+        <DataCard>
+          <Typography variant="subtitle2" color="primary" gutterBottom>
+            🔥 蒸汽生产
+          </Typography>
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+            <Typography variant="body2">
+              锅炉烧煤产生蒸汽
+            </Typography>
+            <ActionButton 
+              variant="contained" 
+              size="small"
+              onClick={() => {
+                const success = powerService.addPowerFacility('boiler', 'steam', 1);
+                if (success) {
+                  showSuccessMessage('已添加锅炉设施');
+                } else {
+                  showErrorMessage('添加锅炉失败');
+                }
+              }}
+            >
+              ➕ 添加锅炉
+            </ActionButton>
+          </Box>
+          <Typography variant="caption" color="text.secondary">
+            产出: 60单位/秒蒸汽 | 消耗: 1.8煤炭/秒 + 60水/秒
+          </Typography>
+        </DataCard>
+      );
+    }
+
+    return null;
+  };
+
+  // 显示消息的辅助函数
+  const showSuccessMessage = (message: string) => {
+    // 这里应该调用 App 组件的成功消息显示函数
+    console.log('Success:', message);
+  };
+
+  const showErrorMessage = (message: string) => {
+    // 这里应该调用 App 组件的错误消息显示函数
+    console.log('Error:', message);
+  };
 
   return (
     <Dialog 
@@ -241,6 +326,9 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
             材料充足 ✓ 预计时间: 2.5秒
           </Typography>
         </DataCard>
+
+        {/* 电力生产区域 */}
+        {getPowerProductionPanel()}
 
         {/* 生产设施管理 */}
         {inventory && inventory.status === 'producing' && (() => {
