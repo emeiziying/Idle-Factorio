@@ -141,21 +141,46 @@ interface FacilityLogistics {
   facilityCount: number;
   
   // 能力数据
-  baseInputCapacity: number;
-  baseOutputCapacity: number;
-  actualInputCapacity: number;
-  actualOutputCapacity: number;
-  actualProductionRate: number;
+  baseInputCapacity: number;      // 基础输入需求
+  baseOutputCapacity: number;     // 基础输出产能
+  actualInputCapacity: number;    // 实际输入运力
+  actualOutputCapacity: number;   // 实际输出运力
+  actualProductionRate: number;   // 实际产能（受限于瓶颈）
   
   // 效率指标
-  efficiency: number;
+  efficiency: number;             // 实际产能/基础产能
   bottleneck: 'none' | 'input' | 'output';
   
   // 物流配置
   inputLogistics: LogisticsConfig;
   outputLogistics: LogisticsConfig;
 }
+
+interface LogisticsConfig {
+  conveyors: number;      // 传送带数量
+  conveyorType: string;   // 传送带类型
+  inserters: number;      // 机械臂数量
+  inserterType: string;   // 机械臂类型
+}
 ```
+
+### 效率计算公式
+
+```typescript
+// 物流运力计算
+const conveyorCapacity = conveyorCount * conveyorSpeed;
+const inserterCapacity = inserterCount * inserterSpeed;
+const logisticsCapacity = Math.min(conveyorCapacity, inserterCapacity);
+
+// 实际产能计算
+const actualProduction = Math.min(
+  baseProduction,         // 设施基础产能
+  inputLogisticsCapacity, // 输入物流限制
+  outputLogisticsCapacity // 输出物流限制
+);
+
+// 效率计算
+const efficiency = actualProduction / baseProduction;
 
 ---
 
