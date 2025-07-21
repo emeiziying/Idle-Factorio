@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Avatar } from '@mui/material';
+import { Avatar } from '@mui/material';
 import { 
   Science as ScienceIcon,
   Factory as FactoryIcon,

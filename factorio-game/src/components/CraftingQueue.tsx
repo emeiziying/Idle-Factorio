@@ -12,7 +12,6 @@ import {
   ListItemSecondaryAction,
   Chip,
   Tooltip,
-  Button,
   Collapse,
   Badge
 } from '@mui/material';
@@ -43,7 +42,6 @@ const CraftingQueue: React.FC = () => {
   const [updateTrigger, setUpdateTrigger] = useState(0);
 
   const craftingService = CraftingService.getInstance();
-  const dataService = DataService.getInstance();
 
   useEffect(() => {
     // 每100ms更新一次显示
@@ -55,22 +53,24 @@ const CraftingQueue: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const updateTaskInfos = async () => {
+      const infos: TaskInfo[] = [];
+      
+      for (const task of craftingQueue) {
+        const taskInfo = await craftingService.getCraftingTaskInfo(task);
+        infos.push({
+          task,
+          recipe: taskInfo.recipe,
+          progress: taskInfo.progress,
+          remainingTime: taskInfo.remainingTime
+        });
+      }
+      
+      setTaskInfos(infos);
+    };
+    
     updateTaskInfos();
-  }, [craftingQueue, updateTrigger]);
-
-  const updateTaskInfos = async () => {
-    const infos: TaskInfo[] = [];
-    for (const task of craftingQueue) {
-      const info = await craftingService.getCraftingTaskInfo(task);
-      infos.push({
-        task,
-        recipe: info.recipe,
-        progress: info.progress,
-        remainingTime: info.remainingTime
-      });
-    }
-    setTaskInfos(infos);
-  };
+  }, [craftingQueue, updateTrigger, craftingService]);
 
   const handleCancel = async (taskId: string) => {
     const result = await craftingService.cancelCrafting(taskId);
