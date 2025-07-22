@@ -6,13 +6,20 @@
       "mcp__serena__list_dir",
       "mcp__serena__activate_project",
       "mcp__serena__onboarding",
-      "mcp__serena__read_file"
+      "mcp__serena__read_file",
+      "mcp__serena__find_file",
+      "mcp__serena__write_memory",
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)"
     ]
   },
   "enabledMcpjsonServers": [
     "context7",
+    "sequential-thinking"
+  ],
+  "disabledMcpjsonServers": [
     "mcp-feedback-enhanced",
-    "sequential-thinking",
     "promptx",
     "serena"
   ]

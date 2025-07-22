@@ -4,20 +4,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is **异星工厂 v2** (Factorio v2) - a React-based idle factory management game inspired by Factorio. The game implements a logistics-driven production system where production efficiency is calculated as `MIN(base_capacity, input_logistics_capacity, output_logistics_capacity)`.
+This is **异星工厂 v2** (Factorio v2) - a React-based idle factory management game inspired by Factorio. This repository currently contains comprehensive planning documentation and game data, but the React application has not been implemented yet.
 
-**Main Project Directory**: `/demo/` - This contains the actual React application.
+**Current State**: Documentation and planning phase  
+**Target Implementation**: React + TypeScript + Material-UI + Zustand
 
-## Development Commands
+## Project Initialization Commands
+
+Since the React application doesn't exist yet, these commands will create the initial project structure:
 
 ```bash
-# Navigate to the demo directory first
-cd demo
+# Create React app with TypeScript
+npx create-react-app idle-factorio --template typescript
 
-# Install dependencies
-npm install
+# Navigate to project directory
+cd idle-factorio
 
-# Start development server
+# Install additional dependencies
+npm install @mui/material @emotion/react @emotion/styled
+npm install @mui/icons-material
+npm install zustand
+
+# Install development dependencies
+npm install --save-dev @types/node
+
+# Start development server (once created)
 npm start
 
 # Build for production
@@ -25,124 +36,133 @@ npm run build
 
 # Run tests
 npm test
-
-# Eject (if needed)
-npm eject
 ```
 
-## Architecture Overview
+## Planned Architecture
 
-### Service Layer Pattern
-The application follows a service-based architecture with clear separation of concerns:
+### Phase 1 Simplified Design
+According to documentation, Phase 1 will **NOT** implement complex logistics-driven production. Instead:
+- Facilities automatically obtain required materials from inventory
+- Facilities automatically add outputs to inventory  
+- No logistics capacity constraints or bottleneck calculations
 
-- **DataService** (`demo/src/services/DataService.ts`): Game data loading, inventory management, crafting queue
-- **SimpleLogisticsService** (`demo/src/services/SimpleLogisticsService.ts`): Logistics efficiency calculations, optimization recommendations
-- **FacilityService** (`demo/src/services/FacilityService.ts`): Production facility management, recipe matching
-- **PersistenceService** (`demo/src/services/PersistenceService.ts`): Auto-save, data persistence, import/export
+### Service Layer Pattern (Planned)
+The application will follow a service-based architecture:
 
-### Core Calculation Engine
+- **DataService**: Game data loading from `/data/1.1/data.json`, inventory management
+- **UserProgressService**: Item unlock status, localStorage persistence  
+- **FacilityService**: Production facility management, automated production
+- **PowerService**: Electricity generation/consumption balance
+- **PersistenceService**: Auto-save every 30 seconds, import/export
 
-The game's core logic revolves around **logistics-driven production efficiency**:
-
+### Core Game Loop (Phase 1)
 ```typescript
-// Key formula in SimpleLogisticsService.ts:38-42
-actualProduction = min(
-  baseProduction,
-  inputLogisticsCapacity,
-  outputLogisticsCapacity
-)
-efficiency = actualProduction / baseProduction
+// Simplified production loop - no logistics constraints
+setInterval(() => {
+  facilities.forEach(facility => {
+    if (hasRequiredInputs(facility) && hasPower(facility)) {
+      consumeInputs(facility);
+      addOutputsToInventory(facility);
+    }
+  });
+}, 1000); // Update every second
 ```
 
-### Component Structure
+### Planned Component Structure
 
-- **App.tsx**: Main application entry point with theme and state management
-- **CategoryTabs.tsx**: Navigation between item categories (logistics, production, etc.)
-- **FacilityLogisticsPanel.tsx**: Core UI for configuring facility logistics
-- **FacilityOverview.tsx**: Dashboard view of all production facilities
-- **ProductionChainAnalyzer.tsx**: Visualizes complete production chains
+```
+src/
+├── components/
+│   ├── common/          # Reusable UI components
+│   ├── production/      # Item display, crafting, inventory
+│   ├── facilities/      # Facility management, power dashboard  
+│   └── technology/      # Research tree, science packs
+├── services/            # Business logic services
+├── store/              # Zustand state management
+├── types/              # TypeScript type definitions
+└── utils/              # Helper functions, formatting
+```
 
-### Type System
+### Core Module Types (Planned)
 
-- **types/index.ts**: Core game types (Item, Recipe, InventoryItem, etc.)
-- **types/logistics.ts**: Logistics system types (LogisticsConfig, FacilityLogistics)
-- **types/facilities.ts**: Facility definitions and production types
+1. **Production Module**: Item categories, crafting queue, inventory management
+2. **Facilities Module**: Building management, power system, automated production
+3. **Technology Module**: Research tree, item/recipe unlocking
+4. **Power Module**: Electricity generation/consumption balance
 
-## Data Architecture
+## Game Data Structure
 
-### Game Data Loading
-- Data loaded from `/public/data/1.1/data.json` (Factorio game data)
-- Icons served from `/public/data/1.1/icons.webp` sprite sheet
-- Service pattern: `DataService.loadGameData()` → initialize other services
+### Existing Data Assets
+- **Game Data**: `/data/1.1/data.json` - Complete Factorio 1.1.107 item/recipe data
+- **Icons**: `/data/1.1/icons.webp` - Sprite sheet for game icons
+- **Hash File**: `/data/1.1/hash.json` - Data integrity verification
 
-### State Management
-- React hooks + service instances (no Redux/Context needed)
-- Auto-save every 30 seconds via `PersistenceService`
-- State flows: User Action → Service Method → State Update → React Re-render
+### Data Loading Pattern
+```typescript
+// Copy data assets to React public folder
+// Load via fetch from /public/data/1.1/data.json
+const gameData = await DataService.loadGameData();
+```
 
-### Performance Optimizations
-- `React.memo` for expensive components like `ItemCard`
-- `useMemo`/`useCallback` for calculation caching
-- Debounced updates in logistics calculations
-- Batched state updates for inventory changes
+### State Management (Zustand)
+```typescript
+interface GameStore {
+  inventory: Map<string, number>;
+  facilities: FacilityInstance[];
+  unlockedItems: Set<string>;
+  powerGrid: PowerState;
+  // Auto-save every 30 seconds to localStorage
+}
+```
 
-## Key Development Patterns
+## Key Documentation Files
 
-### Adding New Logistics Features
-1. Update logistics types in `types/logistics.ts`
-2. Implement calculation logic in `SimpleLogisticsService`
-3. Add UI components in `components/`
-4. Test efficiency calculations thoroughly
+### Development Planning
+- `第一阶段开发TODO.md` - Complete Phase 1 task checklist with progress tracking
+- `第一阶段开发说明文档.md` - Detailed technical specifications and data structures
+- `第一阶段开发任务文档.md` - Implementation roadmap and milestones
 
-### Adding New Facility Types
-1. Define in `FACILITY_TYPES` constant in `types/facilities.ts`
-2. Update `FacilityService.getDefaultFacilityForRecipe()`
-3. Ensure proper recipe matching and production calculations
+### System Design Documents  
+- `物品解锁系统文档.md` - Item unlock mechanics and UserProgressService
+- `电力系统设计文档.md` - Power generation/consumption balance system
+- `科技页面设计文档.md` - Research tree and technology unlocking
+- `设备管理系统文档.md` - Facility management and automation
+
+### Game Design
+- `异星工厂v2.md` & `异星工厂v3设计文档.md` - Overall game concept and progression
+- `物品分类系统设计.md` - Item categorization strategy
+- `物流系统功能设计.md` - Future logistics system (Phase 2+)
+
+## Development Guidelines
+
+### Phase 1 Constraints
+- **NO** complex logistics calculations - facilities work automatically
+- **NO** input/output capacity limits - direct inventory access
+- **NO** belt/transport systems - items teleport between facilities
+- **Focus on**: Basic UI, crafting, facility management, power balance
 
 ### Working with Game Data
-- Always check `gameData` is loaded before accessing items/recipes
-- Use `DataService` methods for inventory operations
-- Respect the async nature of data loading in components
+```typescript
+// Data structure from /data/1.1/data.json
+interface Item {
+  id: string;
+  name: string; 
+  category: string;
+  // Copy data to React public folder for fetch access
+}
+```
 
-## Testing Strategy
+### Item Unlock System
+Items start locked - use `UserProgressService` to manage unlock states:
+```typescript
+// Only show unlocked items in UI
+const unlockedItems = gameData.items.filter(item => 
+  UserProgressService.isItemUnlocked(item.id)
+);
+```
 
-The project uses Create React App's default testing setup:
-- Jest for unit tests
-- React Testing Library for component tests
-- Test files: `*.test.tsx` alongside components
-
-## Important Implementation Details
-
-### Logistics Calculation Logic
-The `SimpleLogisticsService.updateFacilityLogistics()` method is the heart of the game's mechanics. It:
-1. Calculates total facility requirements
-2. Computes actual logistics capacity
-3. Determines bottlenecks (input vs output)
-4. Returns efficiency percentage
-
-### Auto-Save Mechanism
-- Enabled in `App.tsx` on initialization
-- Saves every 30 seconds via `PersistenceService.enableAutoSave()`
-- Persists logistics configurations, inventory, and facility states
-
-### Performance Considerations
-- The game updates inventory every second in `App.tsx:105-112`
-- Logistics calculations are debounced to prevent excessive computation
-- Use React dev tools to profile render performance when adding features
-
-## Common Development Tasks
-
-### Adding a New Item Category
-1. Update `categoryTabs` in `types/index.ts`
-2. Add category handling in `CategoryTabs.tsx`
-3. Ensure `DataService.getItemsByCategory()` works with new category
-
-### Modifying Logistics Formulas
-- Primary logic in `SimpleLogisticsService.calculateLogisticsCapacity()`
-- Update efficiency calculations in `updateFacilityLogistics()`
-- Test edge cases (zero production, infinite capacity, etc.)
-
-### Adding New UI Components
-- Follow Material-UI patterns established in existing components
-- Use React.memo for performance-critical components
-- Implement proper TypeScript interfaces for props
+### Testing Strategy
+- Use Create React App's Jest + React Testing Library setup
+- Focus on service layer unit tests for game logic
+- Component integration tests for user workflows
+- Test unlock progression and power balance edge cases
