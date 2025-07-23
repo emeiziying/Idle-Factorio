@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import CategoryTabs from '../common/CategoryTabs';
 import CategoryItemGrid from './CategoryItemGrid';
@@ -16,6 +16,9 @@ const ProductionModule: React.FC = () => {
     const loadData = async () => {
       try {
         const dataService = DataService.getInstance();
+        
+        // 先加载游戏数据
+        await dataService.loadGameData();
         
         // 加载分类（按推荐顺序）
         const allCategories = dataService.getAllCategories();
@@ -39,6 +42,12 @@ const ProductionModule: React.FC = () => {
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategory(categoryId);
   };
+
+  // 使用useMemo缓存CategoryItemGrid组件，避免不必要的重新创建
+  const categoryItemGrid = useMemo(() => {
+    if (!selectedCategory) return null;
+    return <CategoryItemGrid key={selectedCategory} categoryId={selectedCategory} />;
+  }, [selectedCategory]);
 
   if (loading) {
     return (
@@ -71,9 +80,7 @@ const ProductionModule: React.FC = () => {
         // 平滑滚动
         scrollBehavior: 'smooth'
       }}>
-        {selectedCategory && (
-          <CategoryItemGrid categoryId={selectedCategory} />
-        )}
+        {categoryItemGrid}
       </Box>
       
       {/* 制作队列 - 底部 */}

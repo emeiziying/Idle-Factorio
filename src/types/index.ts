@@ -39,6 +39,11 @@ export interface Recipe {
   out: { [itemId: string]: number };
   enabled?: boolean;
   energy_required?: number;
+  producers?: string[];
+  flags?: string[]; // 配方标志，如 'mining', 'recycling' 等
+  locations?: string[]; // 生产位置
+  cost?: number; // 生产成本
+  disallowedEffects?: string[]; // 不允许的效果
 }
 
 // 库存物品接口

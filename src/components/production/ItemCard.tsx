@@ -14,7 +14,7 @@ interface ItemCardProps {
   onClick: () => void;
 }
 
-const ItemCard: React.FC<ItemCardProps> = ({ item, onClick }) => {
+const ItemCard: React.FC<ItemCardProps> = React.memo(({ item, onClick }) => {
   const getInventoryItem = useGameStore((state) => state.getInventoryItem);
   const inventoryItem = getInventoryItem(item.id);
   const isMobile = useIsMobile();
@@ -131,6 +131,8 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onClick }) => {
       </Box>
     </Tooltip>
   );
-};
+});
+
+ItemCard.displayName = 'ItemCard';
 
 export default ItemCard;

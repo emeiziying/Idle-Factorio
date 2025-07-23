@@ -5,22 +5,29 @@ import {
   BottomNavigationAction,
   ThemeProvider,
   createTheme,
-  CssBaseline
+  CssBaseline,
+  Fab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Typography,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import {
   Build as BuildIcon,
   Factory as FactoryIcon,
-  Science as ScienceIcon
+  Science as ScienceIcon,
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 
 import ProductionModule from './components/production/ProductionModule';
 import FacilitiesModule from './components/facilities/FacilitiesModule';
 import TechnologyModule from './components/technology/TechnologyModule';
 import DataService from './services/DataService';
-import CraftingEngine from './utils/craftingEngine';
 import useGameStore from './store/gameStore';
-import { useSwipeGesture } from './hooks/useSwipeGesture';
-import { useIsMobile } from './hooks/useIsMobile';
 
 // 创建移动端优化的深色主题
 const theme = createTheme({
@@ -38,6 +45,20 @@ const theme = createTheme({
     },
   },
   components: {
+    // 全局移除outline
+    MuiButtonBase: {
+      styleOverrides: {
+        root: {
+          outline: 'none',
+          '&:focus': {
+            outline: 'none',
+          },
+          '&:focus-visible': {
+            outline: 'none',
+          },
+        },
+      },
+    },
     // 移动端优化
     MuiBottomNavigationAction: {
       styleOverrides: {
@@ -45,21 +66,54 @@ const theme = createTheme({
           minWidth: 'auto',
           paddingTop: 8,
           paddingBottom: 8,
+          outline: 'none',
+          '&:focus': {
+            outline: 'none',
+          },
           '&.Mui-selected': {
             fontSize: '0.75rem',
           },
         },
         label: {
           fontSize: '0.75rem',
+          // 确保未选中时也显示文字
+          opacity: 1,
           '&.Mui-selected': {
             fontSize: '0.8rem',
+            fontWeight: 600,
+          },
+        },
+        // 图标样式
+        iconOnly: {
+          // 确保图标和文字都显示
+          '& .MuiBottomNavigationAction-label': {
+            opacity: 1,
           },
         },
       },
     },
+    // Tab组件移除outline
+    MuiTab: {
+      styleOverrides: {
+        root: {
+          outline: 'none',
+          '&:focus': {
+            outline: 'none',
+          },
+          '&:focus-visible': {
+            outline: 'none',
+          },
+        },
+      },
+    },
+    // 卡片组件移除outline
     MuiCard: {
       styleOverrides: {
         root: {
+          outline: 'none',
+          '&:focus': {
+            outline: 'none',
+          },
           // 移动端更小的圆角
           '@media (max-width: 600px)': {
             borderRadius: 8,
@@ -67,9 +121,14 @@ const theme = createTheme({
         },
       },
     },
+    // 对话框组件移除outline
     MuiDialog: {
       styleOverrides: {
         paper: {
+          outline: 'none',
+          '&:focus': {
+            outline: 'none',
+          },
           // 移动端全屏对话框
           '@media (max-width: 600px)': {
             margin: 8,
@@ -79,177 +138,205 @@ const theme = createTheme({
         },
       },
     },
+    // 图标按钮移除outline
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          outline: 'none',
+          '&:focus': {
+            outline: 'none',
+          },
+          '&:focus-visible': {
+            outline: 'none',
+          },
+        },
+      },
+    },
   },
 });
 
-function App() {
-  const [selectedTab, setSelectedTab] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const isMobile = useIsMobile();
-
-  // 移动端滑动切换标签页
-  const swipeRef = useSwipeGesture({
-    onSwipeLeft: () => {
-      if (isMobile && selectedTab < 2) {
-        setSelectedTab(selectedTab + 1);
-      }
-    },
-    onSwipeRight: () => {
-      if (isMobile && selectedTab > 0) {
-        setSelectedTab(selectedTab - 1);
-      }
-    },
-    threshold: 100
-  });
+const App: React.FC = () => {
+  const [currentModule, setCurrentModule] = useState(0);
+  const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const { clearGameData } = useGameStore();
 
   // 初始化游戏数据
   useEffect(() => {
-    const initializeGame = async () => {
+    const initializeApp = async () => {
       try {
-        const dataService = DataService.getInstance();
-        await dataService.loadGameData();
+        // 加载游戏数据
+        await DataService.getInstance().loadGameData();
         
-        // 启动制作引擎
-        const craftingEngine = CraftingEngine.getInstance();
-        craftingEngine.start();
+        // 加载国际化数据
+        await DataService.getInstance().loadI18nData('zh');
         
-        // 添加一些初始库存物品用于测试
-        const gameStore = useGameStore.getState();
-        gameStore.updateInventory('coal', 100);
-        gameStore.updateInventory('iron-ore', 100);
-        gameStore.updateInventory('copper-ore', 100);
-        gameStore.updateInventory('stone', 50);
-        gameStore.updateInventory('wood', 50);
-        gameStore.updateInventory('iron-plate', 20);
-        gameStore.updateInventory('copper-plate', 20);
-        
-        setIsLoading(false);
-      } catch (err) {
-        console.error('Failed to initialize game:', err);
-        setError('Failed to load game data');
-        setIsLoading(false);
+        console.log('App initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize app:', error);
       }
     };
 
-    initializeGame();
+    initializeApp();
   }, []);
 
-  if (isLoading) {
-    return (
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Box 
-          display="flex" 
-          justifyContent="center" 
-          alignItems="center" 
-          height="100vh"
-          bgcolor="background.default"
-        >
-          Loading game data...
-        </Box>
-      </ThemeProvider>
-    );
-  }
-
-  if (error) {
-    return (
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Box 
-          display="flex" 
-          justifyContent="center" 
-          alignItems="center" 
-          height="100vh"
-          bgcolor="background.default"
-          color="error.main"
-        >
-          {error}
-        </Box>
-      </ThemeProvider>
-    );
-  }
-
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setSelectedTab(newValue);
+    setCurrentModule(newValue);
+  };
+
+  const handleClearGame = () => {
+    clearGameData();
+    setIsClearDialogOpen(false);
+    setShowSuccessMessage(true);
+    // 3秒后重新加载页面
+    setTimeout(() => {
+      window.location.reload();
+    }, 3000);
   };
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box 
-        ref={swipeRef}
-        sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          height: '100vh',
-          bgcolor: 'background.default'
-        }}
-      >
-        {/* 主内容区 */}
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        height: '100vh',
+        width: '100vw',
+        bgcolor: 'background.default'
+      }}>
+        {/* 主内容区域 */}
         <Box sx={{ 
-          flex: 1, 
-          overflow: 'hidden', 
-          p: isMobile ? 0.5 : 1,
-          // 禁用页面缩放和过度滚动
-          overscrollBehavior: 'none',
-          width: '100%',
+          flex: 1,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
           boxSizing: 'border-box'
         }}>
-          {selectedTab === 0 && <ProductionModule />}
-          {selectedTab === 1 && <FacilitiesModule />}
-          {selectedTab === 2 && <TechnologyModule />}
+          {currentModule === 0 && <ProductionModule />}
+          {currentModule === 1 && <FacilitiesModule />}
+          {currentModule === 2 && <TechnologyModule />}
         </Box>
         
         {/* 底部导航 */}
         <BottomNavigation 
-          value={selectedTab} 
+          value={currentModule} 
           onChange={handleTabChange}
+          showLabels // 确保显示标签
           sx={{ 
-            bgcolor: 'background.paper',
+            width: '100%',
             borderTop: 1,
             borderColor: 'divider',
-            height: isMobile ? 70 : 56,
-            // 移动端安全区域适配
-            ...(isMobile && {
-              paddingBottom: 'env(safe-area-inset-bottom)'
-            })
+            bgcolor: 'background.paper',
+            '& .MuiBottomNavigationAction-root': {
+              minWidth: 'auto',
+              flex: 1,
+              '& .MuiBottomNavigationAction-label': {
+                fontSize: '0.75rem',
+                opacity: 1, // 确保未选中时也显示
+                '&.Mui-selected': {
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                },
+              },
+              '& .MuiSvgIcon-root': {
+                fontSize: '1.5rem',
+                marginBottom: '2px',
+              },
+            },
           }}
         >
           <BottomNavigationAction 
             label="生产" 
-            icon={<BuildIcon sx={{ fontSize: isMobile ? '1.5rem' : '1.25rem' }} />} 
-            sx={{ 
-              color: 'text.primary',
-              minWidth: isMobile ? 60 : 80,
-              '&.Mui-selected': {
-                color: 'primary.main'
-              }
-            }}
+            icon={<BuildIcon />} 
+            showLabel={true} // 强制显示标签
           />
           <BottomNavigationAction 
             label="设施" 
-            icon={<FactoryIcon sx={{ fontSize: isMobile ? '1.5rem' : '1.25rem' }} />} 
-            sx={{ 
-              color: 'text.primary',
-              minWidth: isMobile ? 60 : 80,
-              '&.Mui-selected': {
-                color: 'primary.main'
-              }
-            }}
+            icon={<FactoryIcon />} 
+            showLabel={true} // 强制显示标签
           />
           <BottomNavigationAction 
             label="科技" 
-            icon={<ScienceIcon sx={{ fontSize: isMobile ? '1.5rem' : '1.25rem' }} />} 
-            sx={{ 
-              color: 'text.primary',
-              minWidth: isMobile ? 60 : 80,
-              '&.Mui-selected': {
-                color: 'primary.main'
-              }
-            }}
+            icon={<ScienceIcon />} 
+            showLabel={true} // 强制显示标签
           />
         </BottomNavigation>
+
+        {/* 清空存档按钮 - 仅在开发模式下显示 */}
+        {import.meta.env.DEV && (
+          <Fab
+            color="error"
+            size="small"
+            aria-label="clear-game"
+            sx={{
+              position: 'fixed',
+              top: '16px',
+              right: '16px',
+              zIndex: 1000,
+              bgcolor: 'error.main',
+              '&:hover': {
+                bgcolor: 'error.dark',
+              },
+            }}
+            onClick={() => setIsClearDialogOpen(true)}
+          >
+            <DeleteIcon />
+          </Fab>
+        )}
+
+        {/* 清空存档对话框 */}
+        <Dialog 
+          open={isClearDialogOpen} 
+          onClose={() => setIsClearDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle sx={{ color: 'error.main' }}>
+            确认清空存档
+          </DialogTitle>
+          <DialogContent>
+            <Typography>
+              您确定要清空所有游戏数据吗？这将删除所有已保存的进度和设置。
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setIsClearDialogOpen(false)}>
+              取消
+            </Button>
+            <Button onClick={handleClearGame} color="error" variant="contained">
+              清空存档
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* 成功提示 */}
+        <Snackbar
+          open={showSuccessMessage}
+          autoHideDuration={3000}
+          onClose={() => setShowSuccessMessage(false)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          sx={{
+            '& .MuiSnackbarContent-root': {
+              bgcolor: 'success.main',
+              color: 'white',
+            }
+          }}
+        >
+          <Alert 
+            onClose={() => setShowSuccessMessage(false)} 
+            severity="success" 
+            sx={{ 
+              width: '100%',
+              bgcolor: 'success.main',
+              color: 'white',
+              '& .MuiAlert-icon': {
+                color: 'white',
+              }
+            }}
+          >
+            存档已清空！页面将在3秒后重新加载...
+          </Alert>
+        </Snackbar>
       </Box>
     </ThemeProvider>
   );

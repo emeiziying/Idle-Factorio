@@ -52,6 +52,13 @@ class CraftingEngine {
     const currentTask = craftingQueue[0];
     if (!currentTask || currentTask.status === 'completed') return;
 
+    // 检查是否为手动合成任务
+    if (currentTask.recipeId.startsWith('manual_')) {
+      // 手动合成任务立即完成
+      this.completeManualCraft(currentTask);
+      return;
+    }
+
     const recipe = dataService.getRecipe(currentTask.recipeId);
     if (!recipe) return;
 
@@ -113,6 +120,19 @@ class CraftingEngine {
     completeCraftingTask(task.id);
 
     console.log(`Completed crafting: ${recipe.name} x${task.quantity}`);
+  }
+
+  // 完成手动合成
+  private completeManualCraft(task: CraftingTask): void {
+    const { updateInventory, completeCraftingTask } = useGameStore.getState();
+
+    // 直接添加物品到库存
+    updateInventory(task.itemId, task.quantity);
+
+    // 完成任务
+    completeCraftingTask(task.id);
+
+    console.log(`Completed manual crafting: ${task.itemId} x${task.quantity}`);
   }
 }
 

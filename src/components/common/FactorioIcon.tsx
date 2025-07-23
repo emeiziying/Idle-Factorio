@@ -1,87 +1,74 @@
-import React from 'react';
-import { Box, Avatar } from '@mui/material';
-import { Image as ImageIcon } from '@mui/icons-material';
+import React, { useState, useEffect } from 'react';
+import { Box } from '@mui/material';
 import DataService from '../../services/DataService';
+import type { IconData } from '../../types/index';
 
 interface FactorioIconProps {
   itemId: string;
   size?: number;
-  alt?: string;
   className?: string;
+  alt?: string;
 }
 
-interface IconData {
-  id: string;
-  position: string;
-  color: string;
-}
+const ICON_UNIT = 66; // 单个图标标准尺寸
+const SPRITE_URL = '/data/spa/icons.webp';
 
 const FactorioIcon: React.FC<FactorioIconProps> = ({ 
   itemId, 
   size = 32, 
-  alt,
-  className
+  className,
+  alt 
 }) => {
-  const [iconData, setIconData] = React.useState<IconData | null>(null);
-  const [imageError, setImageError] = React.useState(false);
+  const [iconData, setIconData] = useState<IconData | null>(null);
+  const [spriteSize, setSpriteSize] = useState<{ width: number; height: number } | null>(null);
 
-  // 从精灵图中提取图标位置
-  React.useEffect(() => {
-    const loadIconData = () => {
-      try {
-        const dataService = DataService.getInstance();
-        const icon = dataService.getIconData(itemId);
-        if (icon) {
-          console.log(`Loaded icon data for ${itemId}:`, icon);
-          setIconData(icon);
-        } else {
-          console.warn(`Icon not found for ${itemId}`);
-        }
-      } catch (error) {
-        console.warn(`Failed to load icon data for ${itemId}:`, error);
-      }
-    };
-
-    loadIconData();
+  // 加载iconData
+  useEffect(() => {
+    const dataService = DataService.getInstance();
+    setIconData(dataService.getIconData(itemId));
   }, [itemId]);
 
-  const handleImageError = () => {
-    console.warn(`Image error for ${itemId}`);
-    setImageError(true);
-  };
+  // 动态获取精灵图尺寸
+  useEffect(() => {
+    if (spriteSize) return;
+    const img = new window.Image();
+    img.src = SPRITE_URL;
+    img.onload = () => {
+      setSpriteSize({ width: img.naturalWidth, height: img.naturalHeight });
+    };
+  }, [spriteSize]);
 
-  // 计算精灵图中的位置和缩放
-  const getSpritePosition = (position: string, targetSize: number) => {
-    const [x, y] = position.split(' ').map(p => parseInt(p.replace('px', '')));
-    const originalSize = 66; // Factorio原始图标尺寸
-    const spriteSize = 1252; // 精灵图总尺寸
-    const scale = targetSize / originalSize;
-    
-
-    
+  // 解析position字段
+  const getSpritePosition = (position: string) => {
+    if (!spriteSize) return {};
+    // 例：-66px -132px
+    const [xStr, yStr] = position.split(' ');
+    const x = parseInt(xStr, 10);
+    const y = parseInt(yStr, 10);
+    // 目标显示尺寸
+    const displaySize = size;
     return {
-      backgroundPosition: `${x * scale}px ${y * scale}px`,
-      backgroundSize: `${spriteSize * scale}px ${spriteSize * scale}px`
+      backgroundPosition: `${x * displaySize / ICON_UNIT}px ${y * displaySize / ICON_UNIT}px`,
+      backgroundSize: `${spriteSize.width * displaySize / ICON_UNIT}px ${spriteSize.height * displaySize / ICON_UNIT}px`,
+      width: displaySize,
+      height: displaySize
     };
   };
 
-  if (imageError || !iconData) {
-    // 图标加载失败时显示占位符
+  if (!iconData || !iconData.position) {
     return (
-      <Avatar
+      <Box
         className={className}
         sx={{
           width: size,
           height: size,
-          bgcolor: 'grey.700',
-          fontSize: size * 0.5,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
+          bgcolor: 'grey.300',
+          borderRadius: 1,
+          display: 'inline-block',
+          flexShrink: 0
         }}
-      >
-        <ImageIcon sx={{ fontSize: size * 0.6 }} />
-      </Avatar>
+        title={alt || itemId}
+      />
     );
   }
 
@@ -91,18 +78,18 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
       sx={{
         width: size,
         height: size,
-        backgroundImage: 'url(/data/1.1/icons.webp)',
-        ...getSpritePosition(iconData.position, size),
+        backgroundImage: `url(${SPRITE_URL})`,
         backgroundRepeat: 'no-repeat',
         borderRadius: 1,
         bgcolor: 'background.paper',
         display: 'inline-block',
-        flexShrink: 0
+        flexShrink: 0,
+        ...getSpritePosition(iconData.position)
       }}
-      onError={handleImageError}
       title={alt || itemId}
     />
   );
 };
 
 export default FactorioIcon;
+

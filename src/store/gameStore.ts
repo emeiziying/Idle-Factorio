@@ -31,6 +31,7 @@ interface GameState {
   updateFacility: (facilityId: string, updates: Partial<FacilityInstance>) => void;
   removeFacility: (facilityId: string) => void;
   incrementGameTime: (deltaTime: number) => void;
+  clearGameData: () => void;
 }
 
 const useGameStore = create<GameState>()(
@@ -39,7 +40,7 @@ const useGameStore = create<GameState>()(
       // 初始状态
       inventory: new Map(),
       craftingQueue: [],
-      maxQueueSize: 10,
+      maxQueueSize: 50,
       facilities: [],
       gameTime: 0,
       totalItemsProduced: 0,
@@ -155,6 +156,22 @@ const useGameStore = create<GameState>()(
           gameTime: state.gameTime + deltaTime
         }));
       },
+
+      clearGameData: () => {
+        // 清除localStorage
+        localStorage.removeItem('factorio-game-storage');
+        
+        // 重置状态
+        set(() => ({
+          inventory: new Map(),
+          craftingQueue: [],
+          facilities: [],
+          gameTime: 0,
+          totalItemsProduced: 0,
+        }));
+        
+        console.log('Game data cleared successfully');
+      }
     }),
     {
       name: 'factorio-game-storage',

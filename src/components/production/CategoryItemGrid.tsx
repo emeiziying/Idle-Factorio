@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Box, 
   Typography, 
@@ -14,14 +14,19 @@ interface CategoryItemGridProps {
   categoryId: string;
 }
 
-const CategoryItemGrid: React.FC<CategoryItemGridProps> = ({ categoryId }) => {
+const CategoryItemGrid: React.FC<CategoryItemGridProps> = React.memo(({ categoryId }) => {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const isMobile = useIsMobile();
 
   const dataService = DataService.getInstance();
-  const itemsByRow = dataService.getItemsByRow(categoryId);
-  const sortedRows = Array.from(itemsByRow.keys()).sort((a, b) => a - b);
+  
+  // 使用useMemo缓存计算结果，避免每次渲染都重新计算
+  const { itemsByRow, sortedRows } = useMemo(() => {
+    const itemsByRow = dataService.getItemsByRow(categoryId);
+    const sortedRows = Array.from(itemsByRow.keys()).sort((a, b) => a - b);
+    return { itemsByRow, sortedRows };
+  }, [categoryId, dataService]);
 
   const handleItemClick = (item: Item) => {
     setSelectedItem(item);
@@ -32,8 +37,6 @@ const CategoryItemGrid: React.FC<CategoryItemGridProps> = ({ categoryId }) => {
     setDialogOpen(false);
     setSelectedItem(null);
   };
-
-
 
   if (sortedRows.length === 0) {
     return (
@@ -58,7 +61,7 @@ const CategoryItemGrid: React.FC<CategoryItemGridProps> = ({ categoryId }) => {
         const rowName = dataService.getRowDisplayName(categoryId, row);
 
         return (
-          <Box key={row} sx={{ mb: 2, width: '100%' }}>
+          <Box key={`${categoryId}-row-${row}`} sx={{ mb: 2, width: '100%' }}>
             {/* 小标题 */}
             <Box sx={{ mb: 1, px: 1 }}>
               <Typography 
@@ -104,7 +107,7 @@ const CategoryItemGrid: React.FC<CategoryItemGridProps> = ({ categoryId }) => {
             >
               {items.map((item) => (
                 <ItemCard
-                  key={item.id}
+                  key={`${categoryId}-${item.id}`}
                   item={item}
                   onClick={() => handleItemClick(item)}
                 />
@@ -129,6 +132,8 @@ const CategoryItemGrid: React.FC<CategoryItemGridProps> = ({ categoryId }) => {
       )}
     </Box>
   );
-};
+});
+
+CategoryItemGrid.displayName = 'CategoryItemGrid';
 
 export default CategoryItemGrid;

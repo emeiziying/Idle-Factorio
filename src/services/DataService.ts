@@ -3,9 +3,17 @@
 import type { GameData, Item, Recipe, Category } from '../types/index';
 import UserProgressService from './UserProgressService';
 
+interface I18nData {
+  categories: Record<string, string>;
+  items: Record<string, string>;
+  recipes: Record<string, string>;
+  locations: Record<string, string>;
+}
+
 class DataService {
   private static instance: DataService;
   private gameData: GameData | null = null;
+  private i18nData: I18nData | null = null;
   private userProgressService: UserProgressService;
 
   private constructor() {
@@ -26,18 +34,79 @@ class DataService {
     }
 
     try {
-      const response = await fetch('/data/1.1/data.json');
+      const response = await fetch('/data/spa/data.json');
       if (!response.ok) {
         throw new Error(`Failed to load game data: ${response.statusText}`);
       }
       
-      this.gameData = await response.json();
+      const data = await response.json();
+      this.gameData = data;
       console.log('Game data loaded successfully');
-      return this.gameData;
+      return data;
     } catch (error) {
       console.error('Error loading game data:', error);
       throw error;
     }
+  }
+
+  // 加载国际化数据
+  async loadI18nData(locale: string = 'zh'): Promise<I18nData> {
+    if (this.i18nData) {
+      return this.i18nData;
+    }
+
+    try {
+      const response = await fetch(`/data/spa/i18n/${locale}.json`);
+      if (!response.ok) {
+        throw new Error(`Failed to load i18n data: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      this.i18nData = data;
+      console.log('I18n data loaded successfully');
+      return data;
+    } catch (error) {
+      console.error('Error loading i18n data:', error);
+      // 返回空数据作为fallback
+      return {
+        categories: {},
+        items: {},
+        recipes: {},
+        locations: {}
+      };
+    }
+  }
+
+  // 获取本地化的分类名称
+  getLocalizedCategoryName(categoryId: string): string {
+    if (!this.i18nData) {
+      return categoryId;
+    }
+    return this.i18nData.categories[categoryId] || categoryId;
+  }
+
+  // 获取本地化的物品名称
+  getLocalizedItemName(itemId: string): string {
+    if (!this.i18nData) {
+      return itemId;
+    }
+    return this.i18nData.items[itemId] || itemId;
+  }
+
+  // 获取本地化的配方名称
+  getLocalizedRecipeName(recipeId: string): string {
+    if (!this.i18nData) {
+      return recipeId;
+    }
+    return this.i18nData.recipes[recipeId] || recipeId;
+  }
+
+  // 获取本地化的位置名称
+  getLocalizedLocationName(locationId: string): string {
+    if (!this.i18nData) {
+      return locationId;
+    }
+    return this.i18nData.locations[locationId] || locationId;
   }
 
   // 获取所有物品
@@ -109,23 +178,12 @@ class DataService {
     return this.gameData.recipes.find(recipe => recipe.id === recipeId);
   }
 
-  // 获取所有分类（按推荐顺序排列）
+  // 获取所有分类（按原始数据顺序）
   getAllCategories(): Category[] {
     if (!this.gameData) return [];
     
-    // 按照游戏逻辑进程重新排序分类
-    const categoryOrder = [
-      'intermediate-products', // 中间产品 - 游戏基础
-      'production',           // 生产设施 - 制造核心  
-      'logistics',           // 物流基础设施 - 运输系统
-      'combat',              // 战斗防御 - 军事系统
-      'fluids',              // 流体 - 液体处理
-      'technology'           // 科技 - 研究系统
-    ];
-    
-    const allCategories = this.gameData.categories;
-    const categoryMap = new Map(allCategories.map(cat => [cat.id, cat]));
-    return categoryOrder.map(id => categoryMap.get(id)!).filter(Boolean);
+    // 直接返回原始数据中的分类顺序
+    return this.gameData.categories || [];
   }
 
   // 获取分类
