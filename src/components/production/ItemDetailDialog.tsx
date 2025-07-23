@@ -29,6 +29,97 @@ interface ItemDetailDialogProps {
   onClose: () => void;
 }
 
+// 配方材料组件
+const RecipeMaterials: React.FC<{
+  recipe: Recipe;
+  getInventoryItem: (id: string) => any;
+  dataService: DataService;
+}> = ({ recipe, getInventoryItem, dataService }) => (
+  <>
+    <Typography variant="caption" color="text.secondary">
+      需要材料:
+    </Typography>
+    <Box display="flex" flexWrap="wrap" gap={1} mt={0.5}>
+      {Object.entries(recipe.in).map(([itemId, required]) => {
+        const available = getInventoryItem(itemId).currentAmount;
+        const hasEnough = available >= required;
+        return (
+          <Box key={itemId} display="flex" alignItems="center" gap={0.5}>
+            <FactorioIcon itemId={itemId} size={20} />
+            <Typography 
+              variant="body2" 
+              color={hasEnough ? "text.primary" : "error.main"}
+            >
+              {dataService.getLocalizedItemName(itemId)} x{required}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              ({available})
+            </Typography>
+          </Box>
+        );
+      })}
+    </Box>
+  </>
+);
+
+// 配方产出组件
+const RecipeOutput: React.FC<{
+  recipe: Recipe;
+  itemId: string;
+  dataService: DataService;
+}> = ({ recipe, itemId, dataService }) => (
+  <>
+    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+      输出产品:
+    </Typography>
+    <Box display="flex" alignItems="center" gap={1} mt={0.5}>
+      <FactorioIcon itemId={itemId} size={24} />
+      <Typography variant="body2">
+        {dataService.getLocalizedItemName(itemId)} x{recipe.out[itemId] || 1}
+      </Typography>
+    </Box>
+  </>
+);
+
+// 制作按钮组件
+const CraftButtons: React.FC<{
+  onCraft: (quantity: number) => void;
+  disabled?: boolean;
+  variant?: 'contained' | 'outlined';
+  isMobile: boolean;
+}> = ({ onCraft, disabled = false, variant = 'contained', isMobile }) => (
+  <Box mt={2} display="flex" gap={1} flexWrap="wrap">
+    <Button
+      size={isMobile ? "medium" : "small"}
+      variant={variant}
+      startIcon={<AddIcon />}
+      onClick={() => onCraft(1)}
+      disabled={disabled}
+      sx={{ 
+        fontSize: isMobile ? '0.8rem' : '0.875rem',
+        minWidth: 'auto',
+        px: isMobile ? 1 : 1.5
+      }}
+    >
+      x1
+    </Button>
+    <Button
+      size={isMobile ? "medium" : "small"}
+      variant={variant}
+      startIcon={<AddIcon />}
+      onClick={() => onCraft(5)}
+      disabled={disabled}
+      sx={{ 
+        fontSize: isMobile ? '0.8rem' : '0.875rem',
+        minWidth: 'auto',
+        px: isMobile ? 1 : 1.5
+      }}
+    >
+      x5
+    </Button>
+  </Box>
+);
+
 const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
   item,
   open,
@@ -44,6 +135,7 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
   const { getInventoryItem, addCraftingTask } = useGameStore();
   const isMobile = useIsMobile();
   const dataService = DataService.getInstance();
+  const validator = ManualCraftingValidator.getInstance();
 
   const inventoryItem = getInventoryItem(item.id);
 
@@ -185,6 +277,226 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
     return dataService.getLocalizedItemName(itemId);
   };
 
+  // 渲染手动合成配方部分
+  const renderManualCraftingSection = () => {
+    const itemRecipes = dataService.getRecipesForItem(item.id);
+    
+    // 如果物品没有配方（原材料），显示无需材料
+    if (itemRecipes.length === 0) {
+      return (
+        <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+            <Typography variant="body2" fontWeight="bold" color="primary.main">
+              手动合成
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              立即完成
+            </Typography>
+          </Box>
+
+          <Typography variant="caption" color="text.secondary">
+            需要材料:
+          </Typography>
+          <Box display="flex" alignItems="center" gap={1} mt={0.5}>
+            <Typography variant="body2" color="text.secondary">
+              无需材料
+            </Typography>
+          </Box>
+
+          <RecipeOutput recipe={{ out: { [item.id]: 1 } } as Recipe} itemId={item.id} dataService={dataService} />
+          
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+            制作时间: 0秒
+          </Typography>
+
+          <CraftButtons onCraft={handleManualCraft} isMobile={isMobile} />
+        </Box>
+      );
+    }
+    
+    // 使用验证器检查哪些配方可以手动制作
+    const manualCraftableRecipes = itemRecipes.filter(recipe => {
+      const validation = validator.validateRecipe(recipe);
+      return validation.canCraftManually;
+    });
+
+    // 检查是否有需要特定生产者的配方
+    const restrictedRecipes = itemRecipes.filter(recipe => {
+      const validation = validator.validateRecipe(recipe);
+      return !validation.canCraftManually && validation.category === 'restricted';
+    });
+
+    // 如果有可手动制作的配方，显示第一个
+    if (manualCraftableRecipes.length > 0) {
+      const recipe = manualCraftableRecipes[0];
+      const canCraft = Object.entries(recipe.in).every(([itemId, required]) => {
+        const available = getInventoryItem(itemId).currentAmount;
+        return available >= required;
+      });
+
+      return (
+        <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+            <Typography variant="body2" fontWeight="bold" color="primary.main">
+              手动合成
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {recipe.time}秒
+            </Typography>
+          </Box>
+
+          <RecipeMaterials recipe={recipe} getInventoryItem={getInventoryItem} dataService={dataService} />
+          <RecipeOutput recipe={recipe} itemId={item.id} dataService={dataService} />
+          
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+            制作时间: {recipe.time}秒
+          </Typography>
+
+          <CraftButtons onCraft={handleManualCraft} disabled={!canCraft} isMobile={isMobile} />
+        </Box>
+      );
+    }
+
+    // 如果没有可手动制作的配方，但有需要特定生产者的配方，显示提示
+    if (restrictedRecipes.length > 0) {
+      const recipe = restrictedRecipes[0];
+      const validation = validator.validateRecipe(recipe);
+      
+      return (
+        <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+            <Typography variant="body2" fontWeight="bold" color="warning.main">
+              需要生产设备
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {recipe.time}秒
+            </Typography>
+          </Box>
+
+          <Alert severity="info" sx={{ mb: 2 }}>
+            <Typography variant="body2">
+              {validation.reason}
+            </Typography>
+            {recipe.producers && recipe.producers.length > 0 && (
+              <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
+                需要设备: {recipe.producers.join(', ')}
+              </Typography>
+            )}
+          </Alert>
+
+          <RecipeMaterials recipe={recipe} getInventoryItem={getInventoryItem} dataService={dataService} />
+          <RecipeOutput recipe={recipe} itemId={item.id} dataService={dataService} />
+          
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+            制作时间: {recipe.time}秒
+          </Typography>
+
+          <Box mt={2}>
+            <Typography variant="body2" color="text.secondary">
+              请在设施模块中配置相应的生产设备来制作此物品。
+            </Typography>
+          </Box>
+        </Box>
+      );
+    }
+
+    // 如果没有任何配方，显示默认信息
+    return (
+      <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
+        <Typography variant="body2" color="text.secondary">
+          此物品没有可用的制作配方。
+        </Typography>
+      </Box>
+    );
+  };
+
+  // 渲染生产设备配方部分
+  const renderProducerRecipesSection = () => {
+    const itemRecipes = dataService.getRecipesForItem(item.id);
+    
+    // 获取需要生产设备的配方
+    const producerRecipes = itemRecipes.filter(recipe => {
+      const validation = validator.validateRecipe(recipe);
+      return !validation.canCraftManually && validation.category === 'restricted';
+    });
+
+    // 检查producer解锁状态
+    const isProducerUnlocked = (recipe: Recipe) => {
+      if (!recipe.producers || recipe.producers.length === 0) return true;
+      return recipe.producers.some((pid: string) => dataService.isItemUnlocked(pid));
+    };
+
+    // 过滤出已解锁的producer配方
+    const unlockedProducerRecipes = producerRecipes.filter(isProducerUnlocked);
+
+    if (unlockedProducerRecipes.length === 0) {
+      return null; // 没有解锁的producer配方，不显示此区域
+    }
+
+    return (
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="subtitle2" gutterBottom color="secondary.main">
+          生产设备配方
+        </Typography>
+        
+        {unlockedProducerRecipes.map((recipe) => {
+          const canCraft = Object.entries(recipe.in).every(([itemId, required]) => {
+            const available = getInventoryItem(itemId).currentAmount;
+            return available >= required;
+          });
+
+          return (
+            <Box key={recipe.id} sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                <Typography variant="body2" fontWeight="bold" color="secondary.main">
+                  {dataService.getLocalizedRecipeName(recipe.id)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {recipe.time}秒
+                </Typography>
+              </Box>
+
+              {/* 生产设备信息 */}
+              {recipe.producers && recipe.producers.length > 0 && (
+                <Box sx={{ mb: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    生产设备:
+                  </Typography>
+                  <Box display="flex" flexWrap="wrap" gap={1} mt={0.5}>
+                    {recipe.producers.map((producerId) => (
+                      <Chip
+                        key={producerId}
+                        icon={<FactorioIcon itemId={producerId} size={16} />}
+                        label={dataService.getLocalizedItemName(producerId)}
+                        size="small"
+                        color="secondary"
+                        variant="outlined"
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              <RecipeMaterials recipe={recipe} getInventoryItem={getInventoryItem} dataService={dataService} />
+              <RecipeOutput recipe={recipe} itemId={item.id} dataService={dataService} />
+              
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                制作时间: {recipe.time}秒
+              </Typography>
+
+              <CraftButtons 
+                onCraft={(quantity) => handleCraft(recipe, quantity)} 
+                disabled={!canCraft} 
+                variant="outlined"
+                isMobile={isMobile} 
+              />
+            </Box>
+          );
+        })}
+      </Box>
+    );
+  };
+
   return (
     <Dialog
       open={open}
@@ -282,508 +594,12 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
             </Typography>
             
             {/* 手动合成配方 */}
-            {(() => {
-              const itemRecipes = dataService.getRecipesForItem(item.id);
-              const validator = ManualCraftingValidator.getInstance();
-              
-              // 如果物品没有配方（原材料），显示无需材料
-              if (itemRecipes.length === 0) {
-                return (
-                  <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                      <Typography variant="body2" fontWeight="bold" color="primary.main">
-                        手动合成
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        立即完成
-                      </Typography>
-                    </Box>
-
-                    {/* 输入材料 */}
-                    <Typography variant="caption" color="text.secondary">
-                      需要材料:
-                    </Typography>
-                    <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-                      <Typography variant="body2" color="text.secondary">
-                        无需材料
-                      </Typography>
-                    </Box>
-
-                    {/* 输出产品 */}
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                      输出产品:
-                    </Typography>
-                    <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-                      <FactorioIcon itemId={item.id} size={24} />
-                      <Typography variant="body2">
-                        {dataService.getLocalizedItemName(item.id)} x1
-                      </Typography>
-                    </Box>
-
-                    {/* 制作时间 */}
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                      制作时间: 0秒
-                    </Typography>
-
-                    {/* 制作按钮 */}
-                    <Box mt={2} display="flex" gap={1} flexWrap="wrap">
-                      <Button
-                        size={isMobile ? "medium" : "small"}
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => handleManualCraft(1)}
-                        sx={{ 
-                          fontSize: isMobile ? '0.8rem' : '0.875rem',
-                          minWidth: 'auto',
-                          px: isMobile ? 1 : 1.5
-                        }}
-                      >
-                        x1
-                      </Button>
-                      <Button
-                        size={isMobile ? "medium" : "small"}
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => handleManualCraft(5)}
-                        sx={{ 
-                          fontSize: isMobile ? '0.8rem' : '0.875rem',
-                          minWidth: 'auto',
-                          px: isMobile ? 1 : 1.5
-                        }}
-                      >
-                        x5
-                      </Button>
-                    </Box>
-                  </Box>
-                );
-              }
-              
-              // 使用验证器检查哪些配方可以手动制作
-              const manualCraftableRecipes = itemRecipes.filter(recipe => {
-                const validation = validator.validateRecipe(recipe);
-                return validation.canCraftManually;
-              });
-
-              // 检查是否有需要特定生产者的配方
-              const restrictedRecipes = itemRecipes.filter(recipe => {
-                const validation = validator.validateRecipe(recipe);
-                return !validation.canCraftManually && validation.category === 'restricted';
-              });
-
-              // 如果有可手动制作的配方，显示第一个
-              if (manualCraftableRecipes.length > 0) {
-                const recipe = manualCraftableRecipes[0];
-                const canCraft = Object.entries(recipe.in).every(([itemId, required]) => {
-                  const available = getInventoryItem(itemId).currentAmount;
-                  return available >= required;
-                });
-
-                return (
-                  <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                      <Typography variant="body2" fontWeight="bold" color="primary.main">
-                        手动合成
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {recipe.time}秒
-                      </Typography>
-                    </Box>
-
-                    {/* 输入材料 */}
-                    <Typography variant="caption" color="text.secondary">
-                      需要材料:
-                    </Typography>
-                    <Box display="flex" flexWrap="wrap" gap={1} mt={0.5}>
-                      {Object.entries(recipe.in).map(([itemId, required]) => {
-                        const available = getInventoryItem(itemId).currentAmount;
-                        const hasEnough = available >= required;
-                        return (
-                          <Box key={itemId} display="flex" alignItems="center" gap={0.5}>
-                            <FactorioIcon itemId={itemId} size={20} />
-                            <Typography 
-                              variant="body2" 
-                              color={hasEnough ? "text.primary" : "error.main"}
-                            >
-                              {dataService.getLocalizedItemName(itemId)} x{required}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              ({available})
-                            </Typography>
-                          </Box>
-                        );
-                      })}
-                    </Box>
-
-                    {/* 输出产品 */}
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                      输出产品:
-                    </Typography>
-                    <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-                      <FactorioIcon itemId={item.id} size={24} />
-                      <Typography variant="body2">
-                        {dataService.getLocalizedItemName(item.id)} x{recipe.out[item.id] || 1}
-                      </Typography>
-                    </Box>
-
-                    {/* 制作时间 */}
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                      制作时间: {recipe.time}秒
-                    </Typography>
-
-                    {/* 制作按钮 */}
-                    <Box mt={2} display="flex" gap={1} flexWrap="wrap">
-                      <Button
-                        size={isMobile ? "medium" : "small"}
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => handleManualCraft(1)}
-                        disabled={!canCraft}
-                        sx={{ 
-                          fontSize: isMobile ? '0.8rem' : '0.875rem',
-                          minWidth: 'auto',
-                          px: isMobile ? 1 : 1.5
-                        }}
-                      >
-                        x1
-                      </Button>
-                      <Button
-                        size={isMobile ? "medium" : "small"}
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => handleManualCraft(5)}
-                        disabled={!canCraft}
-                        sx={{ 
-                          fontSize: isMobile ? '0.8rem' : '0.875rem',
-                          minWidth: 'auto',
-                          px: isMobile ? 1 : 1.5
-                        }}
-                      >
-                        x5
-                      </Button>
-                    </Box>
-                  </Box>
-                );
-              }
-
-              // 如果没有可手动制作的配方，但有需要特定生产者的配方，显示提示
-              if (restrictedRecipes.length > 0) {
-                const recipe = restrictedRecipes[0];
-                const validation = validator.validateRecipe(recipe);
-                
-                return (
-                  <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                      <Typography variant="body2" fontWeight="bold" color="warning.main">
-                        需要生产设备
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {recipe.time}秒
-                      </Typography>
-                    </Box>
-
-                    <Alert severity="info" sx={{ mb: 2 }}>
-                      <Typography variant="body2">
-                        {validation.reason}
-                      </Typography>
-                      {recipe.producers && recipe.producers.length > 0 && (
-                        <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
-                          需要设备: {recipe.producers.join(', ')}
-                        </Typography>
-                      )}
-                    </Alert>
-
-                    {/* 输入材料 */}
-                    <Typography variant="caption" color="text.secondary">
-                      需要材料:
-                    </Typography>
-                    <Box display="flex" flexWrap="wrap" gap={1} mt={0.5}>
-                      {Object.entries(recipe.in).map(([itemId, required]) => {
-                        const available = getInventoryItem(itemId).currentAmount;
-                        const hasEnough = available >= required;
-                        return (
-                          <Box key={itemId} display="flex" alignItems="center" gap={0.5}>
-                            <FactorioIcon itemId={itemId} size={20} />
-                            <Typography 
-                              variant="body2" 
-                              color={hasEnough ? "text.primary" : "error.main"}
-                            >
-                              {dataService.getLocalizedItemName(itemId)} x{required}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              ({available})
-                            </Typography>
-                          </Box>
-                        );
-                      })}
-                    </Box>
-
-                    {/* 输出产品 */}
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                      输出产品:
-                    </Typography>
-                    <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-                      <FactorioIcon itemId={item.id} size={24} />
-                      <Typography variant="body2">
-                        {dataService.getLocalizedItemName(item.id)} x{recipe.out[item.id] || 1}
-                      </Typography>
-                    </Box>
-
-                    {/* 制作时间 */}
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                      制作时间: {recipe.time}秒
-                    </Typography>
-
-                    {/* 提示：需要在设施模块中生产 */}
-                    <Box mt={2}>
-                      <Typography variant="body2" color="text.secondary">
-                        请在设施模块中配置相应的生产设备来制作此物品。
-                      </Typography>
-                    </Box>
-                  </Box>
-                );
-              }
-
-              // 如果没有任何配方，显示默认信息
-              return (
-                <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
-                  <Typography variant="body2" color="text.secondary">
-                    此物品没有可用的制作配方。
-                  </Typography>
-                </Box>
-              );
-            })()}
+            {renderManualCraftingSection()}
             
             {/* 生产设备配方 */}
-            {(() => {
-              const itemRecipes = dataService.getRecipesForItem(item.id);
-              const validator = ManualCraftingValidator.getInstance();
-              
-              // 获取需要生产设备的配方
-              const producerRecipes = itemRecipes.filter(recipe => {
-                const validation = validator.validateRecipe(recipe);
-                return !validation.canCraftManually && validation.category === 'restricted';
-              });
+            {renderProducerRecipesSection()}
 
-              // 检查producer解锁状态
-              const isProducerUnlocked = (recipe: Recipe) => {
-                if (!recipe.producers || recipe.producers.length === 0) return true;
-                return recipe.producers.some((pid: string) => dataService.isItemUnlocked(pid));
-              };
-
-              // 过滤出已解锁的producer配方
-              const unlockedProducerRecipes = producerRecipes.filter(isProducerUnlocked);
-
-              if (unlockedProducerRecipes.length === 0) {
-                return null; // 没有解锁的producer配方，不显示此区域
-              }
-
-              return (
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" gutterBottom color="secondary.main">
-                    生产设备配方
-                  </Typography>
-                  
-                  {unlockedProducerRecipes.map((recipe) => {
-                    const canCraft = Object.entries(recipe.in).every(([itemId, required]) => {
-                      const available = getInventoryItem(itemId).currentAmount;
-                      return available >= required;
-                    });
-
-                    return (
-                      <Box key={recipe.id} sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
-                        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                          <Typography variant="body2" fontWeight="bold" color="secondary.main">
-                            {dataService.getLocalizedRecipeName(recipe.id)}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {recipe.time}秒
-                          </Typography>
-                        </Box>
-
-                        {/* 生产设备信息 */}
-                        {recipe.producers && recipe.producers.length > 0 && (
-                          <Box sx={{ mb: 1 }}>
-                            <Typography variant="caption" color="text.secondary">
-                              生产设备:
-                            </Typography>
-                            <Box display="flex" flexWrap="wrap" gap={1} mt={0.5}>
-                              {recipe.producers.map((producerId) => (
-                                <Chip
-                                  key={producerId}
-                                  icon={<FactorioIcon itemId={producerId} size={16} />}
-                                  label={dataService.getLocalizedItemName(producerId)}
-                                  size="small"
-                                  color="secondary"
-                                  variant="outlined"
-                                />
-                              ))}
-                            </Box>
-                          </Box>
-                        )}
-
-                        {/* 输入材料 */}
-                        <Typography variant="caption" color="text.secondary">
-                          需要材料:
-                        </Typography>
-                        <Box display="flex" flexWrap="wrap" gap={1} mt={0.5}>
-                          {Object.entries(recipe.in).map(([itemId, required]) => {
-                            const available = getInventoryItem(itemId).currentAmount;
-                            const hasEnough = available >= required;
-                            return (
-                              <Box key={itemId} display="flex" alignItems="center" gap={0.5}>
-                                <FactorioIcon itemId={itemId} size={20} />
-                                <Typography 
-                                  variant="body2" 
-                                  color={hasEnough ? "text.primary" : "error.main"}
-                                >
-                                  {dataService.getLocalizedItemName(itemId)} x{required}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  ({available})
-                                </Typography>
-                              </Box>
-                            );
-                          })}
-                        </Box>
-
-                        {/* 输出产品 */}
-                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                          输出产品:
-                        </Typography>
-                        <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-                          <FactorioIcon itemId={item.id} size={24} />
-                          <Typography variant="body2">
-                            {dataService.getLocalizedItemName(item.id)} x{recipe.out[item.id] || 1}
-                          </Typography>
-                        </Box>
-
-                        {/* 制作时间 */}
-                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                          制作时间: {recipe.time}秒
-                        </Typography>
-
-                        {/* 制作按钮 */}
-                        <Box mt={2} display="flex" gap={1} flexWrap="wrap">
-                          <Button
-                            size={isMobile ? "medium" : "small"}
-                            variant="outlined"
-                            startIcon={<AddIcon />}
-                            onClick={() => handleCraft(recipe, 1)}
-                            disabled={!canCraft}
-                            sx={{ 
-                              fontSize: isMobile ? '0.8rem' : '0.875rem',
-                              minWidth: 'auto',
-                              px: isMobile ? 1 : 1.5
-                            }}
-                          >
-                            x1
-                          </Button>
-                          <Button
-                            size={isMobile ? "medium" : "small"}
-                            variant="outlined"
-                            startIcon={<AddIcon />}
-                            onClick={() => handleCraft(recipe, 5)}
-                            disabled={!canCraft}
-                            sx={{ 
-                              fontSize: isMobile ? '0.8rem' : '0.875rem',
-                              minWidth: 'auto',
-                              px: isMobile ? 1 : 1.5
-                            }}
-                          >
-                            x5
-                          </Button>
-                        </Box>
-                      </Box>
-                    );
-                  })}
-                </Box>
-              );
-            })()}
-            
-            {/* 其他配方 */}
-            {recipes.map((recipe) => (
-              <Box key={recipe.id} sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                  <Typography variant="body2" fontWeight="bold">
-                    {dataService.getLocalizedRecipeName(recipe.id)}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {formatTime(recipe.time)}
-                  </Typography>
-                </Box>
-
-                {/* 输入材料 */}
-                <Typography variant="caption" color="text.secondary">
-                  需要材料:
-                </Typography>
-                <Box display="flex" flexWrap="wrap" gap={1} mb={1}>
-                  {Object.entries(recipe.in).map(([itemId, quantity]) => {
-                    const available = getInventoryItem(itemId).currentAmount;
-                    const sufficient = available >= quantity;
-                    
-                    return (
-                      <Chip
-                        key={itemId}
-                        icon={<FactorioIcon itemId={itemId} size={16} />}
-                        label={`${getLocalizedItemName(itemId)} x${quantity}`}
-                        size="small"
-                        color={sufficient ? 'default' : 'error'}
-                        variant={sufficient ? 'filled' : 'outlined'}
-                      />
-                    );
-                  })}
-                </Box>
-
-                {/* 输出产品 */}
-                <Typography variant="caption" color="text.secondary">
-                  产出:
-                </Typography>
-                <Box display="flex" flexWrap="wrap" gap={1} mb={1}>
-                  {Object.entries(recipe.out).map(([itemId, quantity]) => {
-                    return (
-                      <Chip
-                        key={itemId}
-                        icon={<FactorioIcon itemId={itemId} size={16} />}
-                        label={`${getLocalizedItemName(itemId)} x${quantity}`}
-                        size="small"
-                        color="primary"
-                        variant="filled"
-                      />
-                    );
-                  })}
-                </Box>
-
-                {/* 制作按钮 */}
-                <Box mt={2} display="flex" gap={1} flexWrap="wrap">
-                  <Button
-                    size={isMobile ? "medium" : "small"}
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => handleCraft(recipe, 1)}
-                    sx={{ 
-                      fontSize: isMobile ? '0.8rem' : '0.875rem',
-                      minWidth: 'auto',
-                      px: isMobile ? 1 : 1.5
-                    }}
-                  >
-                    x1
-                  </Button>
-                  <Button
-                    size={isMobile ? "medium" : "small"}
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => handleCraft(recipe, 5)}
-                    sx={{ 
-                      fontSize: isMobile ? '0.8rem' : '0.875rem',
-                      minWidth: 'auto',
-                      px: isMobile ? 1 : 1.5
-                    }}
-                  >
-                    x5
-                  </Button>
-                </Box>
-              </Box>
-            ))}
+            {/* 其他配方 - 这部分已被上面的两个函数覆盖，可以删除或保留作为备份 */}
           </CardContent>
         </Card>
 
