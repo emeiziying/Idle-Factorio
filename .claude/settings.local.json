@@ -11,7 +11,23 @@
       "mcp__serena__write_memory",
       "Bash(find:*)",
       "Bash(mkdir:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(npx create-react-app:*)",
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(rmdir:*)",
+      "Bash(cp:*)",
+      "Bash(npm run dev:*)",
+      "Bash(pkill:*)",
+      "Bash(rm:*)",
+      "Bash(curl:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls:*)",
+      "WebFetch(domain:mui.com)",
+      "WebFetch(domain:wiki.factorio.com)",
+      "Bash(python3:*)",
+      "Bash(npm start)",
+      "Bash(pnpm dev:*)"
     ]
   },
   "enabledMcpjsonServers": [
