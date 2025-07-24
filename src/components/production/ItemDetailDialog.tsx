@@ -22,6 +22,7 @@ import useGameStore from '../../store/gameStore';
 import FactorioIcon from '../common/FactorioIcon';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import ManualCraftingValidator from '../../utils/manualCraftingValidator';
+import { relaxedManualCraftingConfig } from '../../config/manualCraftingConfig';
 
 interface ItemDetailDialogProps {
   item: Item;
@@ -136,6 +137,11 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
   const isMobile = useIsMobile();
   const dataService = DataService.getInstance();
   const validator = ManualCraftingValidator.getInstance();
+  
+  // 使用宽松配置以允许更多物品手动制作
+  useEffect(() => {
+    validator.useRelaxedConfig();
+  }, []);
 
   const inventoryItem = getInventoryItem(item.id);
 
