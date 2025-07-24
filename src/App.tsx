@@ -29,6 +29,7 @@ import FacilitiesModule from './components/facilities/FacilitiesModule';
 import TechnologyModule from './components/technology/TechnologyModule';
 import ManualCraftingTestPage from './components/test/ManualCraftingTestPage';
 import DataService from './services/DataService';
+import CraftingEngine from './utils/craftingEngine';
 import useGameStore from './store/gameStore';
 
 // 创建移动端优化的深色主题
@@ -173,6 +174,9 @@ const App: React.FC = () => {
         // 加载国际化数据
         await DataService.getInstance().loadI18nData('zh');
         
+        // 启动制作引擎
+        CraftingEngine.getInstance().start();
+        
         console.log('App initialized successfully');
       } catch (error) {
         console.error('Failed to initialize app:', error);
@@ -180,6 +184,11 @@ const App: React.FC = () => {
     };
 
     initializeApp();
+    
+    // 清理函数：组件卸载时停止制作引擎
+    return () => {
+      CraftingEngine.getInstance().stop();
+    };
   }, []);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {

@@ -2,6 +2,7 @@
 
 import type { GameData, Item, Recipe, Category } from '../types/index';
 import UserProgressService from './UserProgressService';
+import { RecipeService } from './RecipeService';
 
 interface I18nData {
   categories: Record<string, string>;
@@ -41,6 +42,13 @@ class DataService {
       
       const data = await response.json();
       this.gameData = data;
+      
+      // 初始化配方服务
+      if (data.recipes) {
+        RecipeService.initializeRecipes(data.recipes);
+        console.log('RecipeService initialized with game data');
+      }
+      
       console.log('Game data loaded successfully');
       return data;
     } catch (error) {
@@ -148,34 +156,139 @@ class DataService {
     return this.gameData.items.find(item => item.id === itemId);
   }
 
-  // 获取所有配方
+  // 获取所有配方（使用RecipeService）
   getAllRecipes(): Recipe[] {
-    if (!this.gameData) return [];
-    return this.gameData.recipes || [];
+    return RecipeService.getAllRecipes();
   }
 
-  // 获取物品的制作配方
+  // 获取物品的制作配方（使用RecipeService）
   getRecipesForItem(itemId: string): Recipe[] {
-    if (!this.gameData || !this.gameData.recipes) return [];
-    
-    return this.gameData.recipes.filter(recipe => 
-      recipe.out && recipe.out[itemId] > 0
-    );
+    return RecipeService.getRecipesThatProduce(itemId);
   }
 
-  // 获取使用该物品的配方
+  // 获取使用该物品的配方（使用RecipeService）
   getRecipesUsingItem(itemId: string): Recipe[] {
-    if (!this.gameData || !this.gameData.recipes) return [];
-    
-    return this.gameData.recipes.filter(recipe => 
-      recipe.in && recipe.in[itemId] > 0
-    );
+    return RecipeService.getRecipesThatUse(itemId);
   }
 
-  // 获取配方
+  // 获取配方（使用RecipeService）
   getRecipe(recipeId: string): Recipe | undefined {
-    if (!this.gameData || !this.gameData.recipes) return undefined;
-    return this.gameData.recipes.find(recipe => recipe.id === recipeId);
+    return RecipeService.getRecipeById(recipeId);
+  }
+
+  // 获取手动采集配方（新增）
+  getManualRecipes(itemId?: string): Recipe[] {
+    return RecipeService.getManualRecipes(itemId);
+  }
+
+  // 获取自动化配方（新增）
+  getAutomatedRecipes(itemId?: string): Recipe[] {
+    return RecipeService.getAutomatedRecipes(itemId);
+  }
+
+  // 获取采矿配方（新增）
+  getMiningRecipes(itemId?: string): Recipe[] {
+    return RecipeService.getMiningRecipes(itemId);
+  }
+
+  // 获取回收配方（新增）
+  getRecyclingRecipes(itemId?: string): Recipe[] {
+    return RecipeService.getRecyclingRecipes(itemId);
+  }
+
+  // 获取最高效率配方（新增）
+  getMostEfficientRecipe(itemId: string): Recipe | undefined {
+    return RecipeService.getMostEfficientRecipe(itemId);
+  }
+
+  // 获取配方统计信息（新增）
+  getRecipeStats(itemId: string) {
+    return RecipeService.getRecipeStats(itemId);
+  }
+
+  // 获取配方效率（新增）
+  getRecipeEfficiency(recipe: Recipe, itemId?: string): number {
+    return RecipeService.getRecipeEfficiency(recipe, itemId);
+  }
+
+  // 搜索配方（新增）
+  searchRecipes(query: string): Recipe[] {
+    return RecipeService.searchRecipes(query);
+  }
+
+  // ========== 新增高级功能 ==========
+
+  /**
+   * 获取配方依赖链
+   * @param recipe 配方
+   * @param maxDepth 最大深度
+   */
+  getRecipeDependencyChain(recipe: Recipe, maxDepth: number = 5) {
+    return RecipeService.getRecipeDependencyChain(recipe, maxDepth);
+  }
+
+  /**
+   * 计算配方总成本
+   * @param recipe 配方
+   * @param includeRawMaterials 是否包含原材料成本
+   */
+  calculateRecipeCost(recipe: Recipe, includeRawMaterials: boolean = true) {
+    return RecipeService.calculateRecipeCost(recipe, includeRawMaterials);
+  }
+
+  /**
+   * 获取最优生产路径
+   * @param targetItemId 目标物品ID
+   * @param quantity 目标数量
+   * @param unlockedItems 已解锁的物品列表
+   */
+  getOptimalProductionPath(
+    targetItemId: string,
+    quantity: number = 1,
+    unlockedItems: string[] = []
+  ) {
+    return RecipeService.getOptimalProductionPath(targetItemId, quantity, unlockedItems);
+  }
+
+  /**
+   * 获取配方推荐
+   * @param itemId 物品ID
+   * @param unlockedItems 已解锁的物品列表
+   * @param preferences 用户偏好
+   */
+  getRecipeRecommendations(
+    itemId: string,
+    unlockedItems: string[] = [],
+    preferences: 'efficiency' | 'speed' | 'cost' | 'manual' = 'efficiency'
+  ): Recipe[] {
+    return RecipeService.getRecipeRecommendations(itemId, unlockedItems, preferences);
+  }
+
+  /**
+   * 获取增强的配方统计信息
+   * @param itemId 物品ID
+   * @param unlockedItems 已解锁的物品列表
+   */
+  getEnhancedRecipeStats(
+    itemId: string,
+    unlockedItems: string[] = []
+  ) {
+    return RecipeService.getEnhancedRecipeStats(itemId, unlockedItems);
+  }
+
+  /**
+   * 获取配方复杂度评分
+   * @param recipe 配方
+   */
+  getRecipeComplexityScore(recipe: Recipe): number {
+    return RecipeService.getRecipeComplexityScore(recipe);
+  }
+
+  /**
+   * 获取配方分类统计
+   */
+  getRecipeCategoryStats(): Map<string, number> {
+    return RecipeService.getRecipeCategoryStats();
   }
 
   // 获取所有分类（按原始数据顺序）
@@ -300,7 +413,11 @@ class DataService {
     return {
       item,
       recipes: this.getRecipesForItem(itemId),
-      usedInRecipes: this.getRecipesUsingItem(itemId)
+      usedInRecipes: this.getRecipesUsingItem(itemId),
+      // 新增：配方统计信息
+      recipeStats: this.getRecipeStats(itemId),
+      // 新增：推荐配方
+      recommendedRecipe: this.getMostEfficientRecipe(itemId)
     };
   }
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Tooltip, Chip } from "@mui/material";
+import { Box, Tooltip } from "@mui/material";
 import type { Item, Recipe } from "../../types/index";
 import type { ManualCraftingValidation } from "../../utils/manualCraftingValidator";
 import {

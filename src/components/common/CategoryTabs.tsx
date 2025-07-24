@@ -121,7 +121,7 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
                 alignItems: 'center',
                 width: '100%' // 确保内容居中
               }}>
-                <FactorioIcon itemId={getCategoryIconId(category)} size={32} />
+                <FactorioIcon itemId={getCategoryIconId(category)} size={32} showBorder={false} />
                 <span style={{ 
                   fontSize: 12, 
                   marginTop: 2,

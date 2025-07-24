@@ -2,8 +2,9 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { InventoryItem, CraftingTask } from '../types/index';
+import type { InventoryItem, CraftingTask, Recipe } from '../types/index';
 import type { FacilityInstance } from '../types/facilities';
+import { RecipeService } from '../services/RecipeService';
 
 interface GameState {
   // 库存系统
@@ -20,6 +21,11 @@ interface GameState {
   gameTime: number;
   totalItemsProduced: number;
   
+  // 配方相关
+  favoriteRecipes: Set<string>;
+  recentRecipes: string[];
+  maxRecentRecipes: number;
+  
   // Actions
   updateInventory: (itemId: string, amount: number) => void;
   getInventoryItem: (itemId: string) => InventoryItem;
@@ -32,6 +38,24 @@ interface GameState {
   removeFacility: (facilityId: string) => void;
   incrementGameTime: (deltaTime: number) => void;
   clearGameData: () => void;
+  
+  // 配方相关 Actions
+  addFavoriteRecipe: (recipeId: string) => void;
+  removeFavoriteRecipe: (recipeId: string) => void;
+  isFavoriteRecipe: (recipeId: string) => boolean;
+  addRecentRecipe: (recipeId: string) => void;
+  getRecentRecipes: () => Recipe[];
+  getFavoriteRecipes: () => Recipe[];
+  getRecommendedRecipes: (itemId: string) => Recipe[];
+  getRecipeStats: (itemId: string) => {
+    totalRecipes: number;
+    manualRecipes: number;
+    automatedRecipes: number;
+    miningRecipes: number;
+    recyclingRecipes: number;
+    mostEfficientRecipe?: Recipe;
+  };
+  searchRecipes: (query: string) => Recipe[];
 }
 
 const useGameStore = create<GameState>()(
@@ -44,6 +68,9 @@ const useGameStore = create<GameState>()(
       facilities: [],
       gameTime: 0,
       totalItemsProduced: 0,
+      favoriteRecipes: new Set(),
+      recentRecipes: [],
+      maxRecentRecipes: 10,
 
       // 库存管理
       updateInventory: (itemId: string, amount: number) => {
@@ -157,6 +184,73 @@ const useGameStore = create<GameState>()(
         }));
       },
 
+      // 配方相关 Actions
+      addFavoriteRecipe: (recipeId: string) => {
+        set((state) => {
+          const newFavorites = new Set(state.favoriteRecipes);
+          newFavorites.add(recipeId);
+          return { favoriteRecipes: newFavorites };
+        });
+      },
+
+      removeFavoriteRecipe: (recipeId: string) => {
+        set((state) => {
+          const newFavorites = new Set(state.favoriteRecipes);
+          newFavorites.delete(recipeId);
+          return { favoriteRecipes: newFavorites };
+        });
+      },
+
+      isFavoriteRecipe: (recipeId: string) => {
+        return get().favoriteRecipes.has(recipeId);
+      },
+
+      addRecentRecipe: (recipeId: string) => {
+        set((state) => {
+          const newRecent = [recipeId, ...state.recentRecipes.filter(id => id !== recipeId)];
+          return {
+            recentRecipes: newRecent.slice(0, state.maxRecentRecipes)
+          };
+        });
+      },
+
+      getRecentRecipes: () => {
+        const recentIds = get().recentRecipes;
+        return recentIds
+          .map(id => RecipeService.getRecipeById(id))
+          .filter((recipe): recipe is Recipe => recipe !== undefined);
+      },
+
+      getFavoriteRecipes: () => {
+        const favoriteIds = Array.from(get().favoriteRecipes);
+        return favoriteIds
+          .map(id => RecipeService.getRecipeById(id))
+          .filter((recipe): recipe is Recipe => recipe !== undefined);
+      },
+
+      getRecommendedRecipes: (itemId: string) => {
+        const recipes = RecipeService.getRecipesThatProduce(itemId);
+        const mostEfficient = RecipeService.getMostEfficientRecipe(itemId);
+        
+        if (mostEfficient) {
+          // 将最高效率配方放在第一位
+          return [
+            mostEfficient,
+            ...recipes.filter(r => r.id !== mostEfficient.id)
+          ];
+        }
+        
+        return recipes;
+      },
+
+      getRecipeStats: (itemId: string) => {
+        return RecipeService.getRecipeStats(itemId);
+      },
+
+      searchRecipes: (query: string) => {
+        return RecipeService.searchRecipes(query);
+      },
+
       clearGameData: () => {
         // 清除localStorage
         localStorage.removeItem('factorio-game-storage');
@@ -168,6 +262,8 @@ const useGameStore = create<GameState>()(
           facilities: [],
           gameTime: 0,
           totalItemsProduced: 0,
+          favoriteRecipes: new Set(),
+          recentRecipes: [],
         }));
         
         console.log('Game data cleared successfully');
@@ -178,12 +274,14 @@ const useGameStore = create<GameState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         ...state,
-        inventory: Array.from(state.inventory.entries())
+        inventory: Array.from(state.inventory.entries()),
+        favoriteRecipes: Array.from(state.favoriteRecipes)
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
-          // 恢复 Map 结构
-          state.inventory = new Map(state.inventory as any);
+          // 恢复 Map 和 Set 结构
+          state.inventory = new Map(state.inventory as unknown as [string, InventoryItem][]);
+          state.favoriteRecipes = new Set(state.favoriteRecipes as unknown as string[]);
         }
       }
     }

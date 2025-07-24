@@ -4,56 +4,46 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is **异星工厂 v2** (Factorio v2) - a React-based idle factory management game inspired by Factorio. This repository currently contains comprehensive planning documentation and game data, but the React application has not been implemented yet.
+This is **异星工厂 v2** (Factorio v2) - a React-based idle factory management game inspired by Factorio. The application is built with modern React architecture and implements core game mechanics for production management.
 
-**Current State**: Documentation and planning phase  
-**Target Implementation**: React + TypeScript + Material-UI + Zustand
+**Current State**: Active development - Core modules implemented  
+**Tech Stack**: React 19.1.0 + TypeScript + Vite + Material-UI + Zustand
 
-## Project Initialization Commands
-
-Since the React application doesn't exist yet, these commands will create the initial project structure:
+## Development Commands
 
 ```bash
-# Create React app with TypeScript
-npx create-react-app idle-factorio --template typescript
+# Start development server (with hot reload)
+npm run dev
 
-# Navigate to project directory
-cd idle-factorio
-
-# Install additional dependencies
-npm install @mui/material @emotion/react @emotion/styled
-npm install @mui/icons-material
-npm install zustand
-
-# Install development dependencies
-npm install --save-dev @types/node
-
-# Start development server (once created)
-npm start
-
-# Build for production
+# Build for production (TypeScript compilation + Vite build)
 npm run build
 
-# Run tests
-npm test
+# Lint code
+npm run lint
+
+# Preview production build
+npm run preview
 ```
 
-## Planned Architecture
+## Current Architecture
 
-### Phase 1 Simplified Design
-According to documentation, Phase 1 will **NOT** implement complex logistics-driven production. Instead:
-- Facilities automatically obtain required materials from inventory
-- Facilities automatically add outputs to inventory  
-- No logistics capacity constraints or bottleneck calculations
+### Implemented Service Layer Pattern
+The application follows a service-oriented architecture with clear separation of concerns:
 
-### Service Layer Pattern (Planned)
-The application will follow a service-based architecture:
+- **DataService**: Singleton pattern for game data loading from `/public/data/spa/`, inventory management
+- **RecipeService**: Static class for recipe analysis, efficiency calculations, and dependency chains
+- **UserProgressService**: Item unlock status management (implemented)
+- **GameStore (Zustand)**: Reactive state management with localStorage persistence
 
-- **DataService**: Game data loading from `/data/1.1/data.json`, inventory management
-- **UserProgressService**: Item unlock status, localStorage persistence  
-- **FacilityService**: Production facility management, automated production
-- **PowerService**: Electricity generation/consumption balance
-- **PersistenceService**: Auto-save every 30 seconds, import/export
+### Phase 1 Implementation Status
+Currently implemented core systems:
+- ✅ Production Module: Item display, crafting queue, inventory management
+- ✅ Game Data Loading: Async data loading with internationalization support
+- ✅ Recipe System: Advanced recipe analysis and optimization
+- ✅ State Persistence: Zustand store with Map/Set serialization
+- 🚧 Facilities Module: Basic structure implemented
+- 📋 Technology Module: Planned
+- 📋 Power Module: Planned
 
 ### Core Game Loop (Phase 1)
 ```typescript
@@ -68,51 +58,132 @@ setInterval(() => {
 }, 1000); // Update every second
 ```
 
-### Planned Component Structure
+### Current Component Structure
 
 ```
 src/
 ├── components/
-│   ├── common/          # Reusable UI components
-│   ├── production/      # Item display, crafting, inventory
-│   ├── facilities/      # Facility management, power dashboard  
-│   └── technology/      # Research tree, science packs
-├── services/            # Business logic services
-├── store/              # Zustand state management
-├── types/              # TypeScript type definitions
-└── utils/              # Helper functions, formatting
+│   ├── common/          # FactorioIcon, CategoryTabs, reusable UI
+│   ├── production/      # ItemDetailDialog, RecipeAnalysis, RecipeInfo
+│   ├── facilities/      # Facility management components (basic)
+│   ├── technology/      # Technology tree (planned)
+│   └── test/           # Development testing components
+├── services/           # DataService, RecipeService, UserProgressService
+├── store/             # gameStore.ts - Zustand state with persistence
+├── types/             # TypeScript interfaces for game data
+├── utils/             # customRecipeUtils, manualCraftingValidator
+├── data/              # customRecipes.ts - Game-specific data
+└── hooks/             # Custom React hooks (if any)
 ```
 
-### Core Module Types (Planned)
+### Implemented Module Architecture
 
-1. **Production Module**: Item categories, crafting queue, inventory management
-2. **Facilities Module**: Building management, power system, automated production
-3. **Technology Module**: Research tree, item/recipe unlocking
-4. **Power Module**: Electricity generation/consumption balance
+1. **Production Module** (✅ Complete): 
+   - Bottom navigation with CategoryTabs
+   - ItemDetailDialog with recipe analysis
+   - Crafting queue management with progress tracking
+   - Inventory system with capacity limits
+
+2. **Recipe System** (✅ Advanced):
+   - Recipe efficiency calculations and optimization
+   - Dependency chain analysis (recursive)
+   - Cost calculations (raw materials + total costs)
+   - Recipe categorization (manual/automated/mining/recycling)
+   - Favorites and recent recipes tracking
+
+3. **State Management** (✅ Sophisticated):
+   - Zustand store with Map/Set support
+   - localStorage persistence with custom serialization
+   - Real-time inventory updates and crafting progress
 
 ## Game Data Structure
 
-### Existing Data Assets
-- **Game Data**: `/data/1.1/data.json` - Complete Factorio 1.1.107 item/recipe data
-- **Icons**: `/data/1.1/icons.webp` - Sprite sheet for game icons
-- **Hash File**: `/data/1.1/hash.json` - Data integrity verification
+### Current Data Assets
+- **Game Data**: `/public/data/spa/` - Processed game data with internationalization
+- **Custom Recipes**: `/src/data/customRecipes.ts` - Game-specific recipe modifications
+- **Icons**: Sprite sheet-based icon system via FactorioIcon component
 
-### Data Loading Pattern
+### Data Loading Architecture
 ```typescript
-// Copy data assets to React public folder
-// Load via fetch from /public/data/1.1/data.json
+// DataService singleton pattern
+const gameData = await DataService.loadGameData();
+
+// Async data loading with error handling
+export class DataService {
+  private static instance: DataService;
+  private static data: GameData | null = null;
+  
+  static async loadGameData(): Promise<GameData> {
+    // Fetch from /public/data/spa/ with language support
+  }
+}
+```
+
+### Current State Management (Zustand)
+```typescript
+interface GameState {
+  // Core systems
+  inventory: Map<string, InventoryItem>;
+  craftingQueue: CraftingTask[];
+  facilities: FacilityInstance[];
+  
+  // Recipe management
+  favoriteRecipes: Set<string>;
+  recentRecipes: string[];
+  
+  // Game progression
+  gameTime: number;
+  totalItemsProduced: number;
+  
+  // Persistence: Auto-save to localStorage with Map/Set serialization support
+}
+
+// Advanced features:
+// - Custom JSON serialization for Map/Set types
+// - Recipe search and filtering
+// - Crafting progress tracking
+// - Inventory capacity management
+```
+
+## UI Architecture & Patterns
+
+### Mobile-First Design
+- **Bottom Navigation**: Primary navigation with 5 modules (Production, Facilities, Technology, etc.)
+- **Material-UI Theme**: Custom dark theme optimized for mobile devices  
+- **Responsive Layout**: Flexible breakpoints and touch-friendly interactions
+
+### Key UI Components
+- **FactorioIcon**: Sprite sheet-based icon rendering system
+- **CategoryTabs**: Tab-based category navigation with dynamic content
+- **ItemDetailDialog**: Modal dialog with recipe analysis and crafting options
+- **RecipeAnalysis**: Advanced recipe efficiency visualization
+- **CraftingQueue**: Real-time progress tracking and task management
+
+### Component Patterns
+- **Service Integration**: Components directly call service methods (DataService, RecipeService)
+- **Zustand Integration**: useGameStore() hook for reactive state access
+- **Async Data Loading**: Suspense-ready data loading with error boundaries
+- **Performance Optimization**: React.memo and efficient re-rendering patterns
+
+## Key Development Patterns
+
+### Service Layer Usage
+```typescript
+// Static service methods for business logic
+const recipes = RecipeService.getRecipesThatProduce(itemId);
+const efficiency = RecipeService.calculateRecipeEfficiency(recipe);
+
+// Singleton data access
 const gameData = await DataService.loadGameData();
 ```
 
-### State Management (Zustand)
+### State Management Pattern
 ```typescript
-interface GameStore {
-  inventory: Map<string, number>;
-  facilities: FacilityInstance[];
-  unlockedItems: Set<string>;
-  powerGrid: PowerState;
-  // Auto-save every 30 seconds to localStorage
-}
+// Zustand store access
+const { inventory, addCraftingTask, updateInventory } = useGameStore();
+
+// Map/Set persistence handled automatically
+const favoriteRecipes = useGameStore(state => state.favoriteRecipes);
 ```
 
 ## Key Documentation Files
@@ -135,34 +206,56 @@ interface GameStore {
 
 ## Development Guidelines
 
-### Phase 1 Constraints
-- **NO** complex logistics calculations - facilities work automatically
-- **NO** input/output capacity limits - direct inventory access
-- **NO** belt/transport systems - items teleport between facilities
-- **Focus on**: Basic UI, crafting, facility management, power balance
+### Current Implementation Focus
+- ✅ **Production System**: Full crafting queue and inventory management
+- ✅ **Recipe System**: Advanced analysis with efficiency calculations
+- ✅ **Data Management**: Async loading with internationalization
+- 🚧 **Facilities System**: Basic structure, needs power integration
+- 📋 **Technology System**: Research tree and unlock progression
+- 📋 **Power System**: Electricity generation/consumption balance
 
-### Working with Game Data
+### Working with Services
+
+#### DataService Usage
 ```typescript
-// Data structure from /data/1.1/data.json
-interface Item {
-  id: string;
-  name: string; 
-  category: string;
-  // Copy data to React public folder for fetch access
+// Always use singleton pattern
+const gameData = await DataService.loadGameData();
+const item = DataService.getItemById(itemId);
+
+// Check data availability before UI rendering
+if (DataService.isDataLoaded()) {
+  // Safe to access game data
 }
 ```
 
-### Item Unlock System
-Items start locked - use `UserProgressService` to manage unlock states:
+#### RecipeService Integration
 ```typescript
-// Only show unlocked items in UI
-const unlockedItems = gameData.items.filter(item => 
-  UserProgressService.isItemUnlocked(item.id)
-);
+// Recipe analysis and optimization
+const recipes = RecipeService.getRecipesThatProduce(itemId);
+const mostEfficient = RecipeService.getMostEfficientRecipe(itemId);
+const stats = RecipeService.getRecipeStats(itemId);
+
+// Cost calculations
+const rawCosts = RecipeService.calculateRawMaterialCosts(recipe);
+const totalCosts = RecipeService.calculateTotalCosts(recipe);
 ```
 
-### Testing Strategy
-- Use Create React App's Jest + React Testing Library setup
-- Focus on service layer unit tests for game logic
-- Component integration tests for user workflows
-- Test unlock progression and power balance edge cases
+### State Management Best Practices
+```typescript
+// Prefer selector patterns for performance
+const inventory = useGameStore(state => state.inventory);
+const craftingQueue = useGameStore(state => state.craftingQueue);
+
+// Use actions for state updates
+const { updateInventory, addCraftingTask } = useGameStore();
+
+// Handle Map/Set types correctly (auto-serialized)
+const favoriteRecipes = useGameStore(state => state.favoriteRecipes); // Set<string>
+```
+
+### Component Development
+- **Mobile-First**: Design for touch interactions and mobile viewports
+- **Service Layer**: Use services for business logic, not components
+- **Performance**: Utilize React.memo for expensive renders
+- **Material-UI**: Follow established theme and component patterns
+- **Error Handling**: Implement proper loading states and error boundaries

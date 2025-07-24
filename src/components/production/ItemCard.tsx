@@ -62,24 +62,23 @@ const ItemCard: React.FC<ItemCardProps> = React.memo(({ item, onClick }) => {
     >
       <Box
         sx={{
-          width: isMobile ? 44 : 52,
-          height: isMobile ? 44 : 52,
           cursor: 'pointer',
           position: 'relative',
-          bgcolor: 'background.paper',
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 1,
           transition: 'all 0.15s ease',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          // 去除移动端点击高亮
+          WebkitTapHighlightColor: 'transparent',
+          WebkitTouchCallout: 'none',
+          WebkitUserSelect: 'none',
+          KhtmlUserSelect: 'none',
+          MozUserSelect: 'none',
+          msUserSelect: 'none',
+          userSelect: 'none',
           '&:hover': {
-            bgcolor: 'action.hover',
-            borderColor: 'primary.main',
             transform: 'scale(1.05)',
             zIndex: 10,
-            boxShadow: '0 2px 8px rgba(33, 150, 243, 0.2)',
           },
           '&:active': {
             transform: 'scale(1.02)',
@@ -88,29 +87,11 @@ const ItemCard: React.FC<ItemCardProps> = React.memo(({ item, onClick }) => {
         onClick={onClick}
       >
       {/* 物品图标 */}
-      <FactorioIcon itemId={item.id} size={isMobile ? 24 : 32} />
-      
-      {/* 库存数量 - 右下角显示 */}
-      {inventoryItem.currentAmount > 0 && (
-        <Typography
-          variant="caption"
-          sx={{
-            position: 'absolute',
-            bottom: 1,
-            right: 2,
-            fontSize: isMobile ? '8px' : '10px',
-            lineHeight: 1,
-            color: '#fff',
-            textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
-            fontWeight: 'bold',
-          }}
-        >
-          {inventoryItem.currentAmount > 999 
-            ? `${Math.floor(inventoryItem.currentAmount / 1000)}k` 
-            : inventoryItem.currentAmount
-          }
-        </Typography>
-      )}
+      <FactorioIcon 
+        itemId={item.id} 
+        size={isMobile ? 40 : 48} 
+        quantity={inventoryItem.currentAmount > 0 ? inventoryItem.currentAmount : undefined}
+      />
 
       {/* 状态指示器 - 左上角小点 */}
       {inventoryItem.status !== 'normal' && (

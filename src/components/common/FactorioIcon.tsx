@@ -8,6 +8,8 @@ interface FactorioIconProps {
   size?: number;
   className?: string;
   alt?: string;
+  quantity?: number;
+  showBorder?: boolean;
 }
 
 const ICON_UNIT = 66; // 单个图标标准尺寸
@@ -17,7 +19,9 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
   itemId, 
   size = 32, 
   className,
-  alt 
+  alt,
+  quantity,
+  showBorder = true
 }) => {
   const [iconData, setIconData] = useState<IconData | null>(null);
   const [spriteSize, setSpriteSize] = useState<{ width: number; height: number } | null>(null);
@@ -55,20 +59,54 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
     };
   };
 
+  const containerSize = showBorder ? size + 10 : size; // 图标尺寸 + 4px padding on each side (if border shown)
+
   if (!iconData || !iconData.position) {
     return (
       <Box
         className={className}
         sx={{
-          width: size,
-          height: size,
-          bgcolor: 'grey.300',
-          borderRadius: 1,
+          width: containerSize,
+          height: containerSize,
+          ...(showBorder && {
+            padding: '4px',
+            backgroundColor: '#999',
+            borderTop: '1px solid #454545',
+            borderLeft: '1px solid #212121',
+            borderRight: '1px solid #212121',
+            borderBottom: '1px solid #191919',
+          }),
           display: 'inline-block',
-          flexShrink: 0
+          flexShrink: 0,
+          position: 'relative'
         }}
         title={alt || itemId}
-      />
+      >
+        <Box
+          sx={{
+            width: size,
+            height: size,
+            bgcolor: 'grey.300',
+          }}
+        />
+        {quantity && quantity > 0 && (
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: showBorder ? '-3px' : '0px',
+              right: showBorder ? '2px' : '0px',
+              color: '#fff',
+              fontSize: 'larger',
+              fontWeight: 'bold',
+              textShadow: '0px 1px 1px #000, 0px -1px 1px #000, 1px 0px 1px #000, -1px 0px 1px #000',
+              lineHeight: 1,
+              pointerEvents: 'none'
+            }}
+          >
+            {quantity > 999 ? `${Math.floor(quantity / 1000)}k` : quantity}
+          </Box>
+        )}
+      </Box>
     );
   }
 
@@ -76,18 +114,49 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
     <Box
       className={className}
       sx={{
-        width: size,
-        height: size,
-        backgroundImage: `url(${SPRITE_URL})`,
-        backgroundRepeat: 'no-repeat',
-        borderRadius: 1,
-        bgcolor: 'background.paper',
+        width: containerSize,
+        height: containerSize,
+        ...(showBorder && {
+          padding: '4px',
+          backgroundColor: '#313131',
+          borderTop: '1px solid #454545',
+          borderLeft: '1px solid #212121',
+          borderRight: '1px solid #212121',
+          borderBottom: '1px solid #191919',
+        }),
         display: 'inline-block',
         flexShrink: 0,
-        ...getSpritePosition(iconData.position)
+        position: 'relative'
       }}
       title={alt || itemId}
-    />
+    >
+      <Box
+        sx={{
+          width: size,
+          height: size,
+          backgroundImage: `url(${SPRITE_URL})`,
+          backgroundRepeat: 'no-repeat',
+          ...getSpritePosition(iconData.position)
+        }}
+      />
+      {quantity && quantity > 0 && (
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: showBorder ? '-3px' : '0px',
+            right: showBorder ? '2px' : '0px',
+            color: '#fff',
+            fontSize: 'larger',
+            fontWeight: 'bold',
+            textShadow: '0px 1px 1px #000, 0px -1px 1px #000, 1px 0px 1px #000, -1px 0px 1px #000',
+            lineHeight: 1,
+            pointerEvents: 'none'
+          }}
+        >
+          {quantity > 999 ? `${Math.floor(quantity / 1000)}k` : quantity}
+        </Box>
+      )}
+    </Box>
   );
 };
 

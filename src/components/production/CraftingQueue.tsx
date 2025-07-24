@@ -4,12 +4,12 @@ import {
   Card,
   CardContent,
   Typography,
-  LinearProgress,
+  CircularProgress,
   IconButton
 } from '@mui/material';
-import useGameStore from '../../store/gameStore';
-import DataService from '../../services/DataService';
 import FactorioIcon from '../common/FactorioIcon';
+import DataService from '../../services/DataService';
+import useGameStore from '../../store/gameStore';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
 const CraftingQueue: React.FC = () => {
@@ -33,7 +33,7 @@ const CraftingQueue: React.FC = () => {
         <Box 
           sx={{ 
             display: 'grid',
-            gridTemplateColumns: `repeat(auto-fill, ${isMobile ? 40 : 55}px)`,
+            gridTemplateColumns: `repeat(auto-fill, ${isMobile ? 64 : 80}px)`,
             gap: isMobile ? 0.8 : 1.2,
             justifyContent: 'start'
           }}
@@ -58,67 +58,64 @@ const CraftingQueue: React.FC = () => {
                 }}
                 onClick={() => removeCraftingTask(task.id)}
               >
-                {/* 物品图标 */}
-                <Box 
-                  sx={{ 
-                    width: isMobile ? 40 : 55,
-                    height: isMobile ? 40 : 55,
+                {/* 环形进度条 */}
+                <Box
+                  sx={{
+                    position: 'relative',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    bgcolor: 'background.paper',
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                    position: 'relative',
-                    overflow: 'hidden'
+                    width: isMobile ? 64 : 80,
+                    height: isMobile ? 64 : 80,
                   }}
                 >
-                  <FactorioIcon itemId={task.itemId} size={isMobile ? 24 : 32} />
+                  {/* 背景圆环 */}
+                  <CircularProgress
+                    variant="determinate"
+                    value={100}
+                    size={isMobile ? 64 : 80}
+                    thickness={2}
+                    sx={{
+                      position: 'absolute',
+                      color: 'rgba(255, 255, 255, 0.1)',
+                      zIndex: 1,
+                    }}
+                  />
                   
-                  {/* 数量显示 */}
-                  {task.quantity > 1 && (
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        position: 'absolute',
-                        top: 1,
-                        right: 1,
-                        fontSize: isMobile ? '6px' : '8px',
-                        lineHeight: 1,
-                        color: '#fff',
-                        textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
-                        fontWeight: 'bold',
-                        bgcolor: 'rgba(0,0,0,0.6)',
-                        borderRadius: '50%',
-                        width: isMobile ? 12 : 14,
-                        height: isMobile ? 12 : 14,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      {task.quantity}
-                    </Typography>
-                  )}
-                </Box>
+                  {/* 进度圆环 */}
+                  <CircularProgress
+                    variant="determinate"
+                    value={task.progress}
+                    size={isMobile ? 64 : 80}
+                    thickness={2}
+                    sx={{
+                      position: 'absolute',
+                      color: 'primary.main',
+                      zIndex: 2,
+                      transform: 'rotate(-90deg) !important',
+                      '& .MuiCircularProgress-circle': {
+                        strokeLinecap: 'round',
+                      },
+                    }}
+                  />
 
-                {/* 进度条 */}
-                <LinearProgress
-                  variant="determinate"
-                  value={task.progress}
-                  sx={{ 
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: 2,
-                    borderRadius: '0 0 4px 4px',
-                    '& .MuiLinearProgress-bar': {
-                      borderRadius: '0 0 4px 4px'
-                    }
-                  }}
-                />
+                  {/* 物品图标 */}
+                  <Box 
+                    sx={{ 
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative',
+                      zIndex: 3,
+                    }}
+                  >
+                    <FactorioIcon 
+                      itemId={task.itemId} 
+                      size={isMobile ? 40 : 48} 
+                      quantity={task.quantity > 1 ? task.quantity : undefined}
+                    />
+                  </Box>
+                </Box>
 
                 {/* 取消按钮 */}
                 <IconButton

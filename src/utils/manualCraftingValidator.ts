@@ -195,9 +195,18 @@ export class ManualCraftingValidator {
       }
     }
 
-    // 3. 检查配方标志
+    // 3. 检查生产者类型 - 基于设备特征判断（优先级高于配方标志）
+    if (recipe.producers && recipe.producers.length > 0) {
+      const producerCheck = this.checkProducerRestrictions(recipe.producers);
+      if (!producerCheck.canCraftManually) {
+        this.recipeValidationCache.set(cacheKey, producerCheck);
+        return producerCheck;
+      }
+    }
+
+    // 4. 检查配方标志
     if (recipe.flags) {
-      // 采矿配方 - 可以手动采集（但已排除流体）
+      // 采矿配方 - 可以手动采集（但已排除流体和特殊设备限制）
       if (recipe.flags.includes('mining')) {
         const result = {
           canCraftManually: true,
@@ -241,17 +250,6 @@ export class ManualCraftingValidator {
         return result;
       }
     }
-
-    // 4. 检查生产者类型 - 基于设备特征判断
-    if (recipe.producers && recipe.producers.length > 0) {
-      const producerCheck = this.checkProducerRestrictions(recipe.producers);
-      if (!producerCheck.canCraftManually) {
-        this.recipeValidationCache.set(cacheKey, producerCheck);
-        return producerCheck;
-      }
-    }
-
-
 
     // 5. 空输入配方 - 通常是采集类配方（流体已被排除）
     if (!recipe.in || Object.keys(recipe.in).length === 0) {
@@ -311,6 +309,15 @@ export class ManualCraftingValidator {
    * @returns 验证结果
    */
   private checkProducerRestrictions(producers: string[]): ManualCraftingValidation {
+    // 大型采矿机专用 - 不能手动采集
+    // 根据Factorio Wiki：钨矿石等只能使用大型采矿机开采
+    if (producers.includes('big-mining-drill') && producers.length === 1) {
+      return {
+        canCraftManually: false,
+        reason: ValidationReason.SPECIAL_EQUIPMENT,
+        category: ValidationCategory.RESTRICTED
+      };
+    }
     // 冶炼设备 - 官方Wiki明确：矿石必须在熔炉中冶炼
     const smeltingProducers = producers.filter(p => 
       p.includes('furnace') || p.includes('foundry')

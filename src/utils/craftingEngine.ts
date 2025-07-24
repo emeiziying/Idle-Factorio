@@ -69,9 +69,11 @@ class CraftingEngine {
       return;
     }
 
-    // 如果任务刚开始，消耗材料
+    // 如果任务刚开始，消耗材料并开始制作
     if (currentTask.status === 'pending') {
       this.consumeMaterials(recipe, 1);
+      // 重新设置开始时间，确保时间计算正确
+      currentTask.startTime = now;
       updateCraftingProgress(currentTask.id, 0);
     }
 
