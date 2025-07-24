@@ -18,11 +18,11 @@ import type { CraftingTask } from '../../types/index';
 
 // Constants
 const QUEUE_CAPACITY = 50;
-const MOBILE_ITEM_SIZE = 48;
-const DESKTOP_ITEM_SIZE = 64;
-const PROGRESS_BAR_HEIGHT = 4;
-const GRID_GAP_MOBILE = 0.8;
-const GRID_GAP_DESKTOP = 1.2;
+const MOBILE_ITEM_SIZE = 36;
+const DESKTOP_ITEM_SIZE = 48;
+const PROGRESS_BAR_HEIGHT = 3;
+const GRID_GAP_MOBILE = 0.5;
+const GRID_GAP_DESKTOP = 0.8;
 
 // Sub-component for individual crafting queue items
 interface CraftingQueueItemProps {
@@ -190,12 +190,17 @@ const CraftingQueue: React.FC = () => {
   }), [isMobile]);
 
   const cardStyles = useMemo(() => ({
-    mb: isMobile ? 1.5 : 2,
-    transition: 'all 0.3s ease'
+    mb: 0,
+    transition: 'all 0.3s ease',
+    boxShadow: 'none',
+    borderTop: '1px solid',
+    borderColor: 'divider',
+    borderRadius: 0
   }), [isMobile]);
 
   const contentStyles = useMemo(() => ({
-    p: isMobile ? 1.5 : 2
+    p: isMobile ? 1 : 1.5,
+    py: 1
   }), [isMobile]);
 
   // Don't show anything when queue is empty
@@ -207,10 +212,10 @@ const CraftingQueue: React.FC = () => {
     <Card sx={cardStyles}>
       <CardContent sx={contentStyles}>
         {/* Header with queue info and clear button */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
           <Typography 
-            variant="h6" 
-            sx={{ fontSize: isMobile ? '1.1rem' : '1.25rem' }}
+            variant="subtitle2" 
+            sx={{ fontSize: isMobile ? '0.875rem' : '0.95rem', fontWeight: 600 }}
           >
             制作队列 ({craftingQueue.length}/{QUEUE_CAPACITY})
           </Typography>
