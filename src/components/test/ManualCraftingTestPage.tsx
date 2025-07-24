@@ -296,7 +296,7 @@ const ManualCraftingTestPage: React.FC = () => {
                       sx={{ 
                         display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fill, minmax(44px, 1fr))',
-                        gap: 0.5
+                        gap: 1
                       }}
                     >
                       {groupedByRow[row].map(itemData => (

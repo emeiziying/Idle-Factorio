@@ -55,7 +55,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
           输出产品:
         </Typography>
         <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-          <FactorioIcon itemId={item.id} size={24} />
+          <FactorioIcon itemId={item.id} size={32} />
           <Typography variant="body2">
             {getLocalizedItemName(item.id)} x1
           </Typography>
@@ -121,7 +121,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
             const hasEnough = available >= required;
             return (
               <Box key={itemId} display="flex" alignItems="center" gap={0.5}>
-                <FactorioIcon itemId={itemId} size={20} />
+                <FactorioIcon itemId={itemId} size={32} />
                 <Typography 
                   variant="body2" 
                   color={hasEnough ? "text.primary" : "error.main"}
@@ -141,7 +141,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
           输出产品:
         </Typography>
         <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-          <FactorioIcon itemId={item.id} size={24} />
+          <FactorioIcon itemId={item.id} size={32} />
           <Typography variant="body2">
             {getLocalizedItemName(item.id)} x{recipe.out[item.id] || 1}
           </Typography>
@@ -218,7 +218,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
           输出产品:
         </Typography>
         <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-          <FactorioIcon itemId={item.id} size={24} />
+          <FactorioIcon itemId={item.id} size={32} />
           <Typography variant="body2">
             {getLocalizedItemName(item.id)} x{recipe.out[item.id] || 1}
           </Typography>

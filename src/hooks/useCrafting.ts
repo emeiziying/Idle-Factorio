@@ -105,7 +105,7 @@ export const useCrafting = () => {
 
     // 添加到制作队列
     const success = addCraftingTask({
-      recipeId: recipe.id,
+      recipeId: `manual_${itemId}`,
       itemId: itemId,
       quantity,
       progress: 0,

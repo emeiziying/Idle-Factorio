@@ -99,7 +99,7 @@ const CategoryItemGrid: React.FC<CategoryItemGridProps> = React.memo(({ category
               sx={{
                 display: 'grid',
                 gridTemplateColumns: `repeat(auto-fill, ${isMobile ? 44 : 52}px)`,
-                gap: 0.5,
+                gap: 1,
                 justifyContent: 'start',
                 width: '100%',
                 px: 1

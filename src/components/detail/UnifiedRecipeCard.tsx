@@ -18,7 +18,6 @@ interface UnifiedRecipeCardProps {
   variant: 'normal' | 'manual' | 'producer';
   title?: string;
   onCraft: (recipe: Recipe, quantity: number) => void;
-  showNoMaterials?: boolean; // 手动合成的无材料情况
   disabled?: boolean;
   cardVariant?: 'contained' | 'outlined';
 }
@@ -28,7 +27,6 @@ const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({
   variant, 
   title, 
   onCraft, 
-  showNoMaterials = false,
   disabled = false,
   cardVariant = 'contained'
 }) => {
@@ -39,28 +37,49 @@ const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({
     return dataService.getLocalizedItemName(itemId);
   };
 
-  // 颜色主题映射
   const getThemeColor = () => {
     switch (variant) {
-      case 'normal':
       case 'manual':
         return 'primary.main';
       case 'producer':
         return 'secondary.main';
       default:
-        return 'primary.main';
+        return 'text.primary';
     }
   };
 
   const themeColor = getThemeColor();
 
-  const canCraft = showNoMaterials || Object.entries(recipe.in).every(([itemId, required]) => {
+  // 检查是否可以制作
+  const canCraft = Object.entries(recipe.in).every(([itemId, required]) => {
     const available = getInventoryItem(itemId).currentAmount;
     return available >= required;
   });
 
   const handleCraft = (quantity: number) => {
     onCraft(recipe, quantity);
+  };
+
+  // 通用的材料/产品渲染函数
+  const renderItems = (items: { [itemId: string]: number }, isInput: boolean = true) => {
+    return Object.entries(items).map(([itemId, quantity], index) => {
+      const available = isInput ? getInventoryItem(itemId).currentAmount : 0;
+      const isShortage = isInput && available < quantity;
+      
+      return (
+        <React.Fragment key={itemId}>
+          <FactorioIcon 
+            itemId={itemId} 
+            size={32} 
+            quantity={quantity}
+            shortage={isShortage}
+          />
+          {index < Object.entries(items).length - 1 && (
+            <AddIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+          )}
+        </React.Fragment>
+      );
+    });
   };
 
   return (
@@ -79,7 +98,7 @@ const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({
             {title || dataService.getLocalizedRecipeName(recipe.id)}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {showNoMaterials ? '立即完成' : `${recipe.time}秒`}
+            {`${recipe.time}秒`}
           </Typography>
         </Box>
 
@@ -88,7 +107,7 @@ const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({
           display="flex" 
           alignItems="center" 
           justifyContent="center" 
-          gap={2}
+          gap={0.25}
           sx={{ 
             mb: 2,
             p: 2,
@@ -99,128 +118,23 @@ const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({
           }}
         >
           {/* 时间图标 */}
-          <Box 
-            sx={{ 
-              position: 'relative',
-              width: 48,
-              height: 48,
-              padding: '4px',
-              backgroundColor: '#999',
-              borderTop: '1px solid #454545',
-              borderLeft: '1px solid #212121',
-              borderRight: '1px solid #212121',
-              borderBottom: '1px solid #191919',
-              borderRadius: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <img 
-              src="/Time.png" 
-              alt="Time" 
-              style={{ 
-                width: '100%', 
-                height: '100%',
-                objectFit: 'contain'
-              }} 
-            />
-            <Typography 
-              variant="caption" 
-              sx={{ 
-                position: 'absolute',
-                bottom: '-3px',
-                right: '2px',
-                color: '#fff',
-                fontSize: 'larger',
-                fontWeight: 'bold',
-                textShadow: '0px 1px 1px #000, 0px -1px 1px #000, 1px 0px 1px #000, -1px 0px 1px #000',
-                lineHeight: 1
-              }}
-            >
-              {showNoMaterials ? '0' : recipe.time}
-            </Typography>
-          </Box>
+          <FactorioIcon 
+            customImage="/Time.png"
+            size={32} 
+            quantity={recipe.time}
+          />
+
+          {/* 加号连接 */}
+          <AddIcon sx={{ color: 'text.secondary', fontSize: 16 }} />
 
           {/* 输入材料 */}
-          <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
-            {showNoMaterials ? (
-              // 无材料情况
-              <Box display="flex" flexDirection="column" alignItems="center" gap={0.5}>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', textAlign: 'center' }}>
-                  无需材料
-                </Typography>
-              </Box>
-            ) : (
-              // 有材料情况
-              Object.entries(recipe.in).map(([itemId, required], index) => {
-                const available = getInventoryItem(itemId).currentAmount;
-                const hasEnough = available >= required;
-                return (
-                  <Box key={itemId} display="flex" flexDirection="column" alignItems="center" gap={0.5} position="relative">
-                    <FactorioIcon itemId={itemId} size={32} />
-                    <Typography 
-                      variant="caption" 
-                      color={hasEnough ? "text.secondary" : "error.main"}
-                      sx={{ 
-                        fontSize: '0.7rem',
-                        position: 'absolute',
-                        bottom: 0,
-                        right: 0,
-                        backgroundColor: 'background.paper',
-                        borderRadius: '50%',
-                        width: 16,
-                        height: 16,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        border: '1px solid',
-                        borderColor: hasEnough ? 'divider' : 'error.main'
-                      }}
-                    >
-                      {required}
-                    </Typography>
-                    {index < Object.entries(recipe.in).length - 1 && (
-                      <AddIcon sx={{ fontSize: 16, color: 'text.secondary', mt: 1 }} />
-                    )}
-                  </Box>
-                );
-              })
-            )}
-          </Box>
+          {renderItems(recipe.in)}
 
           {/* 箭头 */}
-          <ArrowIcon sx={{ color: themeColor, fontSize: 24 }} />
+          <ArrowIcon sx={{ color: themeColor, fontSize: 16 }} />
 
           {/* 输出产品 */}
-          <Box display="flex" alignItems="center" gap={1}>
-            {Object.entries(recipe.out).map(([itemId, quantity]) => (
-              <Box key={itemId} display="flex" flexDirection="column" alignItems="center" gap={0.5} position="relative">
-                <FactorioIcon itemId={itemId} size={36} />
-                <Typography 
-                  variant="caption" 
-                  color={themeColor}
-                  sx={{ 
-                    fontSize: '0.8rem',
-                    position: 'absolute',
-                    bottom: 0,
-                    right: 0,
-                    backgroundColor: 'background.paper',
-                    borderRadius: '50%',
-                    width: 18,
-                    height: 18,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: '1px solid',
-                    borderColor: themeColor
-                  }}
-                >
-                  {quantity}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
+          {renderItems(recipe.out, false)}
         </Box>
 
         {/* 生产者信息 - 移到配方流程下方 */}
@@ -233,7 +147,7 @@ const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({
               {recipe.producers.map((producerId) => (
                 <Chip
                   key={producerId}
-                  icon={<FactorioIcon itemId={producerId} size={16} />}
+                  icon={<FactorioIcon itemId={producerId} size={32} />}
                   label={getLocalizedItemName(producerId)}
                   size="small"
                   color="secondary"

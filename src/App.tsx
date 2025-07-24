@@ -31,6 +31,7 @@ import ManualCraftingTestPage from './components/test/ManualCraftingTestPage';
 import DataService from './services/DataService';
 import CraftingEngine from './utils/craftingEngine';
 import useGameStore from './store/gameStore';
+import { useIsMobile } from './hooks/useIsMobile';
 
 // 创建移动端优化的深色主题
 const theme = createTheme({
@@ -162,6 +163,7 @@ const App: React.FC = () => {
   const [currentModule, setCurrentModule] = useState(0);
   const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const isMobile = useIsMobile();
   const { clearGameData } = useGameStore();
 
   // 初始化游戏数据
@@ -289,13 +291,20 @@ const App: React.FC = () => {
             aria-label="clear-game"
             sx={{
               position: 'fixed',
-              top: '16px',
+              bottom: isMobile ? '68px' : '72px', // 移动端稍微靠近一点
               right: '16px',
               zIndex: 1000,
               bgcolor: 'error.main',
+              width: isMobile ? '44px' : '48px',
+              height: isMobile ? '44px' : '48px',
               '&:hover': {
                 bgcolor: 'error.dark',
+                transform: 'scale(1.1)',
               },
+              '&:active': {
+                transform: 'scale(0.95)',
+              },
+              transition: 'all 0.2s ease',
             }}
             onClick={() => setIsClearDialogOpen(true)}
           >

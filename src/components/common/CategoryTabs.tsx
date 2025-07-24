@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Box, Tabs, Tab } from '@mui/material';
 import FactorioIcon from './FactorioIcon';
 import type { Category } from '../../types/index';
 import { useIsMobile } from '../../hooks/useIsMobile';
-import DataService from '../../services/DataService';
 
 interface CategoryTabsProps {
   categories: Category[];
@@ -17,26 +16,6 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
   onCategoryChange
 }) => {
   const isMobile = useIsMobile();
-  const [i18nLoaded, setI18nLoaded] = useState(false);
-
-  // 检查国际化数据是否已加载
-  useEffect(() => {
-    const checkI18nLoaded = () => {
-      const dataService = DataService.getInstance();
-      try {
-        // 尝试获取一个分类的中文名称来检查是否已加载
-        const testName = dataService.getLocalizedCategoryName('logistics');
-        setI18nLoaded(testName !== 'logistics'); // 如果返回的不是原始ID，说明已加载
-      } catch {
-        setI18nLoaded(false);
-      }
-    };
-
-    checkI18nLoaded();
-    // 定期检查直到加载完成
-    const interval = setInterval(checkI18nLoaded, 100);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleChange = (_event: React.SyntheticEvent, newValue: string) => {
     onCategoryChange(newValue);
@@ -45,14 +24,6 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
   // 分类图标映射 - 根据分类id匹配对应的代表性物品图标
   const getCategoryIconId = (category: Category) => {
     return category.icon || category.id;
-  };
-
-  // 获取分类显示名称
-  const getCategoryDisplayName = (categoryId: string): string => {
-    if (!i18nLoaded) {
-      return categoryId; // 如果国际化未加载，显示原始ID
-    }
-    return DataService.getInstance().getLocalizedCategoryName(categoryId);
   };
 
   return (
@@ -77,14 +48,14 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
         sx={{
           width: '100%', // 确保Tabs占满容器宽度
           '& .MuiTab-root': {
-            minWidth: isMobile ? 60 : 80, // 最小宽度，允许自适应
-            maxWidth: isMobile ? 120 : 150, // 最大宽度，防止过宽
+            minWidth: isMobile ? 50 : 60, // 减小最小宽度，因为去掉了文字
+            maxWidth: isMobile ? 80 : 100, // 减小最大宽度
             flex: '0 0 auto', // 不允许伸缩，保持固定大小
             fontSize: '0.75rem',
             textTransform: 'none',
             fontWeight: 500,
             color: 'text.secondary',
-            padding: isMobile ? '6px 8px' : '8px 12px',
+            padding: isMobile ? '8px 6px' : '12px 8px', // 调整内边距
             border: 'none', // 移除所有边框
             '&.Mui-selected': {
               color: 'primary.main',
@@ -117,22 +88,11 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
             icon={
               <Box sx={{ 
                 display: 'flex', 
-                flexDirection: 'column', 
                 alignItems: 'center',
-                width: '100%' // 确保内容居中
+                justifyContent: 'center',
+                width: '100%'
               }}>
-                <FactorioIcon itemId={getCategoryIconId(category)} size={32} showBorder={false} />
-                <span style={{ 
-                  fontSize: 12, 
-                  marginTop: 2,
-                  textAlign: 'center',
-                  width: '100%',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
-                }}>
-                  {getCategoryDisplayName(category.id)}
-                </span>
+                <FactorioIcon itemId={getCategoryIconId(category)} size={isMobile ? 40 : 48} showBorder={false} />
               </Box>
             }
             value={category.id}

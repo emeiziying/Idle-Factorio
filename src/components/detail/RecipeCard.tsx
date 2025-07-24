@@ -59,7 +59,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
           const hasEnough = available >= required;
           return (
             <Box key={itemId} display="flex" alignItems="center" gap={0.5}>
-              <FactorioIcon itemId={itemId} size={20} />
+              <FactorioIcon itemId={itemId} size={32} />
               <Typography 
                 variant="body2" 
                 color={hasEnough ? "text.primary" : "error.main"}
@@ -81,7 +81,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
       <Box display="flex" alignItems="center" gap={1} mt={0.5}>
         {Object.entries(recipe.out).map(([itemId, quantity]) => (
           <Box key={itemId} display="flex" alignItems="center" gap={0.5}>
-            <FactorioIcon itemId={itemId} size={24} />
+            <FactorioIcon itemId={itemId} size={32} />
             <Typography variant="body2">
               {getLocalizedItemName(itemId)} x{quantity}
             </Typography>

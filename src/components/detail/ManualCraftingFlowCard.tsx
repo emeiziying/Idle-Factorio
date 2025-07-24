@@ -22,30 +22,6 @@ const ManualCraftingFlowCard: React.FC<ManualCraftingFlowCardProps> = ({ item, o
 
   const itemRecipes = dataService.getRecipesForItem(item.id);
   
-  // 如果物品没有配方（原材料），显示无需材料
-  if (itemRecipes.length === 0) {
-    // 创建一个虚拟的配方用于无材料情况
-    const noMaterialRecipe: Recipe = {
-      id: `manual-${item.id}`,
-      name: `手动合成 ${dataService.getLocalizedItemName(item.id)}`,
-      category: 'manual',
-      in: {},
-      out: { [item.id]: 1 },
-      time: 0,
-      producers: []
-    };
-
-    return (
-      <UnifiedRecipeCard
-        recipe={noMaterialRecipe}
-        variant="manual"
-        title="手动合成"
-        onCraft={(_recipe, quantity) => onManualCraft(item.id, quantity)}
-        showNoMaterials={true}
-      />
-    );
-  }
-  
   // 使用验证器检查哪些配方可以手动制作
   const recipeValidations = itemRecipes.map(recipe => ({
     recipe,

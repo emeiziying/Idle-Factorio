@@ -31,7 +31,8 @@
       "mcp__sequential-thinking__sequentialthinking",
       "Bash(npm run build:*)",
       "Bash(node:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npm run lint)"
     ]
   },
   "enabledMcpjsonServers": [

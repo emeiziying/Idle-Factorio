@@ -21,10 +21,10 @@ import { useCrafting } from '../../hooks/useCrafting';
 import ItemDetailHeader from './ItemDetailHeader';
 import InventoryCard from './InventoryCard';
 import ManualCraftingFlowCard from './ManualCraftingFlowCard';
-import ProducerRecipeCard from './ProducerRecipeCard';
 import RecipeFlowCard from './RecipeFlowCard';
 import UsageCard from './UsageCard';
 import RecipeAnalysis from '../production/RecipeAnalysis';
+import ManualCraftingValidator from '../../utils/manualCraftingValidator';
 
 interface ItemDetailDialogProps {
   item: Item;
@@ -43,7 +43,6 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
   const { 
     recipes, 
     usedInRecipes, 
-    producerRecipes 
   } = useItemRecipes(item);
   
   const { handleCraft, handleManualCraft, showMessage, closeMessage } = useCrafting();
@@ -110,25 +109,12 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
                   onManualCraft={handleManualCraft}
                 />
                 
-                {/* 生产设备配方 */}
-                {producerRecipes.length > 0 && (
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" gutterBottom color="secondary.main">
-                      生产设备配方
-                    </Typography>
-                    
-                    {producerRecipes.map((recipe) => (
-                      <ProducerRecipeCard 
-                        key={recipe.id}
-                        recipe={recipe}
-                        onCraft={handleCraft}
-                      />
-                    ))}
-                  </Box>
-                )}
-                
-                {/* 其他配方 */}
-                {recipes.map((recipe) => (
+                {/* 其他配方 - 排除已显示的手动合成配方 */}
+                {recipes.filter(recipe => {
+                  const validator = ManualCraftingValidator.getInstance();
+                  const validation = validator.validateRecipe(recipe);
+                  return !validation.canCraftManually;
+                }).map((recipe) => (
                   <RecipeFlowCard 
                     key={recipe.id}
                     recipe={recipe}

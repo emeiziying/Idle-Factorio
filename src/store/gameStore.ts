@@ -132,9 +132,27 @@ const useGameStore = create<GameState>()(
       },
 
       removeCraftingTask: (taskId: string) => {
-        set((state) => ({
-          craftingQueue: state.craftingQueue.filter(task => task.id !== taskId)
-        }));
+        const state = get();
+        const task = state.craftingQueue.find(t => t.id === taskId);
+        
+        if (task) {
+          // 如果是手动合成任务，不需要归还库存（因为手动合成没有消耗库存）
+          if (!task.recipeId.startsWith('manual_')) {
+            // 获取配方信息并归还库存
+            const recipe = RecipeService.getRecipeById(task.recipeId);
+            if (recipe) {
+              // 归还输入材料
+              Object.entries(recipe.in).forEach(([itemId, required]) => {
+                get().updateInventory(itemId, (required as number) * task.quantity);
+              });
+            }
+          }
+          
+          // 移除任务
+          set((state) => ({
+            craftingQueue: state.craftingQueue.filter(task => task.id !== taskId)
+          }));
+        }
       },
 
       updateCraftingProgress: (taskId: string, progress: number) => {

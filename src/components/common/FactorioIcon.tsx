@@ -4,12 +4,14 @@ import DataService from '../../services/DataService';
 import type { IconData } from '../../types/index';
 
 interface FactorioIconProps {
-  itemId: string;
+  itemId?: string; // 当使用customImage时可选
   size?: number;
   className?: string;
   alt?: string;
   quantity?: number;
   showBorder?: boolean;
+  customImage?: string; // 自定义图片URL
+  shortage?: boolean; // 是否数量不足
 }
 
 const ICON_UNIT = 66; // 单个图标标准尺寸
@@ -21,26 +23,29 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
   className,
   alt,
   quantity,
-  showBorder = true
+  showBorder = true,
+  customImage,
+  shortage
 }) => {
   const [iconData, setIconData] = useState<IconData | null>(null);
   const [spriteSize, setSpriteSize] = useState<{ width: number; height: number } | null>(null);
 
-  // 加载iconData
+  // 加载iconData - 只在没有customImage时加载
   useEffect(() => {
+    if (customImage || !itemId) return;
     const dataService = DataService.getInstance();
     setIconData(dataService.getIconData(itemId));
-  }, [itemId]);
+  }, [itemId, customImage]);
 
-  // 动态获取精灵图尺寸
+  // 动态获取精灵图尺寸 - 只在没有customImage时加载
   useEffect(() => {
-    if (spriteSize) return;
+    if (customImage || spriteSize) return;
     const img = new window.Image();
     img.src = SPRITE_URL;
     img.onload = () => {
       setSpriteSize({ width: img.naturalWidth, height: img.naturalHeight });
     };
-  }, [spriteSize]);
+  }, [spriteSize, customImage]);
 
   // 解析position字段
   const getSpritePosition = (position: string) => {
@@ -59,101 +64,70 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
     };
   };
 
-  const containerSize = showBorder ? size + 10 : size; // 图标尺寸 + 4px padding on each side (if border shown)
+  const containerSize = showBorder ? size + 8 : size; // 图标尺寸 + 4px padding on each side (if border shown)
 
-  if (!iconData || !iconData.position) {
-    return (
-      <Box
-        className={className}
-        sx={{
-          width: containerSize,
-          height: containerSize,
-          ...(showBorder && {
-            padding: '4px',
-            backgroundColor: '#999',
-            borderTop: '1px solid #454545',
-            borderLeft: '1px solid #212121',
-            borderRight: '1px solid #212121',
-            borderBottom: '1px solid #191919',
-          }),
-          display: 'inline-block',
-          flexShrink: 0,
-          position: 'relative'
-        }}
-        title={alt || itemId}
-      >
-        <Box
-          sx={{
-            width: size,
-            height: size,
-            bgcolor: 'grey.300',
-          }}
-        />
-        {quantity && quantity > 0 && (
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: showBorder ? '-3px' : '0px',
-              right: showBorder ? '2px' : '0px',
-              color: '#fff',
-              fontSize: 'larger',
-              fontWeight: 'bold',
-              textShadow: '0px 1px 1px #000, 0px -1px 1px #000, 1px 0px 1px #000, -1px 0px 1px #000',
-              lineHeight: 1,
-              pointerEvents: 'none'
-            }}
-          >
-            {quantity > 999 ? `${Math.floor(quantity / 1000)}k` : quantity}
-          </Box>
-        )}
-      </Box>
-    );
-  }
+  // 公共容器样式
+  const containerStyles = {
+    width: containerSize,
+    height: containerSize,
+    ...(showBorder && {
+      padding: '3px',
+      backgroundColor: shortage ? 'error.main' : (customImage || (iconData?.position) ? '#313131' : '#999'),
+      borderTop: '1px solid #454545',
+      borderLeft: '1px solid #212121',
+      borderRight: '1px solid #212121',
+      borderBottom: '1px solid #191919',
+    }),
+    display: 'inline-block',
+    flexShrink: 0,
+    position: 'relative'
+  };
+
+  // 公共数量显示样式
+  const quantityStyles = {
+    position: 'absolute' as const,
+    bottom:  '0px',
+    right: showBorder ? '2px' : '0px',
+    color: '#fff',
+    fontSize: 'larger',
+    fontWeight: 'bold',
+    textShadow: '0px 1px 1px #000, 0px -1px 1px #000, 1px 0px 1px #000, -1px 0px 1px #000',
+    lineHeight: 1,
+    pointerEvents: 'none' as const
+  };
+
+  // 格式化数量显示
+  const formatQuantity = (qty: number) => {
+    return qty > 999 ? `${Math.floor(qty / 1000)}k` : qty;
+  };
 
   return (
     <Box
       className={className}
-      sx={{
-        width: containerSize,
-        height: containerSize,
-        ...(showBorder && {
-          padding: '4px',
-          backgroundColor: '#313131',
-          borderTop: '1px solid #454545',
-          borderLeft: '1px solid #212121',
-          borderRight: '1px solid #212121',
-          borderBottom: '1px solid #191919',
-        }),
-        display: 'inline-block',
-        flexShrink: 0,
-        position: 'relative'
-      }}
+      sx={containerStyles}
       title={alt || itemId}
     >
       <Box
         sx={{
           width: size,
           height: size,
-          backgroundImage: `url(${SPRITE_URL})`,
-          backgroundRepeat: 'no-repeat',
-          ...getSpritePosition(iconData.position)
+          ...(customImage ? {
+            backgroundImage: `url(${customImage})`,
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center',
+            backgroundSize: 'contain',
+          } : iconData?.position ? {
+            backgroundImage: `url(${SPRITE_URL})`,
+            backgroundRepeat: 'no-repeat',
+            ...getSpritePosition(iconData.position)
+          } : {
+            bgcolor: 'grey.300',
+          })
         }}
       />
       {quantity && quantity > 0 && (
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: showBorder ? '-3px' : '0px',
-            right: showBorder ? '2px' : '0px',
-            color: '#fff',
-            fontSize: 'larger',
-            fontWeight: 'bold',
-            textShadow: '0px 1px 1px #000, 0px -1px 1px #000, 1px 0px 1px #000, -1px 0px 1px #000',
-            lineHeight: 1,
-            pointerEvents: 'none'
-          }}
-        >
-          {quantity > 999 ? `${Math.floor(quantity / 1000)}k` : quantity}
+        <Box sx={quantityStyles}>
+          {formatQuantity(quantity)}
         </Box>
       )}
     </Box>
