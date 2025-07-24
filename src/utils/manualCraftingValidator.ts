@@ -4,18 +4,70 @@
 import DataService from '../services/DataService';
 import type { Recipe } from '../types/index';
 
+// 验证结果类别常量
+export const ValidationCategory = {
+  RAW_MATERIAL: 'raw_material',
+  CRAFTABLE: 'craftable',
+  RESTRICTED: 'restricted'
+} as const;
+
+export type ValidationCategoryType = typeof ValidationCategory[keyof typeof ValidationCategory];
+
+// 验证原因常量 - 支持国际化
+export const ValidationReason = {
+  ITEM_NOT_FOUND: 'item_not_found',
+  RAW_MATERIAL: 'raw_material',
+  RECIPE_AVAILABLE: 'recipe_available',
+  FLUID_INVOLVED: 'fluid_involved',
+  BLACKLISTED_ITEM: 'blacklisted_item',
+  COMPLEX_MACHINE: 'complex_machine',
+  MINING_RECIPE: 'mining_recipe',
+  RECYCLING_RECIPE: 'recycling_recipe',
+  TECHNOLOGY_RECIPE: 'technology_recipe',
+  AGRICULTURE_RECIPE: 'agriculture_recipe',
+  SMELTING_REQUIRED: 'smelting_required',
+  CHEMICAL_EQUIPMENT: 'chemical_equipment',
+  FLUID_EXTRACTION: 'fluid_extraction',
+  RECYCLER_REQUIRED: 'recycler_required',
+  AGRICULTURE_EQUIPMENT: 'agriculture_equipment',
+  LAB_REQUIRED: 'lab_required',
+  COLLECTION_RECIPE: 'collection_recipe',
+  BASIC_CRAFTING: 'basic_crafting',
+  SPECIAL_EQUIPMENT: 'special_equipment'
+} as const;
+
+export type ValidationReasonType = typeof ValidationReason[keyof typeof ValidationReason];
+
 export interface ManualCraftingValidation {
   canCraftManually: boolean;
-  reason: string;
-  category: 'raw_material' | 'craftable' | 'restricted';
+  reason: ValidationReasonType;
+  category: ValidationCategoryType;
+  details?: string; // 可选的详细说明
 }
 
 export class ManualCraftingValidator {
   private static instance: ManualCraftingValidator;
   private dataService: DataService;
+  
+  // 缓存机制 - 提升性能
+  private validationCache: Map<string, ManualCraftingValidation> = new Map();
+  private recipeValidationCache: Map<string, ManualCraftingValidation> = new Map();
+
+  // 黑名单：明确不能手动制作的物品
+  // 基于Factorio官方Wiki规则和游戏逻辑
+  private readonly MANUAL_CRAFTING_BLACKLIST = [
+    // 官方Wiki明确：必须使用装配机，不能手动制作
+    'engine-unit',
+    // 官方Wiki明确：需要火箭发射井，不能手动制作     
+    'rocket-part',
+    // 破碎机
+    'crusher'   
+  ];
 
   private constructor() {
     this.dataService = DataService.getInstance();
+    // 清除缓存，确保新的验证逻辑生效
+    this.clearCache();
   }
 
   static getInstance(): ManualCraftingValidator {
@@ -26,18 +78,44 @@ export class ManualCraftingValidator {
   }
 
   /**
+   * 清除缓存 - 当数据更新时调用
+   */
+  clearCache(): void {
+    this.validationCache.clear();
+    this.recipeValidationCache.clear();
+  }
+
+  /**
    * 判断物品是否可以手动采集
    * @param itemId 物品ID
    * @returns 验证结果
    */
   validateManualCrafting(itemId: string): ManualCraftingValidation {
+    // 检查缓存
+    if (this.validationCache.has(itemId)) {
+      return this.validationCache.get(itemId)!;
+    }
+
     const item = this.dataService.getItem(itemId);
     if (!item) {
-      return {
+      const result = {
         canCraftManually: false,
-        reason: '物品不存在',
-        category: 'restricted'
+        reason: ValidationReason.ITEM_NOT_FOUND,
+        category: ValidationCategory.RESTRICTED
       };
+      this.validationCache.set(itemId, result);
+      return result;
+    }
+
+    // 特殊检查：Technology 物品不能手动制作
+    if (item.category === 'technology') {
+      const result = {
+        canCraftManually: false,
+        reason: ValidationReason.TECHNOLOGY_RECIPE,
+        category: ValidationCategory.RESTRICTED
+      };
+      this.validationCache.set(itemId, result);
+      return result;
     }
 
     // 获取物品的所有配方
@@ -45,134 +123,316 @@ export class ManualCraftingValidator {
 
     // 1. 检查是否为原材料（没有配方）
     if (recipes.length === 0) {
-      return {
+      const result = {
         canCraftManually: true,
-        reason: '原材料，可直接采集',
-        category: 'raw_material'
+        reason: ValidationReason.RAW_MATERIAL,
+        category: ValidationCategory.RAW_MATERIAL
       };
+      this.validationCache.set(itemId, result);
+      return result;
     }
 
     // 2. 检查配方是否有限制
     for (const recipe of recipes) {
       const validation = this.validateRecipe(recipe);
       if (validation.canCraftManually) {
-        return {
+        const result = {
           canCraftManually: true,
-          reason: '可通过配方手动制作',
-          category: 'craftable'
+          reason: ValidationReason.RECIPE_AVAILABLE,
+          category: ValidationCategory.CRAFTABLE
         };
+        this.validationCache.set(itemId, result);
+        return result;
       }
     }
 
-    return {
+    const result = {
       canCraftManually: false,
-      reason: '需要特殊设备制作',
-      category: 'restricted'
+      reason: ValidationReason.SPECIAL_EQUIPMENT,
+      category: ValidationCategory.RESTRICTED
     };
+    this.validationCache.set(itemId, result);
+    return result;
   }
 
   /**
    * 验证单个配方是否可以手动制作
+   * 基于Factorio官方Wiki规则 + 配方属性自动判断
    * @param recipe 配方
    * @returns 验证结果
    */
   public validateRecipe(recipe: Recipe): ManualCraftingValidation {
-    // 检查配方标志
-    if (recipe.flags) {
-      // 采矿配方 - 可以手动采集
-      if (recipe.flags.includes('mining')) {
-        return {
-          canCraftManually: true,
-          reason: '采矿配方，可手动采集',
-          category: 'raw_material'
-        };
-      }
-
-      // 回收配方 - 通常可以手动制作
-      if (recipe.flags.includes('recycling')) {
-        return {
-          canCraftManually: true,
-          reason: '回收配方，可手动制作',
-          category: 'craftable'
-        };
-      }
+    // 使用配方ID作为缓存键
+    const cacheKey = recipe.id;
+    if (this.recipeValidationCache.has(cacheKey)) {
+      return this.recipeValidationCache.get(cacheKey)!;
     }
 
-    // 检查生产者限制
-    if (recipe.producers) {
-      const restrictedProducers = [
-        'stone-furnace', 'steel-furnace', 'electric-furnace', // 熔炉
-        'assembling-machine-1', 'assembling-machine-2', 'assembling-machine-3', // 装配机
-        'chemical-plant', 'oil-refinery', 'centrifuge', // 化工设备
-        'pumpjack', 'offshore-pump' // 流体设备
-      ];
-
-      const hasRestrictedProducer = recipe.producers.some((producer: string) => 
-        restrictedProducers.includes(producer)
-      );
-
-      if (hasRestrictedProducer) {
-        return {
-          canCraftManually: false,
-          reason: '需要特殊生产设备',
-          category: 'restricted'
-        };
-      }
-    }
-
-    // 检查输入材料是否包含液体
-    if (recipe.in) {
-      const fluidInputs = Object.keys(recipe.in).filter(input => 
-        this.isFluidItem(input)
-      );
-
-      if (fluidInputs.length > 0) {
-        return {
-          canCraftManually: false,
-          reason: '配方包含液体，无法手动制作',
-          category: 'restricted'
-        };
-      }
-    }
-
-    // 检查是否为特殊限制物品
-    const restrictedItems = [
-      'engine-unit',
-      'electric-engine-unit', 
-      'flying-robot-frame',
-      'rocket-fuel',
-      'rocket-control-unit',
-      'low-density-structure',
-      'rocket-part'
-    ];
-
-    if (restrictedItems.includes(recipe.id)) {
-      return {
+    // 1. 检查输入输出是否包含流体 - 最高优先级，流体永远不能手动制作
+    if (this.hasFluidInRecipe(recipe)) {
+      const result = {
         canCraftManually: false,
-        reason: '高级物品，需要特殊设备',
-        category: 'restricted'
+        reason: ValidationReason.FLUID_INVOLVED,
+        category: ValidationCategory.RESTRICTED
       };
+      this.recipeValidationCache.set(cacheKey, result);
+      return result;
     }
 
-    // 默认可以手动制作（基于配方特征判断）
-    return {
+    // 2. 检查输出物品 - 黑名单和复杂设备检查
+    if (recipe.out) {
+      for (const itemId of Object.keys(recipe.out)) {
+        // 检查黑名单
+        if (this.MANUAL_CRAFTING_BLACKLIST.includes(itemId)) {
+          const result = {
+            canCraftManually: false,
+            reason: ValidationReason.BLACKLISTED_ITEM,
+            category: ValidationCategory.RESTRICTED
+          };
+          this.recipeValidationCache.set(cacheKey, result);
+          return result;
+        }
+      }
+    }
+
+    // 3. 检查配方标志
+    if (recipe.flags) {
+      // 采矿配方 - 可以手动采集（但已排除流体）
+      if (recipe.flags.includes('mining')) {
+        const result = {
+          canCraftManually: true,
+          reason: ValidationReason.MINING_RECIPE,
+          category: ValidationCategory.RAW_MATERIAL
+        };
+        this.recipeValidationCache.set(cacheKey, result);
+        return result;
+      }
+
+      // 回收配方 - 需要回收设备，不能手动制作
+      if (recipe.flags.includes('recycling')) {
+        const result = {
+          canCraftManually: false,
+          reason: ValidationReason.RECYCLING_RECIPE,
+          category: ValidationCategory.RESTRICTED
+        };
+        this.recipeValidationCache.set(cacheKey, result);
+        return result;
+      }
+
+      // 研究配方 - 不能手动制作
+      if (recipe.flags.includes('technology')) {
+        const result = {
+          canCraftManually: false,
+          reason: ValidationReason.TECHNOLOGY_RECIPE,
+          category: ValidationCategory.RESTRICTED
+        };
+        this.recipeValidationCache.set(cacheKey, result);
+        return result;
+      }
+
+      // 种植配方 - 需要农业设备
+      if (recipe.flags.includes('grow')) {
+        const result = {
+          canCraftManually: false,
+          reason: ValidationReason.AGRICULTURE_RECIPE,
+          category: ValidationCategory.RESTRICTED
+        };
+        this.recipeValidationCache.set(cacheKey, result);
+        return result;
+      }
+    }
+
+    // 4. 检查生产者类型 - 基于设备特征判断
+    if (recipe.producers && recipe.producers.length > 0) {
+      const producerCheck = this.checkProducerRestrictions(recipe.producers);
+      if (!producerCheck.canCraftManually) {
+        this.recipeValidationCache.set(cacheKey, producerCheck);
+        return producerCheck;
+      }
+    }
+
+
+
+    // 5. 空输入配方 - 通常是采集类配方（流体已被排除）
+    if (!recipe.in || Object.keys(recipe.in).length === 0) {
+      const result = {
+        canCraftManually: true,
+        reason: ValidationReason.COLLECTION_RECIPE,
+        category: ValidationCategory.RAW_MATERIAL
+      };
+      this.recipeValidationCache.set(cacheKey, result);
+      return result;
+    }
+
+    // 6. 默认允许手动制作 - 基础制作配方
+    const result = {
       canCraftManually: true,
-      reason: '可通过配方手动制作',
-      category: 'craftable'
+      reason: ValidationReason.BASIC_CRAFTING,
+      category: ValidationCategory.CRAFTABLE
     };
+    this.recipeValidationCache.set(cacheKey, result);
+    return result;
   }
 
   /**
+   * 检查配方是否涉及流体（输入或输出）
+   * 基于官方Wiki规则：任何涉及液体的配方都不能手动制作
+   * @param recipe 配方
+   * @returns 是否涉及流体
+   */
+  private hasFluidInRecipe(recipe: Recipe): boolean {
+    // 检查输入和输出材料是否包含流体
+    const checkItems = (items: Record<string, number>) => {
+      for (const itemId of Object.keys(items)) {
+        if (this.isFluidItem(itemId)) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    // 检查输入材料
+    if (recipe.in && checkItems(recipe.in)) {
+      return true;
+    }
+
+    // 检查输出产品
+    if (recipe.out && checkItems(recipe.out)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * 检查生产者限制
+   * 基于设备类型特征自动判断
+   * @param producers 生产者列表
+   * @returns 验证结果
+   */
+  private checkProducerRestrictions(producers: string[]): ManualCraftingValidation {
+    // 冶炼设备 - 官方Wiki明确：矿石必须在熔炉中冶炼
+    const smeltingProducers = producers.filter(p => 
+      p.includes('furnace') || p.includes('foundry')
+    );
+    if (smeltingProducers.length > 0) {
+      return {
+        canCraftManually: false,
+        reason: ValidationReason.SMELTING_REQUIRED,
+        category: ValidationCategory.RESTRICTED
+      };
+    }
+
+    // 特殊化工设备 - 不能手动制作
+    const chemicalProducers = producers.filter(p => 
+      ['chemical-plant', 'oil-refinery', 'centrifuge', 'cryogenic-plant'].includes(p)
+    );
+    if (chemicalProducers.length > 0) {
+      return {
+        canCraftManually: false,
+        reason: ValidationReason.CHEMICAL_EQUIPMENT,
+        category: ValidationCategory.RESTRICTED
+      };
+    }
+
+    // 流体提取设备 - 不能手动制作
+    const fluidProducers = producers.filter(p => 
+      ['offshore-pump', 'pumpjack', 'water-pump'].includes(p)
+    );
+    if (fluidProducers.length > 0) {
+      return {
+        canCraftManually: false,
+        reason: ValidationReason.FLUID_EXTRACTION,
+        category: ValidationCategory.RESTRICTED
+      };
+    }
+
+    // 回收设备 - 不能手动制作
+    if (producers.includes('recycler')) {
+      return {
+        canCraftManually: false,
+        reason: ValidationReason.RECYCLER_REQUIRED,
+        category: ValidationCategory.RESTRICTED
+      };
+    }
+
+    // 农业设备 - 不能手动制作
+    if (producers.includes('agricultural-tower')) {
+      return {
+        canCraftManually: false,
+        reason: ValidationReason.AGRICULTURE_EQUIPMENT,
+        category: ValidationCategory.RESTRICTED
+      };
+    }
+
+    // 实验室设备 - 不能手动制作
+    if (producers.includes('lab')) {
+      return {
+        canCraftManually: false,
+        reason: ValidationReason.LAB_REQUIRED,
+        category: ValidationCategory.RESTRICTED
+      };
+    }
+
+    // 生物室设备 - 不能手动制作
+    if (producers.includes('biochamber')) {
+      return {
+        canCraftManually: false,
+        reason: ValidationReason.SPECIAL_EQUIPMENT,
+        category: ValidationCategory.RESTRICTED
+      };
+    }
+
+    // 俘虏虫族生成器 - 不能手动制作
+    if (producers.includes('captive-biter-spawner')) {
+      return {
+        canCraftManually: false,
+        reason: ValidationReason.SPECIAL_EQUIPMENT,
+        category: ValidationCategory.RESTRICTED
+      };
+    }
+
+    // 星岩抓取臂 - 特殊的太空采集设备，不能手动制作
+    if (producers.includes('asteroid-collector')) {
+      return {
+        canCraftManually: false,
+        reason: ValidationReason.SPECIAL_EQUIPMENT,
+        category: ValidationCategory.RESTRICTED
+      };
+    }
+
+    // 破碎机 - 特殊的太空处理设备，不能手动制作
+    if (producers.includes('crusher')) {
+      return {
+        canCraftManually: false,
+        reason: ValidationReason.SPECIAL_EQUIPMENT,
+        category: ValidationCategory.RESTRICTED
+      };
+    }
+
+    // 装配机配方 - 根据Factorio规则，基础物品可以手动制作
+    // 这里不做限制，让后续逻辑处理
+    return {
+      canCraftManually: true,
+      reason: ValidationReason.BASIC_CRAFTING,
+      category: ValidationCategory.CRAFTABLE
+    };
+  }
+
+
+
+  /**
    * 判断物品是否为流体
+   * 基于物品分类准确识别，无需维护模式列表
    * @param itemId 物品ID
    * @returns 是否为流体
    */
   private isFluidItem(itemId: string): boolean {
-    const fluidItems = [
-      'water', 'steam', 'crude-oil', 'heavy-oil', 'light-oil', 'petroleum-gas',
-      'sulfuric-acid', 'lubricant', 'uranium-235', 'uranium-238'
-    ];
-    return fluidItems.includes(itemId);
+    const item = this.dataService.getItem(itemId);
+    if (!item) return false;
+    
+    // 基于分类判断 - 这是最准确的方法
+    return item.category === 'fluids';
   }
 
   /**
@@ -180,17 +440,10 @@ export class ManualCraftingValidator {
    * @returns 可手动采集的物品ID列表
    */
   getManualCraftableItems(): string[] {
-    const allItems = this.dataService.getAllItems();
-    const manualCraftableItems: string[] = [];
-
-    for (const item of allItems) {
+    return this.filterItemsByCondition(item => {
       const validation = this.validateManualCrafting(item.id);
-      if (validation.canCraftManually) {
-        manualCraftableItems.push(item.id);
-      }
-    }
-
-    return manualCraftableItems;
+      return validation.canCraftManually;
+    });
   }
 
   /**
@@ -198,17 +451,28 @@ export class ManualCraftingValidator {
    * @returns 原材料物品ID列表
    */
   getRawMaterials(): string[] {
+    return this.filterItemsByCondition(item => {
+      const recipes = this.dataService.getRecipesForItem(item.id);
+      return recipes.length === 0;
+    });
+  }
+
+  /**
+   * 通用物品过滤方法
+   * @param condition 过滤条件函数
+   * @returns 符合条件的物品ID列表
+   */
+  private filterItemsByCondition(condition: (item: import('../types').Item) => boolean): string[] {
     const allItems = this.dataService.getAllItems();
-    const rawMaterials: string[] = [];
+    const filteredItems: string[] = [];
 
     for (const item of allItems) {
-      const recipes = this.dataService.getRecipesForItem(item.id);
-      if (recipes.length === 0) {
-        rawMaterials.push(item.id);
+      if (condition(item)) {
+        filteredItems.push(item.id);
       }
     }
 
-    return rawMaterials;
+    return filteredItems;
   }
 
   /**
@@ -231,4 +495,82 @@ export class ManualCraftingValidator {
   }
 }
 
-export default ManualCraftingValidator; 
+export default ManualCraftingValidator;
+
+/**
+ * 国际化工具函数 - 将验证原因转换为本地化文本
+ * @param reason 验证原因
+ * @param locale 语言代码，默认为 'zh'
+ * @returns 本地化文本
+ */
+export function getValidationReasonText(reason: ValidationReasonType, locale: string = 'zh'): string {
+  const reasonTexts: Record<string, Record<ValidationReasonType, string>> = {
+    zh: {
+      [ValidationReason.ITEM_NOT_FOUND]: '物品不存在',
+      [ValidationReason.RAW_MATERIAL]: '原材料，可直接采集',
+      [ValidationReason.RECIPE_AVAILABLE]: '可通过配方手动制作',
+      [ValidationReason.FLUID_INVOLVED]: '配方涉及流体，无法手动制作',
+      [ValidationReason.BLACKLISTED_ITEM]: '黑名单物品，无法手动制作',
+      [ValidationReason.COMPLEX_MACHINE]: '复杂机械设备，无法手动制作',
+      [ValidationReason.MINING_RECIPE]: '采矿配方，可手动采集',
+      [ValidationReason.RECYCLING_RECIPE]: '回收配方，需要回收设备',
+      [ValidationReason.TECHNOLOGY_RECIPE]: '研究配方，需要实验室',
+      [ValidationReason.AGRICULTURE_RECIPE]: '农业配方，需要农业设备',
+      [ValidationReason.SMELTING_REQUIRED]: '冶炼配方，必须使用熔炉',
+      [ValidationReason.CHEMICAL_EQUIPMENT]: '化工配方，需要特殊设备',
+      [ValidationReason.FLUID_EXTRACTION]: '流体提取，需要专用设备',
+      [ValidationReason.RECYCLER_REQUIRED]: '回收配方，需要回收设备',
+      [ValidationReason.AGRICULTURE_EQUIPMENT]: '农业配方，需要农业设备',
+      [ValidationReason.LAB_REQUIRED]: '研究配方，需要实验室',
+      [ValidationReason.COLLECTION_RECIPE]: '采集类配方，可手动操作',
+      [ValidationReason.BASIC_CRAFTING]: '基础制作配方，可手动制作',
+      [ValidationReason.SPECIAL_EQUIPMENT]: '需要特殊设备制作'
+    },
+    en: {
+      [ValidationReason.ITEM_NOT_FOUND]: 'Item not found',
+      [ValidationReason.RAW_MATERIAL]: 'Raw material, can be collected directly',
+      [ValidationReason.RECIPE_AVAILABLE]: 'Can be crafted manually via recipe',
+      [ValidationReason.FLUID_INVOLVED]: 'Recipe involves fluids, cannot be crafted manually',
+      [ValidationReason.BLACKLISTED_ITEM]: 'Blacklisted item, cannot be crafted manually',
+      [ValidationReason.COMPLEX_MACHINE]: 'Complex mechanical device, cannot be crafted manually',
+      [ValidationReason.MINING_RECIPE]: 'Mining recipe, can be collected manually',
+      [ValidationReason.RECYCLING_RECIPE]: 'Recycling recipe, requires recycling equipment',
+      [ValidationReason.TECHNOLOGY_RECIPE]: 'Research recipe, requires laboratory',
+      [ValidationReason.AGRICULTURE_RECIPE]: 'Agriculture recipe, requires agriculture equipment',
+      [ValidationReason.SMELTING_REQUIRED]: 'Smelting recipe, must use furnace',
+      [ValidationReason.CHEMICAL_EQUIPMENT]: 'Chemical recipe, requires special equipment',
+      [ValidationReason.FLUID_EXTRACTION]: 'Fluid extraction, requires dedicated equipment',
+      [ValidationReason.RECYCLER_REQUIRED]: 'Recycling recipe, requires recycling equipment',
+      [ValidationReason.AGRICULTURE_EQUIPMENT]: 'Agriculture recipe, requires agriculture equipment',
+      [ValidationReason.LAB_REQUIRED]: 'Research recipe, requires laboratory',
+      [ValidationReason.COLLECTION_RECIPE]: 'Collection recipe, can be operated manually',
+      [ValidationReason.BASIC_CRAFTING]: 'Basic crafting recipe, can be crafted manually',
+      [ValidationReason.SPECIAL_EQUIPMENT]: 'Requires special equipment to craft'
+    }
+  };
+
+  return reasonTexts[locale]?.[reason] || reasonTexts.zh[reason] || reason;
+}
+
+/**
+ * 获取验证类别的本地化文本
+ * @param category 验证类别
+ * @param locale 语言代码，默认为 'zh'
+ * @returns 本地化文本
+ */
+export function getValidationCategoryText(category: ValidationCategoryType, locale: string = 'zh'): string {
+  const categoryTexts: Record<string, Record<ValidationCategoryType, string>> = {
+    zh: {
+      [ValidationCategory.RAW_MATERIAL]: '原材料',
+      [ValidationCategory.CRAFTABLE]: '可制作',
+      [ValidationCategory.RESTRICTED]: '受限制'
+    },
+    en: {
+      [ValidationCategory.RAW_MATERIAL]: 'Raw Material',
+      [ValidationCategory.CRAFTABLE]: 'Craftable',
+      [ValidationCategory.RESTRICTED]: 'Restricted'
+    }
+  };
+
+  return categoryTexts[locale]?.[category] || categoryTexts.zh[category] || category;
+} 

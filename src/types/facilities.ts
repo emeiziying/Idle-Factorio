@@ -25,13 +25,15 @@ export interface FacilityInstance {
   production?: ProductionData;
 }
 
-export enum FacilityStatus {
-  RUNNING = 'running',
-  STOPPED = 'stopped',
-  NO_POWER = 'no_power',
-  NO_RESOURCE = 'no_resource',
-  OUTPUT_FULL = 'output_full'
-}
+export const FacilityStatus = {
+  RUNNING: 'running',
+  STOPPED: 'stopped',
+  NO_POWER: 'no_power',
+  NO_RESOURCE: 'no_resource',
+  OUTPUT_FULL: 'output_full'
+} as const;
+
+export type FacilityStatus = typeof FacilityStatus[keyof typeof FacilityStatus];
 
 export interface ProductionData {
   currentRecipeId?: string;

@@ -41,7 +41,7 @@ class CraftingEngine {
   // 更新制作队列
   private updateCraftingQueue(): void {
     const gameStore = useGameStore.getState();
-    const { craftingQueue, updateCraftingProgress, completeCraftingTask, updateInventory } = gameStore;
+    const { craftingQueue, updateCraftingProgress } = gameStore;
 
     if (craftingQueue.length === 0) return;
 

@@ -358,17 +358,19 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
                 );
               }
               
-              // 使用验证器检查哪些配方可以手动制作
-              const manualCraftableRecipes = itemRecipes.filter(recipe => {
-                const validation = validator.validateRecipe(recipe);
-                return validation.canCraftManually;
-              });
+              // 使用验证器检查哪些配方可以手动制作 - 优化版本
+              const recipeValidations = itemRecipes.map(recipe => ({
+                recipe,
+                validation: validator.validateRecipe(recipe)
+              }));
+              
+              const manualCraftableRecipes = recipeValidations
+                .filter(({ validation }) => validation.canCraftManually)
+                .map(({ recipe }) => recipe);
 
-              // 检查是否有需要特定生产者的配方
-              const restrictedRecipes = itemRecipes.filter(recipe => {
-                const validation = validator.validateRecipe(recipe);
-                return !validation.canCraftManually && validation.category === 'restricted';
-              });
+              const restrictedRecipes = recipeValidations
+                .filter(({ validation }) => !validation.canCraftManually && validation.category === 'restricted')
+                .map(({ recipe }) => recipe);
 
               // 如果有可手动制作的配方，显示第一个
               if (manualCraftableRecipes.length > 0) {

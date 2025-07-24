@@ -20,12 +20,14 @@ import {
   Build as BuildIcon,
   Factory as FactoryIcon,
   Science as ScienceIcon,
-  Delete as DeleteIcon
+  Delete as DeleteIcon,
+  BugReport as TestIcon
 } from '@mui/icons-material';
 
 import ProductionModule from './components/production/ProductionModule';
 import FacilitiesModule from './components/facilities/FacilitiesModule';
 import TechnologyModule from './components/technology/TechnologyModule';
+import ManualCraftingTestPage from './components/test/ManualCraftingTestPage';
 import DataService from './services/DataService';
 import useGameStore from './store/gameStore';
 
@@ -207,7 +209,7 @@ const App: React.FC = () => {
         {/* 主内容区域 */}
         <Box sx={{ 
           flex: 1,
-          overflow: 'hidden',
+          overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
           boxSizing: 'border-box'
@@ -215,6 +217,7 @@ const App: React.FC = () => {
           {currentModule === 0 && <ProductionModule />}
           {currentModule === 1 && <FacilitiesModule />}
           {currentModule === 2 && <TechnologyModule />}
+          {currentModule === 3 && <ManualCraftingTestPage />}
         </Box>
         
         {/* 底部导航 */}
@@ -231,16 +234,16 @@ const App: React.FC = () => {
               minWidth: 'auto',
               flex: 1,
               '& .MuiBottomNavigationAction-label': {
-                fontSize: '0.75rem',
+                fontSize: '0.65rem',
                 opacity: 1, // 确保未选中时也显示
                 '&.Mui-selected': {
-                  fontSize: '0.8rem',
+                  fontSize: '0.7rem',
                   fontWeight: 600,
                 },
               },
               '& .MuiSvgIcon-root': {
-                fontSize: '1.5rem',
-                marginBottom: '2px',
+                fontSize: '1.3rem',
+                marginBottom: '1px',
               },
             },
           }}
@@ -260,6 +263,13 @@ const App: React.FC = () => {
             icon={<ScienceIcon />} 
             showLabel={true} // 强制显示标签
           />
+          {import.meta.env.DEV && (
+            <BottomNavigationAction 
+              label="测试" 
+              icon={<TestIcon />} 
+              showLabel={true} // 强制显示标签
+            />
+          )}
         </BottomNavigation>
 
         {/* 清空存档按钮 - 仅在开发模式下显示 */}
