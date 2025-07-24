@@ -89,51 +89,58 @@ const restrictedCategories = [
   'recycling'
 ];
 
+// 手动制作白名单（基于 Wiki）
+const manualCraftingWhitelist = [
+  'wooden-chest', 'iron-chest', 'transport-belt', 'underground-belt',
+  'splitter', 'burner-inserter', 'inserter', 'pipe', 'pipe-to-ground',
+  'iron-stick', 'iron-gear-wheel', 'copper-cable', 'electronic-circuit',
+  'automation-science-pack', 'logistic-science-pack', 'stone-furnace',
+  'burner-mining-drill', 'small-electric-pole', 'pistol', 'firearm-magazine',
+  'light-armor', 'repair-pack'
+];
+
 /**
  * 验证配方是否可以手动制作
+ * 基于 Factorio Wiki 规则
  */
-function validateRecipe(recipe) {
-  // 1. 检查配方标志
+function validateRecipe(recipe, itemId) {
+  // 1. 检查白名单（最高优先级）
+  if (itemId && manualCraftingWhitelist.includes(itemId)) {
+    return { canCraft: true, reason: '在手动制作白名单中' };
+  }
+  
+  // 2. 检查配方类别
+  if (recipe.category) {
+    if (recipe.category === 'recycling-or-hand-crafting') {
+      return { canCraft: true, reason: '可手动制作或回收' };
+    }
+    if (recipe.category === 'crafting' || recipe.category === 'advanced-crafting') {
+      // 可手动制作的类别，但还需要检查其他限制
+    } else if (restrictedCategories.includes(recipe.category)) {
+      return { canCraft: false, reason: `需要特殊设备（${recipe.category}）` };
+    } else {
+      return { canCraft: false, reason: `配方类别 "${recipe.category}" 不支持手动制作` };
+    }
+  }
+  
+  // 3. 检查配方标志
   if (recipe.flags) {
     if (recipe.flags.includes('mining')) {
       return { canCraft: true, reason: '采矿配方（可手动采集）' };
     }
   }
   
-  // 2. 检查配方类别
-  if (recipe.category) {
-    if (recipe.category === 'crafting' || recipe.category === 'advanced-crafting') {
-      // 基础和高级制作类别通常可以手动制作
-    } else if (recipe.category === 'recycling-or-hand-crafting') {
-      return { canCraft: true, reason: '可手动制作或回收' };
-    } else if (restrictedCategories.includes(recipe.category)) {
-      return { canCraft: false, reason: `需要特殊设备（${recipe.category}）` };
-    }
-  }
-  
-  // 3. 检查生产者限制
-  if (recipe.producers && recipe.producers.length > 0) {
-    // 特殊的生产者不算限制
-    const specialProducers = ['burner-mining-drill', 'electric-mining-drill', 'pumpjack', 'offshore-pump'];
-    const nonSpecialProducers = recipe.producers.filter(p => !specialProducers.includes(p));
-    
-    // 如果有非特殊生产者，就需要设备
-    if (nonSpecialProducers.length > 0) {
-      return { canCraft: false, reason: `需要生产设备: ${nonSpecialProducers.join(', ')}` };
-    }
-  }
-  
-  // 4. 检查输入材料是否包含流体 (使用 in 字段)
+  // 4. 检查输入材料是否包含流体 (Wiki规则：包含流体不能手动制作)
   if (recipe.in) {
-    const hasFluid = Object.keys(recipe.in).some(itemName => 
+    const fluidInputs = Object.keys(recipe.in).filter(itemName => 
       fluidItems.includes(itemName)
     );
-    if (hasFluid) {
-      return { canCraft: false, reason: '材料包含流体' };
+    if (fluidInputs.length > 0) {
+      return { canCraft: false, reason: `材料包含流体（${fluidInputs.join(', ')}）` };
     }
   }
   
-  // 5. 检查特殊限制物品 (使用 out 字段)
+  // 5. 检查特殊限制物品 (Wiki明确提到的)
   if (recipe.out) {
     const outputItems = Object.keys(recipe.out);
     const hasRestricted = outputItems.some(itemName => 
@@ -178,7 +185,7 @@ function validateManualCrafting(itemId) {
   let restrictionReason = '';
   
   for (const recipe of itemRecipes) {
-    const validation = validateRecipe(recipe);
+    const validation = validateRecipe(recipe, itemId);
     if (validation.canCraft) {
       hasManualRecipe = true;
       break;
@@ -246,7 +253,7 @@ function runValidation() {
     if (itemRecipes.length > 0) {
       console.log(`   配方数量: ${itemRecipes.length}`);
       for (const recipe of itemRecipes) {
-        const recipeValidation = validateRecipe(recipe);
+        const recipeValidation = validateRecipe(recipe, item.id);
         console.log(`     - ${recipe.name || '未命名配方'}`);
         console.log(`       类别: ${recipe.category || '无'}`);
         console.log(`       生产者: ${recipe.producers ? recipe.producers.join(', ') : '手动'}`);

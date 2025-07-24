@@ -138,9 +138,9 @@ const ItemDetailDialog: React.FC<ItemDetailDialogProps> = ({
   const dataService = DataService.getInstance();
   const validator = ManualCraftingValidator.getInstance();
   
-  // 使用宽松配置以允许更多物品手动制作
+  // 使用默认配置（基于Wiki规则）
   useEffect(() => {
-    validator.useRelaxedConfig();
+    validator.useDefaultConfig();
   }, []);
 
   const inventoryItem = getInventoryItem(item.id);

@@ -127,7 +127,7 @@ export class ManualCraftingValidator {
     const mainProduct = recipe.results?.[0]?.name || 
                        (recipe.out ? Object.keys(recipe.out)[0] : null);
 
-    // 1. 检查产品黑名单
+    // 1. 检查产品黑名单（最高优先级）
     if (mainProduct && this.config.manualCraftingBlacklist.includes(mainProduct)) {
       return {
         canCraftManually: false,
@@ -136,7 +136,7 @@ export class ManualCraftingValidator {
       };
     }
 
-    // 2. 检查产品白名单
+    // 2. 检查产品白名单（第二优先级）
     if (mainProduct && this.config.manualCraftingWhitelist.includes(mainProduct)) {
       return {
         canCraftManually: true,
@@ -145,18 +145,9 @@ export class ManualCraftingValidator {
       };
     }
 
-    // 3. 严格模式：如果有生产者就不能手动制作
-    if (this.config.strictMode && recipe.producers && recipe.producers.length > 0) {
-      return {
-        canCraftManually: false,
-        reason: '严格模式：配方指定了生产设备',
-        category: 'restricted'
-      };
-    }
-
-    // 4. 检查配方类别
+    // 3. 检查配方类别
     if (recipe.category) {
-      // 特殊类别处理
+      // 特殊类别处理：recycling-or-hand-crafting 可以手动制作
       if (recipe.category === 'recycling-or-hand-crafting') {
         return {
           canCraftManually: true,
@@ -178,13 +169,13 @@ export class ManualCraftingValidator {
       if (!this.config.manualCraftableCategories.includes(recipe.category)) {
         return {
           canCraftManually: false,
-          reason: `配方类别 "${recipe.category}" 需要特殊设备`,
+          reason: `配方类别 "${recipe.category}" 不支持手动制作`,
           category: 'restricted'
         };
       }
     }
 
-    // 5. 检查配方标志
+    // 4. 检查配方标志
     if (recipe.flags) {
       // 采矿配方 - 可以手动采集
       if (recipe.flags.includes('mining')) {
@@ -194,10 +185,54 @@ export class ManualCraftingValidator {
           category: 'raw_material'
         };
       }
+      
+      // 回收配方通常需要回收机
+      if (recipe.flags.includes('recycling')) {
+        return {
+          canCraftManually: false,
+          reason: '回收配方需要回收机',
+          category: 'restricted'
+        };
+      }
     }
 
-    // 6. 检查生产者限制
+    // 5. 检查输入材料是否包含液体（根据Wiki，这是重要限制）
+    if (recipe.in) {
+      const fluidInputs = Object.keys(recipe.in).filter(input => 
+        this.config.fluidItems.includes(input)
+      );
+
+      if (fluidInputs.length > 0) {
+        // 除非在白名单中，否则包含流体的配方不能手动制作
+        return {
+          canCraftManually: false,
+          reason: `配方包含液体（${fluidInputs.join(', ')}），无法手动制作`,
+          category: 'restricted'
+        };
+      }
+    }
+
+    // 6. 检查是否为特殊限制物品（Wiki明确提到的）
+    if (mainProduct && this.config.restrictedItems.includes(mainProduct)) {
+      return {
+        canCraftManually: false,
+        reason: '该物品不支持手动制作（Wiki规则）',
+        category: 'restricted'
+      };
+    }
+
+    // 7. 检查生产者限制
     if (recipe.producers && recipe.producers.length > 0) {
+      // 严格模式下，有生产者就不能手动制作
+      if (this.config.strictMode) {
+        return {
+          canCraftManually: false,
+          reason: '严格模式：配方指定了生产设备',
+          category: 'restricted'
+        };
+      }
+
+      // 检查是否所有生产者都是受限的
       if (this.hasRestrictedProducer(recipe.producers)) {
         return {
           canCraftManually: false,
@@ -205,37 +240,32 @@ export class ManualCraftingValidator {
           category: 'restricted'
         };
       }
-    }
-
-    // 7. 检查输入材料是否包含液体
-    if (recipe.in) {
-      const fluidInputs = Object.keys(recipe.in).filter(input => 
-        this.config.fluidItems.includes(input)
-      );
-
-      if (fluidInputs.length > 0) {
+    } else if (!recipe.producers || recipe.producers.length === 0) {
+      // 没有生产者的配方
+      if (this.config.allowNoProducerRecipes) {
+        // 如果配置允许，没有生产者的配方可以手动制作
         return {
-          canCraftManually: false,
-          reason: '配方包含液体，无法手动制作',
-          category: 'restricted'
+          canCraftManually: true,
+          reason: '基础配方，可以手动制作',
+          category: 'craftable'
         };
       }
     }
 
-    // 8. 检查是否为特殊限制物品
-    if (mainProduct && this.config.restrictedItems.includes(mainProduct)) {
+    // 8. 最终判断：如果配方有合适的类别且没有其他限制，可以手动制作
+    if (recipe.category && this.config.manualCraftableCategories.includes(recipe.category)) {
       return {
-        canCraftManually: false,
-        reason: '高级物品需要特殊设备',
-        category: 'restricted'
+        canCraftManually: true,
+        reason: '可以手动制作',
+        category: 'craftable'
       };
     }
 
-    // 默认：可以手动制作
+    // 默认：不能手动制作
     return {
-      canCraftManually: true,
-      reason: '可以手动制作',
-      category: 'craftable'
+      canCraftManually: false,
+      reason: '该配方需要生产设备',
+      category: 'restricted'
     };
   }
 
@@ -253,16 +283,23 @@ export class ManualCraftingValidator {
    */
   private getCategoryRestrictionReason(category: string): string {
     const categoryReasons: Record<string, string> = {
+      // 基础游戏类别
       'smelting': '熔炼配方需要熔炉',
       'chemistry': '化工配方需要化工厂',
       'oil-processing': '炼油配方需要炼油厂',
       'centrifuging': '离心配方需要离心机',
       'rocket-building': '火箭建造需要火箭发射井',
+      'crafting-with-fluid': '包含流体的配方不能手动制作',
+      
+      // 太空时代类别
       'electromagnetics': '电磁配方需要电磁工厂',
       'cryogenics': '低温配方需要低温工厂',
       'metallurgy': '冶金配方需要铸造厂',
       'organic': '有机配方需要生物室',
-      'recycling': '回收配方需要回收机'
+      'recycling': '回收配方需要回收机',
+      
+      // 特殊类别
+      'recycling-or-hand-crafting': '可以手动制作或使用回收机' // 这个实际上是允许的
     };
 
     return categoryReasons[category] || `配方类别 "${category}" 需要特殊设备`;
