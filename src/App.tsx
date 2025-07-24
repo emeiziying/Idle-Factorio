@@ -28,6 +28,7 @@ import FacilitiesModule from './components/facilities/FacilitiesModule';
 import TechnologyModule from './components/technology/TechnologyModule';
 import DataService from './services/DataService';
 import useGameStore from './store/gameStore';
+import { runManualCraftingValidation } from './utils/runManualCraftingValidation';
 
 // 创建移动端优化的深色主题
 const theme = createTheme({
@@ -282,6 +283,26 @@ const App: React.FC = () => {
           >
             <DeleteIcon />
           </Fab>
+        )}
+        
+        {/* 验证手动制作按钮 - 仅在开发模式下显示 */}
+        {import.meta.env.DEV && (
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => {
+              console.log('Running manual crafting validation...');
+              runManualCraftingValidation();
+            }}
+            sx={{
+              position: 'fixed',
+              top: '16px',
+              left: '16px',
+              zIndex: 1000,
+            }}
+          >
+            验证制作
+          </Button>
         )}
 
         {/* 清空存档对话框 */}
