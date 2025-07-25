@@ -2,25 +2,18 @@ import React from 'react';
 import {
   Typography,
   Box,
-  IconButton,
   useTheme
 } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
 import type { Item } from '../../types/index';
-import FactorioIcon from '../common/FactorioIcon';
 import DataService from '../../services/DataService';
 import useGameStore from '../../store/gameStore';
 
 interface ItemDetailHeaderProps {
   item: Item;
-  onClose: () => void;
-  hideCloseButton?: boolean;
 }
 
 const ItemDetailHeader: React.FC<ItemDetailHeaderProps> = ({ 
-  item, 
-  onClose, 
-  hideCloseButton = false
+  item
 }) => {
   const theme = useTheme();
   const dataService = DataService.getInstance();
@@ -40,10 +33,6 @@ const ItemDetailHeader: React.FC<ItemDetailHeaderProps> = ({
       p: 1,
       pb: 0.5
     }}>
-      <FactorioIcon 
-        itemId={item.id} 
-        size={24} 
-      />
       <Box flex={1}>
         <Typography 
           variant="subtitle1"
@@ -74,12 +63,6 @@ const ItemDetailHeader: React.FC<ItemDetailHeaderProps> = ({
           /{inventoryItem.maxCapacity.toLocaleString()}
         </Typography>
       </Box>
-
-      {!hideCloseButton && (
-        <IconButton onClick={onClose} size="small">
-          <CloseIcon />
-        </IconButton>
-      )}
     </Box>
   );
 };

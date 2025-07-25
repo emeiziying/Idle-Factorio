@@ -3,10 +3,19 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { InventoryItem, CraftingTask, Recipe, DeployedContainer, OperationResult } from '../types/index';
+import type { 
+  Technology, 
+  TechResearchState, 
+  ResearchQueueItem, 
+  TechCategory,
+  ResearchPriority
+} from '../types/technology';
+import type { InventoryOperations } from '../types/inventory';
 import type { FacilityInstance } from '../types/facilities';
 import { RecipeService } from '../services/RecipeService';
 import { getStorageConfig } from '../data/storageConfigs';
 import DataService from '../services/DataService';
+import TechnologyService from '../services/TechnologyService';
 
 interface GameState {
   // 库存系统
@@ -30,6 +39,14 @@ interface GameState {
   favoriteRecipes: Set<string>;
   recentRecipes: string[];
   maxRecentRecipes: number;
+
+  // 科技系统
+  technologies: Map<string, Technology>;
+  researchState: TechResearchState | null;
+  researchQueue: ResearchQueueItem[];
+  unlockedTechs: Set<string>;
+  autoResearch: boolean;
+  techCategories: TechCategory[];
   
   // Actions
   updateInventory: (itemId: string, amount: number) => void;
@@ -69,6 +86,19 @@ interface GameState {
     mostEfficientRecipe?: Recipe;
   };
   searchRecipes: (query: string) => Recipe[];
+
+  // 科技系统 Actions
+  initializeTechnologyService: () => Promise<void>;
+  startResearch: (techId: string) => Promise<boolean>;
+  completeResearch: (techId: string) => void;
+  addToResearchQueue: (techId: string, priority?: ResearchPriority) => boolean;
+  removeFromResearchQueue: (techId: string) => void;
+  reorderResearchQueue: (techId: string, newPosition: number) => boolean;
+  setAutoResearch: (enabled: boolean) => void;
+  getTechnology: (techId: string) => Technology | undefined;
+  isTechUnlocked: (techId: string) => boolean;
+  isTechAvailable: (techId: string) => boolean;
+  updateResearchProgress: (deltaTime: number) => void;
 }
 
 const useGameStore = create<GameState>()(
@@ -85,6 +115,14 @@ const useGameStore = create<GameState>()(
       favoriteRecipes: new Set(),
       recentRecipes: [],
       maxRecentRecipes: 10,
+
+      // 科技系统初始状态
+      technologies: new Map(),
+      researchState: null,
+      researchQueue: [],
+      unlockedTechs: new Set(),
+      autoResearch: true,
+      techCategories: [],
 
       // 库存管理
       updateInventory: (itemId: string, amount: number) => {
@@ -446,6 +484,188 @@ const useGameStore = create<GameState>()(
         get().recalculateItemCapacity(container.targetItemId);
       },
 
+      // ========== 科技系统 Actions ==========
+
+      // 初始化科技服务
+      initializeTechnologyService: async () => {
+        try {
+          const techService = TechnologyService;
+          if (!techService.isServiceInitialized()) {
+            await techService.initialize();
+            
+            // 创建库存操作实现并注入到科技服务
+            const inventoryOps: InventoryOperations = {
+              getItemAmount: (itemId: string) => {
+                return get().getInventoryItem(itemId).currentAmount;
+              },
+              updateItemAmount: (itemId: string, change: number) => {
+                get().updateInventory(itemId, change);
+              },
+              hasEnoughItems: (requirements: Record<string, number>) => {
+                return Object.entries(requirements).every(([itemId, required]) => {
+                  const available = get().getInventoryItem(itemId).currentAmount;
+                  return available >= required;
+                });
+              },
+              consumeItems: (requirements: Record<string, number>) => {
+                // 先检查是否有足够的物品
+                const hasEnough = Object.entries(requirements).every(([itemId, required]) => {
+                  const available = get().getInventoryItem(itemId).currentAmount;
+                  return available >= required;
+                });
+                
+                if (!hasEnough) {
+                  return false;
+                }
+                
+                // 消耗物品
+                Object.entries(requirements).forEach(([itemId, required]) => {
+                  get().updateInventory(itemId, -required);
+                });
+                
+                return true;
+              }
+            };
+            
+            // 注入库存操作到科技服务
+            techService.setInventoryOperations(inventoryOps);
+            
+            // 同步科技状态到store
+            const allTechs = techService.getAllTechnologies();
+            const techMap = new Map(allTechs.map(tech => [tech.id, tech]));
+            const techTreeState = techService.getTechTreeState();
+            const unlockedTechs = new Set(techTreeState.unlockedTechs);
+            const techCategories = techService.getTechCategories();
+            
+            set(() => ({
+              technologies: techMap,
+              unlockedTechs,
+              techCategories
+            }));
+          }
+        } catch (error) {
+          console.error('Failed to initialize TechnologyService:', error);
+        }
+      },
+
+      // 开始研究
+      startResearch: async (techId: string) => {
+        const techService = TechnologyService;
+        const result = await techService.startResearch(techId);
+        
+        if (result.success) {
+          const currentResearch = techService.getCurrentResearch();
+          const queue = techService.getResearchQueue();
+          
+          set(() => ({
+            researchState: currentResearch || null,
+            researchQueue: queue
+          }));
+        }
+        
+        return result.success;
+      },
+
+      // 完成研究
+      completeResearch: (techId: string) => {
+        const techService = TechnologyService;
+        techService.completeResearch(techId);
+        
+        // 更新store状态
+        const unlockedTechs = new Set([...get().unlockedTechs, techId]);
+        const currentResearch = techService.getCurrentResearch();
+        const queue = techService.getResearchQueue();
+        
+        set(() => ({
+          unlockedTechs,
+          researchState: currentResearch || null,
+          researchQueue: queue
+        }));
+      },
+
+      // 添加到研究队列
+      addToResearchQueue: (techId: string, priority?: ResearchPriority) => {
+        const techService = TechnologyService;
+        const result = techService.addToResearchQueue(techId, priority);
+        
+        if (result.success) {
+          const queue = techService.getResearchQueue();
+          set(() => ({
+            researchQueue: queue
+          }));
+        }
+        
+        return result.success;
+      },
+
+      // 从队列移除
+      removeFromResearchQueue: (techId: string) => {
+        const techService = TechnologyService;
+        const success = techService.removeFromResearchQueue(techId);
+        
+        if (success) {
+          const queue = techService.getResearchQueue();
+          set(() => ({
+            researchQueue: queue
+          }));
+        }
+      },
+
+      // 重新排序队列
+      reorderResearchQueue: (techId: string, newPosition: number) => {
+        const techService = TechnologyService;
+        const success = techService.reorderResearchQueue(techId, newPosition);
+        
+        if (success) {
+          const queue = techService.getResearchQueue();
+          set(() => ({
+            researchQueue: queue
+          }));
+        }
+        
+        return success;
+      },
+
+      // 设置自动研究
+      setAutoResearch: (enabled: boolean) => {
+        const techService = TechnologyService;
+        techService.setAutoResearch(enabled);
+        
+        set(() => ({
+          autoResearch: enabled
+        }));
+      },
+
+      // 获取科技
+      getTechnology: (techId: string) => {
+        return get().technologies.get(techId);
+      },
+
+      // 检查科技是否已解锁
+      isTechUnlocked: (techId: string) => {
+        return get().unlockedTechs.has(techId);
+      },
+
+      // 检查科技是否可研究
+      isTechAvailable: (techId: string) => {
+        const techService = TechnologyService;
+        return techService.isTechAvailable(techId);
+      },
+
+      // 更新研究进度
+      updateResearchProgress: (deltaTime: number) => {
+        const techService = TechnologyService;
+        techService.updateResearchProgress(deltaTime);
+        
+        // 更新store中的研究状态
+        const currentResearch = techService.getCurrentResearch();
+        if (currentResearch) {
+          set(() => ({
+            researchState: currentResearch
+          }));
+        }
+      },
+
       clearGameData: () => {
         // 清除localStorage
         localStorage.removeItem('factorio-game-storage');
@@ -460,6 +680,13 @@ const useGameStore = create<GameState>()(
           totalItemsProduced: 0,
           favoriteRecipes: new Set(),
           recentRecipes: [],
+          // 重置科技系统状态
+          technologies: new Map(),
+          researchState: null,
+          researchQueue: [],
+          unlockedTechs: new Set(),
+          autoResearch: true,
+          techCategories: [],
         }));
         
         console.log('Game data cleared successfully');
@@ -469,15 +696,21 @@ const useGameStore = create<GameState>()(
       name: 'factorio-game-storage',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        ...state,
         inventory: Array.from(state.inventory.entries()),
-        favoriteRecipes: Array.from(state.favoriteRecipes)
+        craftingQueue: state.craftingQueue,
+        favoriteRecipes: Array.from(state.favoriteRecipes),
+        technologies: Array.from(state.technologies.entries()),
+        unlockedTechs: Array.from(state.unlockedTechs),
+        techCategories: state.techCategories
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
-          // 恢复 Map 和 Set 结构
           state.inventory = new Map(state.inventory as unknown as [string, InventoryItem][]);
+          state.craftingQueue = state.craftingQueue as CraftingTask[];
           state.favoriteRecipes = new Set(state.favoriteRecipes as unknown as string[]);
+          state.technologies = new Map(state.technologies as unknown as [string, Technology][]);
+          state.unlockedTechs = new Set(state.unlockedTechs as unknown as string[]);
+          state.techCategories = state.techCategories as TechCategory[];
         }
       }
     }

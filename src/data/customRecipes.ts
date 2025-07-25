@@ -59,11 +59,49 @@ const WOOD_RECIPES: Recipe[] = [
 ];
 
 /**
+ * 科技包配方
+ * 基于 Factorio 官方数据
+ */
+const SCIENCE_PACK_RECIPES: Recipe[] = [
+  // 自动化科技包
+  {
+    id: "automation-science-pack",
+    name: "Automation Science Pack",
+    category: "science-packs",
+    time: 5,
+    in: { 
+      "copper-plate": 1, 
+      "iron-gear-wheel": 1 
+    },
+    out: { "automation-science-pack": 1 },
+    cost: 0.5, // 制作成本
+    flags: ["automation"],
+    producers: ["assembling-machine-1", "assembling-machine-2", "assembling-machine-3"],
+    locations: ["nauvis"]
+  },
+
+  // 铁齿轮配方（如果需要）
+  {
+    id: "iron-gear-wheel",
+    name: "Iron Gear Wheel",
+    category: "intermediate-products",
+    time: 0.5,
+    in: { "iron-plate": 2 },
+    out: { "iron-gear-wheel": 1 },
+    cost: 0.25,
+    flags: ["automation"],
+    producers: ["assembling-machine-1", "assembling-machine-2", "assembling-machine-3"],
+    locations: ["nauvis"]
+  }
+];
+
+/**
  * 所有自定义配方
  * 按物品类型分组，便于管理和扩展
  */
 export const CUSTOM_RECIPES: Recipe[] = [
   ...WOOD_RECIPES,
+  ...SCIENCE_PACK_RECIPES,
   // 在这里添加其他自定义配方
   // 例如：其他原材料的手动采集配方
   // 例如：特殊物品的配方
@@ -75,6 +113,8 @@ export const CUSTOM_RECIPES: Recipe[] = [
  */
 export const CUSTOM_RECIPES_BY_ITEM: Record<string, Recipe[]> = {
   wood: WOOD_RECIPES,
+  'automation-science-pack': SCIENCE_PACK_RECIPES.filter(r => r.out['automation-science-pack']),
+  'iron-gear-wheel': SCIENCE_PACK_RECIPES.filter(r => r.out['iron-gear-wheel']),
   // 在这里添加其他物品的配方
   // 例如：
   // stone: STONE_RECIPES,

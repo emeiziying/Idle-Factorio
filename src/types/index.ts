@@ -1,5 +1,7 @@
 // 核心游戏类型定义
 
+import type { Technology } from './technology';
+
 // 分类接口
 export interface Category {
   id: string;
@@ -92,6 +94,7 @@ export interface GameData {
   items: Item[];
   recipes: Recipe[];
   icons: IconData[];
+  technologies?: Technology[]; // 科技数据（可选，向后兼容）
 }
 
 // 物品详情接口
@@ -134,3 +137,6 @@ export interface OperationResult {
   reason?: string;
   message: string;
 }
+
+// 导出科技系统相关类型
+export * from './technology';

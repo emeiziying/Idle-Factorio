@@ -3,10 +3,12 @@
 class UserProgressService {
   private static instance: UserProgressService;
   private unlockedItems: Set<string>;
+  private unlockedTechs: Set<string>;
   private readonly STORAGE_KEY = 'factorio_user_progress';
 
   private constructor() {
     this.unlockedItems = new Set();
+    this.unlockedTechs = new Set();
     this.loadProgress();
     this.initializeDefaultUnlocks();
   }
@@ -40,9 +42,34 @@ class UserProgressService {
     return Array.from(this.unlockedItems);
   }
 
+  // ========== 科技解锁管理 ==========
+
+  // 检查科技是否已解锁
+  isTechUnlocked(techId: string): boolean {
+    return this.unlockedTechs.has(techId);
+  }
+
+  // 解锁单个科技
+  unlockTech(techId: string): void {
+    this.unlockedTechs.add(techId);
+    this.saveProgress();
+  }
+
+  // 批量解锁科技
+  unlockTechs(techIds: string[]): void {
+    techIds.forEach(id => this.unlockedTechs.add(id));
+    this.saveProgress();
+  }
+
+  // 获取所有已解锁科技ID
+  getUnlockedTechs(): string[] {
+    return Array.from(this.unlockedTechs);
+  }
+
   // 重置用户进度
   resetProgress(): void {
     this.unlockedItems.clear();
+    this.unlockedTechs.clear();
     this.initializeDefaultUnlocks();
     this.saveProgress();
   }
@@ -54,6 +81,7 @@ class UserProgressService {
       if (saved) {
         const data = JSON.parse(saved);
         this.unlockedItems = new Set(data.unlockedItems || []);
+        this.unlockedTechs = new Set(data.unlockedTechs || []);
       }
     } catch (error) {
       console.warn('Failed to load user progress:', error);
@@ -65,6 +93,7 @@ class UserProgressService {
     try {
       const data = {
         unlockedItems: Array.from(this.unlockedItems),
+        unlockedTechs: Array.from(this.unlockedTechs),
         lastUpdated: Date.now()
       };
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));

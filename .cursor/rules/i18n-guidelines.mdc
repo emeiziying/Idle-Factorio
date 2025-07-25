@@ -1,0 +1,98 @@
+# i18n 国际化指南
+
+## 📋 概述
+
+本项目支持国际化（i18n），所有用户可见的文本都应该使用国际化系统，而不是硬编码的中文或英文文本。
+
+## 🗂️ 文件结构
+
+- **翻译文件位置**: `data/spa/i18n/` 目录
+- **中文翻译**: `data/spa/i18n/zh.json`
+- **日文翻译**: `data/spa/i18n/ja.json`
+- **服务类**: `src/services/DataService.ts` 中的 `loadI18nData()` 方法
+
+## 🔧 使用方法
+
+### 1. 在组件中使用i18n
+
+```typescript
+import DataService from '../services/DataService';
+
+// 在组件中获取翻译
+const dataService = DataService.getInstance();
+const localizedName = dataService.getLocalizedItemName('iron-plate');
+const localizedCategoryName = dataService.getLocalizedCategoryName('logistics');
+```
+
+### 2. 可用的翻译方法
+
+- `getLocalizedItemName(itemId: string)` - 获取物品的本地化名称
+- `getLocalizedCategoryName(categoryId: string)` - 获取分类的本地化名称
+- `getLocalizedRecipeName(recipeId: string)` - 获取配方的本地化名称
+- `getLocalizedLocationName(locationId: string)` - 获取位置的本地化名称
+
+### 3. 添加新的翻译
+
+当需要添加新的翻译时：
+
+1. **更新中文翻译文件**: `data/spa/i18n/zh.json`
+2. **更新日文翻译文件**: `data/spa/i18n/ja.json`
+3. **确保翻译键的一致性**
+
+## ❌ 避免的做法
+
+```typescript
+// ❌ 错误：硬编码中文文本
+return <div>铁板</div>;
+
+// ❌ 错误：硬编码英文文本
+return <div>Iron Plate</div>;
+
+// ✅ 正确：使用i18n
+const localizedName = dataService.getLocalizedItemName('iron-plate');
+return <div>{localizedName}</div>;
+```
+
+## ✅ 正确的做法
+
+```typescript
+// ✅ 在组件中正确使用i18n
+import DataService from '../services/DataService';
+
+function ItemCard({ itemId }: { itemId: string }) {
+  const dataService = DataService.getInstance();
+  const itemName = dataService.getLocalizedItemName(itemId);
+  const categoryName = dataService.getLocalizedCategoryName('logistics');
+  
+  return (
+    <div>
+      <h3>{itemName}</h3>
+      <span>{categoryName}</span>
+    </div>
+  );
+}
+```
+
+## 🔍 相关文件
+
+- [DataService.ts](mdc:src/services/DataService.ts) - i18n服务实现
+- [zh.json](mdc:data/spa/i18n/zh.json) - 中文翻译文件
+- [ja.json](mdc:data/spa/i18n/ja.json) - 日文翻译文件
+
+## 📝 注意事项
+
+1. **始终使用翻译键**: 不要直接使用中文或英文文本
+2. **保持键名一致性**: 确保所有语言文件中的键名一致
+3. **测试多语言**: 在开发过程中测试不同语言环境
+4. **更新文档**: 添加新翻译时记得更新相关文档
+
+## 🚀 最佳实践
+
+- 在开发新功能时，首先考虑i18n需求
+- 使用有意义的翻译键名
+- 保持翻译文件的整洁和一致性
+- 定期检查和更新翻译内容
+description:
+globs:
+alwaysApply: false
+---

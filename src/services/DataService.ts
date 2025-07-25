@@ -420,6 +420,29 @@ class DataService {
       recommendedRecipe: this.getMostEfficientRecipe(itemId)
     };
   }
+
+  // 获取所有科技数据（原始JSON格式）
+  getRawGameData(): unknown {
+    return this.gameData;
+  }
+
+  // 获取科技数据
+  getTechnologies(): unknown[] {
+    if (!this.gameData) return [];
+    const rawData = this.gameData as unknown as Record<string, unknown>;
+    const items = rawData.items as unknown[];
+    return items.filter(item => {
+      const itemData = item as Record<string, unknown>;
+      return itemData.category === 'technology' && itemData.technology;
+    });
+  }
+
+  // 获取科技分类数据
+  getTechCategories(): unknown[] {
+    if (!this.gameData) return [];
+    const rawData = this.gameData as unknown as Record<string, unknown>;
+    return (rawData.categories as unknown[]) || [];
+  }
 }
 
 export default DataService;
