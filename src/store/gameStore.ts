@@ -2,9 +2,11 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { InventoryItem, CraftingTask, Recipe } from '../types/index';
+import type { InventoryItem, CraftingTask, Recipe, DeployedContainer, OperationResult } from '../types/index';
 import type { FacilityInstance } from '../types/facilities';
 import { RecipeService } from '../services/RecipeService';
+import { getStorageConfig } from '../data/storageConfigs';
+import DataService from '../services/DataService';
 
 interface GameState {
   // 库存系统
@@ -16,6 +18,9 @@ interface GameState {
   
   // 设施系统
   facilities: FacilityInstance[];
+  
+  // 存储容器系统
+  deployedContainers: DeployedContainer[];
   
   // 游戏统计
   gameTime: number;
@@ -29,6 +34,7 @@ interface GameState {
   // Actions
   updateInventory: (itemId: string, amount: number) => void;
   getInventoryItem: (itemId: string) => InventoryItem;
+  recalculateItemCapacity: (itemId: string) => void;
   addCraftingTask: (task: Omit<CraftingTask, 'id'>) => boolean;
   removeCraftingTask: (taskId: string) => void;
   updateCraftingProgress: (taskId: string, progress: number) => void;
@@ -38,6 +44,13 @@ interface GameState {
   removeFacility: (facilityId: string) => void;
   incrementGameTime: (deltaTime: number) => void;
   clearGameData: () => void;
+  
+  // 存储容器相关 Actions
+  deployChestForStorage: (chestType: string, targetItemId: string) => OperationResult;
+  craftChest: (chestType: string, quantity?: number) => OperationResult;
+  canCraftChest: (chestType: string, quantity?: number) => boolean;
+  getDeployedContainersForItem: (itemId: string) => DeployedContainer[];
+  removeDeployedContainer: (containerId: string) => void;
   
   // 配方相关 Actions
   addFavoriteRecipe: (recipeId: string) => void;
@@ -66,6 +79,7 @@ const useGameStore = create<GameState>()(
       craftingQueue: [],
       maxQueueSize: 50,
       facilities: [],
+      deployedContainers: [],
       gameTime: 0,
       totalItemsProduced: 0,
       favoriteRecipes: new Set(),
@@ -76,14 +90,7 @@ const useGameStore = create<GameState>()(
       updateInventory: (itemId: string, amount: number) => {
         set((state) => {
           const newInventory = new Map(state.inventory);
-          const currentItem = newInventory.get(itemId) || {
-            itemId,
-            currentAmount: 0,
-            maxCapacity: 1000, // 默认容量
-            productionRate: 0,
-            consumptionRate: 0,
-            status: 'normal' as const
-          };
+          const currentItem = newInventory.get(itemId) || get().getInventoryItem(itemId);
 
           const newAmount = Math.max(0, currentItem.currentAmount + amount);
           const updatedItem = {
@@ -102,14 +109,61 @@ const useGameStore = create<GameState>()(
 
       getInventoryItem: (itemId: string) => {
         const inventory = get().inventory;
-        return inventory.get(itemId) || {
+        const existing = inventory.get(itemId);
+        
+        if (existing) {
+          return existing;
+        }
+        
+        // 新物品，计算默认容量
+        const dataService = DataService.getInstance();
+        const item = dataService.getItem(itemId);
+        const stackSize = item?.stack || 100; // 默认堆叠大小
+        
+        // 获取已部署的容器
+        const containers = get().deployedContainers.filter(c => c.targetItemId === itemId);
+        const additionalStacks = containers.reduce((sum, c) => sum + c.additionalStacks, 0);
+        
+        const baseStacks = 1; // 默认1个堆叠
+        const totalStacks = baseStacks + additionalStacks;
+        
+        return {
           itemId,
           currentAmount: 0,
-          maxCapacity: 1000,
+          stackSize,
+          baseStacks,
+          additionalStacks,
+          totalStacks,
+          maxCapacity: totalStacks * stackSize,
           productionRate: 0,
           consumptionRate: 0,
           status: 'normal' as const
         };
+      },
+
+      recalculateItemCapacity: (itemId: string) => {
+        set(state => {
+          const newInventory = new Map(state.inventory);
+          const currentItem = newInventory.get(itemId);
+          
+          if (currentItem) {
+            // 获取最新的容器信息
+            const containers = state.deployedContainers.filter(c => c.targetItemId === itemId);
+            const additionalStacks = containers.reduce((sum, c) => sum + c.additionalStacks, 0);
+            const totalStacks = currentItem.baseStacks + additionalStacks;
+            
+            const updatedItem = {
+              ...currentItem,
+              additionalStacks,
+              totalStacks,
+              maxCapacity: totalStacks * currentItem.stackSize
+            };
+            
+            newInventory.set(itemId, updatedItem);
+          }
+          
+          return { inventory: newInventory };
+        });
       },
 
       // 制作队列管理
@@ -269,6 +323,129 @@ const useGameStore = create<GameState>()(
         return RecipeService.searchRecipes(query);
       },
 
+      // 存储容器相关方法
+      deployChestForStorage: (chestType: string, targetItemId: string) => {
+        const config = getStorageConfig(chestType);
+        if (!config) {
+          return {
+            success: false,
+            reason: 'invalid_chest_type',
+            message: `无效的箱子类型: ${chestType}`
+          };
+        }
+        
+        const chestItem = get().getInventoryItem(config.itemId);
+        
+        // 检查是否有现成的箱子
+        if (chestItem.currentAmount <= 0) {
+          return {
+            success: false,
+            reason: 'insufficient_chest',
+            message: `没有可用的${config.name}，请先制造`
+          };
+        }
+        
+        // 消耗1个箱子
+        get().updateInventory(config.itemId, -1);
+        
+        // 创建部署记录
+        const deployment: DeployedContainer = {
+          id: `deployed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          chestType,
+          chestItemId: config.itemId,
+          targetItemId,
+          additionalStacks: config.additionalStacks || 0,
+          deployedAt: Date.now()
+        };
+        
+        set(state => ({
+          deployedContainers: [...state.deployedContainers, deployment]
+        }));
+        
+        // 重新计算目标物品的容量
+        get().recalculateItemCapacity(targetItemId);
+        
+        return {
+          success: true,
+          message: `为 ${targetItemId} 成功部署了${config.name}`
+        };
+      },
+
+      craftChest: (chestType: string, quantity: number = 1) => {
+        const config = getStorageConfig(chestType);
+        if (!config) {
+          return {
+            success: false,
+            reason: 'invalid_chest_type',
+            message: `无效的箱子类型: ${chestType}`
+          };
+        }
+        
+        // 检查原材料是否足够
+        const hasEnoughMaterials = Object.entries(config.recipe).every(([itemId, required]) => {
+          const available = get().getInventoryItem(itemId).currentAmount;
+          return available >= required * quantity;
+        });
+        
+        if (!hasEnoughMaterials) {
+          return {
+            success: false,
+            reason: 'insufficient_materials',
+            message: '原材料不足'
+          };
+        }
+        
+        // 消耗原材料
+        Object.entries(config.recipe).forEach(([itemId, required]) => {
+          get().updateInventory(itemId, -required * quantity);
+        });
+        
+        // 添加到制作队列
+        for (let i = 0; i < quantity; i++) {
+          get().addCraftingTask({
+            recipeId: `craft_${config.itemId}`,
+            itemId: config.itemId,
+            quantity: 1,
+            progress: 0,
+            startTime: Date.now(),
+            craftingTime: config.craftingTime * 1000,
+            status: 'pending'
+          });
+        }
+        
+        return {
+          success: true,
+          message: `开始制造${quantity}个${config.name}`
+        };
+      },
+
+      canCraftChest: (chestType: string, quantity: number = 1) => {
+        const config = getStorageConfig(chestType);
+        if (!config) return false;
+        
+        return Object.entries(config.recipe).every(([itemId, required]) => {
+          const available = get().getInventoryItem(itemId).currentAmount;
+          return available >= required * quantity;
+        });
+      },
+
+      getDeployedContainersForItem: (itemId: string) => {
+        return get().deployedContainers.filter(c => c.targetItemId === itemId);
+      },
+
+      removeDeployedContainer: (containerId: string) => {
+        const container = get().deployedContainers.find(c => c.id === containerId);
+        if (!container) return;
+        
+        // 移除容器
+        set(state => ({
+          deployedContainers: state.deployedContainers.filter(c => c.id !== containerId)
+        }));
+        
+        // 重新计算目标物品的容量
+        get().recalculateItemCapacity(container.targetItemId);
+      },
+
       clearGameData: () => {
         // 清除localStorage
         localStorage.removeItem('factorio-game-storage');
@@ -278,6 +455,7 @@ const useGameStore = create<GameState>()(
           inventory: new Map(),
           craftingQueue: [],
           facilities: [],
+          deployedContainers: [],
           gameTime: 0,
           totalItemsProduced: 0,
           favoriteRecipes: new Set(),

@@ -26,7 +26,7 @@ export interface Item {
   belt?: {
     speed: number;
   };
-  machine?: any;
+  machine?: unknown;
 }
 
 // 配方接口
@@ -50,7 +50,14 @@ export interface Recipe {
 export interface InventoryItem {
   itemId: string;
   currentAmount: number;
-  maxCapacity: number;
+  
+  // 堆叠系统
+  stackSize: number;           // 单堆叠大小（来自物品数据）
+  baseStacks: number;          // 基础堆叠数（默认1）
+  additionalStacks: number;    // 箱子提供的额外堆叠
+  totalStacks: number;         // 总堆叠数 = base + additional
+  maxCapacity: number;         // 总容量 = totalStacks × stackSize
+  
   productionRate: number;
   consumptionRate: number;
   status: 'producing' | 'stopped' | 'insufficient' | 'inventory_full' | 'researching' | 'normal';
@@ -92,4 +99,38 @@ export interface ItemDetails {
   item: Item;
   recipes: Recipe[];
   usedInRecipes: Recipe[];
+}
+
+// 存储配置接口 - 支持固体和液体存储
+export interface StorageConfig {
+  itemId: string;              // 存储设备作为物品的ID
+  name: string;
+  category: 'solid' | 'liquid'; // 存储类型：固体或液体
+  additionalStacks?: number;    // 固体存储：提供的额外堆叠数
+  fluidCapacity?: number;       // 液体存储：液体容量（单位）
+  recipe: { [itemId: string]: number }; // 制造配方
+  craftingTime: number;        // 制造时间（秒）
+  description: string;
+  dimensions?: string;          // 尺寸（如 "3×3"）
+  requiredTechnology?: string;  // 需要的科技
+}
+
+// 向后兼容的别名
+export type ChestConfig = StorageConfig;
+
+// 已部署的存储容器
+export interface DeployedContainer {
+  id: string;
+  chestType: string;           // 箱子类型
+  chestItemId: string;         // 箱子物品ID
+  targetItemId: string;        // 为哪个物品提供存储
+  additionalStacks: number;    // 提供的堆叠数
+  deployedAt: number;          // 部署时间
+}
+
+// 操作结果接口
+export interface OperationResult {
+  success: boolean;
+  reason?: string;
+  message: string;
 }
