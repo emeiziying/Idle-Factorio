@@ -4,7 +4,8 @@ import {
   CardContent,
   Typography,
   Box,
-  Chip
+  Chip,
+  useTheme
 } from '@mui/material';
 import type { Recipe } from '../../types/index';
 import FactorioIcon from '../common/FactorioIcon';
@@ -15,6 +16,7 @@ interface UsageCardProps {
 }
 
 const UsageCard: React.FC<UsageCardProps> = ({ usedInRecipes }) => {
+  const theme = useTheme();
   const dataService = DataService.getInstance();
 
   const getLocalizedItemName = (itemId: string): string => {
@@ -26,12 +28,12 @@ const UsageCard: React.FC<UsageCardProps> = ({ usedInRecipes }) => {
   }
 
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="subtitle2" gutterBottom>
+    <Card sx={{ ...theme.customStyles.layout.cardCompact, bgcolor: 'transparent', boxShadow: 1 }}>
+      <CardContent sx={{ p: theme.customStyles.spacing.compact }}>
+        <Typography variant="subtitle2" gutterBottom sx={theme.customStyles.typography.subtitle}>
           用于制作
         </Typography>
-        <Box display="flex" flexWrap="wrap" gap={1}>
+        <Box display="flex" flexWrap="wrap" gap={theme.customStyles.spacing.compact}>
           {usedInRecipes.map((recipe) => {
             const outputItemId = Object.keys(recipe.out)[0];
             return (

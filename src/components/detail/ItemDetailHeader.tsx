@@ -1,50 +1,87 @@
 import React from 'react';
 import {
-  DialogTitle,
   Typography,
   Box,
-  IconButton
+  IconButton,
+  useTheme
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import type { Item } from '../../types/index';
 import FactorioIcon from '../common/FactorioIcon';
-import { useIsMobile } from '../../hooks/useIsMobile';
 import DataService from '../../services/DataService';
+import useGameStore from '../../store/gameStore';
 
 interface ItemDetailHeaderProps {
   item: Item;
   onClose: () => void;
+  hideCloseButton?: boolean;
 }
 
-const ItemDetailHeader: React.FC<ItemDetailHeaderProps> = ({ item, onClose }) => {
-  const isMobile = useIsMobile();
+const ItemDetailHeader: React.FC<ItemDetailHeaderProps> = ({ 
+  item, 
+  onClose, 
+  hideCloseButton = false
+}) => {
+  const theme = useTheme();
   const dataService = DataService.getInstance();
+  const { getInventoryItem } = useGameStore();
 
   const getLocalizedItemName = (itemId: string): string => {
     return dataService.getLocalizedItemName(itemId);
   };
 
+  const inventoryItem = getInventoryItem(item.id);
+
   return (
-    <DialogTitle sx={{ 
+    <Box sx={{ 
       display: 'flex', 
       alignItems: 'center', 
-      gap: 2,
-      p: isMobile ? 2 : 3,
-      pb: isMobile ? 1 : 2
+      gap: 1.5,
+      p: 1,
+      pb: 0.5
     }}>
-      <FactorioIcon itemId={item.id} size={isMobile ? 28 : 32} />
+      <FactorioIcon 
+        itemId={item.id} 
+        size={24} 
+      />
       <Box flex={1}>
-        <Typography variant={isMobile ? "h6" : "h6"} sx={{ fontSize: isMobile ? '1.1rem' : '1.25rem' }}>
+        <Typography 
+          variant="subtitle1"
+          sx={theme.customStyles.typography.compact}
+        >
           {getLocalizedItemName(item.id)}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}>
-          {item.description || '暂无描述'}
+      </Box>
+      
+      {/* 库存信息 */}
+      <Box sx={theme.customStyles.layout.inventoryInfo}>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            ...theme.customStyles.typography.compact,
+            color: 'primary.main'
+          }}
+        >
+          {inventoryItem.currentAmount.toLocaleString()}
+        </Typography>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            ...theme.customStyles.typography.small,
+            color: 'text.secondary',
+            ml: theme.customStyles.spacing.tight
+          }}
+        >
+          / {inventoryItem.maxCapacity.toLocaleString()}
         </Typography>
       </Box>
-      <IconButton onClick={onClose} size={isMobile ? "medium" : "small"}>
-        <CloseIcon />
-      </IconButton>
-    </DialogTitle>
+
+      {!hideCloseButton && (
+        <IconButton onClick={onClose} size="small">
+          <CloseIcon />
+        </IconButton>
+      )}
+    </Box>
   );
 };
 

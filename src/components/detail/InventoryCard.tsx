@@ -5,54 +5,58 @@ import {
   Typography,
   Grid,
   Chip,
-  Box
+  Box,
+  useTheme
 } from '@mui/material';
 import type { Item } from '../../types/index';
 import useGameStore from '../../store/gameStore';
-import { useIsMobile } from '../../hooks/useIsMobile';
 
 interface InventoryCardProps {
   item: Item;
 }
 
 const InventoryCard: React.FC<InventoryCardProps> = ({ item }) => {
+  const theme = useTheme();
   const { getInventoryItem } = useGameStore();
-  const isMobile = useIsMobile();
   
   const inventoryItem = getInventoryItem(item.id);
 
   return (
-    <Card sx={{ mb: isMobile ? 1.5 : 2 }}>
-      <CardContent sx={{ p: isMobile ? 1.5 : 2 }}>
-        <Typography variant="subtitle2" gutterBottom sx={{ fontSize: isMobile ? '0.9rem' : '1rem' }}>
+    <Card sx={{ ...theme.customStyles.layout.cardCompact, bgcolor: 'transparent', boxShadow: 1 }}>
+      <CardContent sx={{ p: theme.customStyles.spacing.compact }}>
+        <Typography 
+          variant="subtitle2" 
+          gutterBottom 
+          sx={theme.customStyles.typography.subtitle}
+        >
           库存信息
         </Typography>
-        <Grid container spacing={isMobile ? 1 : 2}>
+        <Grid container spacing={theme.customStyles.spacing.compact}>
           <Grid size={6}>
-            <Typography variant="body2" color="text.secondary" sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}>
+            <Typography variant="body2" color="text.secondary" sx={theme.customStyles.typography.small}>
               当前数量:
             </Typography>
-            <Typography variant="h6" color="primary.main" sx={{ fontSize: isMobile ? '1.1rem' : '1.25rem' }}>
+            <Typography variant="h6" color="primary.main" sx={theme.customStyles.typography.compact}>
               {inventoryItem.currentAmount.toLocaleString()}
             </Typography>
           </Grid>
           <Grid size={6}>
-            <Typography variant="body2" color="text.secondary" sx={{ fontSize: isMobile ? '0.8rem' : '0.875rem' }}>
+            <Typography variant="body2" color="text.secondary" sx={theme.customStyles.typography.small}>
               最大容量:
             </Typography>
-            <Typography variant="h6" sx={{ fontSize: isMobile ? '1.1rem' : '1.25rem' }}>
+            <Typography variant="h6" sx={theme.customStyles.typography.compact}>
               {inventoryItem.maxCapacity.toLocaleString()}
             </Typography>
           </Grid>
         </Grid>
         
         {inventoryItem.status !== 'normal' && (
-          <Box mt={1}>
+          <Box mt={theme.customStyles.spacing.compact}>
             <Chip
               label={inventoryItem.status}
               color="warning"
-              size={isMobile ? "small" : "small"}
-              sx={{ fontSize: isMobile ? '0.7rem' : '0.75rem' }}
+              size="small"
+              sx={theme.customStyles.typography.tiny}
             />
           </Box>
         )}

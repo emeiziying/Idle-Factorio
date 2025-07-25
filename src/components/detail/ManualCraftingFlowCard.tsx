@@ -56,7 +56,7 @@ const ManualCraftingFlowCard: React.FC<ManualCraftingFlowCardProps> = ({ item, o
     const validation = validator.validateRecipe(recipe);
     
     return (
-      <Card sx={{ mb: 2, bgcolor: 'background.paper' }}>
+      <Card sx={{ mb: 2, bgcolor: 'transparent', boxShadow: 1 }}>
         <CardContent sx={{ p: 2 }}>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
             <Typography variant="subtitle2" fontWeight="bold" color="warning.main">
@@ -100,7 +100,7 @@ const ManualCraftingFlowCard: React.FC<ManualCraftingFlowCardProps> = ({ item, o
 
   // 如果没有任何配方，显示默认信息
   return (
-    <Card sx={{ mb: 2, bgcolor: 'background.paper' }}>
+    <Card sx={{ mb: 2, bgcolor: 'transparent', boxShadow: 1 }}>
       <CardContent sx={{ p: 2 }}>
         <Typography variant="body2" color="text.secondary">
           此物品没有可用的制作配方。

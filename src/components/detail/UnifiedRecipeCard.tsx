@@ -88,7 +88,8 @@ const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({
       sx={{ 
         mb: 2,
         borderColor: cardVariant === 'outlined' ? 'divider' : 'transparent',
-        bgcolor: 'background.paper'
+        bgcolor: 'transparent',
+        boxShadow: 1
       }}
     >
       <CardContent sx={{ p: 2 }}>

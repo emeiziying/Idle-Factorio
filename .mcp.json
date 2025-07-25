@@ -28,6 +28,11 @@
       "serena": {
         "command": "uvx",
         "args": ["--from", "git+https://github.com/oraios/serena", "serena-mcp-server"]
+      },
+      "mui-mcp": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@mui/mcp@latest"]
       }
     }
   }

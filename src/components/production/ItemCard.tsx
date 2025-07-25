@@ -12,9 +12,10 @@ import { useIsMobile } from '../../hooks/useIsMobile';
 interface ItemCardProps {
   item: Item;
   onClick: () => void;
+  selected?: boolean;
 }
 
-const ItemCard: React.FC<ItemCardProps> = React.memo(({ item, onClick }) => {
+const ItemCard: React.FC<ItemCardProps> = React.memo(({ item, onClick, selected = false }) => {
   const getInventoryItem = useGameStore((state) => state.getInventoryItem);
   const inventoryItem = getInventoryItem(item.id);
   const isMobile = useIsMobile();
@@ -89,8 +90,9 @@ const ItemCard: React.FC<ItemCardProps> = React.memo(({ item, onClick }) => {
       {/* 物品图标 */}
       <FactorioIcon 
         itemId={item.id} 
-        size={isMobile ? 40 : 48} 
+        size={isMobile ? 36 : 48} 
         quantity={inventoryItem.currentAmount > 0 ? inventoryItem.currentAmount : undefined}
+        selected={selected}
       />
 
       {/* 状态指示器 - 左上角小点 */}

@@ -12,6 +12,8 @@ interface FactorioIconProps {
   showBorder?: boolean;
   customImage?: string; // 自定义图片URL
   shortage?: boolean; // 是否数量不足
+  selected?: boolean; // 是否选中状态
+  selectedBgColor?: string; // 选中时的背景色
 }
 
 const ICON_UNIT = 66; // 单个图标标准尺寸
@@ -25,7 +27,9 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
   quantity,
   showBorder = true,
   customImage,
-  shortage
+  shortage,
+  selected = false,
+  selectedBgColor = '#e39827'
 }) => {
   const [iconData, setIconData] = useState<IconData | null>(null);
   const [spriteSize, setSpriteSize] = useState<{ width: number; height: number } | null>(null);
@@ -66,13 +70,20 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
 
   const containerSize = showBorder ? size + 8 : size; // 图标尺寸 + 4px padding on each side (if border shown)
 
+  // 计算背景色
+  const getBackgroundColor = () => {
+    if (shortage) return 'error.main';
+    if (selected) return selectedBgColor;
+    return (customImage || (iconData?.position) ? '#313131' : '#999');
+  };
+
   // 公共容器样式
   const containerStyles = {
     width: containerSize,
     height: containerSize,
     ...(showBorder && {
       padding: '3px',
-      backgroundColor: shortage ? 'error.main' : (customImage || (iconData?.position) ? '#313131' : '#999'),
+      backgroundColor: getBackgroundColor(),
       borderTop: '1px solid #454545',
       borderLeft: '1px solid #212121',
       borderRight: '1px solid #212121',

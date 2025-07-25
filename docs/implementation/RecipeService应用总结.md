@@ -94,7 +94,7 @@ getRecipeComplexityScore(recipe: Recipe): number
 ## 组件应用
 
 ### 1. 现有组件更新
-- **ItemDetailDialog**: 添加配方分析标签页
+- **ItemDetailPanel**: 添加配方分析标签页
 - **RecipeInfo**: 使用 RecipeService 的统计功能
 - **CraftingQueue**: 通过 DataService 使用 RecipeService
 

@@ -7,7 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is **异星工厂 v2** (Factorio v2) - a React-based idle factory management game inspired by Factorio. The application is built with modern React architecture and implements core game mechanics for production management.
 
 **Current State**: Active development - Core modules implemented  
-**Tech Stack**: React 19.1.0 + TypeScript + Vite + Material-UI + Zustand
+**Tech Stack**: React 19.1.0 + TypeScript + Vite + Material-UI + Zustand  
+**Package Manager**: npm (both package-lock.json and pnpm-lock.yaml present - use npm consistently)
 
 ## Development Commands
 
@@ -15,15 +16,20 @@ This is **异星工厂 v2** (Factorio v2) - a React-based idle factory managemen
 # Start development server (with hot reload)
 npm run dev
 
-# Build for production (TypeScript compilation + Vite build)
+# Build for production (TypeScript compilation + Vite build)  
 npm run build
 
-# Lint code
+# Lint code (ESLint with TypeScript support)
 npm run lint
 
 # Preview production build
 npm run preview
+
+# Install dependencies
+npm install
 ```
+
+**Note**: Always run `npm run lint` after making code changes to ensure TypeScript and React code quality.
 
 ## Current Architecture
 
@@ -64,7 +70,8 @@ setInterval(() => {
 src/
 ├── components/
 │   ├── common/          # FactorioIcon, CategoryTabs, reusable UI
-│   ├── production/      # ItemDetailDialog, RecipeAnalysis, RecipeInfo
+│   ├── detail/          # Recipe cards and detail components
+│   ├── production/      # ItemDetailPanel, RecipeAnalysis, RecipeInfo
 │   ├── facilities/      # Facility management components (basic)
 │   ├── technology/      # Technology tree (planned)
 │   └── test/           # Development testing components
@@ -73,14 +80,22 @@ src/
 ├── types/             # TypeScript interfaces for game data
 ├── utils/             # customRecipeUtils, manualCraftingValidator
 ├── data/              # customRecipes.ts - Game-specific data
-└── hooks/             # Custom React hooks (if any)
+├── hooks/             # Custom React hooks (useCrafting, useIsMobile, etc.)
+└── examples/          # Example/demo components
 ```
+
+**Key Implementation Files**:
+- `src/services/DataService.ts` - Singleton game data manager with i18n support
+- `src/services/RecipeService.ts` - Advanced recipe analysis and optimization  
+- `src/store/gameStore.ts` - Zustand store with Map/Set serialization
+- `src/components/common/FactorioIcon.tsx` - Sprite sheet icon system
+- `src/utils/craftingEngine.ts` - Core crafting logic and validation
 
 ### Implemented Module Architecture
 
 1. **Production Module** (✅ Complete): 
    - Bottom navigation with CategoryTabs
-   - ItemDetailDialog with recipe analysis
+   - ItemDetailPanel with recipe analysis
    - Crafting queue management with progress tracking
    - Inventory system with capacity limits
 
@@ -100,6 +115,9 @@ src/
 
 ### Current Data Assets
 - **Game Data**: `/public/data/spa/` - Processed game data with internationalization
+  - `data.json` - Main game data (items, recipes, categories)
+  - `i18n/zh.json`, `i18n/ja.json` - Localization files
+  - `icons.webp` - Sprite sheet for all item icons
 - **Custom Recipes**: `/src/data/customRecipes.ts` - Game-specific recipe modifications
 - **Icons**: Sprite sheet-based icon system via FactorioIcon component
 
@@ -155,7 +173,7 @@ interface GameState {
 ### Key UI Components
 - **FactorioIcon**: Sprite sheet-based icon rendering system
 - **CategoryTabs**: Tab-based category navigation with dynamic content
-- **ItemDetailDialog**: Modal dialog with recipe analysis and crafting options
+- **ItemDetailPanel**: Right panel with recipe analysis and crafting options
 - **RecipeAnalysis**: Advanced recipe efficiency visualization
 - **CraftingQueue**: Real-time progress tracking and task management
 
@@ -259,3 +277,35 @@ const favoriteRecipes = useGameStore(state => state.favoriteRecipes); // Set<str
 - **Performance**: Utilize React.memo for expensive renders
 - **Material-UI**: Follow established theme and component patterns
 - **Error Handling**: Implement proper loading states and error boundaries
+
+## Critical Development Patterns
+
+### ESLint Configuration
+The project uses a modern ESLint setup with TypeScript support:
+- Files: `eslint.config.js` with `typescript-eslint` integration
+- Rules: React hooks, React refresh, and TypeScript recommended rules
+- **Always run `npm run lint` before committing changes**
+
+### TypeScript Configuration
+- Main config: `tsconfig.json` with references to `tsconfig.app.json` and `tsconfig.node.json`
+- Strict TypeScript checking enabled for type safety
+- Import paths and module resolution configured for the project structure
+
+### State Persistence Strategy
+Zustand store implements custom serialization for complex types:
+```typescript
+// Map and Set types are serialized/deserialized automatically
+favoriteRecipes: Set<string> // Persisted as array, restored as Set
+inventory: Map<string, InventoryItem> // Persisted as entries array
+```
+
+### Service Integration Pattern
+Services should be used for all business logic:
+```typescript
+// Correct - use service methods
+const recipes = RecipeService.getRecipesThatProduce(itemId);
+const item = DataService.getInstance().getItem(itemId);
+
+// Incorrect - don't implement business logic in components
+const recipes = gameData.recipes.filter(r => r.out[itemId]);
+```
