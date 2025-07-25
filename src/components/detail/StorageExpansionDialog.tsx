@@ -22,7 +22,8 @@ import type { Item } from '../../types/index';
 import useGameStore from '../../store/gameStore';
 import FactorioIcon from '../common/FactorioIcon';
 import DataService from '../../services/DataService';
-import { STORAGE_CONFIGS, getAvailableChestTypes } from '../../data/storageConfigs';
+import { getAvailableChestTypes } from '../../data/storageConfigs';
+import { storageService } from '../../services/StorageService';
 
 interface StorageExpansionDialogProps {
   open: boolean;
@@ -45,7 +46,7 @@ const ChestCraftingDialog: React.FC<ChestCraftingDialogProps> = ({
   const { craftChest, canCraftChest, getInventoryItem } = useGameStore();
   const dataService = DataService.getInstance();
 
-  const config = STORAGE_CONFIGS[chestType];
+  const config = storageService.getStorageConfig(chestType);
   if (!config) return null;
 
   const handleCraft = () => {
@@ -94,7 +95,7 @@ const ChestCraftingDialog: React.FC<ChestCraftingDialogProps> = ({
         <Box display="flex" gap={1} mb={2}>
           {Object.entries(config.recipe).map(([itemId, amount]) => {
             const available = getInventoryItem(itemId).currentAmount;
-            const needed = amount * craftQuantity;
+            const needed = (amount as number) * craftQuantity;
             const itemName = dataService.getLocalizedItemName(itemId);
             
             return (
@@ -223,7 +224,8 @@ const StorageExpansionDialog: React.FC<StorageExpansionDialogProps> = ({
         
         <DialogContent>
           {getAvailableChestTypes().map((chestType) => {
-            const config = STORAGE_CONFIGS[chestType];
+            const config = storageService.getStorageConfig(chestType);
+            if (!config) return null;
             const chestInventory = getInventoryItem(config.itemId);
             const hasChest = chestInventory.currentAmount > 0;
             const canCraft = canCraftChest(chestType);
@@ -287,9 +289,9 @@ const StorageExpansionDialog: React.FC<StorageExpansionDialogProps> = ({
                       <Chip
                         key={itemId}
                         icon={<FactorioIcon itemId={itemId} size={16} />}
-                        label={amount}
+                        label={amount as number}
                         size="small"
-                        color={hasEnoughMaterial(itemId, amount) ? "default" : "error"}
+                        color={hasEnoughMaterial(itemId, amount as number) ? "default" : "error"}
                       />
                     ))}
                   </Box>

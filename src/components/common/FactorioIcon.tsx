@@ -136,7 +136,7 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
           })
         }}
       />
-      {quantity && quantity > 0 && (
+      {quantity !== undefined && (
         <Box sx={quantityStyles}>
           {formatQuantity(quantity)}
         </Box>

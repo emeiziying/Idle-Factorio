@@ -10,7 +10,7 @@ import {
   Alert,
   useTheme
 } from '@mui/material';
-import { Analytics as AnalyticsIcon } from '@mui/icons-material';
+import { Analytics as AnalyticsIcon, Inventory as InventoryIcon } from '@mui/icons-material';
 import type { Item } from '../../types/index';
 import { useItemRecipes } from '../../hooks/useItemRecipes';
 import { useCrafting } from '../../hooks/useCrafting';
@@ -18,6 +18,7 @@ import ItemDetailHeader from '../detail/ItemDetailHeader';
 import ManualCraftingFlowCard from '../detail/ManualCraftingFlowCard';
 import RecipeFlowCard from '../detail/RecipeFlowCard';
 import UsageCard from '../detail/UsageCard';
+import InventoryManagementCard from '../detail/InventoryManagementCard';
 import RecipeAnalysis from './RecipeAnalysis';
 import ManualCraftingValidator from '../../utils/manualCraftingValidator';
 
@@ -85,6 +86,7 @@ const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item }) => {
             }}
           >
             <Tab label="基本信息" />
+            <Tab label="库存管理" icon={<InventoryIcon />} iconPosition="start" />
             <Tab label="配方分析" icon={<AnalyticsIcon />} iconPosition="start" />
           </Tabs>
         </Box>
@@ -135,6 +137,10 @@ const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item }) => {
           )}
 
           {activeTab === 1 && (
+            <InventoryManagementCard item={item} />
+          )}
+
+          {activeTab === 2 && (
             <RecipeAnalysis 
               itemId={item.id} 
               unlockedItems={[]} // 这里可以传入已解锁的物品列表

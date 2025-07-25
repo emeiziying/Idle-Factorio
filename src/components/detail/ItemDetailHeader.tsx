@@ -58,7 +58,7 @@ const ItemDetailHeader: React.FC<ItemDetailHeaderProps> = ({
         <Typography 
           variant="body2" 
           sx={{ 
-            ...theme.customStyles.typography.compact,
+            ...theme.customStyles.typography.small,
             color: 'primary.main'
           }}
         >
@@ -69,10 +69,9 @@ const ItemDetailHeader: React.FC<ItemDetailHeaderProps> = ({
           sx={{ 
             ...theme.customStyles.typography.small,
             color: 'text.secondary',
-            ml: theme.customStyles.spacing.tight
           }}
         >
-          / {inventoryItem.maxCapacity.toLocaleString()}
+          /{inventoryItem.maxCapacity.toLocaleString()}
         </Typography>
       </Box>
 
