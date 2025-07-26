@@ -23,20 +23,35 @@ import { RecipeService } from './RecipeService';
 import useGameStore from '../store/gameStore';
 import type { FacilityInstance } from '../types/facilities';
 
-// 从data.json加载的科技数据接口
-interface DataJsonTechnology {
+// 从data.json加载的科技配方接口
+interface TechRecipe {
   id: string;
   name: string;
   category: string;
-  time: number;
-  count?: number;
+  row: number;
+  producers?: string[];
   in: { [itemId: string]: number };
   out: { [itemId: string]: number };
-  producers?: string[];
   flags?: string[];
-  icon?: string;
-  iconText?: string;
-  row?: number;
+  researchTrigger?: {
+    type: string;
+    item?: string;
+    count?: number;
+  };
+  time?: number;
+  count?: number;
+}
+
+// 从data.json加载的科技物品接口
+interface TechItem {
+  id: string;
+  name: string;
+  category: string;
+  row: number;
+  technology?: {
+    prerequisites?: string[];
+    unlockedRecipes?: string[];
+  };
 }
 
 /**
@@ -46,6 +61,7 @@ interface DataJsonTechnology {
 export class TechnologyService {
   private static instance: TechnologyService;
   private techTree: Map<string, Technology> = new Map();
+  private techOrder: string[] = []; // 保存科技在JSON中的原始顺序
   private techState: TechTreeState;
   private eventEmitter: EventTarget = new EventTarget();
   private userProgressService: UserProgressService;
@@ -101,76 +117,58 @@ export class TechnologyService {
   }
 
   /**
-   * 从data.json转换科技数据
+   * 从data.json转换科技数据（同时使用配方和物品数据）
    */
-  private convertDataJsonTechnology(dataTech: DataJsonTechnology): Technology {
-    // 根据科技类型和前置条件计算研究成本
-    const researchCost = this.calculateResearchCost(dataTech);
-    const researchTime = this.calculateResearchTime(dataTech);
-    
+  private convertTechnologyFromDataJson(techId: string, techRecipe: TechRecipe, techItem: TechItem): Technology {
     // 使用DataService获取本地化的科技名称
     const dataService = DataService.getInstance();
-    const localizedName = dataService.getLocalizedRecipeName(dataTech.id) || dataTech.name;
+    let localizedName = dataService.getLocalizedRecipeName(techId);
+    if (!localizedName || localizedName === techId) {
+      localizedName = dataService.getLocalizedItemName(techId);
+    }
+    if (!localizedName || localizedName === techId) {
+      localizedName = techItem.name;
+    }
     
-    // 尝试从RecipeService获取对应的科技配方，优先使用配方中的icon字段
-    const techRecipe = RecipeService.getRecipeById(dataTech.id);
-    const iconId = techRecipe?.icon || dataTech.id;
+    // 从配方数据获取研究成本和时间
+    const researchCost = this.calculateResearchCostFromRecipe(techRecipe);
+    const researchTime = this.calculateResearchTimeFromRecipe(techRecipe);
     
-    // 使用RecipeService获取科技相关的配方
-    // 方法1：通过科技ID匹配配方
-    const techRecipesById = RecipeService.searchRecipes(dataTech.id);
+    // 从物品数据获取前置依赖和解锁内容
+    const prerequisites = techItem.technology?.prerequisites || [];
+    const unlockedRecipes = techItem.technology?.unlockedRecipes || [];
     
-    // 方法2：通过科技名称匹配配方
-    const techRecipesByName = RecipeService.searchRecipes(dataTech.name);
-    
-    // 方法3：获取所有配方，然后过滤出与科技相关的
-    const allRecipes = RecipeService.getAllRecipes();
-    const techRelatedRecipes = allRecipes.filter(recipe => {
-      // 检查配方是否与科技相关
-      const recipeName = recipe.name.toLowerCase();
-      const techName = dataTech.name.toLowerCase();
-      const techId = dataTech.id.toLowerCase();
-      
-      return recipeName.includes(techName) || 
-             recipeName.includes(techId) ||
-             recipe.id.includes(techId) ||
-             recipe.id.includes(techName);
-    });
-    
-    // 合并所有找到的配方，去重
-    const allTechRecipes = [...techRecipesById, ...techRecipesByName, ...techRelatedRecipes];
-    const uniqueRecipes = allTechRecipes.filter((recipe, index, self) => 
-      index === self.findIndex(r => r.id === recipe.id)
-    );
+    // 获取图标ID（优先使用RecipeService中的图标配置）
+    const iconId = RecipeService.getRecipeById(techId)?.icon || techId;
     
     return {
-      id: dataTech.id,
-      name: localizedName, // 使用本地化的名称
-      description: localizedName, // 使用本地化的名称作为描述
-      category: dataTech.category,
-      row: dataTech.row || 0,
-      prerequisites: [], // 从recipes数组获取的数据没有prerequisites字段，暂时设为空数组
+      id: techId,
+      name: localizedName,
+      description: localizedName,
+      category: 'technology', // 统一设为technology分类
+      row: techItem.row || 0,
+      prerequisites: prerequisites,
       researchCost,
       researchTime,
       unlocks: {
-        recipes: uniqueRecipes.map(recipe => recipe.id)
+        recipes: unlockedRecipes,
+        items: [], // 暂时为空，后续可以根据需要扩展
+        buildings: [] // 暂时为空，后续可以根据需要扩展
       },
-      position: { x: dataTech.row || 0, y: 0 }, // 简化位置计算
-      icon: iconId // 优先使用配方中的icon字段
+      position: { x: techItem.row || 0, y: 0 }, // 简化位置计算
+      icon: iconId,
+      researchTrigger: techRecipe.researchTrigger
     };
   }
 
   /**
-   * 计算科技研究成本
+   * 从配方数据计算科技研究成本
    */
-  private calculateResearchCost(dataTech: DataJsonTechnology): Record<string, number> {
-    // 尝试从 RecipeService 获取对应的科技配方
-    const techRecipe = RecipeService.getRecipeById(dataTech.id);
-    
-    if (techRecipe && techRecipe.category === 'technology') {
-      // 使用新格式：总成本 = in * count
-      const unitCosts = techRecipe.in || {}; // 每个研究单位的科技包消耗
-      const unitCount = techRecipe.count || 1; // 需要研究的单位数量
+  private calculateResearchCostFromRecipe(techRecipe: TechRecipe): Record<string, number> {
+    // 如果配方有输入成本，直接使用
+    if (techRecipe.in && Object.keys(techRecipe.in).length > 0) {
+      const unitCosts = techRecipe.in;
+      const unitCount = techRecipe.count || 1;
       
       const totalCosts: Record<string, number> = {};
       Object.entries(unitCosts).forEach(([sciencePackId, unitCost]) => {
@@ -180,32 +178,29 @@ export class TechnologyService {
       return totalCosts;
     }
     
-    // 回退到默认计算方式
-    const baseCost = 10;
-    return { 'automation-science-pack': baseCost };
+    // 如果没有输入成本，说明是通过研究触发器解锁的科技
+    // 返回空对象表示不需要科技包
+    return {};
   }
 
   /**
-   * 计算科技研究时间
+   * 从配方数据计算科技研究时间
    */
-  private calculateResearchTime(dataTech: DataJsonTechnology): number {
-    // 尝试从 RecipeService 获取对应的科技配方
-    const techRecipe = RecipeService.getRecipeById(dataTech.id);
-    
-    if (techRecipe && techRecipe.category === 'technology') {
-      // 使用新格式：总时间 = time * count
-      const unitTime = techRecipe.time || 15; // 每个研究单位的时间
-      const unitCount = techRecipe.count || 1; // 需要研究的单位数量
+  private calculateResearchTimeFromRecipe(techRecipe: TechRecipe): number {
+    // 如果配方有时间设置，使用它
+    if (techRecipe.time) {
+      const unitTime = techRecipe.time;
+      const unitCount = techRecipe.count || 1;
       return unitTime * unitCount;
     }
     
-    // 回退到默认计算方式
-    const baseTime = 15;
-    return baseTime;
+    // 如果没有时间设置，说明是通过研究触发器解锁的科技
+    // 返回0表示立即解锁
+    return 0;
   }
 
   /**
-   * 从data.json加载科技数据
+   * 从data.json加载科技数据（同时使用配方和物品数据）
    */
   private async loadTechnologiesFromDataJson(): Promise<void> {
     try {
@@ -214,18 +209,65 @@ export class TechnologyService {
       await dataService.loadGameData(); // 确保游戏数据已加载
       await dataService.loadI18nData('zh'); // 确保国际化数据已加载
       
-      const technologyItems = dataService.getTechnologies();
+      // 获取原始游戏数据
+      const gameData = dataService.getRawGameData() as { recipes: unknown[]; items: unknown[] };
       
-      // 转换并加载科技数据
-      for (const dataTech of technologyItems) {
-        const tech = this.convertDataJsonTechnology(dataTech as DataJsonTechnology);
-        this.techTree.set(tech.id, tech);
+      // 获取科技配方（recipes中category为technology）
+      const techRecipes: TechRecipe[] = gameData.recipes.filter((recipe: unknown) => 
+        (recipe as { category?: string }).category === 'technology'
+      ) as TechRecipe[];
+      
+      // 获取科技物品（items中包含technology字段）
+      const techItems: TechItem[] = gameData.items.filter((item: unknown) => 
+        (item as { technology?: unknown }).technology !== undefined
+      ) as TechItem[];
+      
+      // 创建科技物品索引
+      const techItemsMap = new Map<string, TechItem>();
+      techItems.forEach(item => {
+        techItemsMap.set(item.id, item);
+      });
+      
+      // 创建科技配方索引
+      const techRecipesMap = new Map<string, TechRecipe>();
+      techRecipes.forEach(recipe => {
+        techRecipesMap.set(recipe.id, recipe);
+      });
+      
+      // 重置顺序数组
+      this.techOrder = [];
+      
+      // 按照items中的原始顺序处理所有科技
+      for (const techItem of techItems) {
+        const techRecipe = techRecipesMap.get(techItem.id);
+        
+        if (techRecipe) {
+          // 有配方的科技，使用配方和物品数据
+          const tech = this.convertTechnologyFromDataJson(techItem.id, techRecipe, techItem);
+          this.techTree.set(tech.id, tech);
+          this.techOrder.push(tech.id);
+        } else {
+          // 只有物品数据的科技，创建虚拟配方
+          const virtualRecipe: TechRecipe = {
+            id: techItem.id,
+            name: techItem.name,
+            category: 'technology',
+            row: techItem.row,
+            in: {},
+            out: { [techItem.id]: 1 },
+            time: 15,
+            count: 1
+          };
+          
+          const tech = this.convertTechnologyFromDataJson(techItem.id, virtualRecipe, techItem);
+          this.techTree.set(tech.id, tech);
+          this.techOrder.push(tech.id);
+        }
       }
       
-      console.log(`Loaded ${technologyItems.length} technologies from data.json`);
+      // 科技数据加载完成
     } catch (error) {
       console.error('Failed to load technologies from data.json:', error);
-      // 如果加载失败，抛出错误而不是回退到硬编码数据
       throw new Error('无法加载科技数据，请检查data.json文件');
     }
   }
@@ -319,7 +361,7 @@ export class TechnologyService {
       this.calculateAvailableTechs();
       
       this.isInitialized = true;
-      console.log('TechnologyService initialized successfully');
+      // TechnologyService initialized successfully
     } catch (error) {
       console.error('Failed to initialize TechnologyService:', error);
       throw error;
@@ -362,6 +404,17 @@ export class TechnologyService {
    */
   public isServiceInitialized(): boolean {
     return this.isInitialized;
+  }
+
+  /**
+   * 强制重新初始化（用于调试）
+   */
+  public async forceReinitialize(): Promise<void> {
+    // Force reinitializing TechnologyService...
+    this.isInitialized = false;
+    this.techTree.clear();
+    this.techOrder = [];
+    await this.initialize();
   }
 
   // ========== 状态查询方法 ==========
@@ -430,10 +483,113 @@ export class TechnologyService {
   }
 
   /**
-   * 获取所有科技
+   * 获取所有科技（按依赖顺序排序）
    */
   public getAllTechnologies(): Technology[] {
-    return Array.from(this.techTree.values());
+    return this.getTechnologiesInDependencyOrder();
+  }
+
+  /**
+   * 获取所有科技（按JSON中recipes的原始顺序）
+   */
+  public getAllTechnologiesInOriginalOrder(): Technology[] {
+    return this.techOrder.map(techId => this.techTree.get(techId)!).filter(tech => tech);
+  }
+
+  /**
+   * 按依赖顺序获取所有科技（拓扑排序）
+   */
+  private getTechnologiesInDependencyOrder(): Technology[] {
+    const visited = new Set<string>();
+    const visiting = new Set<string>();
+    const result: Technology[] = [];
+
+    // 深度优先搜索进行拓扑排序
+    const dfs = (techId: string): void => {
+      if (visiting.has(techId)) {
+        // 检测到循环依赖，跳过
+        console.warn(`Circular dependency detected involving tech: ${techId}`);
+        return;
+      }
+      
+      if (visited.has(techId)) {
+        return;
+      }
+
+      const tech = this.techTree.get(techId);
+      if (!tech) {
+        return;
+      }
+
+      visiting.add(techId);
+
+      // 先处理所有前置科技（按照techOrder的顺序）
+      const sortedPrereqs = tech.prerequisites.sort((a, b) => {
+        const aIndex = this.techOrder.indexOf(a);
+        const bIndex = this.techOrder.indexOf(b);
+        return aIndex - bIndex;
+      });
+      
+      sortedPrereqs.forEach(prereqId => {
+        dfs(prereqId);
+      });
+
+      visiting.delete(techId);
+      visited.add(techId);
+      result.push(tech);
+    };
+
+    // 对所有科技执行拓扑排序（按照techOrder的顺序）
+    this.techOrder.forEach(techId => {
+      if (!visited.has(techId)) {
+        dfs(techId);
+      }
+    });
+
+    // 对同级科技按照techOrder排序（保持依赖关系）
+    const reorderedResult: Technology[] = [];
+    const processed = new Set<string>();
+    
+    // 按前置科技分组
+    const techByPrereqs = new Map<string, Technology[]>();
+    
+    result.forEach(tech => {
+      const prereqKey = tech.prerequisites.sort().join(',');
+      if (!techByPrereqs.has(prereqKey)) {
+        techByPrereqs.set(prereqKey, []);
+      }
+      techByPrereqs.get(prereqKey)!.push(tech);
+    });
+    
+    // 对每个组内的科技按照techOrder排序
+    techByPrereqs.forEach((techs) => {
+      techs.sort((a, b) => {
+        const aIndex = this.techOrder.indexOf(a.id);
+        const bIndex = this.techOrder.indexOf(b.id);
+        return aIndex - bIndex;
+      });
+    });
+    
+    // 按照原始拓扑排序的顺序，但使用排序后的组
+    result.forEach(tech => {
+      if (!processed.has(tech.id)) {
+        const prereqKey = tech.prerequisites.sort().join(',');
+        const group = techByPrereqs.get(prereqKey)!;
+        
+        // 将整个组按顺序添加到结果中
+        group.forEach(groupTech => {
+          if (!processed.has(groupTech.id)) {
+            reorderedResult.push(groupTech);
+            processed.add(groupTech.id);
+          }
+        });
+      }
+    });
+
+    // 调试：显示重新排序后的结果
+    // 拓扑排序完成
+
+    return reorderedResult;
   }
 
   /**
@@ -704,7 +860,7 @@ export class TechnologyService {
       }, 100);
     }
 
-    console.log(`Research completed: ${tech.name}`);
+    // Research completed
   }
 
   // ========== 队列管理方法 ==========

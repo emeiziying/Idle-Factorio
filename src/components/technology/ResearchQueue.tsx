@@ -64,7 +64,8 @@ const ResearchQueue: React.FC<ResearchQueueProps> = ({
   collapsible = true
 }) => {
   const theme = useTheme();
-  const [expanded, setExpanded] = React.useState(true);
+  // 当没有当前研究时，默认收起队列
+  const [expanded, setExpanded] = React.useState(!!currentResearch);
   const techService = TechnologyService.getInstance();
 
   // 格式化时间显示
@@ -98,6 +99,17 @@ const ResearchQueue: React.FC<ResearchQueueProps> = ({
   };
 
   const totalQueueTime = getTotalQueueTime();
+
+  // 监听当前研究状态变化，自动展开/收起队列
+  React.useEffect(() => {
+    if (currentResearch) {
+      // 有研究时展开队列
+      setExpanded(true);
+    } else {
+      // 没有研究时收起队列
+      setExpanded(false);
+    }
+  }, [currentResearch]);
 
   return (
     <Card sx={{ mb: 2 }}>

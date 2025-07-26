@@ -10,6 +10,7 @@ import {
 import TechSimpleGrid from './TechSimpleGrid';
 import TechDetailPanel from './TechDetailPanel';
 import ResearchQueue from './ResearchQueue';
+
 import useGameStore from '../../store/gameStore';
 import { TechnologyService } from '../../services/TechnologyService';
 import type { TechStatus } from '../../types/technology';
@@ -47,25 +48,17 @@ const TechnologyModule: React.FC = () => {
         setLoading(true);
         await initializeTechnologyService();
         
-        // 添加详细的调试信息
-        console.log('=== 科技数据加载调试信息 ===');
-        console.log('Loaded technologies count:', technologies.size);
-        console.log('Sample technologies:', Array.from(technologies.values()).slice(0, 3).map(tech => ({
-          id: tech.id,
-          name: tech.name,
-          category: tech.category,
-          prerequisites: tech.prerequisites,
-          researchCost: tech.researchCost,
-          researchTime: tech.researchTime,
-          unlocks: tech.unlocks
-        })));
+        // 强制刷新科技数据
+        const techService = TechnologyService.getInstance();
+        if (techService.isServiceInitialized()) {
+          // 强制重新初始化以应用最新修改
+          await techService.forceReinitialize();
+          
+          // 重新获取排序后的科技数据
+          techService.getAllTechnologies();
+        }
         
-        // 检查是否有从data.json加载的科技
-        const dataJsonTechs = Array.from(technologies.values()).filter(tech => 
-          tech.id.includes('-technology') || tech.id === 'automation' || tech.id === 'logistics'
-        );
-        console.log('Data.json technologies count:', dataJsonTechs.length);
-        console.log('Data.json sample techs:', dataJsonTechs.slice(0, 3).map(tech => tech.id));
+        // 科技数据加载完成
         
         setError(null);
       } catch (err) {
@@ -100,7 +93,7 @@ const TechnologyModule: React.FC = () => {
     try {
       const success = await startResearch(techId);
       if (success) {
-        console.log(`Started researching: ${techId}`);
+        // 研究开始
       }
     } catch (error) {
       console.error('Failed to start research:', error);
@@ -112,7 +105,7 @@ const TechnologyModule: React.FC = () => {
     try {
       const success = addToResearchQueue(techId, ResearchPriority.NORMAL);
       if (success) {
-        console.log(`Added to queue: ${techId}`);
+        // 添加到队列
       }
     } catch (error) {
       console.error('Failed to add to queue:', error);
@@ -152,8 +145,19 @@ const TechnologyModule: React.FC = () => {
 
   // 筛选科技列表
   const filteredTechnologies = React.useMemo(() => {
-    const allTechs = Array.from(technologies.values());
+    // 直接从TechnologyService获取排序后的科技数据
+    const techService = TechnologyService.getInstance();
+    if (techService.isServiceInitialized()) {
+      const sortedTechs = techService.getAllTechnologies();
+
+      
+      // 科技排序完成
+      
+      return sortedTechs;
+    }
     
+    // 如果服务未初始化，使用store中的数据作为后备
+    const allTechs = Array.from(technologies.values());
     return allTechs;
   }, [technologies]);
 
@@ -217,12 +221,7 @@ const TechnologyModule: React.FC = () => {
 
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* 页面头部 */}
-      {/* <TechPageHeader
-        searchFilter={searchFilter}
-        onSearchFilterChange={setSearchFilter}
-        techStats={techStats}
-      /> */}
+
 
       {/* 主体内容 */}
       <Box sx={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', overflow: 'hidden' }}>
@@ -233,6 +232,7 @@ const TechnologyModule: React.FC = () => {
             techStates={techStates}
             queuedTechIds={queuedTechIds}
             onTechClick={handleTechClick}
+            useVirtualization={false}
           />
         </Box>
 

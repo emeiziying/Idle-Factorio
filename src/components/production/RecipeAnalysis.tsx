@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { Box, Typography, Paper, Chip, Divider } from '@mui/material';
 import type { Recipe } from '../../types';
 import { DataService } from '../../services/DataService';
-import {
-  getRecipeDependencyChain,
-  getRecipeCostAnalysis,
-  getItemProductionAnalysis
-} from '../../utils/customRecipeUtils';
+// 暂时注释掉，因为customRecipeUtils已被删除
+// import {
+//   getRecipeDependencyChain,
+//   getRecipeCostAnalysis,
+//   getItemProductionAnalysis
+// } from '../../utils/customRecipeUtils';
 
 interface RecipeAnalysisProps {
   itemId: string;
@@ -15,24 +16,39 @@ interface RecipeAnalysisProps {
 
 const RecipeAnalysis: React.FC<RecipeAnalysisProps> = ({ 
   itemId, 
-  unlockedItems = [] 
+  // unlockedItems = [] // 暂时未使用
 }) => {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const dataService = DataService.getInstance();
 
-  // 获取分析数据
-  const productionAnalysis = getItemProductionAnalysis(itemId, unlockedItems);
-  const recipes = productionAnalysis.recommendations;
-  const enhancedStats = productionAnalysis.enhancedStats;
-  const optimalPath = productionAnalysis.optimalPath;
+  // 获取分析数据 - 暂时禁用，因为customRecipeUtils已被删除
+  // const productionAnalysis = getItemProductionAnalysis(itemId, unlockedItems);
+  // const recipes = productionAnalysis.recommendations;
+  // const enhancedStats = productionAnalysis.enhancedStats;
+  // const optimalPath = productionAnalysis.optimalPath;
+  
+  // 临时数据
+  const recipes: Recipe[] = [];
+  const enhancedStats = { totalRecipes: 0, unlockedRecipes: 0, efficiency: 0 };
+  const optimalPath = { steps: [], totalCost: 0 };
 
   const handleRecipeSelect = (recipe: Recipe) => {
     setSelectedRecipe(recipe);
   };
 
   const renderRecipeCard = (recipe: Recipe) => {
-    const costAnalysis = getRecipeCostAnalysis(recipe);
-    const dependencyChain = getRecipeDependencyChain(recipe);
+    // 暂时禁用，因为customRecipeUtils已被删除
+    // const costAnalysis = getRecipeCostAnalysis(recipe);
+    // const dependencyChain = getRecipeDependencyChain(recipe);
+    
+    // 临时数据
+    const costAnalysis = { 
+      efficiency: 0, 
+      complexity: 0, 
+      cost: { directCost: {}, totalCost: {}, rawMaterials: {} },
+      costEfficiencyRatio: 0 
+    };
+    const dependencyChain = { depth: 0, chain: [] };
     
     return (
       <Paper key={recipe.id} sx={{ p: 2, mb: 2, cursor: 'pointer' }}
@@ -93,8 +109,12 @@ const RecipeAnalysis: React.FC<RecipeAnalysisProps> = ({
     );
   };
 
-  const renderDependencyChain = (recipe: Recipe) => {
-    const dependencyChain = getRecipeDependencyChain(recipe);
+  const renderDependencyChain = () => {
+    // 暂时禁用，因为customRecipeUtils已被删除
+    // const dependencyChain = getRecipeDependencyChain(recipe);
+    
+    // 临时数据
+    const dependencyChain = { depth: 0, chain: [] };
     
     return (
       <Box sx={{ mt: 2 }}>

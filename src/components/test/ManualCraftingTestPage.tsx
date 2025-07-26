@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -106,9 +106,9 @@ const ManualCraftingTestPage: React.FC = () => {
     };
 
     loadData();
-  }, []);
+  }, [analyzeItems, dataService]);
 
-  const analyzeItems = () => {
+  const analyzeItems = useCallback(() => {
     const allItems = dataService.getAllItems();
     const craftableItems: CategoryGroup = {};
     const notCraftableItems: CategoryGroup = {};
@@ -176,7 +176,7 @@ const ManualCraftingTestPage: React.FC = () => {
         categories: categoryStats
       }
     });
-  };
+  }, [dataService, validator]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);

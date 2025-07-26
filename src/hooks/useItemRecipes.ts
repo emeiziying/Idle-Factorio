@@ -54,7 +54,7 @@ export const useItemRecipes = (item: Item) => {
       setRestrictedRecipes(restricted);
       setProducerRecipes(producer);
     }
-  }, [item, dataService]);
+  }, [item, dataService, validator]);
 
   return {
     recipes,

@@ -98,6 +98,13 @@ export interface Technology {
     costMultiplier: number;
     maxLevel?: number;
   };
+  
+  /** 研究触发器（用于触发式解锁科技） */
+  researchTrigger?: {
+    type: string;
+    item?: string;
+    count?: number;
+  };
 }
 
 /**

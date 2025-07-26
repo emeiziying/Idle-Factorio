@@ -120,7 +120,7 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
     bottom:  '0px',
     right: showBorder ? '2px' : '0px',
     color: '#fff',
-    fontSize: 'larger',
+    fontSize: `${Math.max(10, Math.floor(size * 0.4))}px`, // 根据图标大小计算字体大小
     fontWeight: 'bold',
     textShadow: '0px 1px 1px #000, 0px -1px 1px #000, 1px 0px 1px #000, -1px 0px 1px #000',
     lineHeight: 1,

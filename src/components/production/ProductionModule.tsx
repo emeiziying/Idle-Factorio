@@ -40,7 +40,7 @@ const ProductionModule: React.FC = () => {
     };
 
     loadData();
-  }, []);
+  }, [selectedCategory, setSelectedCategory]);
 
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategory(categoryId);
