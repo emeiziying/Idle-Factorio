@@ -15,6 +15,7 @@ const ProductionModule: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // 初始化数据加载
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -27,11 +28,6 @@ const ProductionModule: React.FC = () => {
         const allCategories = dataService.getAllCategories();
         setCategories(allCategories);
         
-        // 如果没有保存的分类或保存的分类不存在，则选择第一个分类
-        if (allCategories.length > 0 && (!selectedCategory || !allCategories.find(cat => cat.id === selectedCategory))) {
-          setSelectedCategory(allCategories[0].id);
-        }
-        
         setLoading(false);
       } catch (error) {
         console.error('Failed to load production data:', error);
@@ -40,7 +36,15 @@ const ProductionModule: React.FC = () => {
     };
 
     loadData();
-  }, [selectedCategory, setSelectedCategory]);
+  }, []); // 只在组件挂载时执行一次
+
+  // 设置默认分类
+  useEffect(() => {
+    if (!loading && categories.length > 0 && (!selectedCategory || !categories.find(cat => cat.id === selectedCategory))) {
+      console.log('Setting default category:', categories[0].id);
+      setSelectedCategory(categories[0].id);
+    }
+  }, [loading, categories, selectedCategory, setSelectedCategory]);
 
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategory(categoryId);
@@ -53,27 +57,36 @@ const ProductionModule: React.FC = () => {
 
   // 获取当前分类的第一个物品作为默认选中项
   const firstItemInCategory = useMemo(() => {
-    if (!selectedCategory) return null;
+    if (!selectedCategory || loading) {
+      return null;
+    }
     
     const dataService = DataService.getInstance();
-    const itemsByRow = dataService.getItemsByRow(selectedCategory);
-    const sortedRows = Array.from(itemsByRow.keys()).sort((a, b) => a - b);
     
-    for (const row of sortedRows) {
-      const items = itemsByRow.get(row) || [];
-      if (items.length > 0) {
-        return items[0];
+    try {
+      const itemsByRow = dataService.getItemsByRow(selectedCategory);
+      const sortedRows = Array.from(itemsByRow.keys()).sort((a, b) => a - b);
+      
+      for (const row of sortedRows) {
+        const items = itemsByRow.get(row) || [];
+        if (items.length > 0) {
+          return items[0];
+        }
       }
+      return null;
+    } catch (error) {
+      console.error('Error getting first item for category', selectedCategory, ':', error);
+      return null;
     }
-    return null;
-  }, [selectedCategory]);
+  }, [selectedCategory, loading]);
 
   // 当分类变化时，自动选中第一个物品
   useEffect(() => {
-    if (firstItemInCategory && !selectedItem) {
+    if (firstItemInCategory && !loading) {
+      console.log('Auto-selecting first item:', firstItemInCategory.name);
       setSelectedItem(firstItemInCategory);
     }
-  }, [firstItemInCategory, selectedItem]);
+  }, [firstItemInCategory, loading]);
 
   if (loading) {
     return (
@@ -98,15 +111,16 @@ const ProductionModule: React.FC = () => {
       <Box sx={{ 
         flex: 1, 
         display: 'flex',
-        mt: 0.5,
         overflow: 'hidden'
       }}>
         {/* 左侧物品列表 */}
         <Box sx={{ 
-          width: '100px',
+          width: '105px',
           display: 'flex',
           flexDirection: 'column',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          borderRight: 1,
+          borderColor: 'divider'
         }}>
           <ItemList
             categoryId={selectedCategory}
@@ -114,9 +128,6 @@ const ProductionModule: React.FC = () => {
             onItemSelect={handleItemSelect}
           />
         </Box>
-        
-        {/* 分割线 */}
-        <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
         
         {/* 右侧物品详情 */}
         <Box sx={{ 
@@ -142,7 +153,7 @@ const ProductionModule: React.FC = () => {
       </Box>
       
       {/* 制作队列 - 底部 */}
-      <Box sx={{ flexShrink: 0, mt: 1 }}>
+      <Box sx={{ flexShrink: 0, borderTop: 1, borderColor: 'divider' }}>
         <CraftingQueue />
       </Box>
     </Box>

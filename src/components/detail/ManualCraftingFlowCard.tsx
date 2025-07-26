@@ -2,8 +2,6 @@ import React from 'react';
 import {
   Box,
   Typography,
-  Card,
-  CardContent,
   Alert
 } from '@mui/material';
 import type { Item, Recipe } from '../../types/index';
@@ -55,57 +53,53 @@ const ManualCraftingFlowCard: React.FC<ManualCraftingFlowCardProps> = ({ item, o
     const validation = validator.validateRecipe(recipe);
     
     return (
-      <Card sx={{ mb: 2, bgcolor: 'transparent', boxShadow: 1 }}>
-        <CardContent sx={{ p: 2 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Typography variant="subtitle2" fontWeight="bold" color="warning.main">
-              需要生产设备
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {recipe.time}秒
-            </Typography>
-          </Box>
+      <Box sx={{ mb: 2 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="subtitle2" fontWeight="bold" color="warning.main">
+            需要生产设备
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {recipe.time}秒
+          </Typography>
+        </Box>
 
-          <Alert severity="info" sx={{ mb: 2 }}>
-            <Typography variant="body2">
-              {validation.reason}
+        <Alert severity="info" sx={{ mb: 2 }}>
+          <Typography variant="body2">
+            {validation.reason}
+          </Typography>
+          {recipe.producers && recipe.producers.length > 0 && (
+            <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
+              需要设备: {recipe.producers.join(', ')}
             </Typography>
-            {recipe.producers && recipe.producers.length > 0 && (
-              <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
-                需要设备: {recipe.producers.join(', ')}
-              </Typography>
-            )}
-          </Alert>
+          )}
+        </Alert>
 
-          {/* 使用统一组件显示配方，但禁用制作 */}
-          <UnifiedRecipeCard
-            recipe={recipe}
-            variant="manual"
-            title="手动合成"
-            onCraft={(recipe, quantity) => onManualCraft(item.id, quantity, recipe)}
-            disabled={true}
-          />
+        {/* 使用统一组件显示配方，但禁用制作 */}
+        <UnifiedRecipeCard
+          recipe={recipe}
+          variant="manual"
+          title="手动合成"
+          onCraft={(recipe, quantity) => onManualCraft(item.id, quantity, recipe)}
+          disabled={true}
+        />
 
-          {/* 提示：需要在设施模块中生产 */}
-          <Box mt={2}>
-            <Typography variant="body2" color="text.secondary">
-              请在设施模块中配置相应的生产设备来制作此物品。
-            </Typography>
-          </Box>
-        </CardContent>
-      </Card>
+        {/* 提示：需要在设施模块中生产 */}
+        <Box mt={2}>
+          <Typography variant="body2" color="text.secondary">
+            请在设施模块中配置相应的生产设备来制作此物品。
+          </Typography>
+        </Box>
+      </Box>
     );
   }
 
   // 如果没有任何配方，显示默认信息
   return (
-    <Card sx={{ mb: 2, bgcolor: 'transparent', boxShadow: 1 }}>
-      <CardContent sx={{ p: 2 }}>
-        <Typography variant="body2" color="text.secondary">
-          此物品没有可用的制作配方。
-        </Typography>
-      </CardContent>
-    </Card>
+    <Box sx={{ mb: 2 }}>
+      <Typography variant="body2" color="text.secondary">
+        此物品没有可用的制作配方。
+      </Typography>
+    </Box>
   );
 };
 

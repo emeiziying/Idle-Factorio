@@ -34,9 +34,11 @@
       "Bash(grep:*)",
       "Bash(npm run lint)",
       "mcp__ide__getDiagnostics",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "mcp__browser-tools__takeScreenshot"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "context7",
     "sequential-thinking",
@@ -47,6 +49,5 @@
     "mcp-feedback-enhanced",
     "promptx",
     "serena"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

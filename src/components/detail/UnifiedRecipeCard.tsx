@@ -2,8 +2,6 @@ import React from 'react';
 import {
   Box,
   Typography,
-  Card,
-  CardContent,
   Chip
 } from '@mui/material';
 import { Add as AddIcon, ArrowForward as ArrowIcon } from '@mui/icons-material';
@@ -12,6 +10,7 @@ import FactorioIcon from '../common/FactorioIcon';
 import { DataService } from '../../services/DataService';
 import useGameStore from '../../store/gameStore';
 import CraftingButtons from './CraftingButtons';
+import TimeIcon from '../../assets/Time.png';
 
 interface UnifiedRecipeCardProps {
   recipe: Recipe;
@@ -70,12 +69,12 @@ const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({
         <React.Fragment key={itemId}>
           <FactorioIcon 
             itemId={itemId} 
-            size={32} 
+            size={24} 
             quantity={quantity}
             shortage={isShortage}
           />
           {index < Object.entries(items).length - 1 && (
-            <AddIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+            <AddIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
           )}
         </React.Fragment>
       );
@@ -83,90 +82,86 @@ const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({
   };
 
   return (
-    <Card 
-      variant={cardVariant === 'outlined' ? 'outlined' : 'elevation'} 
+    <Box 
       sx={{ 
-        mb: 2,
-        borderColor: cardVariant === 'outlined' ? 'divider' : 'transparent',
-        bgcolor: 'transparent',
-        boxShadow: 1
+        mb: 1.5,
+        p: 1.5,
+        borderRadius: 1,
+        border: '1px solid',
+        borderColor: 'divider',
+        bgcolor: 'background.paper'
       }}
     >
-      <CardContent sx={{ p: 2 }}>
-        {/* 标题和时间 */}
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="subtitle2" fontWeight="bold" color={title ? "primary.main" : themeColor}>
-            {title || dataService.getLocalizedRecipeName(recipe.id)}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {`${recipe.time}秒`}
-          </Typography>
-        </Box>
+      {/* 标题 */}
+      <Box display="flex" justifyContent="flex-start" alignItems="center" mb={1.5}>
+        <Typography variant="subtitle2" fontWeight="bold" color={title ? "primary.main" : themeColor}>
+          {title || dataService.getLocalizedRecipeName(recipe.id)}
+        </Typography>
+      </Box>
 
-        {/* 配方流程：时间图标 + 原料 => 产物 */}
-        <Box 
-          display="flex" 
-          alignItems="center" 
-          justifyContent="center" 
-          gap={0.25}
-          sx={{ 
-            mb: 2,
-            p: 2,
-            bgcolor: 'background.default',
-            borderRadius: 1,
-            border: '1px solid',
-            borderColor: 'divider'
-          }}
-        >
-          {/* 时间图标 */}
-          <FactorioIcon 
-            customImage="/Time.png"
-            size={32} 
-            quantity={recipe.time}
-          />
-
-          {/* 加号连接 */}
-          <AddIcon sx={{ color: 'text.secondary', fontSize: 16 }} />
-
-          {/* 输入材料 */}
-          {renderItems(recipe.in)}
-
-          {/* 箭头 */}
-          <ArrowIcon sx={{ color: themeColor, fontSize: 16 }} />
-
-          {/* 输出产品 */}
-          {renderItems(recipe.out, false)}
-        </Box>
-
-        {/* 生产者信息 - 移到配方流程下方 */}
-        {variant === 'producer' && recipe.producers && recipe.producers.length > 0 && (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="caption" color="text.secondary">
-              生产设备:
-            </Typography>
-            <Box display="flex" flexWrap="wrap" gap={1} mt={0.5}>
-              {recipe.producers.map((producerId) => (
-                <Chip
-                  key={producerId}
-                  icon={<FactorioIcon itemId={producerId} size={32} />}
-                  label={getLocalizedItemName(producerId)}
-                  size="small"
-                  color="secondary"
-                  variant="outlined"
-                />
-              ))}
-            </Box>
-          </Box>
-        )}
-
-        {/* 制作按钮 */}
-        <CraftingButtons 
-          onCraft={handleCraft}
-          disabled={disabled || !canCraft}
-          variant={cardVariant}
+      {/* 配方流程：时间图标 + 原料 => 产物 */}
+      <Box 
+        display="flex" 
+        alignItems="center" 
+        justifyContent="center" 
+        gap={0.25}
+        sx={{ 
+          mb: 1.5,
+          p: 1.5,
+          bgcolor: 'background.default',
+          borderRadius: 1,
+          border: '1px solid',
+          borderColor: 'divider'
+        }}
+      >
+        {/* 时间图标 */}
+        <FactorioIcon 
+          customImage={TimeIcon}
+          size={24} 
+          quantity={recipe.time}
         />
-      </CardContent>
-    </Card>
+
+        {/* 加号连接 */}
+        <AddIcon sx={{ color: 'text.secondary', fontSize: 14 }} />
+
+        {/* 输入材料 */}
+        {renderItems(recipe.in)}
+
+        {/* 箭头 */}
+        <ArrowIcon sx={{ color: themeColor, fontSize: 14 }} />
+
+        {/* 输出产品 */}
+        {renderItems(recipe.out, false)}
+      </Box>
+
+      {/* 生产者信息 - 移到配方流程下方 */}
+      {variant === 'producer' && recipe.producers && recipe.producers.length > 0 && (
+        <Box sx={{ mb: 1.5 }}>
+          <Typography variant="caption" color="text.secondary">
+            生产设备:
+          </Typography>
+          <Box display="flex" flexWrap="wrap" gap={1} mt={0.5}>
+            {recipe.producers.map((producerId) => (
+              <Chip
+                key={producerId}
+                icon={<FactorioIcon itemId={producerId} size={24} />}
+                label={getLocalizedItemName(producerId)}
+                size="small"
+                color="secondary"
+                variant="outlined"
+              />
+            ))}
+          </Box>
+        </Box>
+      )}
+
+      {/* 制作按钮 */}
+      <CraftingButtons 
+        onCraft={handleCraft}
+        disabled={disabled || !canCraft}
+        variant={cardVariant}
+      />
+    </Box>
   );
 };
 

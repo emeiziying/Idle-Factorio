@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Card,
   Typography,
   Chip,
   Box,
@@ -72,18 +71,18 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({
   };
 
   return (
-    <Card
-      sx={{
-        ...theme.customStyles.layout.cardCompact,
-        bgcolor: "transparent",
-        boxShadow: 1,
-      }}
-      title="库存管理"
-    >
-      <Typography variant="subtitle2">库存管理</Typography>
+    <Box sx={{ mb: 2 }}>
+      <Typography variant="subtitle2" sx={{ 
+        fontSize: '0.8rem',
+        fontWeight: 600,
+        color: 'text.primary',
+        mb: 1
+      }}>
+        库存管理
+      </Typography>
 
       {/* 存储设备列表 - 纵向排列 */}
-      <Box display="flex" flexDirection="column" gap={1} sx={{marginTop:0.5}}>
+      <Box display="flex" flexDirection="column" gap={1}>
         {availableStorageTypes.map((storageType) => {
           const storageConfig = storageService.getStorageConfig(storageType);
           if (!storageConfig) return null;
@@ -171,7 +170,7 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({
           />
         </Box>
       )}
-    </Card>
+    </Box>
   );
 };
 

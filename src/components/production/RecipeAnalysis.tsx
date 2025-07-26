@@ -29,8 +29,28 @@ const RecipeAnalysis: React.FC<RecipeAnalysisProps> = ({
   
   // 临时数据
   const recipes: Recipe[] = [];
-  const enhancedStats = { totalRecipes: 0, unlockedRecipes: 0, efficiency: 0 };
-  const optimalPath = { steps: [], totalCost: 0 };
+  const enhancedStats = { 
+    totalRecipes: 0, 
+    unlockedRecipes: 0, 
+    efficiency: 0,
+    availableRecipes: 0,
+    manualRecipes: 0,
+    automatedRecipes: 0,
+    miningRecipes: 0,
+    recyclingRecipes: 0,
+    dependencyDepth: 0,
+    averageEfficiency: 0,
+    fastestRecipe: null as Recipe | null,
+    cheapestRecipe: null as Recipe | null
+  };
+  const optimalPath = { 
+    steps: [], 
+    totalCost: new Map(),
+    path: [] as Recipe[],
+    totalTime: 0,
+    efficiency: 0,
+    size: 0
+  };
 
   const handleRecipeSelect = (recipe: Recipe) => {
     setSelectedRecipe(recipe);
@@ -48,7 +68,12 @@ const RecipeAnalysis: React.FC<RecipeAnalysisProps> = ({
       cost: { directCost: {}, totalCost: {}, rawMaterials: {} },
       costEfficiencyRatio: 0 
     };
-    const dependencyChain = { depth: 0, chain: [] };
+    const dependencyChain = { 
+      depth: 0, 
+      chain: [],
+      dependencies: new Map(),
+      totalCost: new Map()
+    };
     
     return (
       <Paper key={recipe.id} sx={{ p: 2, mb: 2, cursor: 'pointer' }}
@@ -109,12 +134,18 @@ const RecipeAnalysis: React.FC<RecipeAnalysisProps> = ({
     );
   };
 
-  const renderDependencyChain = () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const renderDependencyChain = (_recipe: Recipe) => {
     // 暂时禁用，因为customRecipeUtils已被删除
     // const dependencyChain = getRecipeDependencyChain(recipe);
     
     // 临时数据
-    const dependencyChain = { depth: 0, chain: [] };
+    const dependencyChain = { 
+      depth: 0, 
+      chain: [],
+      dependencies: new Map(),
+      totalCost: new Map()
+    };
     
     return (
       <Box sx={{ mt: 2 }}>

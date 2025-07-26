@@ -1,7 +1,5 @@
 import React from 'react';
 import {
-  Card,
-  CardContent,
   Typography,
   Box,
   Chip,
@@ -28,27 +26,34 @@ const UsageCard: React.FC<UsageCardProps> = ({ usedInRecipes }) => {
   }
 
   return (
-    <Card sx={{ ...theme.customStyles.layout.cardCompact, bgcolor: 'transparent', boxShadow: 1 }}>
-      <CardContent sx={{ p: theme.customStyles.spacing.compact }}>
-        <Typography variant="subtitle2" gutterBottom sx={theme.customStyles.typography.subtitle}>
-          用于制作
-        </Typography>
-        <Box display="flex" flexWrap="wrap" gap={theme.customStyles.spacing.compact}>
-          {usedInRecipes.map((recipe) => {
-            const outputItemId = Object.keys(recipe.out)[0];
-            return (
-              <Chip
-                key={recipe.id}
-                icon={<FactorioIcon itemId={outputItemId} size={16} />}
-                label={getLocalizedItemName(outputItemId)}
-                size="small"
-                variant="outlined"
-              />
-            );
-          })}
-        </Box>
-      </CardContent>
-    </Card>
+    <Box sx={{ mb: 2 }}>
+      <Typography variant="subtitle2" gutterBottom sx={{ 
+        fontSize: '0.8rem',
+        fontWeight: 600,
+        color: 'text.primary',
+        mb: 1
+      }}>
+        用于制作
+      </Typography>
+      <Box display="flex" flexWrap="wrap" gap={0.5}>
+        {usedInRecipes.map((recipe) => {
+          const outputItemId = Object.keys(recipe.out)[0];
+          return (
+            <Chip
+              key={recipe.id}
+              icon={<FactorioIcon itemId={outputItemId} size={16} />}
+              label={getLocalizedItemName(outputItemId)}
+              size="small"
+              variant="outlined"
+              sx={{
+                borderColor: 'divider',
+                bgcolor: 'background.paper'
+              }}
+            />
+          );
+        })}
+      </Box>
+    </Box>
   );
 };
 

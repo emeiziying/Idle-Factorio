@@ -19,6 +19,8 @@ export class DataService {
   private static instance: DataService;
   private gameData: GameData | null = null;
   private i18nData: I18nData | null = null;
+  private i18nLoadingPromise: Promise<I18nData> | null = null;
+  private gameDataLoadingPromise: Promise<GameData> | null = null;
   private userProgressService: UserProgressService;
 
   private constructor() {
@@ -34,10 +36,29 @@ export class DataService {
 
   // 加载游戏数据 - 改为异步import
   async loadGameData(): Promise<GameData> {
+    // 如果数据已加载，直接返回
     if (this.gameData) {
       return this.gameData;
     }
 
+    // 如果正在加载中，返回同一个Promise
+    if (this.gameDataLoadingPromise) {
+      return this.gameDataLoadingPromise;
+    }
+
+    // 开始新的加载过程
+    this.gameDataLoadingPromise = this.doLoadGameData();
+    
+    try {
+      const result = await this.gameDataLoadingPromise;
+      return result;
+    } finally {
+      // 加载完成后清除Promise缓存
+      this.gameDataLoadingPromise = null;
+    }
+  }
+
+  private async doLoadGameData(): Promise<GameData> {
     try {
       // 直接使用导入的数据，无需fetch
       this.gameData = gameData as unknown as GameData;
@@ -56,12 +77,31 @@ export class DataService {
     }
   }
 
-  // 加载国际化数据 - 改为动态import
+  // 加载国际化数据 - 改为动态import，防止重复加载
   async loadI18nData(locale: string = 'zh'): Promise<I18nData> {
+    // 如果数据已加载，直接返回
     if (this.i18nData) {
       return this.i18nData;
     }
 
+    // 如果正在加载中，返回同一个Promise
+    if (this.i18nLoadingPromise) {
+      return this.i18nLoadingPromise;
+    }
+
+    // 开始新的加载过程
+    this.i18nLoadingPromise = this.doLoadI18nData(locale);
+    
+    try {
+      const result = await this.i18nLoadingPromise;
+      return result;
+    } finally {
+      // 加载完成后清除Promise缓存
+      this.i18nLoadingPromise = null;
+    }
+  }
+
+  private async doLoadI18nData(locale: string): Promise<I18nData> {
     try {
       // 使用动态import替代fetch
       const i18nModule = await import(`../data/spa/i18n/${locale}.json`);
@@ -71,12 +111,14 @@ export class DataService {
     } catch (error) {
       console.error('Error loading i18n data:', error);
       // 返回空数据作为fallback
-      return {
+      const fallbackData = {
         categories: {},
         items: {},
         recipes: {},
         locations: {}
       };
+      this.i18nData = fallbackData;
+      return fallbackData;
     }
   }
 

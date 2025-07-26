@@ -24,6 +24,7 @@ class CraftingEngine {
   private static instance: CraftingEngine;
   private intervalId: number | null = null;
   private readonly UPDATE_INTERVAL = 100; // 100ms更新一次
+  private isStarting: boolean = false; // 防止重复启动
 
   // 设备效率配置 - 参考Factorio的采矿机
   private readonly DEVICE_EFFICIENCIES: Record<string, DeviceEfficiency> = {
@@ -54,13 +55,22 @@ class CraftingEngine {
 
   // 启动制作引擎
   start(): void {
-    if (this.intervalId !== null) return;
+    // 如果已经在运行或正在启动中，直接返回
+    if (this.intervalId !== null || this.isStarting) {
+      return;
+    }
 
-    this.intervalId = window.setInterval(() => {
-      this.updateCraftingQueue();
-    }, this.UPDATE_INTERVAL);
+    this.isStarting = true;
 
-    console.log('Crafting engine started');
+    try {
+      this.intervalId = window.setInterval(() => {
+        this.updateCraftingQueue();
+      }, this.UPDATE_INTERVAL);
+
+      console.log('Crafting engine started');
+    } finally {
+      this.isStarting = false;
+    }
   }
 
   // 停止制作引擎

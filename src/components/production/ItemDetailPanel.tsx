@@ -1,12 +1,11 @@
 import React from 'react';
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   Snackbar,
   Alert,
-  useTheme
+  useTheme,
+  Divider
 } from '@mui/material';
 import type { Item } from '../../types/index';
 import { useItemRecipes } from '../../hooks/useItemRecipes';
@@ -38,13 +37,15 @@ const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item }) => {
       width: '100%', 
       height: '100%', 
       display: 'flex', 
-      flexDirection: 'column'
+      flexDirection: 'column',
+      bgcolor: 'background.default'
     }}>
       {/* 头部 */}
       <Box sx={{ 
         flexShrink: 0,
         borderBottom: 1,
-        borderColor: 'divider'
+        borderColor: 'divider',
+        bgcolor: 'background.paper'
       }}>
         <ItemDetailHeader 
           item={item} 
@@ -55,39 +56,42 @@ const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item }) => {
       <Box sx={{ 
         flex: 1,
         overflow: 'auto',
-        p: 0.5,
+        p: 1,
         // 禁用过度滚动
         overscrollBehavior: 'none',
         // 平滑滚动
         scrollBehavior: 'smooth'
       }}>
         {/* 制作配方 */}
-        <Card sx={theme.customStyles.layout.cardCompact}>
-          <CardContent sx={{ p: theme.customStyles.spacing.compact }}>
-            <Typography variant="subtitle2" gutterBottom sx={theme.customStyles.typography.subtitle}>
-              制作配方
-            </Typography>
-            
-            {/* 手动合成配方 */}
-            <ManualCraftingFlowCard 
-              item={item} 
-              onManualCraft={handleManualCraft}
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="subtitle2" gutterBottom sx={{ 
+            fontSize: '0.8rem',
+            fontWeight: 600,
+            color: 'text.primary',
+            mb: 1
+          }}>
+            制作配方
+          </Typography>
+          
+          {/* 手动合成配方 */}
+          <ManualCraftingFlowCard 
+            item={item} 
+            onManualCraft={handleManualCraft}
+          />
+          
+          {/* 其他配方 - 排除已显示的手动合成配方 */}
+          {recipes.filter(recipe => {
+            const validator = ManualCraftingValidator.getInstance();
+            const validation = validator.validateRecipe(recipe);
+            return !validation.canCraftManually;
+          }).map((recipe) => (
+            <RecipeFlowCard 
+              key={recipe.id}
+              recipe={recipe}
+              onCraft={handleCraft}
             />
-            
-            {/* 其他配方 - 排除已显示的手动合成配方 */}
-            {recipes.filter(recipe => {
-              const validator = ManualCraftingValidator.getInstance();
-              const validation = validator.validateRecipe(recipe);
-              return !validation.canCraftManually;
-            }).map((recipe) => (
-              <RecipeFlowCard 
-                key={recipe.id}
-                recipe={recipe}
-                onCraft={handleCraft}
-              />
-            ))}
-          </CardContent>
-        </Card>
+          ))}
+        </Box>
 
         {/* 用途 */}
         <UsageCard usedInRecipes={usedInRecipes} />

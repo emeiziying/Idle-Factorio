@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   ThemeProvider,
@@ -41,24 +41,56 @@ const App: React.FC = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const isMobile = useIsMobile();
   const { clearGameData } = useGameStore();
+  
+  // 使用ref来跟踪初始化状态，避免重复初始化
+  const initializationRef = useRef<{
+    isInitialized: boolean;
+    initPromise: Promise<void> | null;
+  }>({
+    isInitialized: false,
+    initPromise: null
+  });
 
   // 初始化游戏数据
   useEffect(() => {
     const initializeApp = async () => {
-      try {
-        // 加载游戏数据
-        await DataService.getInstance().loadGameData();
-
-        // 加载国际化数据
-        await DataService.getInstance().loadI18nData('zh');
-
-        // 启动制作引擎
-        CraftingEngine.getInstance().start();
-
-        console.log('App initialized successfully');
-      } catch (error) {
-        console.error('Failed to initialize app:', error);
+      // 如果已经初始化过，直接返回
+      if (initializationRef.current.isInitialized) {
+        return;
       }
+
+      // 如果正在初始化中，返回同一个Promise
+      if (initializationRef.current.initPromise) {
+        return initializationRef.current.initPromise;
+      }
+
+      // 开始新的初始化过程
+      initializationRef.current.initPromise = (async () => {
+        try {
+          // 加载游戏数据
+          await DataService.getInstance().loadGameData();
+
+          // 加载国际化数据
+          await DataService.getInstance().loadI18nData('zh');
+
+          // 启动制作引擎
+          CraftingEngine.getInstance().start();
+
+          console.log('App initialized successfully');
+          
+          // 标记为已初始化
+          initializationRef.current.isInitialized = true;
+        } catch (error) {
+          console.error('Failed to initialize app:', error);
+          // 初始化失败时重置状态，允许重试
+          initializationRef.current.isInitialized = false;
+        } finally {
+          // 清除Promise缓存
+          initializationRef.current.initPromise = null;
+        }
+      })();
+
+      return initializationRef.current.initPromise;
     };
 
     initializeApp();
