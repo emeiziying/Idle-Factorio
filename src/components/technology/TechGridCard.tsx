@@ -1,13 +1,12 @@
-// 科技网格卡片组件 - 紧凑版展示
-
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   Card,
   CardContent,
   Typography,
   Box,
   useTheme,
-  alpha
+  alpha,
+  styled
 } from '@mui/material';
 import {
   CheckCircle as CompletedIcon,
@@ -17,9 +16,58 @@ import {
   NewReleases as TriggerIcon
 } from '@mui/icons-material';
 import FactorioIcon from '../common/FactorioIcon';
+import { TechnologyService } from '../../services/TechnologyService';
 import { DataService } from '../../services/DataService';
-import { RecipeService } from '../../services/RecipeService';
 import type { Technology, TechStatus } from '../../types/technology';
+
+// Factorio Design System
+const FACTORIO_COLORS = {
+  // Core Factorio palette
+  ORANGE_PRIMARY: '#ff9800',
+  ORANGE_DARK: '#e68900',
+  ORANGE_LIGHT: '#ffb74d',
+  GREEN_SUCCESS: '#4caf50',
+  GREEN_DARK: '#388e3c',
+  BLUE_INFO: '#2196f3',
+  BLUE_DARK: '#1976d2',
+  GREY_LOCKED: '#616161',
+  GREY_DARK: '#424242',
+  
+  // Industrial backgrounds with proper contrast
+  CARD_BG_PRIMARY: 'linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%)',
+  CARD_BG_HOVER: 'linear-gradient(135deg, #4a4a4a 0%, #3a3a3a 100%)',
+  
+  // Status backgrounds
+  AVAILABLE_BG: 'rgba(255, 152, 0, 0.25)',
+  COMPLETED_BG: 'rgba(76, 175, 80, 0.2)',
+  RESEARCHING_BG: 'rgba(33, 150, 243, 0.25)',
+  LOCKED_BG: 'rgba(97, 97, 97, 0.15)',
+  
+  // Border colors for industrial depth
+  BORDER_LIGHT: 'rgba(255, 255, 255, 0.1)',
+  BORDER_DARK: 'rgba(0, 0, 0, 0.3)',
+  BORDER_ACCENT: '#454545',
+};
+
+const SPACING = {
+  MICRO: 2,    // 0.25rem - 极小间距
+  SMALL: 4,    // 0.5rem  - 相关元素
+  MEDIUM: 8,   // 1rem    - 区块间距
+  LARGE: 16,   // 2rem    - 主要组件
+  XLARGE: 24,  // 3rem    - 大区块
+};
+
+const TYPOGRAPHY = {
+  TECH_NAME: '0.8rem',     // 主要信息
+  STATUS: '0.7rem',        // 状态标签
+  DETAILS: '0.65rem',      // 详细信息
+  MICRO: '0.6rem',         // 最小标签
+};
+
+const TOUCH_TARGET = {
+  MIN_SIZE: 44,           // 最小触控目标
+  MOBILE_SIZE: 40,        // 移动端最小尺寸
+};
 
 interface TechGridCardProps {
   /** 科技数据 */
@@ -38,6 +86,310 @@ interface TechGridCardProps {
   onClick?: (techId: string) => void;
 }
 
+// Styled components for better performance
+interface StatusConfig {
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  accentColor: string;
+  icon: React.ReactNode;
+  label: string;
+  textColor: string;
+  hoverEffect: boolean;
+}
+
+const StyledCard = styled(Card, {
+  shouldForwardProp: (prop) => !['statusConfig', 'canResearch', 'isCompleted'].includes(prop as string)
+})<{
+  statusConfig: StatusConfig;
+  canResearch: boolean;
+  isCompleted: boolean;
+}>(({ theme, statusConfig, canResearch, isCompleted }) => ({
+  height: '100%',
+  minHeight: 160, // 增加高度以提供更好的内容呼吸空间
+  cursor: canResearch ? 'pointer' : 'default',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  
+  // Factorio 工业风格背景
+  background: FACTORIO_COLORS.CARD_BG_PRIMARY,
+  
+  // 工业风格的斜面边框效果
+  border: 'none',
+  borderLeft: `4px solid ${statusConfig.color}`, // 状态指示條
+  borderRadius: 12, // Factorio 使用较大的圆角
+  
+  boxShadow: `
+    inset 1px 1px 0 ${FACTORIO_COLORS.BORDER_LIGHT},
+    inset -1px -1px 0 ${FACTORIO_COLORS.BORDER_DARK},
+    0 2px 4px rgba(0, 0, 0, 0.2)
+  `,
+  
+  opacity: isCompleted ? 0.7 : 1,
+  position: 'relative',
+  overflow: 'hidden',
+  
+  // 移动端优化
+  [theme.breakpoints.down('sm')]: {
+    minHeight: 140,
+    borderRadius: 8,
+  },
+  
+  // Factorio 风格的悬停效果
+  '&:hover': statusConfig.hoverEffect ? {
+    background: FACTORIO_COLORS.CARD_BG_HOVER,
+    transform: 'translateY(-1px)',
+    boxShadow: `
+      inset 1px 1px 0 ${FACTORIO_COLORS.BORDER_LIGHT},
+      inset -1px -1px 0 ${FACTORIO_COLORS.BORDER_DARK},
+      0 4px 8px rgba(0, 0, 0, 0.3),
+      0 0 0 1px ${alpha(statusConfig.color, 0.5)}
+    `,
+    borderLeftColor: statusConfig.accentColor || statusConfig.color,
+  } : {},
+  
+  // 焦点样式（用于键盘导航）
+  '&:focus-visible': {
+    outline: `2px solid ${statusConfig.color}`,
+    outlineOffset: 2,
+  },
+  
+  // 卡片内部分区间距
+  '& .card-section + .card-section': {
+    marginTop: SPACING.SMALL,
+  },
+}));
+
+const StatusChip = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'statusColor'
+})<{ statusColor: string }>(({ theme, statusColor }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: SPACING.MICRO,
+  padding: `${SPACING.SMALL}px ${SPACING.MEDIUM}px`,
+  minHeight: TOUCH_TARGET.MIN_SIZE,
+  
+  // Factorio 风格背景
+  background: `linear-gradient(135deg, ${alpha(statusColor, 0.2)} 0%, ${alpha(statusColor, 0.1)} 100%)`,
+  borderRadius: 6,
+  border: `1px solid ${alpha(statusColor, 0.4)}`,
+  
+  // 工业风格阴影
+  boxShadow: `
+    inset 1px 1px 0 rgba(255, 255, 255, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.2)
+  `,
+  
+  // 移动端优化
+  [theme.breakpoints.down('sm')]: {
+    minHeight: TOUCH_TARGET.MOBILE_SIZE,
+    padding: `${SPACING.MICRO}px ${SPACING.SMALL}px`,
+    fontSize: TYPOGRAPHY.STATUS,
+  },
+  
+  // 悬停效果
+  '&:hover': {
+    background: `linear-gradient(135deg, ${alpha(statusColor, 0.3)} 0%, ${alpha(statusColor, 0.15)} 100%)`,
+    transform: 'scale(1.02)',
+  },
+}));
+
+// Header component with improved hierarchy
+const TechHeader: React.FC<{
+  technology: Technology;
+  hasResearchTrigger: boolean;
+  statusConfig: StatusConfig;
+  status: TechStatus;
+}> = React.memo(({ technology, hasResearchTrigger, statusConfig, status }) => (
+  <Box className="card-section" sx={{ display: 'flex', alignItems: 'flex-start', gap: SPACING.MEDIUM / 8 }}>
+    {/* 科技图标区域 */}
+    <Box sx={{ position: 'relative', flexShrink: 0 }}>
+      <FactorioIcon
+        itemId={technology.icon || technology.id}
+        size={40} // 将图标尺寸从 32 增加到 40
+        showBorder={false}
+      />
+      {/* 研究触发器指示器 */}
+      {hasResearchTrigger && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: -2,
+            right: -2,
+            width: 18,
+            height: 18,
+            background: `linear-gradient(135deg, ${FACTORIO_COLORS.ORANGE_PRIMARY} 0%, ${FACTORIO_COLORS.ORANGE_DARK} 100%)`,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: `2px solid ${FACTORIO_COLORS.BORDER_ACCENT}`,
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+          }}
+        >
+          <TriggerIcon sx={{ fontSize: 12, color: 'white' }} />
+        </Box>
+      )}
+    </Box>
+    
+    {/* 科技信息区域 */}
+    <Box sx={{ flex: 1, minWidth: 0 }}>
+      {/* 科技名称 - 主要信息 */}
+      <Typography
+        variant="h6"
+        component="h3"
+        sx={{
+          fontSize: TYPOGRAPHY.TECH_NAME,
+          fontWeight: 700,
+          lineHeight: 1.2,
+          mb: SPACING.MICRO / 8,
+          color: statusConfig.textColor,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          textShadow: status === 'available' ? `0 0 6px ${alpha(statusConfig.color, 0.4)}` : 'none'
+        }}
+      >
+        {technology.name}
+      </Typography>
+    </Box>
+  </Box>
+));
+
+// Progress bar component with Factorio styling
+const ProgressBar: React.FC<{
+  progress: number;
+  statusConfig: StatusConfig;
+}> = React.memo(({ progress, statusConfig }) => (
+  <Box className="card-section">
+    {/* 进度条 */}
+    <Box
+      sx={{
+        width: '100%',
+        height: 8, // 增加高度以提高可视性
+        background: `linear-gradient(135deg, ${FACTORIO_COLORS.BORDER_DARK} 0%, ${alpha(FACTORIO_COLORS.GREY_DARK, 0.3)} 100%)`,
+        borderRadius: 4,
+        overflow: 'hidden',
+        position: 'relative',
+        border: `1px solid ${FACTORIO_COLORS.BORDER_ACCENT}`,
+        boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.3)'
+      }}
+    >
+      <Box
+        sx={{
+          width: `${progress * 100}%`,
+          height: '100%',
+          background: `linear-gradient(90deg, ${statusConfig.color} 0%, ${statusConfig.accentColor} 100%)`,
+          transition: 'width 0.5s ease-out',
+          borderRadius: 3,
+          boxShadow: `0 0 6px ${alpha(statusConfig.color, 0.6)}`,
+          position: 'relative',
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '50%',
+            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%)',
+            borderRadius: '3px 3px 0 0'
+          }
+        }}
+      />
+    </Box>
+    
+    {/* 进度信息 */}
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: SPACING.MICRO / 8 }}>
+      <Typography 
+        variant="caption" 
+        sx={{ 
+          fontSize: TYPOGRAPHY.DETAILS,
+          fontWeight: 600,
+          color: statusConfig.color
+        }}
+      >
+        {Math.round(progress * 100)}%
+      </Typography>
+      <Typography 
+        variant="caption" 
+        sx={{ 
+          fontSize: TYPOGRAPHY.DETAILS,
+          color: '#cccccc',
+          fontStyle: 'italic'
+        }}
+      >
+        研究中...
+      </Typography>
+    </Box>
+  </Box>
+));
+
+// Unlock content component with better hierarchy
+const UnlockContent: React.FC<{
+  unlockedContent: { all: Array<{ id: string; icon: string; }> };
+  unlockCount: number;
+}> = React.memo(({ unlockedContent, unlockCount }) => (
+  <Box className="card-section" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    {/* 解锁内容预览 */}
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: SPACING.MICRO / 8 }}>
+      {/* 显示前 3 个解锁内容图标 */}
+      {unlockedContent.all.slice(0, 3).map((content) => (
+        <Box
+          key={content.id}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 24, // 增加尺寸以提高可视性
+            height: 24,
+            background: `linear-gradient(135deg, ${FACTORIO_COLORS.COMPLETED_BG} 0%, ${alpha(FACTORIO_COLORS.GREEN_SUCCESS, 0.1)} 100%)`,
+            borderRadius: 4,
+            border: `1px solid ${alpha(FACTORIO_COLORS.GREEN_SUCCESS, 0.4)}`,
+            boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+          }}
+        >
+          <FactorioIcon
+            itemId={content.icon}
+            size={16} // 从 14 增加到 16
+            showBorder={false}
+          />
+        </Box>
+      ))}
+      
+      {/* 解锁数量显示 */}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          px: SPACING.SMALL / 8,
+          py: SPACING.MICRO / 8,
+          background: `linear-gradient(135deg, ${FACTORIO_COLORS.GREEN_SUCCESS} 0%, ${FACTORIO_COLORS.GREEN_DARK} 100%)`,
+          borderRadius: 4,
+          border: `1px solid ${FACTORIO_COLORS.GREEN_DARK}`,
+          boxShadow: `
+            inset 0 1px 0 rgba(255, 255, 255, 0.2),
+            0 1px 2px rgba(0, 0, 0, 0.2)
+          `,
+          minHeight: 24
+        }}
+      >
+        <Typography 
+          variant="caption" 
+          sx={{ 
+            fontSize: TYPOGRAPHY.DETAILS,
+            fontWeight: 700,
+            color: '#ffffff',
+            textShadow: '0 1px 1px rgba(0, 0, 0, 0.5)'
+          }}
+        >
+          +{unlockCount}
+        </Typography>
+      </Box>
+    </Box>
+  </Box>
+));
+
 const TechGridCard: React.FC<TechGridCardProps> = React.memo(({
   technology,
   status,
@@ -47,362 +399,118 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(({
 }) => {
   const theme = useTheme();
 
-  // 获取状态配置
-  const getStatusConfig = () => {
-    switch (status) {
-      case 'unlocked':
-        return {
-          color: theme.palette.success.main,
-          bgColor: alpha(theme.palette.success.main, 0.08),
-          borderColor: alpha(theme.palette.success.main, 0.3),
-          icon: <CompletedIcon />,
-          label: '已完成',
-          textColor: theme.palette.text.secondary,
-          hoverEffect: false
-        };
-      case 'researching':
-        return {
-          color: theme.palette.info.main,
-          bgColor: alpha(theme.palette.info.main, 0.12),
-          borderColor: theme.palette.info.main,
-          icon: <ResearchingIcon />,
-          label: '研究中',
-          textColor: theme.palette.text.primary,
-          hoverEffect: false
-        };
-      case 'available':
-        return {
-          color: theme.palette.primary.main,
-          bgColor: alpha(theme.palette.primary.main, 0.08),
-          borderColor: theme.palette.primary.main,
-          icon: <QueueIcon />,
-          label: '可研究',
-          textColor: theme.palette.text.primary,
-          hoverEffect: true
-        };
-      default:
-        return {
-          color: theme.palette.grey[500],
-          bgColor: alpha(theme.palette.grey[500], 0.04),
-          borderColor: alpha(theme.palette.grey[400], 0.3),
-          icon: <LockedIcon />,
-          label: '锁定',
-          textColor: theme.palette.text.disabled,
-          hoverEffect: false
-        };
-    }
-  };
+  // Memoize service calls
+  const techData = useMemo(() => ({
+    unlockedContent: TechnologyService.getUnlockedContentInfo(technology),
+    prerequisiteNames: TechnologyService.getPrerequisiteNames(technology.prerequisites),
+    researchTriggerInfo: TechnologyService.getResearchTriggerInfo(technology.id)
+  }), [technology]);
+  
+  const { unlockedContent, prerequisiteNames, researchTriggerInfo } = techData;
+  
+  const hasResearchTrigger = Boolean(researchTriggerInfo);
+  const unlockCount = unlockedContent.all.length;
 
-  const statusConfig = getStatusConfig();
+  // Memoize status configuration
+  const statusConfig = useMemo(() => {
+    const configs = {
+      unlocked: {
+        color: FACTORIO_COLORS.GREEN_SUCCESS,
+        bgColor: FACTORIO_COLORS.COMPLETED_BG,
+        borderColor: FACTORIO_COLORS.GREEN_SUCCESS,
+        accentColor: FACTORIO_COLORS.GREEN_DARK,
+        icon: <CompletedIcon sx={{ fontSize: 16 }} />,
+        label: '已完成',
+        textColor: '#ffffff',
+        hoverEffect: false
+      },
+      researching: {
+        color: FACTORIO_COLORS.BLUE_INFO,
+        bgColor: FACTORIO_COLORS.RESEARCHING_BG,
+        borderColor: FACTORIO_COLORS.BLUE_INFO,
+        accentColor: FACTORIO_COLORS.BLUE_DARK,
+        icon: <ResearchingIcon sx={{ fontSize: 16 }} />,
+        label: '研究中',
+        textColor: '#ffffff',
+        hoverEffect: false
+      },
+      available: {
+        color: FACTORIO_COLORS.ORANGE_PRIMARY,
+        bgColor: FACTORIO_COLORS.AVAILABLE_BG,
+        borderColor: FACTORIO_COLORS.ORANGE_PRIMARY,
+        accentColor: FACTORIO_COLORS.ORANGE_LIGHT,
+        icon: <QueueIcon sx={{ fontSize: 16 }} />,
+        label: '可研究',
+        textColor: '#ffffff',
+        hoverEffect: true
+      },
+      locked: {
+        color: FACTORIO_COLORS.GREY_LOCKED,
+        bgColor: FACTORIO_COLORS.LOCKED_BG,
+        borderColor: FACTORIO_COLORS.GREY_LOCKED,
+        accentColor: FACTORIO_COLORS.GREY_DARK,
+        icon: <LockedIcon sx={{ fontSize: 16 }} />,
+        label: '锁定',
+        textColor: '#cccccc',
+        hoverEffect: false
+      }
+    };
+    return configs[status] || configs.locked;
+  }, [status]);
+
   const canResearch = status === 'available' && !inQueue;
   const isCompleted = status === 'unlocked';
 
-  // 获取解锁内容的数量
-  const getUnlockCount = () => {
-    const items = technology.unlocks.items?.length || 0;
-    const recipes = technology.unlocks.recipes?.length || 0;
-    const buildings = technology.unlocks.buildings?.length || 0;
-    return items + recipes + buildings;
-  };
+  const handleClick = useCallback(() => {
+    onClick?.(technology.id);
+  }, [onClick, technology.id]);
 
-  // 检查是否有研究触发器
-  const hasResearchTrigger = () => {
-    try {
-      const dataService = DataService.getInstance();
-      const techRecipe = dataService.getRecipe(technology.id);
-      return !!techRecipe?.researchTrigger;
-    } catch {
-      return false;
-    }
-  };
-
-  // 获取解锁的配方信息
-  const getUnlockedRecipes = () => {
-    if (!technology.unlocks.recipes || technology.unlocks.recipes.length === 0) {
-      return [];
-    }
-    
-    return technology.unlocks.recipes.map(recipeId => {
-      const recipe = RecipeService.getRecipeById(recipeId);
-      return {
-        id: recipeId,
-        icon: recipe?.icon || recipeId,
-        name: recipe?.name || recipeId
-      };
-    });
-  };
-
-  // 获取解锁的物品信息
-  const getUnlockedItems = () => {
-    if (!technology.unlocks.items || technology.unlocks.items.length === 0) {
-      return [];
-    }
-    
-    return technology.unlocks.items.map(itemId => ({
-      id: itemId,
-      icon: itemId,
-      name: itemId
-    }));
-  };
-
-  // 获取解锁的建筑信息
-  const getUnlockedBuildings = () => {
-    if (!technology.unlocks.buildings || technology.unlocks.buildings.length === 0) {
-      return [];
-    }
-    
-    return technology.unlocks.buildings.map(buildingId => ({
-      id: buildingId,
-      icon: buildingId,
-      name: buildingId
-    }));
-  };
-
-  // 合并所有解锁内容，优先显示配方
-  const getAllUnlockedContent = () => {
-    const recipes = getUnlockedRecipes();
-    const items = getUnlockedItems();
-    const buildings = getUnlockedBuildings();
-    
-    // 优先显示配方，然后是物品，最后是建筑
-    return [...recipes, ...items, ...buildings];
-  };
-
-  // 获取前置科技的名称
-  const getPrerequisiteNames = () => {
-    if (!technology.prerequisites || technology.prerequisites.length === 0) {
-      return [];
-    }
-    
-    const dataService = DataService.getInstance();
-    return technology.prerequisites.map(prereqId => {
-      // 尝试从科技数据中获取名称
-      const techs = dataService.getTechnologies() as Array<{ id: string; name: string }>;
-      const tech = techs?.find(t => t.id === prereqId);
-      if (tech?.name) {
-        return tech.name;
+  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      if (canResearch) {
+        handleClick();
       }
-      
-      // 如果科技数据中没有，尝试从物品数据中获取
-      const item = dataService.getItem(prereqId);
-      if (item) {
-        return dataService.getLocalizedItemName(item.id);
-      }
-      
-      // 最后回退到ID
-      return prereqId;
-    });
-  };
-
-  // 获取研究触发器的信息
-  const getResearchTriggerInfo = () => {
-    try {
-      const dataService = DataService.getInstance();
-      const techRecipe = dataService.getRecipe(technology.id);
-      const researchTrigger = techRecipe?.researchTrigger;
-      
-      if (!researchTrigger) {
-        return null;
-      }
-      
-      let triggerText = '';
-      let triggerItem = '';
-      
-      switch (researchTrigger.type) {
-        case 'craft-item': {
-          triggerItem = researchTrigger.item || '';
-          const itemName = dataService.getLocalizedItemName(triggerItem);
-          const count = researchTrigger.count || 1;
-          triggerText = `制作 ${count} 个 ${itemName}`;
-          break;
-        }
-        case 'build-entity': {
-          triggerItem = researchTrigger.entity || '';
-          const itemName = dataService.getLocalizedItemName(triggerItem);
-          const count = researchTrigger.count || 1;
-          triggerText = `建造 ${count} 个 ${itemName}`;
-          break;
-        }
-        case 'mine-entity': {
-          triggerItem = researchTrigger.entity || '';
-          const itemName = dataService.getLocalizedItemName(triggerItem);
-          const count = researchTrigger.count || 1;
-          triggerText = `挖掘 ${count} 个 ${itemName}`;
-          break;
-        }
-        case 'create-space-platform': {
-          triggerText = `创建空间平台`;
-          break;
-        }
-        case 'capture-spawner': {
-          triggerText = `捕获生成器`;
-          break;
-        }
-        default:
-          triggerText = `触发条件: ${researchTrigger.type}`;
-      }
-      
-      return {
-        text: triggerText,
-        item: triggerItem,
-        type: researchTrigger.type,
-        count: researchTrigger.count || 1
-      };
-    } catch {
-      return null;
     }
-  };
+  }, [canResearch, handleClick]);
 
   return (
-    <Card
-      sx={{
-        height: '100%',
-        cursor: canResearch ? 'pointer' : 'default',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        border: `2px solid ${statusConfig.borderColor}`,
-        bgcolor: statusConfig.bgColor,
-        opacity: isCompleted ? 0.6 : 1,
-        borderRadius: 2,
-        position: 'relative',
-        overflow: 'hidden',
-        '&:hover': statusConfig.hoverEffect ? {
-          transform: 'translateY(-2px) scale(1.02)',
-          boxShadow: `0 8px 25px ${alpha(statusConfig.color, 0.4)}`,
-          borderColor: statusConfig.color,
-          '&::before': {
-            opacity: 0.1
-          }
-        } : {},
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: `linear-gradient(135deg, ${alpha(statusConfig.color, 0.1)} 0%, transparent 100%)`,
-          opacity: 0,
-          transition: 'opacity 0.3s ease',
-          pointerEvents: 'none'
-        },
-        minHeight: 130
-      }}
-      onClick={() => onClick?.(technology.id)}
+    <StyledCard
+      statusConfig={statusConfig}
+      canResearch={canResearch}
+      isCompleted={isCompleted}
+      onClick={canResearch ? handleClick : undefined}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={canResearch ? 0 : -1}
+      aria-label={`${technology.name} 科技。状态：${statusConfig.label}${canResearch ? '。点击开始研究' : ''}`}
+      aria-describedby={`tech-${technology.id}-details`}
     >
-      <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-        {/* 头部：图标和名称 */}
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1 }}>
-          <Box sx={{ position: 'relative' }}>
-            <FactorioIcon
-              itemId={technology.icon || technology.id}
-              size={32}
-              showBorder={false}
-            />
-            {/* 研究触发器指示器 */}
-            {hasResearchTrigger() && (
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: -4,
-                  right: -4,
-                  width: 16,
-                  height: 16,
-                  bgcolor: theme.palette.primary.main,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: `1px solid ${theme.palette.background.paper}`
-                }}
-              >
-                <TriggerIcon sx={{ fontSize: 10, color: 'white' }} />
-              </Box>
-            )}
-          </Box>
-          
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography
-              variant="caption"
-              sx={{
-                fontWeight: 700,
-                mb: 0.5,
-                color: statusConfig.textColor,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                fontSize: '0.8rem',
-                lineHeight: 1.3,
-                textShadow: status === 'available' ? `0 0 8px ${alpha(statusConfig.color, 0.3)}` : 'none'
-              }}
-            >
-              {technology.name}
-            </Typography>
-            
-            {/* 状态指示器 */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.25,
-                  px: 0.5,
-                  py: 0.125,
-                  bgcolor: alpha(statusConfig.color, 0.15),
-                  borderRadius: 1,
-                  border: `1px solid ${alpha(statusConfig.color, 0.3)}`
-                }}
-              >
-                {statusConfig.icon}
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
-                    fontSize: '0.6rem', 
-                    fontWeight: 600,
-                    color: statusConfig.color
-                  }}
-                >
-                  {statusConfig.label}
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-        </Box>
+      <CardContent 
+        sx={{ 
+          p: SPACING.MEDIUM / 8, 
+          '&:last-child': { pb: SPACING.MEDIUM / 8 },
+          // 移动端优化
+          [theme.breakpoints.down('sm')]: {
+            p: SPACING.SMALL / 8,
+            '&:last-child': { pb: SPACING.SMALL / 8 }
+          }
+        }}
+        id={`tech-${technology.id}-details`}
+        aria-live="polite"
+      >
+        <TechHeader
+          technology={technology}
+          hasResearchTrigger={hasResearchTrigger}
+          statusConfig={statusConfig}
+          status={status}
+        />
 
-        {/* 研究进度条 */}
         {status === 'researching' && progress !== undefined && (
-          <Box sx={{ mb: 1 }}>
-            <Box
-              sx={{
-                width: '100%',
-                height: 6,
-                bgcolor: alpha(theme.palette.grey[500], 0.2),
-                borderRadius: 3,
-                overflow: 'hidden',
-                position: 'relative'
-              }}
-            >
-              <Box
-                sx={{
-                  width: `${progress * 100}%`,
-                  height: '100%',
-                  background: `linear-gradient(90deg, ${statusConfig.color} 0%, ${alpha(statusConfig.color, 0.8)} 100%)`,
-                  transition: 'width 0.3s ease',
-                  borderRadius: 3,
-                  boxShadow: `0 0 8px ${alpha(statusConfig.color, 0.5)}`
-                }}
-              />
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', fontWeight: 600 }}>
-                {Math.round(progress * 100)}%
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
-                研究中...
-              </Typography>
-            </Box>
-          </Box>
+          <ProgressBar
+            progress={progress}
+            statusConfig={statusConfig}
+          />
         )}
 
         {/* 解锁条件显示 */}
@@ -416,7 +524,7 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(({
                   {status === 'locked' ? '需要解锁:' : '前置科技:'}
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {getPrerequisiteNames().map((prereqName, index) => {
+                  {prerequisiteNames.map((prereqName, index) => {
                     const isCompleted = status === 'available'; // 如果是可研究状态，说明前置科技已完成
                     return (
                       <Box
@@ -495,8 +603,7 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(({
             {(!technology.prerequisites || technology.prerequisites.length === 0) && status === 'available' && (
               <Box sx={{ mt: 0.5 }}>
                 {(() => {
-                  const triggerInfo = getResearchTriggerInfo();
-                  if (triggerInfo) {
+                  if (researchTriggerInfo) {
                     // 有研究触发器的科技
                     return (
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
@@ -515,9 +622,9 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(({
                             border: `1px solid ${alpha(theme.palette.info.main, 0.3)}`
                           }}
                         >
-                          {triggerInfo.item && (
+                          {researchTriggerInfo.item && (
                             <FactorioIcon
-                              itemId={triggerInfo.item}
+                              itemId={researchTriggerInfo.item}
                               size={16}
                               showBorder={false}
                             />
@@ -530,7 +637,7 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(({
                               fontWeight: 600
                             }}
                           >
-                            {triggerInfo.text}
+                            {researchTriggerInfo.text}
                           </Typography>
                         </Box>
                       </Box>
@@ -675,90 +782,31 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(({
           </Box>
         )}
 
-        {/* 解锁内容显示 - 改进版 */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            {/* 显示解锁内容的图标（优先显示配方） */}
-            {getAllUnlockedContent().slice(0, 3).map((content) => (
-              <Box
-                key={content.id}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 20,
-                  height: 20,
-                  bgcolor: alpha(theme.palette.success.main, 0.15),
-                  borderRadius: 0.5,
-                  border: `1px solid ${alpha(theme.palette.success.main, 0.3)}`
-                }}
-              >
-                <FactorioIcon
-                  itemId={content.icon}
-                  size={14}
-                  showBorder={false}
-                />
-              </Box>
-            ))}
-            
-            {/* 显示解锁数量 */}
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                px: 0.5,
-                py: 0.125,
-                bgcolor: alpha(theme.palette.success.main, 0.2),
-                borderRadius: 0.5,
-                border: `1px solid ${alpha(theme.palette.success.main, 0.4)}`
-              }}
-            >
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  fontSize: '0.65rem', 
-                  fontWeight: 600,
-                  color: theme.palette.success.main
-                }}
-              >
-                +{getUnlockCount()}
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
+        <UnlockContent
+          unlockedContent={unlockedContent}
+          unlockCount={unlockCount}
+        />
 
         {/* 队列状态指示 */}
         {inQueue && (
-          <Box sx={{ mt: 0.5 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.25,
-                px: 0.75,
-                py: 0.25,
-                bgcolor: alpha(theme.palette.info.main, 0.15),
-                borderRadius: 1,
-                border: `1px solid ${alpha(theme.palette.info.main, 0.4)}`,
-                boxShadow: `0 2px 4px ${alpha(theme.palette.info.main, 0.2)}`
-              }}
-            >
-              <QueueIcon sx={{ fontSize: 12, color: theme.palette.info.main }} />
+          <Box className="card-section" sx={{ mt: SPACING.MICRO / 8 }}>
+            <StatusChip statusColor={FACTORIO_COLORS.BLUE_INFO}>
+              <QueueIcon sx={{ fontSize: 14, color: '#ffffff' }} />
               <Typography 
                 variant="caption" 
                 sx={{ 
-                  fontSize: '0.6rem', 
+                  fontSize: TYPOGRAPHY.STATUS,
                   fontWeight: 600,
-                  color: theme.palette.info.main
+                  color: '#ffffff'
                 }}
               >
                 队列中
               </Typography>
-            </Box>
+            </StatusChip>
           </Box>
         )}
       </CardContent>
-    </Card>
+    </StyledCard>
   );
 });
 

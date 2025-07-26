@@ -1281,6 +1281,367 @@ export class TechnologyService {
     return this.techCategories.find(cat => cat.id === categoryId);
   }
 
+  /**
+   * 获取应在科技页面显示的科技列表（过滤逻辑迁移自TechSimpleGrid）
+   * @param technologies 传入的科技列表（已排序）
+   * @param techStates 科技状态映射
+   */
+  public static getDisplayTechnologies(
+    technologies: Technology[],
+    techStates: Map<string, { status: TechStatus; progress?: number }>
+  ): Technology[] {
+    return technologies.filter(tech => {
+      const state = techStates.get(tech.id)?.status || 'locked';
+      // 1. 显示当前可研究的科技（available状态）
+      if (state === 'available') return true;
+      // 2. 显示正在研究的科技（researching状态）
+      if (state === 'researching') return true;
+      // 3. 显示依赖当前可研究科技的科技（locked状态但有可研究的前置科技）
+      if (state === 'locked') {
+        const hasAvailablePrerequisite = tech.prerequisites.some(prereqId => {
+          const prereqState = techStates.get(prereqId)?.status || 'locked';
+          return prereqState === 'available' || prereqState === 'researching';
+        });
+        return hasAvailablePrerequisite;
+      }
+      // 4. 如果科技已解锁，检查是否有依赖它的可研究科技需要显示
+      if (state === 'unlocked') {
+        const hasDependentToShow = technologies.some(dependentTech => {
+          const dependentState = techStates.get(dependentTech.id)?.status || 'locked';
+          return (dependentState === 'available' || dependentState === 'researching') && 
+                 dependentTech.prerequisites.includes(tech.id);
+        });
+        return hasDependentToShow;
+      }
+      return false;
+    });
+  }
+
+  /**
+   * 按状态优先级排序科技列表（排序逻辑迁移自TechSimpleGrid）
+   * @param technologies 传入的科技列表
+   * @param techStates 科技状态映射
+   */
+  public static getTechnologiesSortedByStatus(
+    technologies: Technology[],
+    techStates: Map<string, { status: TechStatus; progress?: number }>
+  ): Technology[] {
+    // 按状态分组，但每个状态内部保持原有的依赖关系顺序
+    const techsByStatus = new Map<string, Technology[]>();
+    
+    technologies.forEach(tech => {
+      const status = techStates.get(tech.id)?.status || 'locked';
+      if (!techsByStatus.has(status)) {
+        techsByStatus.set(status, []);
+      }
+      techsByStatus.get(status)!.push(tech);
+    });
+    
+    // 按状态优先级排序，但在每个状态内部保持原有的依赖关系顺序
+    const statusPriority = {
+      'researching': 0,
+      'available': 1, 
+      'locked': 2,
+      'unlocked': 3
+    };
+    
+    const sorted: Technology[] = [];
+    
+    // 按优先级顺序处理每个状态
+    Object.entries(statusPriority)
+      .sort(([, a], [, b]) => a - b)
+      .forEach(([status]) => {
+        const techsInStatus = techsByStatus.get(status);
+        if (techsInStatus) {
+          // 在每个状态内部，保持原有的依赖关系顺序，不按名称排序
+          sorted.push(...techsInStatus);
+        }
+      });
+    
+    return sorted;
+  }
+
+  /**
+   * 获取科技解锁内容信息（业务逻辑迁移自TechGridCard）
+   * @param technology 科技数据
+   */
+  public static getUnlockedContentInfo(technology: Technology) {
+    
+         // 获取解锁的配方信息
+     const getUnlockedRecipes = () => {
+       if (!technology.unlocks.recipes || technology.unlocks.recipes.length === 0) {
+         return [];
+       }
+       
+       return technology.unlocks.recipes.map(recipeId => {
+         const recipe = RecipeService.getRecipeById(recipeId);
+         return {
+           id: recipeId,
+           icon: recipe?.icon || recipeId,
+           name: recipe?.name || recipeId
+         };
+       });
+     };
+
+    // 获取解锁的物品信息
+    const getUnlockedItems = () => {
+      if (!technology.unlocks.items || technology.unlocks.items.length === 0) {
+        return [];
+      }
+      
+      return technology.unlocks.items.map(itemId => ({
+        id: itemId,
+        icon: itemId,
+        name: itemId
+      }));
+    };
+
+    // 获取解锁的建筑信息
+    const getUnlockedBuildings = () => {
+      if (!technology.unlocks.buildings || technology.unlocks.buildings.length === 0) {
+        return [];
+      }
+      
+      return technology.unlocks.buildings.map(buildingId => ({
+        id: buildingId,
+        icon: buildingId,
+        name: buildingId
+      }));
+    };
+
+    // 合并所有解锁内容，优先显示配方
+    const getAllUnlockedContent = () => {
+      const recipes = getUnlockedRecipes();
+      const items = getUnlockedItems();
+      const buildings = getUnlockedBuildings();
+      
+      // 优先显示配方，然后是物品，最后是建筑
+      return [...recipes, ...items, ...buildings];
+    };
+
+    return {
+      recipes: getUnlockedRecipes(),
+      items: getUnlockedItems(),
+      buildings: getUnlockedBuildings(),
+      all: getAllUnlockedContent()
+    };
+  }
+
+  /**
+   * 获取前置科技的名称（业务逻辑迁移自TechGridCard）
+   * @param prerequisites 前置科技ID列表
+   */
+  public static getPrerequisiteNames(prerequisites: string[]): string[] {
+    if (!prerequisites || prerequisites.length === 0) {
+      return [];
+    }
+    
+    const dataService = DataService.getInstance();
+    return prerequisites.map(prereqId => {
+      // 优先尝试获取本地化的科技名称
+      const localizedName = dataService.getLocalizedTechnologyName(prereqId);
+      if (localizedName && localizedName !== prereqId) {
+        return localizedName;
+      }
+      
+      // 尝试从科技数据中获取名称，但也要尝试本地化
+      const techs = dataService.getTechnologies() as Array<{ id: string; name: string }>;
+      const tech = techs?.find(t => t.id === prereqId);
+      if (tech) {
+        // 先尝试获取tech.name的本地化版本
+        const localizedTechName = dataService.getLocalizedTechnologyName(tech.name.toLowerCase());
+        if (localizedTechName && localizedTechName !== tech.name.toLowerCase()) {
+          return localizedTechName;
+        }
+        // 如果没有本地化，使用原始名称
+        return tech.name;
+      }
+      
+      // 如果科技数据中没有，尝试从物品数据中获取
+      const item = dataService.getItem(prereqId);
+      if (item) {
+        return dataService.getLocalizedItemName(item.id);
+      }
+      
+      // 最后回退到ID
+      return prereqId;
+    });
+  }
+
+  /**
+   * 获取研究触发器信息（业务逻辑迁移自TechGridCard）
+   * @param techId 科技ID
+   */
+  public static getResearchTriggerInfo(techId: string) {
+    try {
+      const dataService = DataService.getInstance();
+      const techRecipe = dataService.getRecipe(techId);
+      const researchTrigger = techRecipe?.researchTrigger;
+      
+      if (!researchTrigger) {
+        return null;
+      }
+      
+      let triggerText = '';
+      let triggerItem = '';
+      
+      switch (researchTrigger.type) {
+        case 'craft-item': {
+          triggerItem = researchTrigger.item || '';
+          const itemName = dataService.getLocalizedItemName(triggerItem);
+          const count = researchTrigger.count || 1;
+          triggerText = `制作 ${count} 个 ${itemName}`;
+          break;
+        }
+        case 'build-entity': {
+          triggerItem = researchTrigger.entity || '';
+          const itemName = dataService.getLocalizedItemName(triggerItem);
+          const count = researchTrigger.count || 1;
+          triggerText = `建造 ${count} 个 ${itemName}`;
+          break;
+        }
+        case 'mine-entity': {
+          triggerItem = researchTrigger.entity || '';
+          const itemName = dataService.getLocalizedItemName(triggerItem);
+          const count = researchTrigger.count || 1;
+          triggerText = `挖掘 ${count} 个 ${itemName}`;
+          break;
+        }
+        case 'create-space-platform': {
+          triggerText = `创建空间平台`;
+          break;
+        }
+        case 'capture-spawner': {
+          triggerText = `捕获生成器`;
+          break;
+        }
+        default:
+          // 处理其他类型的触发器
+          if (researchTrigger.type === 'research-technology') {
+            triggerItem = researchTrigger.item || '';
+            const techName = dataService.getLocalizedRecipeName(triggerItem) || triggerItem;
+            triggerText = `研究科技: ${techName}`;
+          } else if (researchTrigger.type === 'kill-entity') {
+            triggerItem = researchTrigger.item || '';
+            const itemName = dataService.getLocalizedItemName(triggerItem);
+            const count = researchTrigger.count || 1;
+            triggerText = `消灭 ${count} 个 ${itemName}`;
+          } else if (researchTrigger.type === 'construct-entity') {
+            triggerItem = researchTrigger.item || '';
+            const itemName = dataService.getLocalizedItemName(triggerItem);
+            const count = researchTrigger.count || 1;
+            triggerText = `建造 ${count} 个 ${itemName}`;
+          } else {
+            triggerText = `触发条件: ${researchTrigger.type}`;
+          }
+      }
+      
+      return {
+        text: triggerText,
+        item: triggerItem,
+        type: researchTrigger.type,
+        count: researchTrigger.count || 1
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * 获取科技卡片完整显示信息（统一接口，简化组件逻辑）
+   * @param technology 科技数据
+   * @param status 科技状态
+   * @param progress 研究进度
+   * @param inQueue 是否在队列中
+   */
+  public static getTechCardDisplayInfo(
+    technology: Technology,
+    status: TechStatus,
+    progress?: number,
+    inQueue: boolean = false
+  ) {
+    const dataService = DataService.getInstance();
+    
+    // 获取解锁内容
+    const unlockedContent = this.getUnlockedContentInfo(technology);
+    
+    // 获取前置科技名称
+    const prerequisiteNames = this.getPrerequisiteNames(technology.prerequisites);
+    
+    // 获取研究触发器信息
+    const researchTriggerInfo = this.getResearchTriggerInfo(technology.id);
+    
+    // 获取研究配方信息
+    let researchRecipeInfo = null;
+    try {
+      const techRecipe = dataService.getRecipe(technology.id);
+      if (techRecipe) {
+        researchRecipeInfo = {
+          time: techRecipe.time || technology.researchTime,
+          count: techRecipe.count || 1,
+          inputs: techRecipe.in || {}
+        };
+      }
+    } catch {
+      // 忽略错误，使用默认值
+    }
+    
+    // 判断解锁条件类型
+    const unlockConditionType = this.getUnlockConditionType(technology, status, researchTriggerInfo);
+    
+    return {
+      // 基本信息
+      name: technology.name,
+      icon: technology.icon,
+      
+      // 状态信息
+      status,
+      progress,
+      inQueue,
+      canResearch: status === 'available' && !inQueue,
+      isCompleted: status === 'unlocked',
+      
+      // 解锁内容
+      unlockedContent,
+      unlockCount: unlockedContent.all.length,
+      
+      // 前置科技
+      prerequisiteNames,
+      hasPrerequisites: technology.prerequisites && technology.prerequisites.length > 0,
+      
+      // 研究触发器
+      researchTriggerInfo,
+      hasResearchTrigger: !!researchTriggerInfo,
+      
+      // 研究配方
+      researchRecipeInfo,
+      researchCost: technology.researchCost,
+      
+      // 解锁条件类型
+      unlockConditionType
+    };
+  }
+
+  /**
+   * 获取解锁条件类型
+   */
+  private static getUnlockConditionType(
+    technology: Technology, 
+    status: TechStatus, 
+    researchTriggerInfo: any
+  ): 'prerequisites' | 'research-trigger' | 'auto-unlock' | 'none' {
+    if (technology.prerequisites && technology.prerequisites.length > 0) {
+      return 'prerequisites';
+    }
+    if (researchTriggerInfo) {
+      return 'research-trigger';
+    }
+    if (status === 'available') {
+      return 'auto-unlock';
+    }
+    return 'none';
+  }
+
   // ========== 事件系统 ==========
 
   /**

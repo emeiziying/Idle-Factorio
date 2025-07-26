@@ -12,6 +12,7 @@ interface I18nData {
   items: Record<string, string>;
   recipes: Record<string, string>;
   locations: Record<string, string>;
+  technologies?: Record<string, string>; // 可选，如果没有则回退到 recipes 字段
 }
 
 export class DataService {
@@ -109,6 +110,54 @@ export class DataService {
       return locationId;
     }
     return this.i18nData.locations[locationId] || locationId;
+  }
+
+  // 获取本地化的科技名称
+  getLocalizedTechnologyName(technologyId: string): string {
+    if (!this.i18nData) {
+      return technologyId;
+    }
+    
+    // 规范化输入（转为小写并去除空格）
+    const normalizedId = technologyId.toLowerCase().replace(/\s+/g, '-');
+    
+    // 优先从 technologies 字段查找
+    if (this.i18nData.technologies) {
+      // 先查找原始 ID
+      if (this.i18nData.technologies[technologyId]) {
+        return this.i18nData.technologies[technologyId];
+      }
+      // 再查找规范化后的 ID
+      if (this.i18nData.technologies[normalizedId]) {
+        return this.i18nData.technologies[normalizedId];
+      }
+    }
+    
+    // 从 items 字段查找（科技相关的汉化内容存储在这里）
+    if (this.i18nData.items) {
+      // 先查找原始 ID
+      if (this.i18nData.items[technologyId]) {
+        return this.i18nData.items[technologyId];
+      }
+      // 再查找规范化后的 ID
+      if (this.i18nData.items[normalizedId]) {
+        return this.i18nData.items[normalizedId];
+      }
+    }
+    
+    // 回退到 recipes 字段（目前科技名称可能在这里）
+    if (this.i18nData.recipes) {
+      // 先查找原始 ID
+      if (this.i18nData.recipes[technologyId]) {
+        return this.i18nData.recipes[technologyId];
+      }
+      // 再查找规范化后的 ID
+      if (this.i18nData.recipes[normalizedId]) {
+        return this.i18nData.recipes[normalizedId];
+      }
+    }
+    
+    return technologyId;
   }
 
   // 获取所有物品
