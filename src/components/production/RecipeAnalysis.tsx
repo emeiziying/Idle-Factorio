@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Typography, Paper, Chip, Divider } from '@mui/material';
 import type { Recipe } from '../../types';
-import DataService from '../../services/DataService';
+import { DataService } from '../../services/DataService';
 import {
   getRecipeDependencyChain,
   getRecipeCostAnalysis,

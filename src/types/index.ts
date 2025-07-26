@@ -19,6 +19,7 @@ export interface Item {
   subgroup?: string;
   description?: string;
   icon?: string;
+  iconText?: string; // 图标文本（如温度标识 "165°"）
   fuel_value?: string;
   type?: string;
   unlocked?: boolean;
@@ -29,6 +30,14 @@ export interface Item {
     speed: number;
   };
   machine?: unknown;
+}
+
+// 研究触发器接口
+export interface ResearchTrigger {
+  type: 'craft-item' | 'build-entity' | 'mine-entity' | 'create-space-platform' | 'capture-spawner';
+  item?: string; // craft-item类型使用
+  entity?: string; // build-entity和mine-entity类型使用
+  count?: number; // 需要的数量（默认为1）
 }
 
 // 配方接口
@@ -46,6 +55,13 @@ export interface Recipe {
   locations?: string[]; // 生产位置
   cost?: number; // 生产成本
   disallowedEffects?: string[]; // 不允许的效果
+  icon?: string; // 图标ID
+  iconText?: string; // 图标文本（如温度标识 "500°"）
+  
+  // 科技相关新字段
+  row?: number; // 科技树中的行位置
+  count?: number; // 研究单位数量（配合time字段计算总时间）
+  researchTrigger?: ResearchTrigger; // 研究触发条件
 }
 
 // 库存物品接口
@@ -88,7 +104,9 @@ export interface IconData {
 export interface GameData {
   version: {
     base: string;
-    DataRawJson: string;
+    "elevated-rails": string;
+    quality: string;
+    "space-age": string;
   };
   categories: Category[];
   items: Item[];

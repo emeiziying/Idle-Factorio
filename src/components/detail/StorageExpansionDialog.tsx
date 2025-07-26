@@ -21,7 +21,7 @@ import {
 import type { Item } from '../../types/index';
 import useGameStore from '../../store/gameStore';
 import FactorioIcon from '../common/FactorioIcon';
-import DataService from '../../services/DataService';
+import { DataService } from '../../services/DataService';
 import { getAvailableChestTypes } from '../../data/storageConfigs';
 import { storageService } from '../../services/StorageService';
 

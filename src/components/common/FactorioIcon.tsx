@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
-import DataService from '../../services/DataService';
+import { DataService } from '../../services/DataService';
 import type { IconData } from '../../types/index';
+
+// 导入图标精灵图
+import iconSprite from '../../data/spa/icons.webp';
 
 interface FactorioIconProps {
   itemId?: string; // 当使用customImage时可选
@@ -14,10 +17,11 @@ interface FactorioIconProps {
   shortage?: boolean; // 是否数量不足
   selected?: boolean; // 是否选中状态
   selectedBgColor?: string; // 选中时的背景色
+  displayText?: string; // 自定义显示文本（优先级最高）
 }
 
 const ICON_UNIT = 66; // 单个图标标准尺寸
-const SPRITE_URL = '/data/spa/icons.webp';
+const SPRITE_URL = iconSprite; // 使用导入的图标路径
 
 const FactorioIcon: React.FC<FactorioIconProps> = ({ 
   itemId, 
@@ -29,17 +33,33 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
   customImage,
   shortage,
   selected = false,
-  selectedBgColor = '#e39827'
+  selectedBgColor = '#e39827',
+  displayText
 }) => {
   const [iconData, setIconData] = useState<IconData | null>(null);
   const [spriteSize, setSpriteSize] = useState<{ width: number; height: number } | null>(null);
+  const [effectiveIconId, setEffectiveIconId] = useState<string | undefined>(itemId);
+
+  // 状态：从服务层获取的iconText
+  const [recipeIconText, setRecipeIconText] = useState<string | undefined>(undefined);
+
+  // 获取图标信息
+  useEffect(() => {
+    if (!itemId) return;
+    
+    const dataService = DataService.getInstance();
+    const iconInfo = dataService.getIconInfo(itemId);
+    
+    setEffectiveIconId(iconInfo.iconId);
+    setRecipeIconText(iconInfo.iconText);
+  }, [itemId]);
 
   // 加载iconData - 只在没有customImage时加载
   useEffect(() => {
-    if (customImage || !itemId) return;
+    if (customImage || !effectiveIconId) return;
     const dataService = DataService.getInstance();
-    setIconData(dataService.getIconData(itemId));
-  }, [itemId, customImage]);
+    setIconData(dataService.getIconData(effectiveIconId));
+  }, [effectiveIconId, customImage]);
 
   // 动态获取精灵图尺寸 - 只在没有customImage时加载
   useEffect(() => {
@@ -112,6 +132,16 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
     return qty > 999 ? `${Math.floor(qty / 1000)}k` : qty;
   };
 
+  // 获取要显示的文本：优先级 displayText > recipeIconText > quantity
+  const getDisplayText = () => {
+    if (displayText !== undefined) return displayText;
+    if (recipeIconText !== undefined) return recipeIconText;
+    if (quantity !== undefined) return formatQuantity(quantity);
+    return undefined;
+  };
+
+  const textToDisplay = getDisplayText();
+
   return (
     <Box
       className={className}
@@ -136,9 +166,9 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
           })
         }}
       />
-      {quantity !== undefined && (
+      {textToDisplay !== undefined && (
         <Box sx={quantityStyles}>
-          {formatQuantity(quantity)}
+          {textToDisplay}
         </Box>
       )}
     </Box>

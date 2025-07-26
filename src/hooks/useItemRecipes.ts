@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Item, Recipe } from '../types/index';
-import DataService from '../services/DataService';
+import { DataService } from '../services/DataService';
+import { RecipeService } from '../services/RecipeService';
 import ManualCraftingValidator from '../utils/manualCraftingValidator';
 
 export const useItemRecipes = (item: Item) => {
@@ -15,8 +16,8 @@ export const useItemRecipes = (item: Item) => {
 
   useEffect(() => {
     if (item) {
-      const itemRecipes = dataService.getRecipesForItem(item.id);
-      const usageRecipes = dataService.getRecipesUsingItem(item.id);
+      const itemRecipes = RecipeService.getRecipesThatProduce(item.id);
+      const usageRecipes = RecipeService.getRecipesThatUse(item.id);
       
       // 过滤掉producers全部未解锁的配方
       const isProducerUnlocked = (recipe: Recipe) => {

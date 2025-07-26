@@ -1,40 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  BottomNavigation, 
-  BottomNavigationAction,
+import {
+  Box,
   ThemeProvider,
   CssBaseline,
-  Fab,
+  BottomNavigation,
+  BottomNavigationAction,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Button,
-  Typography,
   Snackbar,
-  Alert
+  Alert,
+  Fab,
+  Typography
 } from '@mui/material';
 import {
   Build as BuildIcon,
   Factory as FactoryIcon,
   Science as ScienceIcon,
-  Delete as DeleteIcon,
-  BugReport as TestIcon
+  BugReport as TestIcon,
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 
 import ProductionModule from './components/production/ProductionModule';
 import FacilitiesModule from './components/facilities/FacilitiesModule';
 import TechnologyModule from './components/technology/TechnologyModule';
 import ManualCraftingTestPage from './components/test/ManualCraftingTestPage';
-import DataService from './services/DataService';
+
+import { DataService } from './services/DataService';
 import CraftingEngine from './utils/craftingEngine';
 import useGameStore from './store/gameStore';
 import { useIsMobile } from './hooks/useIsMobile';
+import { usePersistentState } from './hooks/usePersistentState';
 import theme from './theme';
 
 const App: React.FC = () => {
-  const [currentModule, setCurrentModule] = useState(0);
+  const [currentModule, setCurrentModule] = usePersistentState('app-current-module', 0);
   const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const isMobile = useIsMobile();
@@ -46,13 +48,13 @@ const App: React.FC = () => {
       try {
         // 加载游戏数据
         await DataService.getInstance().loadGameData();
-        
+
         // 加载国际化数据
         await DataService.getInstance().loadI18nData('zh');
-        
+
         // 启动制作引擎
         CraftingEngine.getInstance().start();
-        
+
         console.log('App initialized successfully');
       } catch (error) {
         console.error('Failed to initialize app:', error);
@@ -60,7 +62,7 @@ const App: React.FC = () => {
     };
 
     initializeApp();
-    
+
     // 清理函数：组件卸载时停止制作引擎
     return () => {
       CraftingEngine.getInstance().stop();
@@ -84,37 +86,44 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ 
-        display: 'flex', 
+      <Box sx={{
+        display: 'flex',
         flexDirection: 'column',
         height: '100vh',
         width: '100vw',
         bgcolor: 'background.default'
       }}>
         {/* 主内容区域 */}
-        <Box sx={{ 
+        <Box sx={{
           flex: 1,
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          paddingBottom: { xs: '56px', sm: '0px' } // 移动端为底部导航留空间，桌面端不需要
         }}>
           {currentModule === 0 && <ProductionModule />}
           {currentModule === 1 && <FacilitiesModule />}
           {currentModule === 2 && <TechnologyModule />}
           {currentModule === 3 && <ManualCraftingTestPage />}
         </Box>
-        
+
         {/* 底部导航 */}
-        <BottomNavigation 
-          value={currentModule} 
+        <BottomNavigation
+          value={currentModule}
           onChange={handleTabChange}
           showLabels // 确保显示标签
-          sx={{ 
+          sx={{
             width: '100%',
+            position: { xs: 'fixed', sm: 'static' }, // 移动端固定定位，桌面端静态定位
+            bottom: { xs: 0, sm: 'auto' },
+            left: { xs: 0, sm: 'auto' },
+            right: { xs: 0, sm: 'auto' },
+            zIndex: { xs: 1200, sm: 'auto' }, // 移动端高z-index
             borderTop: 1,
             borderColor: 'divider',
             bgcolor: 'background.paper',
+            minHeight: '56px', // 确保最小高度
             '& .MuiBottomNavigationAction-root': {
               minWidth: 'auto',
               flex: 1,
@@ -133,25 +142,25 @@ const App: React.FC = () => {
             },
           }}
         >
-          <BottomNavigationAction 
-            label="生产" 
-            icon={<BuildIcon />} 
+          <BottomNavigationAction
+            label="生产"
+            icon={<BuildIcon />}
             showLabel={true} // 强制显示标签
           />
-          <BottomNavigationAction 
-            label="设施" 
-            icon={<FactoryIcon />} 
+          <BottomNavigationAction
+            label="设施"
+            icon={<FactoryIcon />}
             showLabel={true} // 强制显示标签
           />
-          <BottomNavigationAction 
-            label="科技" 
-            icon={<ScienceIcon />} 
+          <BottomNavigationAction
+            label="科技"
+            icon={<ScienceIcon />}
             showLabel={true} // 强制显示标签
           />
           {import.meta.env.DEV && (
-            <BottomNavigationAction 
-              label="测试" 
-              icon={<TestIcon />} 
+            <BottomNavigationAction
+              label="测试"
+              icon={<TestIcon />}
               showLabel={true} // 强制显示标签
             />
           )}
@@ -165,7 +174,7 @@ const App: React.FC = () => {
             aria-label="clear-game"
             sx={{
               position: 'fixed',
-              bottom: isMobile ? '68px' : '72px', // 移动端稍微靠近一点
+              bottom: isMobile ? '72px' : '72px', // 为固定底部导航留出更多空间
               right: '16px',
               zIndex: 1000,
               bgcolor: 'error.main',
@@ -187,8 +196,8 @@ const App: React.FC = () => {
         )}
 
         {/* 清空存档对话框 */}
-        <Dialog 
-          open={isClearDialogOpen} 
+        <Dialog
+          open={isClearDialogOpen}
           onClose={() => setIsClearDialogOpen(false)}
           maxWidth="xs"
           fullWidth
@@ -224,10 +233,10 @@ const App: React.FC = () => {
             }
           }}
         >
-          <Alert 
-            onClose={() => setShowSuccessMessage(false)} 
-            severity="success" 
-            sx={{ 
+          <Alert
+            onClose={() => setShowSuccessMessage(false)}
+            severity="success"
+            sx={{
               width: '100%',
               bgcolor: 'success.main',
               color: 'white',

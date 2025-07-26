@@ -21,7 +21,7 @@ import {
 } from '@mui/icons-material';
 import FactorioIcon from '../common/FactorioIcon';
 import type { Technology } from '../../types/technology';
-import DataService from '../../services/DataService';
+import { DataService } from '../../services/DataService';
 
 interface TechUnlockEvent {
   techId: string;

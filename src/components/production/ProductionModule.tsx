@@ -5,12 +5,13 @@ import ItemList from './ItemList';
 import ItemDetailPanel from './ItemDetailPanel';
 import CraftingQueue from './CraftingQueue';
 
-import DataService from '../../services/DataService';
+import { DataService } from '../../services/DataService';
+import { usePersistentState } from '../../hooks/usePersistentState';
 import type { Category, Item } from '../../types/index';
 
 const ProductionModule: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = usePersistentState<string>('production-selected-category', '');
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -26,8 +27,8 @@ const ProductionModule: React.FC = () => {
         const allCategories = dataService.getAllCategories();
         setCategories(allCategories);
         
-        // 默认选择第一个分类（中间产品）
-        if (allCategories.length > 0) {
+        // 如果没有保存的分类或保存的分类不存在，则选择第一个分类
+        if (allCategories.length > 0 && (!selectedCategory || !allCategories.find(cat => cat.id === selectedCategory))) {
           setSelectedCategory(allCategories[0].id);
         }
         

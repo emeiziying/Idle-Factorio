@@ -18,7 +18,7 @@ import {
 import TechNode from './TechNode';
 import TechConnections from './TechConnections';
 import type { Technology, TechStatus } from '../../types/technology';
-import TechnologyService from '../../services/TechnologyService';
+import { TechnologyService } from '../../services/TechnologyService';
 
 interface TechGridProps {
   /** 要显示的科技列表 */
@@ -239,7 +239,7 @@ const TechGrid: React.FC<TechGridProps> = ({
 
   // 获取分类信息
   const getCategoryInfo = (categoryId: string) => {
-    const techService = TechnologyService;
+    const techService = TechnologyService.getInstance();
     const categories = techService.getTechCategories();
     const category = categories.find(cat => cat.id === categoryId);
     

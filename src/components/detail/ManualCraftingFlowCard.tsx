@@ -7,7 +7,7 @@ import {
   Alert
 } from '@mui/material';
 import type { Item, Recipe } from '../../types/index';
-import DataService from '../../services/DataService';
+import { RecipeService } from '../../services/RecipeService';
 import ManualCraftingValidator from '../../utils/manualCraftingValidator';
 import UnifiedRecipeCard from './UnifiedRecipeCard';
 
@@ -17,10 +17,9 @@ interface ManualCraftingFlowCardProps {
 }
 
 const ManualCraftingFlowCard: React.FC<ManualCraftingFlowCardProps> = ({ item, onManualCraft }) => {
-  const dataService = DataService.getInstance();
   const validator = ManualCraftingValidator.getInstance();
 
-  const itemRecipes = dataService.getRecipesForItem(item.id);
+  const itemRecipes = RecipeService.getRecipesThatProduce(item.id);
   
   // 使用验证器检查哪些配方可以手动制作
   const recipeValidations = itemRecipes.map(recipe => ({

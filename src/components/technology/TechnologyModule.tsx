@@ -10,11 +10,11 @@ import {
 import TechSimpleGrid from './TechSimpleGrid';
 import TechDetailPanel from './TechDetailPanel';
 import ResearchQueue from './ResearchQueue';
-import TechPageHeader from './TechPageHeader';
 import useGameStore from '../../store/gameStore';
-import TechnologyService from '../../services/TechnologyService';
-import type { TechStatus, TechSearchFilter } from '../../types/technology';
+import { TechnologyService } from '../../services/TechnologyService';
+import type { TechStatus } from '../../types/technology';
 import { ResearchPriority } from '../../types/technology';
+import { usePersistentState } from '../../hooks/usePersistentState';
 
 const TechnologyModule: React.FC = () => {
   const theme = useTheme();
@@ -38,8 +38,7 @@ const TechnologyModule: React.FC = () => {
   // 本地状态
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTechId, setSelectedTechId] = useState<string | null>(null);
-  const [searchFilter, setSearchFilter] = useState<TechSearchFilter>({});
+  const [selectedTechId, setSelectedTechId] = usePersistentState<string | null>('technology-selected-tech', null);
 
   // 初始化科技服务
   useEffect(() => {
@@ -128,7 +127,6 @@ const TechnologyModule: React.FC = () => {
   // 构建科技状态映射
   const techStates = React.useMemo(() => {
     const states = new Map<string, { status: TechStatus; progress?: number }>();
-    const techService = TechnologyService;
     
     Array.from(technologies.values()).forEach(tech => {
       let status: TechStatus = 'locked';
@@ -139,13 +137,13 @@ const TechnologyModule: React.FC = () => {
       } else if (researchState?.techId === tech.id) {
         status = 'researching';
         progress = researchState.progress;
-      } else if (techService.isTechAvailable && techService.isTechAvailable(tech.id)) {
+      } else if (TechnologyService.getInstance().isTechAvailable(tech.id)) {
         status = 'available';
       }
 
       states.set(tech.id, { status, progress });
     });
-    
+
     return states;
   }, [technologies, unlockedTechs, researchState]);
 
@@ -154,51 +152,10 @@ const TechnologyModule: React.FC = () => {
 
   // 筛选科技列表
   const filteredTechnologies = React.useMemo(() => {
-    const techService = TechnologyService;
     const allTechs = Array.from(technologies.values());
     
-    if (Object.keys(searchFilter).length === 0) {
-      return allTechs;
-    }
-    
-    return techService.searchTechnologies(searchFilter);
-  }, [technologies, searchFilter]);
-
-  // 计算科技统计信息
-  const techStats = React.useMemo(() => {
-    const allTechs = Array.from(technologies.values());
-    const stats = {
-      total: allTechs.length,
-      unlocked: 0,
-      available: 0,
-      locked: 0,
-      researching: 0
-    };
-
-    allTechs.forEach(tech => {
-      const state = techStates.get(tech.id);
-      if (state) {
-        switch (state.status) {
-          case 'unlocked':
-            stats.unlocked++;
-            break;
-          case 'available':
-            stats.available++;
-            break;
-          case 'researching':
-            stats.researching++;
-            break;
-          default:
-            stats.locked++;
-            break;
-        }
-      } else {
-        stats.locked++;
-      }
-    });
-
-    return stats;
-  }, [technologies, techStates]);
+    return allTechs;
+  }, [technologies]);
 
   // 加载状态
   if (loading) {
@@ -261,11 +218,11 @@ const TechnologyModule: React.FC = () => {
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* 页面头部 */}
-      <TechPageHeader
+      {/* <TechPageHeader
         searchFilter={searchFilter}
         onSearchFilterChange={setSearchFilter}
         techStats={techStats}
-      />
+      /> */}
 
       {/* 主体内容 */}
       <Box sx={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', overflow: 'hidden' }}>
@@ -276,8 +233,6 @@ const TechnologyModule: React.FC = () => {
             techStates={techStates}
             queuedTechIds={queuedTechIds}
             onTechClick={handleTechClick}
-            onStartResearch={handleStartResearch}
-            onAddToQueue={handleAddToQueue}
           />
         </Box>
 

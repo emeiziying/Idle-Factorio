@@ -27,11 +27,13 @@ import {
   Block as BlockIcon,
   Info as InfoIcon
 } from '@mui/icons-material';
-import DataService from '../../services/DataService';
+import { DataService } from '../../services/DataService';
+import { RecipeService } from '../../services/RecipeService';
 import ManualCraftingValidator from '../../utils/manualCraftingValidator';
 import type { ManualCraftingValidation } from '../../utils/manualCraftingValidator';
 import ItemCard from './ItemCard';
 import type { Item, Recipe } from '../../types/index';
+import { usePersistentState } from '../../hooks/usePersistentState';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -64,21 +66,23 @@ interface CategoryGroup {
   [category: string]: ItemWithValidation[];
 }
 
+interface ItemsData {
+  craftable: CategoryGroup;
+  notCraftable: CategoryGroup;
+  statistics: {
+    total: number;
+    craftable: number;
+    notCraftable: number;
+    categories: { [key: string]: number };
+  };
+}
+
 const ManualCraftingTestPage: React.FC = () => {
-  const [tabValue, setTabValue] = useState(0);
+  const [tabValue, setTabValue] = usePersistentState('test-tab-value', 0);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [itemsData, setItemsData] = useState<{
-    craftable: CategoryGroup;
-    notCraftable: CategoryGroup;
-    statistics: {
-      total: number;
-      craftable: number;
-      notCraftable: number;
-      categories: { [key: string]: number };
-    };
-  }>({
+  const [selectedCategory, setSelectedCategory] = usePersistentState('test-selected-category', 'all');
+  const [itemsData, setItemsData] = useState<ItemsData>({
     craftable: {},
     notCraftable: {},
     statistics: { total: 0, craftable: 0, notCraftable: 0, categories: {} }
@@ -115,7 +119,7 @@ const ManualCraftingTestPage: React.FC = () => {
 
     allItems.forEach(item => {
       const validation = validator.validateManualCrafting(item.id);
-      const recipes = dataService.getRecipesForItem(item.id);
+      const recipes = RecipeService.getRecipesThatProduce(item.id);
       
       const itemData: ItemWithValidation = {
         item,

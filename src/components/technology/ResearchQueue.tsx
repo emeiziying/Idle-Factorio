@@ -29,7 +29,7 @@ import {
 } from '@mui/icons-material';
 import FactorioIcon from '../common/FactorioIcon';
 import type { ResearchQueueItem, TechResearchState } from '../../types/technology';
-import TechnologyService from '../../services/TechnologyService';
+import { TechnologyService } from '../../services/TechnologyService';
 
 interface ResearchQueueProps {
   /** 研究队列列表 */
@@ -65,7 +65,7 @@ const ResearchQueue: React.FC<ResearchQueueProps> = ({
 }) => {
   const theme = useTheme();
   const [expanded, setExpanded] = React.useState(true);
-  const techService = TechnologyService;
+  const techService = TechnologyService.getInstance();
 
   // 格式化时间显示
   const formatTime = (seconds: number) => {

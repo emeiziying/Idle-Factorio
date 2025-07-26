@@ -2,7 +2,7 @@
 
 import type { StorageConfig } from '../types/index';
 import { STORAGE_SPECIFIC_CONFIGS } from '../data/storageConfigs';
-import DataService from './DataService';
+import { DataService } from './DataService';
 
 export class StorageService {
   private static instance: StorageService;

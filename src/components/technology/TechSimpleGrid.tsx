@@ -21,21 +21,13 @@ interface TechSimpleGridProps {
   
   /** 点击科技卡片的回调 */
   onTechClick?: (techId: string) => void;
-  
-  /** 开始研究的回调 */
-  onStartResearch?: (techId: string) => void;
-  
-  /** 添加到队列的回调 */
-  onAddToQueue?: (techId: string) => void;
 }
 
 const TechSimpleGrid: React.FC<TechSimpleGridProps> = ({
   technologies,
   techStates,
   queuedTechIds,
-  onTechClick,
-  onStartResearch,
-  onAddToQueue
+  onTechClick
 }) => {
   const theme = useTheme();
 
@@ -74,14 +66,9 @@ const TechSimpleGrid: React.FC<TechSimpleGridProps> = ({
     return techStates.get(techId) || { status: 'locked' as TechStatus };
   };
 
-  // 处理科技点击 - 直接加入队列
+  // 处理科技点击
   const handleTechClick = (techId: string) => {
-    const state = getTechState(techId);
-    if (state.status === 'available' && !queuedTechIds.has(techId)) {
-      onAddToQueue?.(techId);
-    } else {
-      onTechClick?.(techId);
-    }
+    onTechClick?.(techId);
   };
 
   if (unlockedTechnologies.length === 0) {
@@ -134,8 +121,6 @@ const TechSimpleGrid: React.FC<TechSimpleGridProps> = ({
               progress={state.progress}
               inQueue={queuedTechIds.has(tech.id)}
               onClick={handleTechClick}
-              onStartResearch={onStartResearch}
-              onAddToQueue={onAddToQueue}
             />
           );
         })}

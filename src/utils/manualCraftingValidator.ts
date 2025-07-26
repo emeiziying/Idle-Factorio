@@ -1,7 +1,8 @@
 // 手动采集验证工具类
 // 基于 Factorio Wiki 官方规则实现
 
-import DataService from '../services/DataService';
+import { DataService } from '../services/DataService';
+import { RecipeService } from '../services/RecipeService';
 import type { Recipe } from '../types/index';
 
 // 验证结果类别常量
@@ -119,7 +120,7 @@ export class ManualCraftingValidator {
     }
 
     // 获取物品的所有配方
-    const recipes = this.dataService.getRecipesForItem(itemId);
+    const recipes = RecipeService.getRecipesThatProduce(itemId);
 
     // 1. 检查是否为原材料（没有配方）
     if (recipes.length === 0) {
@@ -459,7 +460,7 @@ export class ManualCraftingValidator {
    */
   getRawMaterials(): string[] {
     return this.filterItemsByCondition(item => {
-      const recipes = this.dataService.getRecipesForItem(item.id);
+      const recipes = RecipeService.getRecipesThatProduce(item.id);
       return recipes.length === 0;
     });
   }
@@ -487,7 +488,7 @@ export class ManualCraftingValidator {
    * @returns 采矿物品ID列表
    */
   getMiningItems(): string[] {
-    const allRecipes = this.dataService.getAllRecipes();
+    const allRecipes = RecipeService.getAllRecipes();
     const miningItems: string[] = [];
 
     for (const recipe of allRecipes) {

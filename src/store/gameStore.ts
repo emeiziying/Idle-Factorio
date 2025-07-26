@@ -14,8 +14,8 @@ import type { InventoryOperations } from '../types/inventory';
 import type { FacilityInstance } from '../types/facilities';
 import { RecipeService } from '../services/RecipeService';
 import { getStorageConfig } from '../data/storageConfigs';
-import DataService from '../services/DataService';
-import TechnologyService from '../services/TechnologyService';
+import { DataService } from '../services/DataService';
+import { TechnologyService } from '../services/TechnologyService';
 
 interface GameState {
   // 库存系统
@@ -47,6 +47,11 @@ interface GameState {
   unlockedTechs: Set<string>;
   autoResearch: boolean;
   techCategories: TechCategory[];
+  
+  // 研究触发器追踪
+  craftedItemCounts: Map<string, number>; // 追踪制造物品数量
+  builtEntityCounts: Map<string, number>; // 追踪建造实体数量
+  minedEntityCounts: Map<string, number>; // 追踪挖掘实体数量
   
   // Actions
   updateInventory: (itemId: string, amount: number) => void;
@@ -99,6 +104,12 @@ interface GameState {
   isTechUnlocked: (techId: string) => boolean;
   isTechAvailable: (techId: string) => boolean;
   updateResearchProgress: (deltaTime: number) => void;
+  
+  // 研究触发器相关
+  trackCraftedItem: (itemId: string, count: number) => void;
+  trackBuiltEntity: (entityId: string, count: number) => void;
+  trackMinedEntity: (entityId: string, count: number) => void;
+  checkResearchTriggers: () => void;
 }
 
 const useGameStore = create<GameState>()(
@@ -123,6 +134,11 @@ const useGameStore = create<GameState>()(
       unlockedTechs: new Set(),
       autoResearch: true,
       techCategories: [],
+      
+      // 研究触发器追踪初始状态
+      craftedItemCounts: new Map(),
+      builtEntityCounts: new Map(),
+      minedEntityCounts: new Map(),
 
       // 库存管理
       updateInventory: (itemId: string, amount: number) => {
@@ -261,6 +277,8 @@ const useGameStore = create<GameState>()(
         if (task) {
           // 添加产品到库存
           get().updateInventory(task.itemId, task.quantity);
+          // 追踪制造的物品（用于研究触发器）
+          get().trackCraftedItem(task.itemId, task.quantity);
           // 移除任务
           get().removeCraftingTask(taskId);
         }
@@ -489,7 +507,7 @@ const useGameStore = create<GameState>()(
       // 初始化科技服务
       initializeTechnologyService: async () => {
         try {
-          const techService = TechnologyService;
+          const techService = TechnologyService.getInstance();
           if (!techService.isServiceInitialized()) {
             await techService.initialize();
             
@@ -550,7 +568,7 @@ const useGameStore = create<GameState>()(
 
       // 开始研究
       startResearch: async (techId: string) => {
-        const techService = TechnologyService;
+        const techService = TechnologyService.getInstance();
         const result = await techService.startResearch(techId);
         
         if (result.success) {
@@ -568,7 +586,7 @@ const useGameStore = create<GameState>()(
 
       // 完成研究
       completeResearch: (techId: string) => {
-        const techService = TechnologyService;
+        const techService = TechnologyService.getInstance();
         techService.completeResearch(techId);
         
         // 更新store状态
@@ -585,7 +603,7 @@ const useGameStore = create<GameState>()(
 
       // 添加到研究队列
       addToResearchQueue: (techId: string, priority?: ResearchPriority) => {
-        const techService = TechnologyService;
+        const techService = TechnologyService.getInstance();
         const result = techService.addToResearchQueue(techId, priority);
         
         if (result.success) {
@@ -600,7 +618,7 @@ const useGameStore = create<GameState>()(
 
       // 从队列移除
       removeFromResearchQueue: (techId: string) => {
-        const techService = TechnologyService;
+        const techService = TechnologyService.getInstance();
         const success = techService.removeFromResearchQueue(techId);
         
         if (success) {
@@ -613,7 +631,7 @@ const useGameStore = create<GameState>()(
 
       // 重新排序队列
       reorderResearchQueue: (techId: string, newPosition: number) => {
-        const techService = TechnologyService;
+        const techService = TechnologyService.getInstance();
         const success = techService.reorderResearchQueue(techId, newPosition);
         
         if (success) {
@@ -628,7 +646,7 @@ const useGameStore = create<GameState>()(
 
       // 设置自动研究
       setAutoResearch: (enabled: boolean) => {
-        const techService = TechnologyService;
+        const techService = TechnologyService.getInstance();
         techService.setAutoResearch(enabled);
         
         set(() => ({
@@ -648,13 +666,13 @@ const useGameStore = create<GameState>()(
 
       // 检查科技是否可研究
       isTechAvailable: (techId: string) => {
-        const techService = TechnologyService;
+        const techService = TechnologyService.getInstance();
         return techService.isTechAvailable(techId);
       },
 
       // 更新研究进度
       updateResearchProgress: (deltaTime: number) => {
-        const techService = TechnologyService;
+        const techService = TechnologyService.getInstance();
         techService.updateResearchProgress(deltaTime);
         
         // 更新store中的研究状态
@@ -663,6 +681,112 @@ const useGameStore = create<GameState>()(
           set(() => ({
             researchState: currentResearch
           }));
+        }
+      },
+
+      // 研究触发器相关方法
+      trackCraftedItem: (itemId: string, count: number) => {
+        set((state) => {
+          const newCraftedItemCounts = new Map(state.craftedItemCounts);
+          const currentCount = newCraftedItemCounts.get(itemId) || 0;
+          newCraftedItemCounts.set(itemId, currentCount + count);
+          return { craftedItemCounts: newCraftedItemCounts };
+        });
+        
+        // 检查研究触发器
+        get().checkResearchTriggers();
+      },
+
+      trackBuiltEntity: (entityId: string, count: number) => {
+        set((state) => {
+          const newBuiltEntityCounts = new Map(state.builtEntityCounts);
+          const currentCount = newBuiltEntityCounts.get(entityId) || 0;
+          newBuiltEntityCounts.set(entityId, currentCount + count);
+          return { builtEntityCounts: newBuiltEntityCounts };
+        });
+        
+        // 检查研究触发器
+        get().checkResearchTriggers();
+      },
+
+      trackMinedEntity: (entityId: string, count: number) => {
+        set((state) => {
+          const newMinedEntityCounts = new Map(state.minedEntityCounts);
+          const currentCount = newMinedEntityCounts.get(entityId) || 0;
+          newMinedEntityCounts.set(entityId, currentCount + count);
+          return { minedEntityCounts: newMinedEntityCounts };
+        });
+        
+        // 检查研究触发器
+        get().checkResearchTriggers();
+      },
+
+      checkResearchTriggers: async () => {
+        const state = get();
+        
+        try {
+          // 获取所有配方数据
+          const allRecipes = RecipeService.getAllRecipes();
+          
+          // 查找科技类配方
+          const techRecipes = allRecipes.filter(recipe => 
+            recipe.category === 'technology' && 
+            recipe.researchTrigger &&
+            !state.unlockedTechs.has(recipe.id)
+          );
+          
+          for (const recipe of techRecipes) {
+            const trigger = recipe.researchTrigger!;
+            let shouldUnlock = false;
+            
+            switch (trigger.type) {
+              case 'craft-item':
+                if (trigger.item) {
+                  const craftedCount = state.craftedItemCounts.get(trigger.item) || 0;
+                  const requiredCount = trigger.count || 1;
+                  shouldUnlock = craftedCount >= requiredCount;
+                }
+                break;
+                
+              case 'build-entity':
+                if (trigger.entity) {
+                  const builtCount = state.builtEntityCounts.get(trigger.entity) || 0;
+                  const requiredCount = trigger.count || 1;
+                  shouldUnlock = builtCount >= requiredCount;
+                }
+                break;
+                
+              case 'mine-entity':
+                if (trigger.entity) {
+                  const minedCount = state.minedEntityCounts.get(trigger.entity) || 0;
+                  const requiredCount = trigger.count || 1;
+                  shouldUnlock = minedCount >= requiredCount;
+                }
+                break;
+                
+              case 'create-space-platform':
+                // TODO: 实现太空平台创建逻辑
+                break;
+                
+              case 'capture-spawner':
+                // TODO: 实现虫巢捕获逻辑
+                break;
+            }
+            
+            if (shouldUnlock) {
+              // 解锁科技
+              set((state) => ({
+                unlockedTechs: new Set([...state.unlockedTechs, recipe.id])
+              }));
+              
+              console.log(`Research unlocked by trigger: ${recipe.name} (${recipe.id})`);
+              
+              // 可以在这里添加通知系统
+              // TODO: 添加科技解锁通知
+            }
+          }
+        } catch (error) {
+          console.error('Error checking research triggers:', error);
         }
       },
 
@@ -701,7 +825,10 @@ const useGameStore = create<GameState>()(
         favoriteRecipes: Array.from(state.favoriteRecipes),
         technologies: Array.from(state.technologies.entries()),
         unlockedTechs: Array.from(state.unlockedTechs),
-        techCategories: state.techCategories
+        techCategories: state.techCategories,
+        craftedItemCounts: Array.from(state.craftedItemCounts.entries()),
+        builtEntityCounts: Array.from(state.builtEntityCounts.entries()),
+        minedEntityCounts: Array.from(state.minedEntityCounts.entries())
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
@@ -711,6 +838,9 @@ const useGameStore = create<GameState>()(
           state.technologies = new Map(state.technologies as unknown as [string, Technology][]);
           state.unlockedTechs = new Set(state.unlockedTechs as unknown as string[]);
           state.techCategories = state.techCategories as TechCategory[];
+          state.craftedItemCounts = new Map(state.craftedItemCounts as unknown as [string, number][]);
+          state.builtEntityCounts = new Map(state.builtEntityCounts as unknown as [string, number][]);
+          state.minedEntityCounts = new Map(state.minedEntityCounts as unknown as [string, number][]);
         }
       }
     }

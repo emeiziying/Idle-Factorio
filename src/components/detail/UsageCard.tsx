@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import type { Recipe } from '../../types/index';
 import FactorioIcon from '../common/FactorioIcon';
-import DataService from '../../services/DataService';
+import { DataService } from '../../services/DataService';
 
 interface UsageCardProps {
   usedInRecipes: Recipe[];

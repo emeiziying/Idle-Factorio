@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { Clear as ClearIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import FactorioIcon from '../common/FactorioIcon';
-import DataService from '../../services/DataService';
+import { DataService } from '../../services/DataService';
 import useGameStore from '../../store/gameStore';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import type { CraftingTask } from '../../types/index';

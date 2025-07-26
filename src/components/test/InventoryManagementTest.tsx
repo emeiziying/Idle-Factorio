@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Typography, Card, CardContent, Button } from '@mui/material';
 import ItemDetailPanel from '../production/ItemDetailPanel';
-import DataService from '../../services/DataService';
+import { DataService } from '../../services/DataService';
 import useGameStore from '../../store/gameStore';
 
 const InventoryManagementTest: React.FC = () => {

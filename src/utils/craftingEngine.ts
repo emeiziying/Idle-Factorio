@@ -2,7 +2,8 @@
 
 import type { CraftingTask, Recipe } from '../types/index';
 import useGameStore from '../store/gameStore';
-import DataService from '../services/DataService';
+import { DataService } from '../services/DataService';
+import { RecipeService } from '../services/RecipeService';
 
 // 设备效率配置 - 基于Factorio的采矿机设计
 interface DeviceEfficiency {
@@ -148,11 +149,10 @@ class CraftingEngine {
     // 检查是否为手动合成任务
     if (currentTask.recipeId.startsWith('manual_')) {
       // 手动合成任务需要时间计算
-      const dataService = DataService.getInstance();
       const itemId = currentTask.itemId;
       
       // 获取物品的配方数据（用于时间计算）
-      const recipes = dataService.getRecipesForItem(itemId);
+      const recipes = RecipeService.getRecipesThatProduce(itemId);
       
       // 优先选择mining类型的配方，而不是recycling配方
       let selectedRecipe = null;

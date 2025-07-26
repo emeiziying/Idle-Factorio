@@ -14,9 +14,11 @@ import {
   CheckCircle as CompletedIcon,
   Lock as LockedIcon,
   Science as ResearchingIcon,
-  Add as QueueIcon
+  Add as QueueIcon,
+  NewReleases as TriggerIcon
 } from '@mui/icons-material';
 import FactorioIcon from '../common/FactorioIcon';
+import { DataService } from '../../services/DataService';
 import type { Technology, TechStatus } from '../../types/technology';
 
 interface TechGridCardProps {
@@ -95,6 +97,17 @@ const TechGridCard: React.FC<TechGridCardProps> = ({
     return items + recipes + buildings;
   };
 
+  // 检查是否有研究触发器
+  const hasResearchTrigger = () => {
+    try {
+      const dataService = DataService.getInstance();
+      const techRecipe = dataService.getRecipe(technology.id);
+      return !!techRecipe?.researchTrigger;
+    } catch {
+      return false;
+    }
+  };
+
   return (
     <Card
       sx={{
@@ -116,11 +129,33 @@ const TechGridCard: React.FC<TechGridCardProps> = ({
       <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
         {/* 头部：图标和名称 */}
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1 }}>
-          <FactorioIcon
-            itemId={technology.icon || technology.id}
-            size={32}
-            showBorder={false}
-          />
+          <Box sx={{ position: 'relative' }}>
+            <FactorioIcon
+              itemId={technology.icon || technology.id}
+              size={32}
+              showBorder={false}
+            />
+            {/* 研究触发器指示器 */}
+            {hasResearchTrigger() && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: -4,
+                  right: -4,
+                  width: 16,
+                  height: 16,
+                  bgcolor: theme.palette.primary.main,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: `1px solid ${theme.palette.background.paper}`
+                }}
+              >
+                <TriggerIcon sx={{ fontSize: 10, color: 'white' }} />
+              </Box>
+            )}
+          </Box>
           
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography

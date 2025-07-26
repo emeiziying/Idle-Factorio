@@ -1,8 +1,11 @@
 // 游戏数据管理服务
 
 import type { GameData, Item, Recipe, Category } from '../types/index';
-import UserProgressService from './UserProgressService';
+import { UserProgressService } from './UserProgressService';
 import { RecipeService } from './RecipeService';
+
+// 异步导入游戏数据
+import gameData from '../data/spa/data.json';
 
 interface I18nData {
   categories: Record<string, string>;
@@ -11,7 +14,7 @@ interface I18nData {
   locations: Record<string, string>;
 }
 
-class DataService {
+export class DataService {
   private static instance: DataService;
   private gameData: GameData | null = null;
   private i18nData: I18nData | null = null;
@@ -28,51 +31,42 @@ class DataService {
     return DataService.instance;
   }
 
-  // 加载游戏数据
+  // 加载游戏数据 - 改为异步import
   async loadGameData(): Promise<GameData> {
     if (this.gameData) {
       return this.gameData;
     }
 
     try {
-      const response = await fetch('/data/spa/data.json');
-      if (!response.ok) {
-        throw new Error(`Failed to load game data: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      this.gameData = data;
+      // 直接使用导入的数据，无需fetch
+      this.gameData = gameData as unknown as GameData;
       
       // 初始化配方服务
-      if (data.recipes) {
-        RecipeService.initializeRecipes(data.recipes);
+      if (this.gameData.recipes) {
+        RecipeService.initializeRecipes(this.gameData.recipes);
         console.log('RecipeService initialized with game data');
       }
       
       console.log('Game data loaded successfully');
-      return data;
+      return this.gameData;
     } catch (error) {
       console.error('Error loading game data:', error);
       throw error;
     }
   }
 
-  // 加载国际化数据
+  // 加载国际化数据 - 改为动态import
   async loadI18nData(locale: string = 'zh'): Promise<I18nData> {
     if (this.i18nData) {
       return this.i18nData;
     }
 
     try {
-      const response = await fetch(`/data/spa/i18n/${locale}.json`);
-      if (!response.ok) {
-        throw new Error(`Failed to load i18n data: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      this.i18nData = data;
+      // 使用动态import替代fetch
+      const i18nModule = await import(`../data/spa/i18n/${locale}.json`);
+      this.i18nData = i18nModule.default as I18nData;
       console.log('I18n data loaded successfully');
-      return data;
+      return this.i18nData;
     } catch (error) {
       console.error('Error loading i18n data:', error);
       // 返回空数据作为fallback
@@ -156,139 +150,9 @@ class DataService {
     return this.gameData.items.find(item => item.id === itemId);
   }
 
-  // 获取所有配方（使用RecipeService）
-  getAllRecipes(): Recipe[] {
-    return RecipeService.getAllRecipes();
-  }
-
-  // 获取物品的制作配方（使用RecipeService）
-  getRecipesForItem(itemId: string): Recipe[] {
-    return RecipeService.getRecipesThatProduce(itemId);
-  }
-
-  // 获取使用该物品的配方（使用RecipeService）
-  getRecipesUsingItem(itemId: string): Recipe[] {
-    return RecipeService.getRecipesThatUse(itemId);
-  }
-
-  // 获取配方（使用RecipeService）
+  // 获取配方（保留常用方法，其他通过RecipeService直接调用）
   getRecipe(recipeId: string): Recipe | undefined {
     return RecipeService.getRecipeById(recipeId);
-  }
-
-  // 获取手动采集配方（新增）
-  getManualRecipes(itemId?: string): Recipe[] {
-    return RecipeService.getManualRecipes(itemId);
-  }
-
-  // 获取自动化配方（新增）
-  getAutomatedRecipes(itemId?: string): Recipe[] {
-    return RecipeService.getAutomatedRecipes(itemId);
-  }
-
-  // 获取采矿配方（新增）
-  getMiningRecipes(itemId?: string): Recipe[] {
-    return RecipeService.getMiningRecipes(itemId);
-  }
-
-  // 获取回收配方（新增）
-  getRecyclingRecipes(itemId?: string): Recipe[] {
-    return RecipeService.getRecyclingRecipes(itemId);
-  }
-
-  // 获取最高效率配方（新增）
-  getMostEfficientRecipe(itemId: string): Recipe | undefined {
-    return RecipeService.getMostEfficientRecipe(itemId);
-  }
-
-  // 获取配方统计信息（新增）
-  getRecipeStats(itemId: string) {
-    return RecipeService.getRecipeStats(itemId);
-  }
-
-  // 获取配方效率（新增）
-  getRecipeEfficiency(recipe: Recipe, itemId?: string): number {
-    return RecipeService.getRecipeEfficiency(recipe, itemId);
-  }
-
-  // 搜索配方（新增）
-  searchRecipes(query: string): Recipe[] {
-    return RecipeService.searchRecipes(query);
-  }
-
-  // ========== 新增高级功能 ==========
-
-  /**
-   * 获取配方依赖链
-   * @param recipe 配方
-   * @param maxDepth 最大深度
-   */
-  getRecipeDependencyChain(recipe: Recipe, maxDepth: number = 5) {
-    return RecipeService.getRecipeDependencyChain(recipe, maxDepth);
-  }
-
-  /**
-   * 计算配方总成本
-   * @param recipe 配方
-   * @param includeRawMaterials 是否包含原材料成本
-   */
-  calculateRecipeCost(recipe: Recipe, includeRawMaterials: boolean = true) {
-    return RecipeService.calculateRecipeCost(recipe, includeRawMaterials);
-  }
-
-  /**
-   * 获取最优生产路径
-   * @param targetItemId 目标物品ID
-   * @param quantity 目标数量
-   * @param unlockedItems 已解锁的物品列表
-   */
-  getOptimalProductionPath(
-    targetItemId: string,
-    quantity: number = 1,
-    unlockedItems: string[] = []
-  ) {
-    return RecipeService.getOptimalProductionPath(targetItemId, quantity, unlockedItems);
-  }
-
-  /**
-   * 获取配方推荐
-   * @param itemId 物品ID
-   * @param unlockedItems 已解锁的物品列表
-   * @param preferences 用户偏好
-   */
-  getRecipeRecommendations(
-    itemId: string,
-    unlockedItems: string[] = [],
-    preferences: 'efficiency' | 'speed' | 'cost' | 'manual' = 'efficiency'
-  ): Recipe[] {
-    return RecipeService.getRecipeRecommendations(itemId, unlockedItems, preferences);
-  }
-
-  /**
-   * 获取增强的配方统计信息
-   * @param itemId 物品ID
-   * @param unlockedItems 已解锁的物品列表
-   */
-  getEnhancedRecipeStats(
-    itemId: string,
-    unlockedItems: string[] = []
-  ) {
-    return RecipeService.getEnhancedRecipeStats(itemId, unlockedItems);
-  }
-
-  /**
-   * 获取配方复杂度评分
-   * @param recipe 配方
-   */
-  getRecipeComplexityScore(recipe: Recipe): number {
-    return RecipeService.getRecipeComplexityScore(recipe);
-  }
-
-  /**
-   * 获取配方分类统计
-   */
-  getRecipeCategoryStats(): Map<string, number> {
-    return RecipeService.getRecipeCategoryStats();
   }
 
   // 获取所有分类（按原始数据顺序）
@@ -399,6 +263,35 @@ class DataService {
     return iconInfo || null;
   }
 
+  /**
+   * 获取物品或配方的图标信息（包含iconText）
+   * 优先级：配方 iconText > 物品 iconText > 无文本
+   */
+  getIconInfo(itemId: string): { iconId: string; iconText?: string } {
+    // 优先从配方获取iconText和icon
+    const recipe = RecipeService.getRecipeById(itemId);
+    if (recipe?.iconText) {
+      return {
+        iconId: recipe.icon || itemId,
+        iconText: recipe.iconText
+      };
+    }
+    
+    // 如果配方没有iconText，尝试从物品数据获取
+    const item = this.getItem(itemId);
+    if (item?.iconText) {
+      return {
+        iconId: item.icon || itemId,
+        iconText: item.iconText
+      };
+    }
+    
+    // 都没有iconText，使用默认logic
+    return {
+      iconId: recipe?.icon || item?.icon || itemId
+    };
+  }
+
   // 获取所有图标数据
   getAllIcons() {
     if (!this.gameData) return [];
@@ -412,12 +305,12 @@ class DataService {
 
     return {
       item,
-      recipes: this.getRecipesForItem(itemId),
-      usedInRecipes: this.getRecipesUsingItem(itemId),
+      recipes: RecipeService.getRecipesThatProduce(itemId),
+      usedInRecipes: RecipeService.getRecipesThatUse(itemId),
       // 新增：配方统计信息
-      recipeStats: this.getRecipeStats(itemId),
+      recipeStats: RecipeService.getRecipeStats(itemId),
       // 新增：推荐配方
-      recommendedRecipe: this.getMostEfficientRecipe(itemId)
+      recommendedRecipe: RecipeService.getMostEfficientRecipe(itemId)
     };
   }
 
@@ -430,10 +323,10 @@ class DataService {
   getTechnologies(): unknown[] {
     if (!this.gameData) return [];
     const rawData = this.gameData as unknown as Record<string, unknown>;
-    const items = rawData.items as unknown[];
-    return items.filter(item => {
-      const itemData = item as Record<string, unknown>;
-      return itemData.category === 'technology' && itemData.technology;
+    const recipes = rawData.recipes as unknown[];
+    return recipes.filter(recipe => {
+      const recipeData = recipe as Record<string, unknown>;
+      return recipeData.category === 'technology';
     });
   }
 
@@ -445,4 +338,5 @@ class DataService {
   }
 }
 
-export default DataService;
+// 导出单例实例以保持向后兼容
+export const dataService = DataService.getInstance();

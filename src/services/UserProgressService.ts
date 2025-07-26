@@ -1,6 +1,6 @@
 // 用户进度管理服务
 
-class UserProgressService {
+export class UserProgressService {
   private static instance: UserProgressService;
   private unlockedItems: Set<string>;
   private unlockedTechs: Set<string>;
@@ -127,4 +127,5 @@ class UserProgressService {
   }
 }
 
-export default UserProgressService;
+// 导出单例实例以保持向后兼容
+export const userProgressService = UserProgressService.getInstance();

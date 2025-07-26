@@ -6,7 +6,8 @@ import {
 } from '@mui/material';
 import type { Item, Recipe } from '../../types/index';
 import FactorioIcon from '../common/FactorioIcon';
-import DataService from '../../services/DataService';
+import { DataService } from '../../services/DataService';
+import { RecipeService } from '../../services/RecipeService';
 import useGameStore from '../../store/gameStore';
 import ManualCraftingValidator from '../../utils/manualCraftingValidator';
 import CraftingButtons from './CraftingButtons';
@@ -25,7 +26,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
     return dataService.getLocalizedItemName(itemId);
   };
 
-  const itemRecipes = dataService.getRecipesForItem(item.id);
+  const itemRecipes = RecipeService.getRecipesThatProduce(item.id);
   
   // 如果物品没有配方（原材料），显示无需材料
   if (itemRecipes.length === 0) {

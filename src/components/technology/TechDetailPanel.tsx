@@ -32,8 +32,9 @@ import {
 } from '@mui/icons-material';
 import FactorioIcon from '../common/FactorioIcon';
 import type { TechResearchState } from '../../types/technology';
-import TechnologyService from '../../services/TechnologyService';
-import DataService from '../../services/DataService';
+import type { ResearchTrigger } from '../../types/index';
+import { TechnologyService } from '../../services/TechnologyService';
+import { DataService } from '../../services/DataService';
 
 interface TechDetailPanelProps {
   /** 要显示的科技ID */
@@ -68,7 +69,7 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
   anchor = 'right'
 }) => {
   const theme = useTheme();
-  const techService = TechnologyService;
+  const techService = TechnologyService.getInstance();
   const dataService = DataService.getInstance();
   
   // 获取科技信息
@@ -167,6 +168,63 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
 
   const prerequisites = getPrerequisites();
   const unlockInfo = getUnlockInfo();
+
+  // 获取研究触发器信息
+  const getResearchTrigger = () => {
+    const techRecipe = dataService.getRecipe(technology.id);
+    return techRecipe?.researchTrigger;
+  };
+
+  const researchTrigger = getResearchTrigger();
+
+  // 格式化研究触发器显示
+  const formatResearchTrigger = (trigger: ResearchTrigger) => {
+    switch (trigger.type) {
+      case 'craft-item': {
+        const item = dataService.getItem(trigger.item!);
+        return {
+          description: `制造 ${trigger.count || 1} 件物品`,
+          itemName: item?.name || trigger.item!,
+          itemId: trigger.item!,
+          count: trigger.count || 1
+        };
+      }
+      case 'build-entity': {
+        return {
+          description: `建造 ${trigger.count || 1} 个建筑`,
+          itemName: trigger.entity!,
+          itemId: trigger.entity!,
+          count: trigger.count || 1
+        };
+      }
+      case 'mine-entity': {
+        return {
+          description: `挖掘 ${trigger.count || 1} 个资源`,
+          itemName: trigger.entity!,
+          itemId: trigger.entity!,
+          count: trigger.count || 1
+        };
+      }
+      case 'create-space-platform': {
+        return {
+          description: '创建太空平台',
+          itemName: '太空平台',
+          itemId: 'space-platform',
+          count: 1
+        };
+      }
+      case 'capture-spawner': {
+        return {
+          description: '捕获虫巢',
+          itemName: '虫巢',
+          itemId: 'spawner',
+          count: 1
+        };
+      }
+      default:
+        return null;
+    }
+  };
 
   // 格式化时间显示
   const formatTime = (seconds: number) => {
@@ -326,6 +384,41 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
               </Box>
             </CardContent>
           </Card>
+
+          {/* 研究触发器 */}
+          {researchTrigger && (
+            <Card sx={{ mb: 2 }}>
+              <CardContent sx={{ '&:last-child': { pb: 2 } }}>
+                <Typography variant="subtitle2" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <UnlockIcon fontSize="small" />
+                  自动解锁条件
+                </Typography>
+                
+                {(() => {
+                  const triggerInfo = formatResearchTrigger(researchTrigger);
+                  if (!triggerInfo) return null;
+                  
+                  return (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 1 }}>
+                      <FactorioIcon
+                        itemId={triggerInfo.itemId}
+                        size={32}
+                        showBorder={false}
+                      />
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {triggerInfo.description}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {triggerInfo.itemName} ×{triggerInfo.count}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          )}
 
           {/* 前置科技 */}
           {prerequisites.length > 0 && (
