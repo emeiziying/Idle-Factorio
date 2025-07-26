@@ -10,14 +10,10 @@ import {
   IconButton,
   Card,
   CardContent,
-  LinearProgress,
   Divider,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   useTheme,
-  alpha
+  alpha,
+  styled
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -35,6 +31,100 @@ import type { TechResearchState } from '../../types/technology';
 import type { ResearchTrigger } from '../../types/index';
 import { TechnologyService } from '../../services/TechnologyService';
 import { DataService } from '../../services/DataService';
+
+// Factorio Design System (与TechGridCard保持一致)
+const FACTORIO_COLORS = {
+  // Core Factorio palette
+  ORANGE_PRIMARY: '#ff9800',
+  ORANGE_DARK: '#e68900',
+  ORANGE_LIGHT: '#ffb74d',
+  GREEN_SUCCESS: '#4caf50',
+  GREEN_DARK: '#388e3c',
+  BLUE_INFO: '#2196f3',
+  BLUE_DARK: '#1976d2',
+  GREY_LOCKED: '#616161',
+  GREY_DARK: '#424242',
+  
+  // Industrial backgrounds with proper contrast
+  CARD_BG_PRIMARY: 'linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%)',
+  CARD_BG_HOVER: 'linear-gradient(135deg, #4a4a4a 0%, #3a3a3a 100%)',
+  
+  // Status backgrounds
+  AVAILABLE_BG: 'rgba(255, 152, 0, 0.25)',
+  COMPLETED_BG: 'rgba(76, 175, 80, 0.2)',
+  RESEARCHING_BG: 'rgba(33, 150, 243, 0.25)',
+  LOCKED_BG: 'rgba(97, 97, 97, 0.15)',
+  
+  // Border colors for industrial depth
+  BORDER_LIGHT: 'rgba(255, 255, 255, 0.1)',
+  BORDER_DARK: 'rgba(0, 0, 0, 0.3)',
+  BORDER_ACCENT: '#454545',
+};
+
+// Factorio风格的Card组件
+const FactorioCard = styled(Card)(({ theme }) => ({
+  background: FACTORIO_COLORS.CARD_BG_PRIMARY,
+  border: 'none',
+  borderRadius: 12,
+  boxShadow: `
+    inset 1px 1px 0 ${FACTORIO_COLORS.BORDER_LIGHT},
+    inset -1px -1px 0 ${FACTORIO_COLORS.BORDER_DARK},
+    0 2px 4px rgba(0, 0, 0, 0.2)
+  `,
+  
+  // 移动端优化
+  [theme.breakpoints.down('sm')]: {
+    borderRadius: 8,
+  },
+}));
+
+// Factorio风格的状态Chip
+const FactorioChip = styled(Chip, {
+  shouldForwardProp: (prop) => prop !== 'statusColor'
+})<{ statusColor: string }>(({ statusColor }) => ({
+  background: `linear-gradient(135deg, ${alpha(statusColor, 0.2)} 0%, ${alpha(statusColor, 0.1)} 100%)`,
+  border: `1px solid ${alpha(statusColor, 0.4)}`,
+  boxShadow: `
+    inset 1px 1px 0 rgba(255, 255, 255, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.2)
+  `,
+  '& .MuiChip-label': {
+    color: '#ffffff',
+    fontWeight: 600,
+    textShadow: '0 1px 1px rgba(0, 0, 0, 0.5)'
+  }
+}));
+
+// Factorio风格的按钮
+const FactorioButton = styled(Button, {
+  shouldForwardProp: (prop) => prop !== 'buttonColor'
+})<{ buttonColor: string }>(({ buttonColor }) => ({
+  background: `linear-gradient(135deg, ${buttonColor} 0%, ${alpha(buttonColor, 0.8)} 100%)`,
+  border: `2px solid ${alpha(buttonColor, 0.6)}`,
+  borderRadius: 8,
+  boxShadow: `
+    inset 1px 1px 0 rgba(255, 255, 255, 0.2),
+    0 2px 4px rgba(0, 0, 0, 0.3)
+  `,
+  color: '#ffffff',
+  fontWeight: 700,
+  textShadow: '0 1px 1px rgba(0, 0, 0, 0.5)',
+  
+  '&:hover': {
+    background: `linear-gradient(135deg, ${alpha(buttonColor, 0.9)} 0%, ${alpha(buttonColor, 0.7)} 100%)`,
+    transform: 'translateY(-1px)',
+    boxShadow: `
+      inset 1px 1px 0 rgba(255, 255, 255, 0.2),
+      0 4px 8px rgba(0, 0, 0, 0.4)
+    `,
+  },
+  
+  '&:disabled': {
+    background: FACTORIO_COLORS.GREY_LOCKED,
+    border: `2px solid ${FACTORIO_COLORS.GREY_DARK}`,
+    color: 'rgba(255, 255, 255, 0.5)',
+  }
+}));
 
 interface TechDetailPanelProps {
   /** 要显示的科技ID */
@@ -82,33 +172,33 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
     return null;
   }
 
-  // 获取状态配置
+  // 获取状态配置 (使用Factorio配色)
   const getStatusConfig = () => {
     switch (status) {
       case 'unlocked':
         return {
-          color: theme.palette.success.main,
+          color: FACTORIO_COLORS.GREEN_SUCCESS,
           icon: <CheckCircleIcon />,
           label: '已解锁',
           description: '此科技已完成研究'
         };
       case 'researching':
         return {
-          color: theme.palette.info.main,
+          color: FACTORIO_COLORS.BLUE_INFO,
           icon: <ResearchingIcon />,
           label: '研究中',
           description: '正在进行研究'
         };
       case 'available':
         return {
-          color: theme.palette.warning.main,
+          color: FACTORIO_COLORS.ORANGE_PRIMARY,
           icon: <StartIcon />,
           label: '可研究',
           description: '满足前置条件，可以开始研究'
         };
       default:
         return {
-          color: theme.palette.grey[600],
+          color: FACTORIO_COLORS.GREY_LOCKED,
           icon: <LockIcon />,
           label: '锁定',
           description: '需要完成前置科技才能解锁'
@@ -140,26 +230,26 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
     };
 
     technology.unlocks.items?.forEach(itemId => {
-      const item = dataService.getItem(itemId);
+      const localizedName = dataService.getLocalizedItemName(itemId);
       unlocks.items.push({
         id: itemId,
-        name: item?.name || itemId
+        name: localizedName || itemId
       });
     });
 
     technology.unlocks.recipes?.forEach(recipeId => {
-      const recipe = dataService.getRecipe(recipeId);
+      const localizedName = dataService.getLocalizedRecipeName(recipeId);
       unlocks.recipes.push({
         id: recipeId,
-        name: recipe?.name || recipeId
+        name: localizedName || recipeId
       });
     });
 
     technology.unlocks.buildings?.forEach(buildingId => {
-      const building = dataService.getItem(buildingId);
+      const localizedName = dataService.getLocalizedItemName(buildingId);
       unlocks.buildings.push({
         id: buildingId,
-        name: building?.name || buildingId
+        name: localizedName || buildingId
       });
     });
 
@@ -181,26 +271,28 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
   const formatResearchTrigger = (trigger: ResearchTrigger) => {
     switch (trigger.type) {
       case 'craft-item': {
-        const item = dataService.getItem(trigger.item!);
+        const localizedName = dataService.getLocalizedItemName(trigger.item!);
         return {
           description: `制造 ${trigger.count || 1} 件物品`,
-          itemName: item?.name || trigger.item!,
+          itemName: localizedName || trigger.item!,
           itemId: trigger.item!,
           count: trigger.count || 1
         };
       }
       case 'build-entity': {
+        const localizedName = dataService.getLocalizedItemName(trigger.entity!);
         return {
           description: `建造 ${trigger.count || 1} 个建筑`,
-          itemName: trigger.entity!,
+          itemName: localizedName || trigger.entity!,
           itemId: trigger.entity!,
           count: trigger.count || 1
         };
       }
       case 'mine-entity': {
+        const localizedName = dataService.getLocalizedItemName(trigger.entity!);
         return {
           description: `挖掘 ${trigger.count || 1} 个资源`,
-          itemName: trigger.entity!,
+          itemName: localizedName || trigger.entity!,
           itemId: trigger.entity!,
           count: trigger.count || 1
         };
@@ -274,14 +366,11 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
               {technology.name}
             </Typography>
             
-            <Chip
+            <FactorioChip
               icon={statusConfig.icon}
               label={statusConfig.label}
               size="small"
-              sx={{
-                bgcolor: alpha(statusConfig.color, 0.2),
-                color: statusConfig.color
-              }}
+              statusColor={statusConfig.color}
             />
           </Box>
           
@@ -304,25 +393,47 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
 
           {/* 研究进度 */}
           {status === 'researching' && (
-            <Card sx={{ mb: 2 }}>
+            <FactorioCard sx={{ mb: 2 }}>
               <CardContent sx={{ '&:last-child': { pb: 2 } }}>
                 <Typography variant="subtitle2" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <ResearchingIcon fontSize="small" />
                   研究进度
                 </Typography>
                 
-                <LinearProgress
-                  variant="determinate"
-                  value={progress * 100}
+                <Box
                   sx={{
+                    width: '100%',
                     height: 8,
+                    background: `linear-gradient(135deg, ${FACTORIO_COLORS.BORDER_DARK} 0%, ${alpha(FACTORIO_COLORS.GREY_DARK, 0.3)} 100%)`,
                     borderRadius: 4,
-                    mb: 1,
-                    '& .MuiLinearProgress-bar': {
-                      backgroundColor: statusConfig.color
-                    }
+                    overflow: 'hidden',
+                    border: `1px solid ${FACTORIO_COLORS.BORDER_ACCENT}`,
+                    boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.3)',
+                    mb: 1
                   }}
-                />
+                >
+                  <Box
+                    sx={{
+                      width: `${progress * 100}%`,
+                      height: '100%',
+                      background: `linear-gradient(90deg, ${statusConfig.color} 0%, ${alpha(statusConfig.color, 0.8)} 100%)`,
+                      transition: 'width 0.5s ease-out',
+                      borderRadius: 3,
+                      boxShadow: `0 0 6px ${alpha(statusConfig.color, 0.6)}`,
+                      position: 'relative',
+                      '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '50%',
+                        background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%)',
+                        borderRadius: '3px 3px 0 0'
+                      }
+                    }}
+                  />
+                </Box>
                 
                 <Typography variant="caption" color="text.secondary">
                   {Math.round(progress * 100)}% 完成
@@ -331,11 +442,11 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
                   )}
                 </Typography>
               </CardContent>
-            </Card>
+            </FactorioCard>
           )}
 
           {/* 研究需求 */}
-          <Card sx={{ mb: 2 }}>
+          <FactorioCard sx={{ mb: 2 }}>
             <CardContent sx={{ '&:last-child': { pb: 2 } }}>
               <Typography variant="subtitle2" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <RequirementIcon fontSize="small" />
@@ -383,11 +494,11 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
                 </Typography>
               </Box>
             </CardContent>
-          </Card>
+          </FactorioCard>
 
           {/* 研究触发器 */}
           {researchTrigger && (
-            <Card sx={{ mb: 2 }}>
+            <FactorioCard sx={{ mb: 2 }}>
               <CardContent sx={{ '&:last-child': { pb: 2 } }}>
                 <Typography variant="subtitle2" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <UnlockIcon fontSize="small" />
@@ -417,175 +528,319 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
                   );
                 })()}
               </CardContent>
-            </Card>
+            </FactorioCard>
           )}
 
           {/* 前置科技 */}
           {prerequisites.length > 0 && (
-            <Card sx={{ mb: 2 }}>
+            <FactorioCard sx={{ mb: 2 }}>
               <CardContent sx={{ '&:last-child': { pb: 2 } }}>
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                <Typography variant="subtitle2" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <RequirementIcon fontSize="small" />
                   前置科技
                 </Typography>
                 
-                <List dense>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                   {prerequisites.map(prereq => (
-                    <ListItem key={prereq.id} sx={{ px: 0 }}>
-                      <ListItemIcon sx={{ minWidth: 36 }}>
-                        {prereq.unlocked ? (
-                          <CheckCircleIcon color="success" fontSize="small" />
-                        ) : (
-                          <LockIcon color="disabled" fontSize="small" />
-                        )}
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={prereq.name}
+                    <Box
+                      key={prereq.id}
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        p: 1,
+                        border: `1px solid ${theme.palette.divider}`,
+                        borderRadius: 1,
+                        bgcolor: prereq.unlocked 
+                          ? alpha(theme.palette.success.main, 0.05)
+                          : alpha(theme.palette.grey[500], 0.05),
+                        minWidth: 64,
+                        maxWidth: 80,
+                        position: 'relative',
+                        '&:hover': {
+                          bgcolor: prereq.unlocked 
+                            ? alpha(theme.palette.success.main, 0.1)
+                            : alpha(theme.palette.grey[500], 0.1),
+                        }
+                      }}
+                      title={`前置科技: ${prereq.name} ${prereq.unlocked ? '(已解锁)' : '(未解锁)'}`}
+                    >
+                      {/* 科技图标 */}
+                      <Box
                         sx={{
-                          '& .MuiListItemText-primary': {
-                            color: prereq.unlocked ? 'inherit' : 'text.disabled'
-                          }
+                          filter: prereq.unlocked ? 'none' : 'grayscale(1) opacity(0.6)'
                         }}
-                      />
-                    </ListItem>
+                      >
+                        <FactorioIcon
+                          itemId={prereq.id}
+                          size={32}
+                          showBorder={false}
+                        />
+                      </Box>
+                      
+                      {/* 状态指示器 */}
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: -4,
+                          right: -4,
+                          width: 16,
+                          height: 16,
+                          borderRadius: '50%',
+                          bgcolor: prereq.unlocked ? theme.palette.success.main : theme.palette.grey[500],
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: `2px solid ${theme.palette.background.paper}`
+                        }}
+                      >
+                        {prereq.unlocked ? (
+                          <CheckCircleIcon sx={{ fontSize: 10, color: 'white' }} />
+                        ) : (
+                          <LockIcon sx={{ fontSize: 10, color: 'white' }} />
+                        )}
+                      </Box>
+                      
+                      {/* 科技名称 */}
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          textAlign: 'center',
+                          fontSize: '0.65rem',
+                          lineHeight: 1.2,
+                          wordBreak: 'break-word',
+                          hyphens: 'auto',
+                          color: prereq.unlocked ? 'inherit' : 'text.disabled'
+                        }}
+                      >
+                        {prereq.name}
+                      </Typography>
+                    </Box>
                   ))}
-                </List>
+                </Box>
               </CardContent>
-            </Card>
+            </FactorioCard>
           )}
 
           {/* 解锁内容 */}
           {(unlockInfo.items.length > 0 || unlockInfo.recipes.length > 0 || unlockInfo.buildings.length > 0) && (
-            <Card sx={{ mb: 2 }}>
+            <FactorioCard sx={{ mb: 2 }}>
               <CardContent sx={{ '&:last-child': { pb: 2 } }}>
                 <Typography variant="subtitle2" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <UnlockIcon fontSize="small" />
                   解锁内容
                 </Typography>
 
-                {/* 解锁物品 */}
-                {unlockInfo.items.length > 0 && (
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                      物品:
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      {unlockInfo.items.map(item => (
-                        <Box
-                          key={item.id}
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.5,
-                            p: 0.5,
-                            border: `1px solid ${theme.palette.divider}`,
-                            borderRadius: 1
-                          }}
-                        >
-                          <FactorioIcon
-                            itemId={item.id}
-                            size={20}
-                            showBorder={false}
-                          />
-                          <Typography variant="caption">
-                            {item.name}
-                          </Typography>
-                        </Box>
-                      ))}
+                {/* 统一显示所有解锁内容 */}
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {/* 解锁物品 */}
+                  {unlockInfo.items.map(item => (
+                    <Box
+                      key={`item-${item.id}`}
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        p: 1,
+                        border: `1px solid ${theme.palette.divider}`,
+                        borderRadius: 1,
+                        bgcolor: alpha(theme.palette.success.main, 0.05),
+                        minWidth: 64,
+                        maxWidth: 80,
+                        '&:hover': {
+                          bgcolor: alpha(theme.palette.success.main, 0.1),
+                        }
+                      }}
+                      title={`物品: ${item.name}`}
+                    >
+                      <FactorioIcon
+                        itemId={item.id}
+                        size={32}
+                        showBorder={false}
+                      />
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          textAlign: 'center',
+                          fontSize: '0.65rem',
+                          lineHeight: 1.2,
+                          wordBreak: 'break-word',
+                          hyphens: 'auto'
+                        }}
+                      >
+                        {item.name}
+                      </Typography>
                     </Box>
-                  </Box>
-                )}
+                  ))}
 
-                {/* 解锁配方 */}
-                {unlockInfo.recipes.length > 0 && (
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                      配方:
-                    </Typography>
-                    <List dense>
-                      {unlockInfo.recipes.map(recipe => (
-                        <ListItem key={recipe.id} sx={{ px: 0 }}>
-                          <ListItemText
-                            primary={recipe.name}
-                            primaryTypographyProps={{ variant: 'body2' }}
-                          />
-                        </ListItem>
-                      ))}
-                    </List>
-                  </Box>
-                )}
-
-                {/* 解锁建筑 */}
-                {unlockInfo.buildings.length > 0 && (
-                  <Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                      建筑:
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      {unlockInfo.buildings.map(building => (
-                        <Box
-                          key={building.id}
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.5,
-                            p: 0.5,
-                            border: `1px solid ${theme.palette.divider}`,
-                            borderRadius: 1
-                          }}
-                        >
-                          <FactorioIcon
-                            itemId={building.id}
-                            size={20}
-                            showBorder={false}
-                          />
-                          <Typography variant="caption">
-                            {building.name}
-                          </Typography>
-                        </Box>
-                      ))}
+                  {/* 解锁配方 */}
+                  {unlockInfo.recipes.map(recipe => (
+                    <Box
+                      key={`recipe-${recipe.id}`}
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        p: 1,
+                        border: `1px solid ${theme.palette.divider}`,
+                        borderRadius: 1,
+                        bgcolor: alpha(theme.palette.primary.main, 0.05),
+                        minWidth: 64,
+                        maxWidth: 80,
+                        '&:hover': {
+                          bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        }
+                      }}
+                      title={`配方: ${recipe.name}`}
+                    >
+                      <FactorioIcon
+                        itemId={recipe.id}
+                        size={32}
+                        showBorder={false}
+                      />
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          textAlign: 'center',
+                          fontSize: '0.65rem',
+                          lineHeight: 1.2,
+                          wordBreak: 'break-word',
+                          hyphens: 'auto'
+                        }}
+                      >
+                        {recipe.name}
+                      </Typography>
                     </Box>
-                  </Box>
+                  ))}
+
+                  {/* 解锁建筑 */}
+                  {unlockInfo.buildings.map(building => (
+                    <Box
+                      key={`building-${building.id}`}
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        p: 1,
+                        border: `1px solid ${theme.palette.divider}`,
+                        borderRadius: 1,
+                        bgcolor: alpha(theme.palette.warning.main, 0.05),
+                        minWidth: 64,
+                        maxWidth: 80,
+                        '&:hover': {
+                          bgcolor: alpha(theme.palette.warning.main, 0.1),
+                        }
+                      }}
+                      title={`建筑: ${building.name}`}
+                    >
+                      <FactorioIcon
+                        itemId={building.id}
+                        size={32}
+                        showBorder={false}
+                      />
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          textAlign: 'center',
+                          fontSize: '0.65rem',
+                          lineHeight: 1.2,
+                          wordBreak: 'break-word',
+                          hyphens: 'auto'
+                        }}
+                      >
+                        {building.name}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+
+                {/* 如果没有任何解锁内容，显示提示 */}
+                {unlockInfo.items.length === 0 && unlockInfo.recipes.length === 0 && unlockInfo.buildings.length === 0 && (
+                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+                    此科技不解锁任何新内容
+                  </Typography>
                 )}
               </CardContent>
-            </Card>
+            </FactorioCard>
           )}
 
           <Divider sx={{ my: 2 }} />
 
           {/* 操作按钮 */}
           <Box sx={{ display: 'flex', gap: 1, flexDirection: 'column' }}>
-            {canResearch && onStartResearch && (
-              <Button
-                variant="contained"
-                color="success"
+            {/* 有研究触发器的科技不显示研究按钮，因为它们是自动解锁的 */}
+            {canResearch && !researchTrigger && onStartResearch && (
+              <FactorioButton
                 startIcon={<StartIcon />}
                 onClick={() => onStartResearch(techId)}
                 fullWidth
+                buttonColor={FACTORIO_COLORS.GREEN_SUCCESS}
               >
                 开始研究
-              </Button>
+              </FactorioButton>
             )}
 
-            {canResearch && onAddToQueue && (
-              <Button
-                variant="outlined"
-                color="info"
+            {canResearch && !researchTrigger && onAddToQueue && (
+              <FactorioButton
                 startIcon={<AddToQueueIcon />}
                 onClick={() => onAddToQueue(techId)}
                 fullWidth
+                buttonColor={FACTORIO_COLORS.BLUE_INFO}
               >
                 添加到队列
-              </Button>
+              </FactorioButton>
             )}
 
-            {status === 'locked' && (
-              <Typography
-                variant="body2"
-                color="text.disabled"
-                sx={{ textAlign: 'center', p: 2 }}
+            {/* 研究触发器科技的说明 */}
+            {researchTrigger && status !== 'unlocked' && (
+              <Box
+                sx={{ 
+                  textAlign: 'center', 
+                  p: 2, 
+                  background: `linear-gradient(135deg, ${alpha(FACTORIO_COLORS.ORANGE_PRIMARY, 0.15)} 0%, ${alpha(FACTORIO_COLORS.ORANGE_PRIMARY, 0.05)} 100%)`,
+                  border: `1px solid ${alpha(FACTORIO_COLORS.ORANGE_PRIMARY, 0.3)}`,
+                  borderRadius: 2,
+                  boxShadow: `inset 0 1px 0 rgba(255, 255, 255, 0.1)`
+                }}
               >
-                {statusConfig.description}
-              </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ 
+                    color: FACTORIO_COLORS.ORANGE_PRIMARY,
+                    fontWeight: 600,
+                    textShadow: '0 1px 1px rgba(0, 0, 0, 0.3)'
+                  }}
+                >
+                  此科技将在满足条件时自动解锁
+                </Typography>
+              </Box>
+            )}
+
+            {status === 'locked' && !researchTrigger && (
+              <Box
+                sx={{ 
+                  textAlign: 'center', 
+                  p: 2, 
+                  background: `linear-gradient(135deg, ${alpha(FACTORIO_COLORS.GREY_LOCKED, 0.15)} 0%, ${alpha(FACTORIO_COLORS.GREY_LOCKED, 0.05)} 100%)`,
+                  border: `1px solid ${alpha(FACTORIO_COLORS.GREY_LOCKED, 0.3)}`,
+                  borderRadius: 2,
+                  boxShadow: `inset 0 1px 0 rgba(255, 255, 255, 0.1)`
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{ 
+                    color: FACTORIO_COLORS.GREY_LOCKED,
+                    fontWeight: 600
+                  }}
+                >
+                  {statusConfig.description}
+                </Typography>
+              </Box>
             )}
           </Box>
         </Box>

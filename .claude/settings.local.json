@@ -40,11 +40,13 @@
   "enabledMcpjsonServers": [
     "context7",
     "sequential-thinking",
-    "mui-mcp"
+    "mui-mcp",
+    "browser-tools"
   ],
   "disabledMcpjsonServers": [
     "mcp-feedback-enhanced",
     "promptx",
     "serena"
-  ]
+  ],
+  "enableAllProjectMcpServers": true
 }

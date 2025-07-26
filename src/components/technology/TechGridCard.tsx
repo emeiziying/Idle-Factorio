@@ -99,15 +99,15 @@ interface StatusConfig {
 }
 
 const StyledCard = styled(Card, {
-  shouldForwardProp: (prop) => !['statusConfig', 'canResearch', 'isCompleted'].includes(prop as string)
+  shouldForwardProp: (prop) => !['statusConfig', 'canClick', 'isCompleted'].includes(prop as string)
 })<{
   statusConfig: StatusConfig;
-  canResearch: boolean;
+  canClick: boolean;
   isCompleted: boolean;
-}>(({ theme, statusConfig, canResearch, isCompleted }) => ({
+}>(({ theme, statusConfig, canClick, isCompleted }) => ({
   height: '100%',
   minHeight: 160, // 增加高度以提供更好的内容呼吸空间
-  cursor: canResearch ? 'pointer' : 'default',
+  cursor: canClick ? 'pointer' : 'default',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   
   // Factorio 工业风格背景
@@ -134,6 +134,9 @@ const StyledCard = styled(Card, {
     borderRadius: 8,
   },
   
+  // 禁用移动端点击时的蓝色遮罩
+  WebkitTapHighlightColor: 'transparent',
+  
   // Factorio 风格的悬停效果
   '&:hover': statusConfig.hoverEffect ? {
     background: FACTORIO_COLORS.CARD_BG_HOVER,
@@ -145,6 +148,20 @@ const StyledCard = styled(Card, {
       0 0 0 1px ${alpha(statusConfig.color, 0.5)}
     `,
     borderLeftColor: statusConfig.accentColor || statusConfig.color,
+  } : {},
+  
+  // Factorio 风格的点击效果
+  '&:active': statusConfig.hoverEffect ? {
+    background: `linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)`,
+    transform: 'translateY(1px)',
+    boxShadow: `
+      inset 2px 2px 4px ${FACTORIO_COLORS.BORDER_DARK},
+      inset -1px -1px 0 ${FACTORIO_COLORS.BORDER_LIGHT},
+      0 1px 2px rgba(0, 0, 0, 0.4),
+      0 0 0 2px ${alpha(statusConfig.color, 0.8)}
+    `,
+    borderLeftColor: statusConfig.color,
+    transition: 'all 0.1s ease-out',
   } : {},
   
   // 焦点样式（用于键盘导航）
@@ -329,66 +346,91 @@ const ProgressBar: React.FC<{
 const UnlockContent: React.FC<{
   unlockedContent: { all: Array<{ id: string; icon: string; }> };
   unlockCount: number;
-}> = React.memo(({ unlockedContent, unlockCount }) => (
-  <Box className="card-section" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-    {/* 解锁内容预览 */}
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: SPACING.MICRO / 8 }}>
-      {/* 显示前 3 个解锁内容图标 */}
-      {unlockedContent.all.slice(0, 3).map((content) => (
-        <Box
-          key={content.id}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 24, // 增加尺寸以提高可视性
-            height: 24,
-            background: `linear-gradient(135deg, ${FACTORIO_COLORS.COMPLETED_BG} 0%, ${alpha(FACTORIO_COLORS.GREEN_SUCCESS, 0.1)} 100%)`,
-            borderRadius: 4,
-            border: `1px solid ${alpha(FACTORIO_COLORS.GREEN_SUCCESS, 0.4)}`,
-            boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-          }}
-        >
-          <FactorioIcon
-            itemId={content.icon}
-            size={16} // 从 14 增加到 16
-            showBorder={false}
-          />
-        </Box>
-      ))}
-      
-      {/* 解锁数量显示 */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          px: SPACING.SMALL / 8,
-          py: SPACING.MICRO / 8,
-          background: `linear-gradient(135deg, ${FACTORIO_COLORS.GREEN_SUCCESS} 0%, ${FACTORIO_COLORS.GREEN_DARK} 100%)`,
-          borderRadius: 4,
-          border: `1px solid ${FACTORIO_COLORS.GREEN_DARK}`,
-          boxShadow: `
-            inset 0 1px 0 rgba(255, 255, 255, 0.2),
-            0 1px 2px rgba(0, 0, 0, 0.2)
-          `,
-          minHeight: 24
-        }}
-      >
-        <Typography 
-          variant="caption" 
-          sx={{ 
-            fontSize: TYPOGRAPHY.DETAILS,
-            fontWeight: 700,
-            color: '#ffffff',
-            textShadow: '0 1px 1px rgba(0, 0, 0, 0.5)'
-          }}
-        >
-          +{unlockCount}
-        </Typography>
+}> = React.memo(({ unlockedContent, unlockCount }) => {
+  const maxDisplayItems = 5; // 最多显示5个图标
+  const displayItems = unlockedContent.all.slice(0, maxDisplayItems);
+  const hasMoreItems = unlockCount > maxDisplayItems;
+  const remainingCount = unlockCount - maxDisplayItems;
+
+  return (
+    <Box className="card-section" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/* 解锁内容预览 */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: SPACING.MICRO / 8, flexWrap: 'wrap' }}>
+        {/* 显示图标，最多5个 */}
+        {displayItems.map((content) => (
+          <Box
+            key={content.id}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 24, // 增加尺寸以提高可视性
+              height: 24,
+              background: `linear-gradient(135deg, ${FACTORIO_COLORS.COMPLETED_BG} 0%, ${alpha(FACTORIO_COLORS.GREEN_SUCCESS, 0.1)} 100%)`,
+              borderRadius: 4,
+              border: `1px solid ${alpha(FACTORIO_COLORS.GREEN_SUCCESS, 0.4)}`,
+              boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+            }}
+            title={`解锁项目: ${content.id}`}
+          >
+            <FactorioIcon
+              itemId={content.icon}
+              size={16} // 从 14 增加到 16
+              showBorder={false}
+            />
+          </Box>
+        ))}
+        
+        {/* 剩余数量显示 - 只有在超过5个时才显示 */}
+        {hasMoreItems && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              px: SPACING.SMALL / 8,
+              py: SPACING.MICRO / 8,
+              background: `linear-gradient(135deg, ${FACTORIO_COLORS.GREEN_SUCCESS} 0%, ${FACTORIO_COLORS.GREEN_DARK} 100%)`,
+              borderRadius: 4,
+              border: `1px solid ${FACTORIO_COLORS.GREEN_DARK}`,
+              boxShadow: `
+                inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                0 1px 2px rgba(0, 0, 0, 0.2)
+              `,
+              minHeight: 24
+            }}
+            title={`还有 ${remainingCount} 个解锁项目`}
+          >
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                fontSize: TYPOGRAPHY.DETAILS,
+                fontWeight: 700,
+                color: '#ffffff',
+                textShadow: '0 1px 1px rgba(0, 0, 0, 0.5)'
+              }}
+            >
+              +{remainingCount}
+            </Typography>
+          </Box>
+        )}
+
+        {/* 如果没有解锁内容，显示提示 */}
+        {unlockCount === 0 && (
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              fontSize: '0.65rem',
+              color: 'text.secondary',
+              fontStyle: 'italic'
+            }}
+          >
+            无解锁内容
+          </Typography>
+        )}
       </Box>
     </Box>
-  </Box>
-));
+  );
+});
 
 const TechGridCard: React.FC<TechGridCardProps> = React.memo(({
   technology,
@@ -458,7 +500,8 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(({
     return configs[status] || configs.locked;
   }, [status]);
 
-  const canResearch = status === 'available' && !inQueue;
+  // 可以点击查看详情的条件：不是已完成状态的科技都可以点击查看
+  const canClick = status !== 'unlocked';
   const isCompleted = status === 'unlocked';
 
   const handleClick = useCallback(() => {
@@ -468,22 +511,22 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(({
   const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      if (canResearch) {
+      if (canClick) {
         handleClick();
       }
     }
-  }, [canResearch, handleClick]);
+  }, [canClick, handleClick]);
 
   return (
     <StyledCard
       statusConfig={statusConfig}
-      canResearch={canResearch}
+      canClick={canClick}
       isCompleted={isCompleted}
-      onClick={canResearch ? handleClick : undefined}
+      onClick={canClick ? handleClick : undefined}
       onKeyDown={handleKeyDown}
       role="button"
-      tabIndex={canResearch ? 0 : -1}
-      aria-label={`${technology.name} 科技。状态：${statusConfig.label}${canResearch ? '。点击开始研究' : ''}`}
+      tabIndex={canClick ? 0 : -1}
+      aria-label={`${technology.name} 科技。状态：${statusConfig.label}${canClick ? '。点击查看详情' : ''}`}
       aria-describedby={`tech-${technology.id}-details`}
     >
       <CardContent 
@@ -524,17 +567,18 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(({
                   {status === 'locked' ? '需要解锁:' : '前置科技:'}
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {prerequisiteNames.map((prereqName, index) => {
+                  {technology.prerequisites.map((prereqId, index) => {
                     const isCompleted = status === 'available'; // 如果是可研究状态，说明前置科技已完成
+                    const prereqName = prerequisiteNames[index];
                     return (
                       <Box
-                        key={index}
+                        key={prereqId}
                         sx={{
                           display: 'flex',
+                          flexDirection: 'column',
                           alignItems: 'center',
                           gap: 0.25,
-                          px: 0.5,
-                          py: 0.25,
+                          p: 0.5,
                           bgcolor: isCompleted 
                             ? alpha(theme.palette.success.main, 0.1)
                             : alpha(theme.palette.grey[500], 0.1),
@@ -544,24 +588,40 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(({
                               ? alpha(theme.palette.success.main, 0.3)
                               : alpha(theme.palette.grey[500], 0.3)
                           }`,
-                          fontSize: '0.6rem'
+                          minWidth: 28,
+                          position: 'relative'
                         }}
+                        title={`前置科技: ${prereqName} ${isCompleted ? '(已解锁)' : '(未解锁)'}`}
                       >
-                        {isCompleted ? (
-                          <CompletedIcon sx={{ fontSize: 12, color: theme.palette.success.main }} />
-                        ) : (
-                          <LockedIcon sx={{ fontSize: 12, color: theme.palette.grey[500] }} />
-                        )}
-                        <Typography 
-                          variant="caption" 
-                          sx={{ 
-                            fontSize: '0.6rem', 
-                            color: isCompleted ? theme.palette.success.main : theme.palette.grey[600],
-                            textDecoration: isCompleted ? 'line-through' : 'none'
+                        {/* 科技图标 */}
+                        <FactorioIcon
+                          itemId={prereqId}
+                          size={20}
+                          showBorder={false}
+                        />
+                        
+                        {/* 状态指示器 */}
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: -2,
+                            right: -2,
+                            width: 12,
+                            height: 12,
+                            borderRadius: '50%',
+                            bgcolor: isCompleted ? theme.palette.success.main : theme.palette.grey[500],
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: `1px solid ${theme.palette.background.paper}`
                           }}
                         >
-                          {prereqName}
-                        </Typography>
+                          {isCompleted ? (
+                            <CompletedIcon sx={{ fontSize: 8, color: 'white' }} />
+                          ) : (
+                            <LockedIcon sx={{ fontSize: 8, color: 'white' }} />
+                          )}
+                        </Box>
                       </Box>
                     );
                   })}
