@@ -4,13 +4,12 @@ import {
   Typography,
   Chip
 } from '@mui/material';
-import { Add as AddIcon, ArrowForward as ArrowIcon } from '@mui/icons-material';
 import type { Recipe } from '../../types/index';
 import FactorioIcon from '../common/FactorioIcon';
 import { DataService } from '../../services/DataService';
 import useGameStore from '../../store/gameStore';
 import CraftingButtons from './CraftingButtons';
-import TimeIcon from '../../assets/Time.png';
+import RecipeFlowDisplay from './RecipeFlowDisplay';
 
 interface UnifiedRecipeCardProps {
   recipe: Recipe;
@@ -59,28 +58,6 @@ const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({
     onCraft(recipe, quantity);
   };
 
-  // 通用的材料/产品渲染函数
-  const renderItems = (items: { [itemId: string]: number }, isInput: boolean = true) => {
-    return Object.entries(items).map(([itemId, quantity], index) => {
-      const available = isInput ? getInventoryItem(itemId).currentAmount : 0;
-      const isShortage = isInput && available < quantity;
-      
-      return (
-        <React.Fragment key={itemId}>
-          <FactorioIcon 
-            itemId={itemId} 
-            size={24} 
-            quantity={quantity}
-            shortage={isShortage}
-          />
-          {index < Object.entries(items).length - 1 && (
-            <AddIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-          )}
-        </React.Fragment>
-      );
-    });
-  };
-
   return (
     <Box 
       sx={{ 
@@ -99,39 +76,14 @@ const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({
         </Typography>
       </Box>
 
-      {/* 配方流程：时间图标 + 原料 => 产物 */}
-      <Box 
-        display="flex" 
-        alignItems="center" 
-        justifyContent="center" 
-        gap={0.25}
-        sx={{ 
-          mb: 1.5,
-          p: 1.5,
-          bgcolor: 'background.default',
-          borderRadius: 1,
-          border: '1px solid',
-          borderColor: 'divider'
-        }}
-      >
-        {/* 时间图标 */}
-        <FactorioIcon 
-          customImage={TimeIcon}
-          size={24} 
-          quantity={recipe.time}
+      {/* 配方流程：使用独立组件 */}
+      <Box sx={{ mb: 1.5 }}>
+        <RecipeFlowDisplay 
+          recipe={recipe}
+          themeColor={themeColor}
+          showTime={true}
+          iconSize={24}
         />
-
-        {/* 加号连接 */}
-        <AddIcon sx={{ color: 'text.secondary', fontSize: 14 }} />
-
-        {/* 输入材料 */}
-        {renderItems(recipe.in)}
-
-        {/* 箭头 */}
-        <ArrowIcon sx={{ color: themeColor, fontSize: 14 }} />
-
-        {/* 输出产品 */}
-        {renderItems(recipe.out, false)}
       </Box>
 
       {/* 生产者信息 - 移到配方流程下方 */}

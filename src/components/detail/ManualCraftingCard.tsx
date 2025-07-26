@@ -11,6 +11,7 @@ import { RecipeService } from '../../services/RecipeService';
 import useGameStore from '../../store/gameStore';
 import ManualCraftingValidator from '../../utils/manualCraftingValidator';
 import CraftingButtons from './CraftingButtons';
+import RecipeFlowDisplay from './RecipeFlowDisplay';
 
 interface ManualCraftingCardProps {
   item: Item;
@@ -32,40 +33,30 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
   if (itemRecipes.length === 0) {
     return (
       <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-          <Typography variant="body2" fontWeight="bold" color="primary.main">
-            手动合成
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            立即完成
-          </Typography>
-        </Box>
-
-        {/* 输入材料 */}
-        <Typography variant="caption" color="text.secondary">
-          需要材料:
-        </Typography>
-        <Box display="flex" alignItems="center" gap={1} mt={0.5}>
+        {/* 简单显示：无需材料的配方 */}
+        <Box sx={{ 
+          p: 1.5,
+          bgcolor: 'background.default',
+          borderRadius: 1,
+          border: '1px solid',
+          borderColor: 'divider',
+          mb: 1.5,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 1
+        }}>
           <Typography variant="body2" color="text.secondary">
             无需材料
           </Typography>
-        </Box>
-
-        {/* 输出产品 */}
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-          输出产品:
-        </Typography>
-        <Box display="flex" alignItems="center" gap={1} mt={0.5}>
+          <Typography variant="body2" color="text.secondary">
+            →
+          </Typography>
           <FactorioIcon itemId={item.id} size={32} />
           <Typography variant="body2">
             {getLocalizedItemName(item.id)} x1
           </Typography>
         </Box>
-
-        {/* 制作时间 */}
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-          制作时间: 0秒
-        </Typography>
 
         {/* 制作按钮 */}
         <CraftingButtons 
@@ -103,55 +94,15 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
 
     return (
       <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-          <Typography variant="body2" fontWeight="bold" color="primary.main">
-            手动合成
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {recipe.time}秒
-          </Typography>
+        {/* 配方流程显示 */}
+        <Box sx={{ mb: 1.5 }}>
+          <RecipeFlowDisplay 
+            recipe={recipe}
+            themeColor="primary.main"
+            showTime={true}
+            iconSize={32}
+          />
         </Box>
-
-        {/* 输入材料 */}
-        <Typography variant="caption" color="text.secondary">
-          需要材料:
-        </Typography>
-        <Box display="flex" flexWrap="wrap" gap={1} mt={0.5}>
-          {Object.entries(recipe.in).map(([itemId, required]) => {
-            const available = getInventoryItem(itemId).currentAmount;
-            const hasEnough = available >= required;
-            return (
-              <Box key={itemId} display="flex" alignItems="center" gap={0.5}>
-                <FactorioIcon itemId={itemId} size={32} />
-                <Typography 
-                  variant="body2" 
-                  color={hasEnough ? "text.primary" : "error.main"}
-                >
-                  {getLocalizedItemName(itemId)} x{required}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  ({available})
-                </Typography>
-              </Box>
-            );
-          })}
-        </Box>
-
-        {/* 输出产品 */}
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-          输出产品:
-        </Typography>
-        <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-          <FactorioIcon itemId={item.id} size={32} />
-          <Typography variant="body2">
-            {getLocalizedItemName(item.id)} x{recipe.out[item.id] || 1}
-          </Typography>
-        </Box>
-
-        {/* 制作时间 */}
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-          制作时间: {recipe.time}秒
-        </Typography>
 
         {/* 制作按钮 */}
         <CraftingButtons 
@@ -169,15 +120,6 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
     
     return (
       <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-          <Typography variant="body2" fontWeight="bold" color="warning.main">
-            需要生产设备
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {recipe.time}秒
-          </Typography>
-        </Box>
-
         <Alert severity="info" sx={{ mb: 2 }}>
           <Typography variant="body2">
             {validation.reason}
@@ -189,49 +131,18 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
           )}
         </Alert>
 
-        {/* 输入材料 */}
-        <Typography variant="caption" color="text.secondary">
-          需要材料:
-        </Typography>
-        <Box display="flex" flexWrap="wrap" gap={1} mt={0.5}>
-          {Object.entries(recipe.in).map(([itemId, required]) => {
-            const available = getInventoryItem(itemId).currentAmount;
-            const hasEnough = available >= required;
-            return (
-              <Box key={itemId} display="flex" alignItems="center" gap={0.5}>
-                <FactorioIcon itemId={itemId} size={20} />
-                <Typography 
-                  variant="body2" 
-                  color={hasEnough ? "text.primary" : "error.main"}
-                >
-                  {getLocalizedItemName(itemId)} x{required}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  ({available})
-                </Typography>
-              </Box>
-            );
-          })}
+        {/* 配方流程显示 */}
+        <Box sx={{ mb: 1.5 }}>
+          <RecipeFlowDisplay 
+            recipe={recipe}
+            themeColor="warning.main"
+            showTime={true}
+            iconSize={32}
+          />
         </Box>
-
-        {/* 输出产品 */}
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-          输出产品:
-        </Typography>
-        <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-          <FactorioIcon itemId={item.id} size={32} />
-          <Typography variant="body2">
-            {getLocalizedItemName(item.id)} x{recipe.out[item.id] || 1}
-          </Typography>
-        </Box>
-
-        {/* 制作时间 */}
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-          制作时间: {recipe.time}秒
-        </Typography>
 
         {/* 提示：需要在设施模块中生产 */}
-        <Box mt={2}>
+        <Box>
           <Typography variant="body2" color="text.secondary">
             请在设施模块中配置相应的生产设备来制作此物品。
           </Typography>

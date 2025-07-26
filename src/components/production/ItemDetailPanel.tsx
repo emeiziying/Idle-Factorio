@@ -4,33 +4,30 @@ import {
   Typography,
   Snackbar,
   Alert,
-  useTheme,
   Divider
 } from '@mui/material';
 import type { Item } from '../../types/index';
 import { useItemRecipes } from '../../hooks/useItemRecipes';
 import { useCrafting } from '../../hooks/useCrafting';
+import { useManualCraftingStatus } from '../../hooks/useManualCraftingStatus';
 import ItemDetailHeader from '../detail/ItemDetailHeader';
-import ManualCraftingFlowCard from '../detail/ManualCraftingFlowCard';
-import RecipeFlowCard from '../detail/RecipeFlowCard';
+import ManualCraftingCard from '../detail/ManualCraftingCard';
+import RecipeFacilitiesCard from '../detail/RecipeFacilitiesCard';
 import UsageCard from '../detail/UsageCard';
 import InventoryManagementCard from '../detail/InventoryManagementCard';
 import RecipeAnalysis from './RecipeAnalysis';
-import ManualCraftingValidator from '../../utils/manualCraftingValidator';
 
 interface ItemDetailPanelProps {
   item: Item;
 }
 
 const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item }) => {
-  const theme = useTheme();
-  
   const { 
-    recipes, 
     usedInRecipes, 
   } = useItemRecipes(item);
   
-  const { handleCraft, handleManualCraft, showMessage, closeMessage } = useCrafting();
+  const { handleManualCraft, showMessage, closeMessage } = useCrafting();
+  const manualCraftingStatus = useManualCraftingStatus(item);
 
   return (
     <Box sx={{ 
@@ -62,36 +59,28 @@ const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item }) => {
         // 平滑滚动
         scrollBehavior: 'smooth'
       }}>
-        {/* 制作配方 */}
+        {/* 1. 手动合成配方（顶部） */}
         <Box sx={{ mb: 2 }}>
           <Typography variant="subtitle2" gutterBottom sx={{ 
-            fontSize: '0.8rem',
+            fontSize: '0.9rem',
             fontWeight: 600,
-            color: 'text.primary',
-            mb: 1
+            color: manualCraftingStatus.color,
+            mb: 1.5
           }}>
-            制作配方
+            {manualCraftingStatus.title}
           </Typography>
           
-          {/* 手动合成配方 */}
-          <ManualCraftingFlowCard 
+          <ManualCraftingCard 
             item={item} 
             onManualCraft={handleManualCraft}
           />
-          
-          {/* 其他配方 - 排除已显示的手动合成配方 */}
-          {recipes.filter(recipe => {
-            const validator = ManualCraftingValidator.getInstance();
-            const validation = validator.validateRecipe(recipe);
-            return !validation.canCraftManually;
-          }).map((recipe) => (
-            <RecipeFlowCard 
-              key={recipe.id}
-              recipe={recipe}
-              onCraft={handleCraft}
-            />
-          ))}
         </Box>
+
+        {/* 2. 设施列表（显示当前物品配方的设施，带添加移除按钮） */}
+        <RecipeFacilitiesCard item={item} />
+
+        {/* 分隔线 */}
+        <Divider sx={{ my: 2 }} />
 
         {/* 用途 */}
         <UsageCard usedInRecipes={usedInRecipes} />
