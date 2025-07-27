@@ -9,6 +9,7 @@ import CraftingQueue from './CraftingQueue';
 import { DataService } from '../../services/DataService';
 import { usePersistentState } from '../../hooks/usePersistentState';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { useProductionLoop } from '../../hooks/useProductionLoop';
 import useGameStore from '../../store/gameStore';
 import type { Category, Item } from '../../types/index';
 
@@ -26,6 +27,9 @@ const ProductionModule: React.FC = () => {
   // 获取制作队列状态
   const craftingQueue = useGameStore((state) => state.craftingQueue);
   const isMobile = useIsMobile();
+  
+  // 启动生产循环
+  useProductionLoop({ enabled: true });
   
   // Keep refs in sync with state
   useEffect(() => {

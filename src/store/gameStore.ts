@@ -16,6 +16,8 @@ import { RecipeService } from '../services/RecipeService';
 import { getStorageConfig } from '../data/storageConfigs';
 import { DataService } from '../services/DataService';
 import { TechnologyService } from '../services/TechnologyService';
+import { FuelService } from '../services/FuelService';
+import { FACILITY_FUEL_CONFIGS } from '../data/fuelConfigs';
 
 interface GameState {
   // 库存系统
@@ -111,6 +113,11 @@ interface GameState {
   trackBuiltEntity: (entityId: string, count: number) => void;
   trackMinedEntity: (entityId: string, count: number) => void;
   checkResearchTriggers: () => void;
+  
+  // 燃料系统 Actions
+  refuelFacility: (facilityId: string, fuelItemId: string, quantity: number) => boolean;
+  autoRefuelFacilities: () => void;
+  updateFuelConsumption: (deltaTime: number) => void;
 }
 
 const useGameStore = create<GameState>()(
@@ -190,6 +197,10 @@ const useGameStore = create<GameState>()(
           initialAmount = 10; // 给10个石炉用于测试
         } else if (itemId === 'stone') {
           initialAmount = 100; // 给100个石头用于制作石炉
+        } else if (itemId === 'coal') {
+          initialAmount = 200; // 给200个煤炭用于燃料
+        } else if (itemId === 'wood') {
+          initialAmount = 50; // 给50个木材用于燃料
         }
         
         return {
@@ -297,6 +308,16 @@ const useGameStore = create<GameState>()(
 
       // 设施管理
       addFacility: (facility) => {
+        const fuelService = FuelService.getInstance();
+        const dataService = DataService.getInstance();
+        
+        // 检查是否需要燃料缓存
+        const facilityItem = dataService.getItem(facility.facilityId);
+        // 检查燃料配置而不是 powerType，因为 powerType 可能在 item 中没有定义
+        if (FACILITY_FUEL_CONFIGS[facility.facilityId]) {
+          facility.fuelBuffer = fuelService.initializeFuelBuffer(facility.facilityId) || undefined;
+        }
+        
         set((state) => ({
           facilities: [...state.facilities, facility]
         }));
@@ -805,6 +826,86 @@ const useGameStore = create<GameState>()(
         } catch (error) {
           console.error('Error checking research triggers:', error);
         }
+      },
+      
+      // 燃料系统方法
+      refuelFacility: (facilityId: string, fuelItemId: string, quantity: number) => {
+        const facility = get().facilities.find(f => f.id === facilityId);
+        if (!facility?.fuelBuffer) return false;
+        
+        const fuelService = FuelService.getInstance();
+        const result = fuelService.addFuel(facility.fuelBuffer, fuelItemId, quantity, facility.facilityId);
+        
+        if (result.success && result.quantityAdded) {
+          // 从库存扣除
+          get().updateInventory(fuelItemId, -result.quantityAdded);
+          
+          // 更新设施
+          get().updateFacility(facilityId, { fuelBuffer: facility.fuelBuffer });
+          
+          return true;
+        }
+        
+        return false;
+      },
+      
+      autoRefuelFacilities: () => {
+        const fuelService = FuelService.getInstance();
+        const facilities = get().facilities;
+        
+        facilities.forEach(facility => {
+          if (facility.fuelBuffer && facility.status !== 'stopped') {
+            const result = fuelService.autoRefuel(facility, get().getInventoryItem);
+            
+            if (result.success) {
+              // 扣除库存
+              Object.entries(result.itemsConsumed).forEach(([itemId, amount]) => {
+                get().updateInventory(itemId, -amount);
+              });
+              
+              // 更新设施
+              get().updateFacility(facility.id, { fuelBuffer: facility.fuelBuffer });
+            }
+          }
+        });
+      },
+      
+      updateFuelConsumption: (deltaTime: number) => {
+        const fuelService = FuelService.getInstance();
+        const facilities = get().facilities;
+        
+        facilities.forEach(facility => {
+          if (facility.fuelBuffer) {
+            const isProducing = facility.status === 'running' && facility.production?.progress !== undefined;
+            const result = fuelService.updateFuelConsumption(facility, deltaTime, isProducing);
+            
+            if (!result.success && facility.status === 'running') {
+              // 燃料耗尽，更新状态
+              get().updateFacility(facility.id, { 
+                status: 'no_fuel',
+                fuelBuffer: facility.fuelBuffer
+              });
+              
+              // 尝试自动补充
+              const refuelResult = fuelService.autoRefuel(facility, get().getInventoryItem);
+              if (refuelResult.success) {
+                // 扣除库存
+                Object.entries(refuelResult.itemsConsumed).forEach(([itemId, amount]) => {
+                  get().updateInventory(itemId, -amount);
+                });
+                
+                // 恢复运行
+                get().updateFacility(facility.id, { 
+                  status: 'running',
+                  fuelBuffer: facility.fuelBuffer
+                });
+              }
+            } else if (result.success) {
+              // 更新燃料缓存
+              get().updateFacility(facility.id, { fuelBuffer: facility.fuelBuffer });
+            }
+          }
+        });
       },
 
       clearGameData: () => {
