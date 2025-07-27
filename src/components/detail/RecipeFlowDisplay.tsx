@@ -15,6 +15,7 @@ interface RecipeFlowDisplayProps {
   showTime?: boolean;
   iconSize?: number;
   onItemSelect?: (item: import('../../types/index').Item) => void;
+  customTime?: number; // 自定义时间，用于手动制作时显示实际时间
 }
 
 const RecipeFlowDisplay: React.FC<RecipeFlowDisplayProps> = ({ 
@@ -22,7 +23,8 @@ const RecipeFlowDisplay: React.FC<RecipeFlowDisplayProps> = ({
   themeColor = 'text.primary',
   showTime = true,
   iconSize = 24,
-  onItemSelect
+  onItemSelect,
+  customTime
 }) => {
   const { getInventoryItem } = useGameStore();
   const dataService = DataService.getInstance();
@@ -100,7 +102,7 @@ const RecipeFlowDisplay: React.FC<RecipeFlowDisplayProps> = ({
             <FactorioIcon 
               customImage={TimeIcon}
               size={iconSize} 
-              quantity={recipe.time}
+              quantity={customTime !== undefined ? customTime : recipe.time}
             />
           </Box>
           {/* 加号连接 - 只有在有输入材料时才显示 */}

@@ -64,7 +64,7 @@ class CraftingEngine {
 
     try {
       this.intervalId = window.setInterval(() => {
-        this.updateCraftingQueue();
+        // this.updateCraftingQueue();
       }, this.UPDATE_INTERVAL);
 
       console.log('Crafting engine started');
@@ -184,8 +184,8 @@ class CraftingEngine {
         const baseTime = selectedRecipe.time || 1; // 基础时间
         const craftingTime = (baseTime / manualEfficiency) * currentTask.quantity * 1000; // 转换为毫秒，考虑数量
         
-        // 确保有开始时间
-        if (!currentTask.startTime) {
+        // 确保有开始时间 - 只在第一次执行时设定
+        if (!currentTask.startTime || currentTask.startTime === 0) {
           currentTask.startTime = now;
           updateCraftingProgress(currentTask.id, 0);
         }
@@ -212,9 +212,11 @@ class CraftingEngine {
 
     // 如果任务刚开始，设置开始时间并开始制作
     if (currentTask.status === 'pending') {
-      // 重新设置开始时间，确保时间计算正确
-      currentTask.startTime = now;
-      updateCraftingProgress(currentTask.id, 0);
+      // 只在第一次执行时设定开始时间
+      if (!currentTask.startTime || currentTask.startTime === 0) {
+        currentTask.startTime = now;
+        updateCraftingProgress(currentTask.id, 0);
+      }
     }
 
     // 基于Factorio机制计算制作时间

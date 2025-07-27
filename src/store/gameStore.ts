@@ -463,7 +463,7 @@ const useGameStore = create<GameState>()(
             itemId: config.itemId,
             quantity: 1,
             progress: 0,
-            startTime: Date.now(),
+            startTime: 0, // 任务开始时再设定
             craftingTime: config.craftingTime * 1000,
             status: 'pending'
           });

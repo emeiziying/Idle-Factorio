@@ -25,8 +25,15 @@ export const useItemRecipes = (item: Item) => {
         return recipe.producers.some((pid: string) => dataService.isItemUnlocked(pid));
       };
       
+      // 检查配方输出物品是否解锁（用于过滤用途显示）
+      const isOutputUnlocked = (recipe: Recipe) => {
+        return Object.keys(recipe.out).every(itemId => dataService.isItemUnlocked(itemId));
+      };
+      
       const filteredRecipes = itemRecipes.filter(isProducerUnlocked);
-      const filteredUsageRecipes = usageRecipes.filter(isProducerUnlocked);
+      const filteredUsageRecipes = usageRecipes.filter(recipe => 
+        isProducerUnlocked(recipe) && isOutputUnlocked(recipe)
+      );
       
       setRecipes(filteredRecipes);
       setUsedInRecipes(filteredUsageRecipes);

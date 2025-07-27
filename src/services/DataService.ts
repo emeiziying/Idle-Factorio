@@ -123,6 +123,11 @@ export class DataService {
     }
   }
 
+  // 检查数据是否已加载
+  isDataLoaded(): boolean {
+    return this.gameData !== null;
+  }
+
   // 获取本地化的分类名称
   getLocalizedCategoryName(categoryId: string): string {
     if (!this.i18nData) {

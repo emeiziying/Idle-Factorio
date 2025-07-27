@@ -37,7 +37,7 @@ export const useCrafting = () => {
       itemId: Object.keys(recipe.out)[0],
       quantity,
       progress: 0,
-      startTime: Date.now(),
+      startTime: 0, // 任务开始时再设定
       craftingTime: recipe.time,
       status: 'pending'
     });
@@ -61,7 +61,7 @@ export const useCrafting = () => {
         itemId: itemId,
         quantity,
         progress: 0,
-        startTime: Date.now(),
+        startTime: 0, // 任务开始时再设定
         craftingTime: 0,
         status: 'pending'
       });
@@ -109,7 +109,7 @@ export const useCrafting = () => {
       itemId: itemId,
       quantity,
       progress: 0,
-      startTime: Date.now(),
+      startTime: 0, // 任务开始时再设定
       craftingTime: recipe.time,
       status: 'pending'
     });

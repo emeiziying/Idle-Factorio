@@ -26,6 +26,26 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
     return category.icon || category.id;
   };
 
+  // 防止热重载时categories为空的情况
+  if (!categories || categories.length === 0) {
+    return (
+      <Box sx={{ 
+        borderBottom: 1, 
+        borderColor: 'divider',
+        bgcolor: 'background.paper',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+        height: 48,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        {/* 空状态占位 */}
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ 
       borderBottom: 1, 

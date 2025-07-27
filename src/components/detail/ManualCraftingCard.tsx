@@ -89,6 +89,10 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
     const isMiningRecipe = recipe.flags && recipe.flags.includes('mining');
     const hasInputMaterials = Object.keys(recipe.in).length > 0;
     
+    // 计算手动制作的实际时间
+    const manualEfficiency = 0.5; // 手动效率 50%
+    const actualTime = recipe.time / manualEfficiency;
+    
     // 采矿配方或无输入材料的配方总是可以制作
     const canCraft = !hasInputMaterials || isMiningRecipe || Object.entries(recipe.in).every(([itemId, required]) => {
       const available = getInventoryItem(itemId).currentAmount;
@@ -105,6 +109,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
             showTime={true}
             iconSize={32}
             onItemSelect={onItemSelect}
+            customTime={actualTime}
           />
         </Box>
 

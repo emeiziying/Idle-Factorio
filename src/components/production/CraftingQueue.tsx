@@ -1,15 +1,17 @@
 import React, { useCallback, useMemo } from 'react';
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   LinearProgress,
   IconButton,
-  Fade,
-  Button
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Slide
 } from '@mui/material';
-import { Clear as ClearIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Clear as ClearIcon, Delete as DeleteIcon, Close as CloseIcon } from '@mui/icons-material';
+import type { TransitionProps } from '@mui/material/transitions';
 import FactorioIcon from '../common/FactorioIcon';
 import { DataService } from '../../services/DataService';
 import useGameStore from '../../store/gameStore';
@@ -21,8 +23,8 @@ const QUEUE_CAPACITY = 50;
 const MOBILE_ITEM_SIZE = 48;
 const DESKTOP_ITEM_SIZE = 64;
 const PROGRESS_BAR_HEIGHT = 4;
-const GRID_GAP_MOBILE = 0.8;
-const GRID_GAP_DESKTOP = 1.2;
+const GRID_GAP_MOBILE = 1;
+const GRID_GAP_DESKTOP = 2;
 
 // Sub-component for individual crafting queue items
 interface CraftingQueueItemProps {
@@ -66,29 +68,34 @@ const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(({ task, 
   const cancelButtonSize = isMobile ? 16 : 20;
 
   return (
-    <Fade in timeout={300}>
-      <Box 
-        role="button"
-        tabIndex={0}
-        aria-label={`制作 ${item.name || task.itemId} - 进度 ${Math.round(progress)}%`}
-        sx={{ 
-          position: 'relative',
-          cursor: 'default', // 改为default，因为不再可点击
-          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-          '&:hover': {
-            transform: 'scale(1.05)',
-            '& .cancel-button': {
-              opacity: 1,
-            }
-          },
-          '&:focus': {
-            outline: '2px solid',
-            outlineColor: 'primary.main',
-            outlineOffset: 2,
+    <Box 
+      role="button"
+      tabIndex={0}
+      aria-label={`制作 ${item.name || task.itemId} - 进度 ${Math.round(progress)}%`}
+      sx={{ 
+        position: 'relative',
+        cursor: 'default',
+        // 移除transform动画，使用opacity和box-shadow代替
+        transition: 'opacity 0.2s ease, box-shadow 0.2s ease',
+        // 确保固定尺寸，避免布局跳动
+        width: itemSize,
+        height: itemSize,
+        flexShrink: 0,
+        '&:hover': {
+          opacity: 0.9,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          '& .cancel-button': {
+            opacity: 1,
           }
-        }}
-        onKeyDown={handleKeyDown}
-      >
+        },
+        '&:focus': {
+          outline: '2px solid',
+          outlineColor: 'primary.main',
+          outlineOffset: 2,
+        }
+      }}
+      onKeyDown={handleKeyDown}
+    >
         {/* 物品图标和进度条容器 */}
         <Box
           sx={{
@@ -97,8 +104,10 @@ const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(({ task, 
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            width: itemSize,
-            height: itemSize,
+            width: '100%',
+            height: '100%',
+            // 确保内容不会超出容器
+            overflow: 'hidden',
           }}
         >
           {/* 物品图标 */}
@@ -158,13 +167,30 @@ const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(({ task, 
           <ClearIcon sx={{ fontSize: cancelButtonSize - 4 }} />
         </IconButton>
       </Box>
-    </Fade>
-  );
+    );
 });
 
 CraftingQueueItem.displayName = 'CraftingQueueItem';
 
-const CraftingQueue: React.FC = () => {
+// 从底部向上滑入的过渡动画
+const Transition = React.forwardRef(function Transition(
+  props: TransitionProps & {
+    children: React.ReactElement;
+  },
+  ref: React.Ref<unknown>,
+) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
+
+interface CraftingQueueProps {
+  open?: boolean;
+  onClose?: () => void;
+}
+
+const CraftingQueue: React.FC<CraftingQueueProps> = ({ 
+  open = false, 
+  onClose 
+}) => {
   const craftingQueue = useGameStore((state) => state.craftingQueue);
   const removeCraftingTask = useGameStore((state) => state.removeCraftingTask);
   const isMobile = useIsMobile();
@@ -181,40 +207,57 @@ const CraftingQueue: React.FC = () => {
     }
   }, [craftingQueue, removeCraftingTask]);
 
-  // Memoize grid styles
+  // Memoize grid styles - 使用 auto-fit 替代 auto-fill 减少重新计算
   const gridStyles = useMemo(() => ({
     display: 'grid',
-    gridTemplateColumns: `repeat(auto-fill, ${isMobile ? MOBILE_ITEM_SIZE : DESKTOP_ITEM_SIZE}px)`,
+    gridTemplateColumns: `repeat(auto-fit, ${isMobile ? MOBILE_ITEM_SIZE : DESKTOP_ITEM_SIZE}px)`,
     gap: isMobile ? GRID_GAP_MOBILE : GRID_GAP_DESKTOP,
-    justifyContent: 'start'
+    justifyContent: 'start',
+    // 添加固定高度减少布局跳动
+    minHeight: isMobile ? MOBILE_ITEM_SIZE : DESKTOP_ITEM_SIZE,
+    // 使用subgrid优化性能（如果支持）
+    gridAutoRows: 'max-content',
   }), [isMobile]);
 
-  const cardStyles = useMemo(() => ({
-    mb: isMobile ? 1.5 : 2,
-    transition: 'all 0.3s ease'
+  const dialogStyles = useMemo(() => ({
+    '& .MuiDialog-paper': {
+      margin: 0,
+      maxHeight: '70vh',
+      width: '100%',
+      maxWidth: isMobile ? '100vw' : '600px',
+      borderRadius: isMobile ? '16px 16px 0 0' : '16px',
+      position: 'fixed',
+      bottom: 0,
+      left: isMobile ? 0 : '50%',
+      transform: isMobile ? 'none' : 'translateX(-50%)',
+    }
   }), [isMobile]);
 
-  const contentStyles = useMemo(() => ({
-    p: isMobile ? 1.5 : 2
-  }), [isMobile]);
 
-  // Don't show anything when queue is empty
-  if (craftingQueue.length === 0) {
+  // 如果不是弹窗模式且队列为空，不显示
+  if (!open && craftingQueue.length === 0) {
     return null;
   }
 
   return (
-    <Card sx={cardStyles}>
-      <CardContent sx={contentStyles}>
-        {/* Header with queue info and clear button */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-          <Typography 
-            variant="h6" 
-            sx={{ fontSize: isMobile ? '1.1rem' : '1.25rem' }}
-          >
-            制作队列 ({craftingQueue.length}/{QUEUE_CAPACITY})
-          </Typography>
-          
+    <Dialog
+      open={open}
+      onClose={onClose}
+      slots={{ transition: Transition }}
+      sx={dialogStyles}
+      hideBackdrop={false}
+      disableEscapeKeyDown={false}
+    >
+      <DialogTitle sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        pb: 1
+      }}>
+        <Typography variant="h6">
+          制作队列 ({craftingQueue.length}/{QUEUE_CAPACITY})
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1 }}>
           {craftingQueue.length > 1 && (
             <Button
               size="small"
@@ -227,20 +270,44 @@ const CraftingQueue: React.FC = () => {
               清空
             </Button>
           )}
+          <IconButton
+            edge="end"
+            color="inherit"
+            onClick={onClose}
+            aria-label="关闭"
+          >
+            <CloseIcon />
+          </IconButton>
         </Box>
-        
-        <Box sx={gridStyles} role="grid" aria-label="制作队列">
-          {craftingQueue.map((task) => (
-            <CraftingQueueItem
-              key={task.id}
-              task={task}
-              isMobile={isMobile}
-              onRemove={handleRemoveTask}
-            />
-          ))}
-        </Box>
-      </CardContent>
-    </Card>
+      </DialogTitle>
+      
+      <DialogContent sx={{ px: 2, pb: 2 }}>
+        {craftingQueue.length === 0 ? (
+          <Box 
+            display="flex" 
+            justifyContent="center" 
+            alignItems="center" 
+            height="100px"
+            color="text.secondary"
+          >
+            <Typography variant="body2">
+              制作队列为空
+            </Typography>
+          </Box>
+        ) : (
+          <Box sx={gridStyles} role="grid" aria-label="制作队列">
+            {craftingQueue.map((task) => (
+              <CraftingQueueItem
+                key={task.id}
+                task={task}
+                isMobile={isMobile}
+                onRemove={handleRemoveTask}
+              />
+            ))}
+          </Box>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 };
 

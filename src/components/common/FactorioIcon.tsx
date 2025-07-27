@@ -39,27 +39,52 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
   const [iconData, setIconData] = useState<IconData | null>(null);
   const [spriteSize, setSpriteSize] = useState<{ width: number; height: number } | null>(null);
   const [effectiveIconId, setEffectiveIconId] = useState<string | undefined>(itemId);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   // 状态：从服务层获取的iconText
   const [recipeIconText, setRecipeIconText] = useState<string | undefined>(undefined);
 
+  // 监听数据加载状态
+  useEffect(() => {
+    const dataService = DataService.getInstance();
+    const checkData = () => {
+      const loaded = dataService.isDataLoaded();
+      setDataLoaded(loaded);
+      return loaded;
+    };
+    
+    // 立即检查
+    if (checkData()) {
+      return;
+    }
+    
+    // 如果数据未加载，定期检查
+    const interval = setInterval(() => {
+      if (checkData()) {
+        clearInterval(interval);
+      }
+    }, 100);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   // 获取图标信息
   useEffect(() => {
-    if (!itemId) return;
+    if (!itemId || !dataLoaded) return;
     
     const dataService = DataService.getInstance();
     const iconInfo = dataService.getIconInfo(itemId);
     
     setEffectiveIconId(iconInfo.iconId);
     setRecipeIconText(iconInfo.iconText);
-  }, [itemId]);
+  }, [itemId, dataLoaded]);
 
   // 加载iconData - 只在没有customImage时加载
   useEffect(() => {
-    if (customImage || !effectiveIconId) return;
+    if (customImage || !effectiveIconId || !dataLoaded) return;
     const dataService = DataService.getInstance();
     setIconData(dataService.getIconData(effectiveIconId));
-  }, [effectiveIconId, customImage]);
+  }, [effectiveIconId, customImage, dataLoaded]);
 
   // 动态获取精灵图尺寸 - 只在没有customImage时加载
   useEffect(() => {
@@ -142,6 +167,9 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
 
   const textToDisplay = getDisplayText();
 
+  // 如果数据未加载完成，显示占位符
+  const isLoading = !customImage && (!iconData || !spriteSize) && itemId;
+  
   return (
     <Box
       className={className}
@@ -157,16 +185,19 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'center',
             backgroundSize: 'contain',
-          } : iconData?.position ? {
+          } : iconData?.position && spriteSize ? {
             backgroundImage: `url(${SPRITE_URL})`,
             backgroundRepeat: 'no-repeat',
             ...getSpritePosition(iconData.position)
+          } : isLoading ? {
+            // 加载中状态 - 显示透明背景避免闪烁
+            backgroundColor: 'transparent',
           } : {
             bgcolor: 'grey.300',
           })
         }}
       />
-      {textToDisplay !== undefined && (
+      {textToDisplay !== undefined && !isLoading && (
         <Box sx={quantityStyles}>
           {textToDisplay}
         </Box>

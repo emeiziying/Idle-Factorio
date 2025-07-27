@@ -23,9 +23,19 @@ const ItemList: React.FC<ItemListProps> = React.memo(({
   
   // 使用useMemo缓存计算结果，避免每次渲染都重新计算
   const { itemsByRow, sortedRows } = useMemo(() => {
-    const itemsByRow = dataService.getItemsByRow(categoryId);
-    const sortedRows = Array.from(itemsByRow.keys()).sort((a, b) => a - b);
-    return { itemsByRow, sortedRows };
+    // 检查数据是否已加载
+    if (!dataService.isDataLoaded()) {
+      return { itemsByRow: new Map(), sortedRows: [] };
+    }
+    
+    try {
+      const itemsByRow = dataService.getItemsByRow(categoryId);
+      const sortedRows = Array.from(itemsByRow.keys()).sort((a, b) => a - b);
+      return { itemsByRow, sortedRows };
+    } catch (error) {
+      console.error('Error loading items for category', categoryId, ':', error);
+      return { itemsByRow: new Map(), sortedRows: [] };
+    }
   }, [categoryId, dataService]);
 
   if (sortedRows.length === 0) {
