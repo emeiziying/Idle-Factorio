@@ -319,9 +319,25 @@ export class ManualCraftingValidator {
         category: ValidationCategory.RESTRICTED
       };
     }
+    
+    // 装配机类设备 - 这些设备通常表示物品可以手动制作或自动制作
+    const assemblingMachines = producers.filter(p => 
+      p.includes('assembling-machine') || p.includes('foundry')
+    );
+    
+    // 如果只有装配机类设备，通常表示可以手动制作
+    // 这符合Factorio中基础物品（传送带、插入机等）的制作规则
+    if (assemblingMachines.length > 0 && assemblingMachines.length === producers.length) {
+      return {
+        canCraftManually: true,
+        reason: ValidationReason.BASIC_CRAFTING,
+        category: ValidationCategory.CRAFTABLE
+      };
+    }
+    
     // 冶炼设备 - 官方Wiki明确：矿石必须在熔炉中冶炼
     const smeltingProducers = producers.filter(p => 
-      p.includes('furnace') || p.includes('foundry')
+      p.includes('furnace') && !p.includes('foundry') // foundry已经在装配机类中处理
     );
     if (smeltingProducers.length > 0) {
       return {

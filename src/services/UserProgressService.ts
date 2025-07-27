@@ -10,7 +10,7 @@ export class UserProgressService {
     this.unlockedItems = new Set();
     this.unlockedTechs = new Set();
     this.loadProgress();
-    this.initializeDefaultUnlocks();
+    // 移除硬编码的基础解锁，改为完全基于科技系统
   }
 
   static getInstance(): UserProgressService {
@@ -19,6 +19,8 @@ export class UserProgressService {
     }
     return UserProgressService.instance;
   }
+
+  // ========== 物品解锁管理 ==========
 
   // 检查物品是否已解锁
   isItemUnlocked(itemId: string): boolean {
@@ -70,7 +72,7 @@ export class UserProgressService {
   resetProgress(): void {
     this.unlockedItems.clear();
     this.unlockedTechs.clear();
-    this.initializeDefaultUnlocks();
+    // 移除硬编码的基础解锁
     this.saveProgress();
   }
 
@@ -100,30 +102,6 @@ export class UserProgressService {
     } catch (error) {
       console.warn('Failed to save user progress:', error);
     }
-  }
-
-  // 初始化默认解锁物品
-  private initializeDefaultUnlocks(): void {
-    const defaultUnlocks = [
-      // 基础资源
-      'coal', 'iron-ore', 'copper-ore', 'stone', 'wood', 'water',
-      // 基础材料
-      'iron-plate', 'copper-plate', 'steel-plate', 'stone-brick',
-      // 基础组件
-      'iron-gear-wheel', 'copper-cable', 'electronic-circuit',
-      // 基础工具和武器
-      'iron-axe', 'iron-pickaxe', 'pistol', 'firearm-magazine',
-      // 基础建筑材料
-      'pipe', 'pipe-to-ground', 'transport-belt', 'underground-belt',
-      // 基础设施
-      'burner-mining-drill', 'stone-furnace', 'boiler', 'steam-engine',
-      // 基础容器
-      'wooden-chest', 'iron-chest'
-    ];
-
-    defaultUnlocks.forEach(itemId => {
-      this.unlockedItems.add(itemId);
-    });
   }
 }
 

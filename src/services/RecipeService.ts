@@ -1,5 +1,7 @@
 import type { Recipe } from '../types';
 import { CUSTOM_RECIPES } from '../data/customRecipes';
+import ManualCraftingValidator from '../utils/manualCraftingValidator';
+import { DataService } from './DataService';
 
 /**
  * 配方服务
@@ -158,6 +160,114 @@ export class RecipeService {
     }
 
     return recipes;
+  }
+
+  /**
+   * 获取物品的手动制作配方
+   * 基于 ManualCraftingValidator 的验证逻辑
+   * @param itemId 物品ID
+   * @returns 手动制作配方，如果不能手动制作则返回 null
+   */
+  static getManualCraftingRecipe(itemId: string): Recipe | null {
+    const validator = ManualCraftingValidator.getInstance();
+    const dataService = DataService.getInstance();
+    
+    // 1. 先判断物品是否可以手动制作
+    const validation = validator.validateManualCrafting(itemId);
+    if (!validation.canCraftManually) {
+      return null;
+    }
+    
+    // 2. 如果是原材料（无配方），返回 null
+    if (validation.reason === 'raw_material') {
+      return null; // 原材料不需要配方
+    }
+    
+    // 3. 获取所有配方并找到可手动制作的
+    const allRecipes = this.getRecipesThatProduce(itemId);
+    
+    for (const recipe of allRecipes) {
+      // 检查配方是否被解锁
+      if (!dataService.isItemUnlocked(recipe.id)) {
+        continue; // 跳过未解锁的配方
+      }
+      
+      const recipeValidation = validator.validateRecipe(recipe);
+      if (recipeValidation.canCraftManually) {
+        return recipe; // 返回第一个可手动制作的配方
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * 获取物品的所有手动制作配方
+   * @param itemId 物品ID
+   * @returns 所有可手动制作的配方列表
+   */
+  static getAllManualCraftingRecipes(itemId: string): Recipe[] {
+    const validator = ManualCraftingValidator.getInstance();
+    const dataService = DataService.getInstance();
+    
+    // 1. 先判断物品是否可以手动制作
+    const validation = validator.validateManualCrafting(itemId);
+    if (!validation.canCraftManually) {
+      return [];
+    }
+    
+    // 2. 如果是原材料（无配方），返回空数组
+    if (validation.reason === 'raw_material') {
+      return []; // 原材料不需要配方
+    }
+    
+    // 3. 获取所有配方并筛选可手动制作的
+    const allRecipes = this.getRecipesThatProduce(itemId);
+    
+    return allRecipes.filter(recipe => {
+      // 检查配方是否被解锁
+      if (!dataService.isItemUnlocked(recipe.id)) {
+        return false; // 跳过未解锁的配方
+      }
+      
+      const recipeValidation = validator.validateRecipe(recipe);
+      return recipeValidation.canCraftManually;
+    });
+  }
+
+  /**
+   * 检查物品是否可以手动制作
+   * @param itemId 物品ID
+   * @returns 是否可以手动制作
+   */
+  static canCraftManually(itemId: string): boolean {
+    const validator = ManualCraftingValidator.getInstance();
+    const validation = validator.validateManualCrafting(itemId);
+    return validation.canCraftManually;
+  }
+
+  /**
+   * 获取物品手动制作的详细信息
+   * @param itemId 物品ID
+   * @returns 手动制作的详细信息
+   */
+  static getManualCraftingInfo(itemId: string): {
+    canCraft: boolean;
+    recipe: Recipe | null;
+    allRecipes: Recipe[];
+    validation: import('../utils/manualCraftingValidator').ManualCraftingValidation;
+  } {
+    const validator = ManualCraftingValidator.getInstance();
+    const validation = validator.validateManualCrafting(itemId);
+    const recipe = this.getManualCraftingRecipe(itemId);
+    const allRecipes = this.getAllManualCraftingRecipes(itemId);
+    
+    return {
+      canCraft: validation.canCraftManually,
+      recipe,
+      allRecipes,
+      validation
+    };
   }
 
   /**

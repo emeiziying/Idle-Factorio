@@ -6,6 +6,7 @@ import { Add as AddIcon, ArrowForward as ArrowIcon } from '@mui/icons-material';
 import type { Recipe } from '../../types/index';
 import FactorioIcon from '../common/FactorioIcon';
 import useGameStore from '../../store/gameStore';
+import { DataService } from '../../services/DataService';
 import TimeIcon from '../../assets/Time.png';
 
 interface RecipeFlowDisplayProps {
@@ -13,15 +14,28 @@ interface RecipeFlowDisplayProps {
   themeColor?: string;
   showTime?: boolean;
   iconSize?: number;
+  onItemSelect?: (item: import('../../types/index').Item) => void;
 }
 
 const RecipeFlowDisplay: React.FC<RecipeFlowDisplayProps> = ({ 
   recipe, 
   themeColor = 'text.primary',
   showTime = true,
-  iconSize = 24
+  iconSize = 24,
+  onItemSelect
 }) => {
   const { getInventoryItem } = useGameStore();
+  const dataService = DataService.getInstance();
+
+  // 处理物品图标点击
+  const handleItemClick = (itemId: string) => {
+    if (onItemSelect) {
+      const clickedItem = dataService.getItem(itemId);
+      if (clickedItem) {
+        onItemSelect(clickedItem);
+      }
+    }
+  };
 
   // 通用的材料/产品渲染函数
   const renderItems = (items: { [itemId: string]: number }, isInput: boolean = true) => {
@@ -31,12 +45,23 @@ const RecipeFlowDisplay: React.FC<RecipeFlowDisplayProps> = ({
       
       return (
         <React.Fragment key={itemId}>
-          <FactorioIcon 
-            itemId={itemId} 
-            size={iconSize} 
-            quantity={quantity}
-            shortage={isShortage}
-          />
+          <Box 
+            onClick={() => handleItemClick(itemId)}
+            sx={{ 
+              cursor: onItemSelect ? 'pointer' : 'default',
+              '&:hover': onItemSelect ? { opacity: 0.8 } : {},
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <FactorioIcon 
+              itemId={itemId} 
+              size={iconSize} 
+              quantity={quantity}
+              shortage={isShortage}
+            />
+          </Box>
           {index < Object.entries(items).length - 1 && (
             <AddIcon sx={{ fontSize: iconSize * 0.6, color: 'text.secondary' }} />
           )}
@@ -50,25 +75,38 @@ const RecipeFlowDisplay: React.FC<RecipeFlowDisplayProps> = ({
       display="flex" 
       alignItems="center" 
       justifyContent="center" 
-      gap={0.25}
+      gap={0.5}
       sx={{ 
         p: 1.5,
         bgcolor: 'background.default',
         borderRadius: 1,
         border: '1px solid',
-        borderColor: 'divider'
+        borderColor: 'divider',
+        minHeight: 'fit-content',
+        width: '100%',
+        textAlign: 'center'
       }}
     >
       {/* 时间图标 */}
       {showTime && (
         <>
-          <FactorioIcon 
-            customImage={TimeIcon}
-            size={iconSize} 
-            quantity={recipe.time}
-          />
-          {/* 加号连接 */}
-          <AddIcon sx={{ color: 'text.secondary', fontSize: iconSize * 0.6 }} />
+          <Box 
+            sx={{ 
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <FactorioIcon 
+              customImage={TimeIcon}
+              size={iconSize} 
+              quantity={recipe.time}
+            />
+          </Box>
+          {/* 加号连接 - 只有在有输入材料时才显示 */}
+          {Object.keys(recipe.in).length > 0 && (
+            <AddIcon sx={{ color: 'text.secondary', fontSize: iconSize * 0.6 }} />
+          )}
         </>
       )}
 

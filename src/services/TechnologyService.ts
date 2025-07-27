@@ -99,9 +99,9 @@ export class TechnologyService {
    * 创建初始状态
    */
   private createInitialState(): TechTreeState {
-    return {
-      unlockedTechs: new Set(), // 初始化为空，从data.json加载
-      researchedTechs: new Set(), // 初始化为空，从data.json加载
+    const state: TechTreeState = {
+      unlockedTechs: new Set(),
+      researchedTechs: new Set(), 
       availableTechs: new Set(),
       currentResearch: undefined,
       researchQueue: [],
@@ -114,6 +114,11 @@ export class TechnologyService {
       totalResearchTime: 0,
       totalSciencePacksConsumed: {}
     };
+
+    // 移除硬编码的基础解锁，改为完全基于科技数据
+    // this.initializeBasicUnlocks(state);
+    
+    return state;
   }
 
   /**
@@ -376,6 +381,9 @@ export class TechnologyService {
     // 从UserProgressService同步已解锁的科技
     const unlockedTechs = this.userProgressService.getUnlockedTechs();
     unlockedTechs.forEach(techId => this.techState.unlockedTechs.add(techId));
+
+    // 移除基础科技自动解锁，改为完全基于研究触发器和玩家主动研究
+    // 所有科技都应该通过研究触发器或玩家主动研究来解锁
 
     for (const techId of this.techState.unlockedTechs) {
       const tech = this.techTree.get(techId);

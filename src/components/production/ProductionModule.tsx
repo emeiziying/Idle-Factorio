@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Box, Typography, Divider } from '@mui/material';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Box, Typography } from '@mui/material';
 import CategoryTabs from '../common/CategoryTabs';
 import ItemList from './ItemList';
 import ItemDetailPanel from './ItemDetailPanel';
@@ -14,6 +14,18 @@ const ProductionModule: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = usePersistentState<string>('production-selected-category', '');
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isItemJump, setIsItemJump] = useState(false); // 标识是否是通过物品跳转切换的分类
+  const selectedItemRef = useRef<Item | null>(null);
+  const selectedCategoryRef = useRef<string>('');
+  
+  // Keep refs in sync with state
+  useEffect(() => {
+    selectedItemRef.current = selectedItem;
+  }, [selectedItem]);
+  
+  useEffect(() => {
+    selectedCategoryRef.current = selectedCategory;
+  }, [selectedCategory]);
 
   // 初始化数据加载
   useEffect(() => {
@@ -24,9 +36,15 @@ const ProductionModule: React.FC = () => {
         // 先加载游戏数据
         await dataService.loadGameData();
         
-        // 加载分类（按推荐顺序）
+        // 加载分类（按推荐顺序），过滤掉没有可用物品的分类
         const allCategories = dataService.getAllCategories();
-        setCategories(allCategories);
+        const categoriesWithAvailableItems = allCategories
+          .filter(category => category.id !== 'technology') // 过滤掉科技分类
+          .filter(category => {
+            const items = dataService.getItemsByCategory(category.id);
+            return items.some(item => dataService.isItemUnlocked(item.id));
+          });
+        setCategories(categoriesWithAvailableItems);
         
         setLoading(false);
       } catch (error) {
@@ -41,7 +59,6 @@ const ProductionModule: React.FC = () => {
   // 设置默认分类
   useEffect(() => {
     if (!loading && categories.length > 0 && (!selectedCategory || !categories.find(cat => cat.id === selectedCategory))) {
-      console.log('Setting default category:', categories[0].id);
       setSelectedCategory(categories[0].id);
     }
   }, [loading, categories, selectedCategory, setSelectedCategory]);
@@ -49,10 +66,18 @@ const ProductionModule: React.FC = () => {
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategory(categoryId);
     setSelectedItem(null); // 切换分类时清空选中的物品
+    setIsItemJump(false); // 手动切换分类，不是物品跳转
   };
 
   const handleItemSelect = (item: Item) => {
+    // 设置选中的物品
     setSelectedItem(item);
+    
+    // 自动切换到该物品所属的分类
+    if (item.category && item.category !== selectedCategory) {
+      setIsItemJump(true); // 标记这是物品跳转引起的分类切换
+      setSelectedCategory(item.category);
+    }
   };
 
   // 获取当前分类的第一个物品作为默认选中项
@@ -80,13 +105,31 @@ const ProductionModule: React.FC = () => {
     }
   }, [selectedCategory, loading]);
 
-  // 当分类变化时，自动选中第一个物品
+  // 当分类变化时，自动选中第一个物品（仅在手动切换分类时）
   useEffect(() => {
-    if (firstItemInCategory && !loading) {
-      console.log('Auto-selecting first item:', firstItemInCategory.name);
+    const currentSelectedItem = selectedItemRef.current;
+    const currentSelectedCategory = selectedCategoryRef.current;
+    
+    // 只有在不是物品跳转的情况下才自动选择第一个物品
+    if (firstItemInCategory && !loading && !isItemJump) {
+      // 额外检查：如果当前选中的物品已经在正确的分类中，就不要覆盖它
+      if (currentSelectedItem && currentSelectedItem.category === currentSelectedCategory) {
+        return;
+      }
       setSelectedItem(firstItemInCategory);
     }
-  }, [firstItemInCategory, loading]);
+  }, [firstItemInCategory, loading, isItemJump]);
+
+  // 单独的useEffect来重置isItemJump标识
+  useEffect(() => {
+    if (isItemJump && selectedItem && selectedItem.category === selectedCategory) {
+      // 延迟重置，确保UI已经稳定
+      const timer = setTimeout(() => {
+        setIsItemJump(false);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isItemJump, selectedItem, selectedCategory]);
 
   if (loading) {
     return (
@@ -135,7 +178,10 @@ const ProductionModule: React.FC = () => {
           overflow: 'hidden'
         }}>
           {selectedItem ? (
-            <ItemDetailPanel item={selectedItem} />
+            <ItemDetailPanel 
+              item={selectedItem} 
+              onItemSelect={handleItemSelect}
+            />
           ) : (
             <Box 
               display="flex" 

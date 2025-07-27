@@ -8,16 +8,18 @@ import {
 } from "@mui/material";
 import type { Item } from "../../types/index";
 import useGameStore from "../../store/gameStore";
-import { storageService } from "../../services/StorageService";
+import { getStorageService } from "../../services/StorageService";
 import FactorioIcon from "../common/FactorioIcon";
 import { DataService } from "../../services/DataService";
 
 interface InventoryManagementCardProps {
   item: Item;
+  onItemSelect?: (item: Item) => void;
 }
 
 const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({
   item,
+  onItemSelect,
 }) => {
   const theme = useTheme();
   const dataService = DataService.getInstance();
@@ -35,6 +37,7 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({
   const isLiquidItem = item.category === "fluids";
 
   // 获取可用的存储类型
+  const storageService = getStorageService();
   const availableStorageTypes = isLiquidItem
     ? storageService.getLiquidStorageTypes()
     : storageService.getSolidStorageTypes();
@@ -70,6 +73,22 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({
     return dataService.getLocalizedItemName(itemId);
   };
 
+  // 处理物品图标点击
+  const handleItemClick = (itemId: string) => {
+    console.log('InventoryManagementCard: Item clicked:', itemId);
+    if (onItemSelect) {
+      const clickedItem = dataService.getItem(itemId);
+      if (clickedItem) {
+        console.log('InventoryManagementCard: Navigating to item:', clickedItem.name, 'Category:', clickedItem.category);
+        onItemSelect(clickedItem);
+      } else {
+        console.warn('InventoryManagementCard: Item not found:', itemId);
+      }
+    } else {
+      console.warn('InventoryManagementCard: onItemSelect callback not provided');
+    }
+  };
+
   return (
     <Box sx={{ mb: 2 }}>
       <Typography variant="subtitle2" sx={{ 
@@ -83,14 +102,20 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({
 
       {/* 存储设备列表 - 纵向排列 */}
       <Box display="flex" flexDirection="column" gap={1}>
-        {availableStorageTypes.map((storageType) => {
-          const storageConfig = storageService.getStorageConfig(storageType);
-          if (!storageConfig) return null;
+        {availableStorageTypes
+          .filter((storageType) => {
+            const storageConfig = storageService.getStorageConfig(storageType);
+            // 只显示已解锁的存储设备
+            return storageConfig && dataService.isItemUnlocked(storageConfig.itemId);
+          })
+          .map((storageType) => {
+            const storageConfig = storageService.getStorageConfig(storageType);
+            if (!storageConfig) return null;
 
-          const storageInventory = getInventoryItem(storageConfig.itemId);
-          const deployedCount = deployedContainers.filter(
-            (c) => c.chestType === storageType
-          ).length;
+            const storageInventory = getInventoryItem(storageConfig.itemId);
+            const deployedCount = deployedContainers.filter(
+              (c) => c.chestType === storageType
+            ).length;
 
           return (
             <Box
@@ -108,11 +133,19 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({
             >
               {/* 左侧：图标和描述 */}
               <Box display="flex" alignItems="center" gap={1}>
-                <FactorioIcon
-                  itemId={storageConfig.itemId}
-                  size={32}
-                  quantity={deployedCount}
-                />
+                <Box 
+                  onClick={() => handleItemClick(storageConfig.itemId)}
+                  sx={{ 
+                    cursor: 'pointer',
+                    '&:hover': { opacity: 0.8 }
+                  }}
+                >
+                  <FactorioIcon
+                    itemId={storageConfig.itemId}
+                    size={32}
+                    quantity={deployedCount}
+                  />
+                </Box>
                 <Box>
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
                     {getLocalizedItemName(storageConfig.itemId)}
@@ -122,7 +155,13 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({
                       ? `液体容量: ${
                           storageConfig.fluidCapacity?.toLocaleString() || 0
                         }`
-                      : `额外堆叠: +${storageConfig.additionalStacks || 0}`}
+                      : (() => {
+                          const itemData = dataService.getItem(item.id);
+                          const stackSize = itemData?.stackSize || 50; // 默认堆叠大小
+                          const additionalStacks = storageConfig.additionalStacks || 0;
+                          const additionalCapacity = additionalStacks * stackSize;
+                          return `额外库存: +${additionalCapacity.toLocaleString()}`;
+                        })()}
                     {deployedCount > 0 && ` (已部署: ${deployedCount})`}
                   </Typography>
                 </Box>

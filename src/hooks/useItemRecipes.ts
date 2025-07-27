@@ -47,7 +47,7 @@ export const useItemRecipes = (item: Item) => {
         
       const producer = filteredRecipes.filter(recipe => {
         const validation = validator.validateRecipe(recipe);
-        return !validation.canCraftManually && validation.category === 'restricted';
+        return !validation.canCraftManually && recipe.producers && recipe.producers.length > 0;
       });
       
       setManualCraftableRecipes(manualCraftable);
@@ -61,6 +61,7 @@ export const useItemRecipes = (item: Item) => {
     usedInRecipes,
     manualCraftableRecipes,
     restrictedRecipes,
-    producerRecipes
+    producerRecipes,
+    hasFacilityRecipes: producerRecipes.length > 0
   };
 }; 

@@ -9,28 +9,45 @@ import FactorioIcon from '../common/FactorioIcon';
 import { DataService } from '../../services/DataService';
 import { RecipeService } from '../../services/RecipeService';
 import useGameStore from '../../store/gameStore';
-import ManualCraftingValidator from '../../utils/manualCraftingValidator';
+import { getValidationReasonText } from '../../utils/manualCraftingValidator';
 import CraftingButtons from './CraftingButtons';
 import RecipeFlowDisplay from './RecipeFlowDisplay';
 
 interface ManualCraftingCardProps {
   item: Item;
   onManualCraft: (itemId: string, quantity: number, recipe?: Recipe) => void;
+  onItemSelect?: (item: Item) => void;
 }
 
-const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualCraft }) => {
+const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualCraft, onItemSelect }) => {
   const { getInventoryItem } = useGameStore();
   const dataService = DataService.getInstance();
-  const validator = ManualCraftingValidator.getInstance();
+  
+  // 使用 RecipeService 的新方法获取手动制作信息
+  const manualCraftingInfo = RecipeService.getManualCraftingInfo(item.id);
 
   const getLocalizedItemName = (itemId: string): string => {
     return dataService.getLocalizedItemName(itemId);
   };
-
-  const itemRecipes = RecipeService.getRecipesThatProduce(item.id);
   
-  // 如果物品没有配方（原材料），显示无需材料
-  if (itemRecipes.length === 0) {
+  // 如果不能手动制作，显示受限提示
+  if (!manualCraftingInfo.canCraft) {
+    return (
+      <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
+        <Alert severity="info" sx={{ mb: 2 }}>
+          <Typography variant="body2">
+            {getValidationReasonText(manualCraftingInfo.validation.reason, 'zh')}
+          </Typography>
+        </Alert>
+        <Typography variant="body2" color="text.secondary">
+          此物品无法手动制作。
+        </Typography>
+      </Box>
+    );
+  }
+
+  // 如果是原材料（无需配方），显示无需材料
+  if (manualCraftingInfo.validation.reason === 'raw_material') {
     return (
       <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
         {/* 简单显示：无需材料的配方 */}
@@ -66,23 +83,9 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
     );
   }
   
-  // 使用验证器检查哪些配方可以手动制作
-  const recipeValidations = itemRecipes.map(recipe => ({
-    recipe,
-    validation: validator.validateRecipe(recipe)
-  }));
-  
-  const manualCraftableRecipes = recipeValidations
-    .filter(({ validation }) => validation.canCraftManually)
-    .map(({ recipe }) => recipe);
-
-  const restrictedRecipes = recipeValidations
-    .filter(({ validation }) => !validation.canCraftManually && validation.category === 'restricted')
-    .map(({ recipe }) => recipe);
-
   // 如果有可手动制作的配方，显示第一个
-  if (manualCraftableRecipes.length > 0) {
-    const recipe = manualCraftableRecipes[0];
+  if (manualCraftingInfo.recipe) {
+    const recipe = manualCraftingInfo.recipe;
     const isMiningRecipe = recipe.flags && recipe.flags.includes('mining');
     const hasInputMaterials = Object.keys(recipe.in).length > 0;
     
@@ -101,6 +104,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
             themeColor="primary.main"
             showTime={true}
             iconSize={32}
+            onItemSelect={onItemSelect}
           />
         </Box>
 
@@ -113,49 +117,11 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
     );
   }
 
-  // 如果没有可手动制作的配方，但有需要特定生产者的配方，显示提示
-  if (restrictedRecipes.length > 0) {
-    const recipe = restrictedRecipes[0];
-    const validation = validator.validateRecipe(recipe);
-    
-    return (
-      <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Alert severity="info" sx={{ mb: 2 }}>
-          <Typography variant="body2">
-            {validation.reason}
-          </Typography>
-          {recipe.producers && recipe.producers.length > 0 && (
-            <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
-              需要设备: {recipe.producers.join(', ')}
-            </Typography>
-          )}
-        </Alert>
-
-        {/* 配方流程显示 */}
-        <Box sx={{ mb: 1.5 }}>
-          <RecipeFlowDisplay 
-            recipe={recipe}
-            themeColor="warning.main"
-            showTime={true}
-            iconSize={32}
-          />
-        </Box>
-
-        {/* 提示：需要在设施模块中生产 */}
-        <Box>
-          <Typography variant="body2" color="text.secondary">
-            请在设施模块中配置相应的生产设备来制作此物品。
-          </Typography>
-        </Box>
-      </Box>
-    );
-  }
-
-  // 如果没有任何配方，显示默认信息
+  // 如果逻辑到达这里，说明有问题，显示默认信息
   return (
     <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
       <Typography variant="body2" color="text.secondary">
-        此物品没有可用的制作配方。
+        无法确定此物品的制作方式。
       </Typography>
     </Box>
   );

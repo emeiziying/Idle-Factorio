@@ -15,15 +15,17 @@ import ManualCraftingCard from '../detail/ManualCraftingCard';
 import RecipeFacilitiesCard from '../detail/RecipeFacilitiesCard';
 import UsageCard from '../detail/UsageCard';
 import InventoryManagementCard from '../detail/InventoryManagementCard';
-import RecipeAnalysis from './RecipeAnalysis';
+// import RecipeAnalysis from './RecipeAnalysis';
 
 interface ItemDetailPanelProps {
   item: Item;
+  onItemSelect?: (item: Item) => void;
 }
 
-const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item }) => {
+const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item, onItemSelect }) => {
   const { 
-    usedInRecipes, 
+    usedInRecipes,
+    hasFacilityRecipes
   } = useItemRecipes(item);
   
   const { handleManualCraft, showMessage, closeMessage } = useCrafting();
@@ -73,26 +75,27 @@ const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item }) => {
           <ManualCraftingCard 
             item={item} 
             onManualCraft={handleManualCraft}
+            onItemSelect={onItemSelect}
           />
         </Box>
 
         {/* 2. 设施列表（显示当前物品配方的设施，带添加移除按钮） */}
-        <RecipeFacilitiesCard item={item} />
+        <RecipeFacilitiesCard item={item} onItemSelect={onItemSelect} />
 
-        {/* 分隔线 */}
-        <Divider sx={{ my: 2 }} />
+        {/* 分隔线 - 只在有设施配方时显示 */}
+        {hasFacilityRecipes && <Divider sx={{ my: 2 }} />}
 
         {/* 用途 */}
-        <UsageCard usedInRecipes={usedInRecipes} />
+        <UsageCard usedInRecipes={usedInRecipes} onItemSelect={onItemSelect} />
 
         {/* 库存管理 */}
-        <InventoryManagementCard item={item} />
+        <InventoryManagementCard item={item} onItemSelect={onItemSelect} />
 
-        {/* 配方分析 */}
-        <RecipeAnalysis 
+        {/* 配方分析 - 暂时移除 */}
+        {/* <RecipeAnalysis 
           itemId={item.id} 
           unlockedItems={[]} // 这里可以传入已解锁的物品列表
-        />
+        /> */}
       </Box>
 
       {/* 消息提示 */}

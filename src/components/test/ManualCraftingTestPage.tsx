@@ -91,23 +91,6 @@ const ManualCraftingTestPage: React.FC = () => {
   const dataService = DataService.getInstance();
   const validator = ManualCraftingValidator.getInstance();
 
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        await dataService.loadGameData();
-        await dataService.loadI18nData('zh');
-        analyzeItems();
-      } catch (error) {
-        console.error('Failed to load game data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, [analyzeItems, dataService]);
-
   const analyzeItems = useCallback(() => {
     const allItems = dataService.getAllItems();
     const craftableItems: CategoryGroup = {};
@@ -177,6 +160,23 @@ const ManualCraftingTestPage: React.FC = () => {
       }
     });
   }, [dataService, validator]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        await dataService.loadGameData();
+        await dataService.loadI18nData('zh');
+        analyzeItems();
+      } catch (error) {
+        console.error('Failed to load game data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [analyzeItems, dataService]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);

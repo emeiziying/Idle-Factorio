@@ -23,7 +23,7 @@ import useGameStore from '../../store/gameStore';
 import FactorioIcon from '../common/FactorioIcon';
 import { DataService } from '../../services/DataService';
 import { getAvailableChestTypes } from '../../data/storageConfigs';
-import { storageService } from '../../services/StorageService';
+import { getStorageService } from '../../services/StorageService';
 
 interface StorageExpansionDialogProps {
   open: boolean;
@@ -46,7 +46,7 @@ const ChestCraftingDialog: React.FC<ChestCraftingDialogProps> = ({
   const { craftChest, canCraftChest, getInventoryItem } = useGameStore();
   const dataService = DataService.getInstance();
 
-  const config = storageService.getStorageConfig(chestType);
+  const config = getStorageService().getStorageConfig(chestType);
   if (!config) return null;
 
   const handleCraft = () => {
@@ -224,7 +224,7 @@ const StorageExpansionDialog: React.FC<StorageExpansionDialogProps> = ({
         
         <DialogContent>
           {getAvailableChestTypes().map((chestType) => {
-            const config = storageService.getStorageConfig(chestType);
+            const config = getStorageService().getStorageConfig(chestType);
             if (!config) return null;
             const chestInventory = getInventoryItem(config.itemId);
             const hasChest = chestInventory.currentAmount > 0;

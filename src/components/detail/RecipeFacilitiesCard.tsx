@@ -3,9 +3,6 @@ import {
   Box,
   Typography,
   Button,
-  Card,
-  CardContent,
-  Chip,
   Alert
 } from '@mui/material';
 import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
@@ -19,16 +16,23 @@ import ManualCraftingValidator from '../../utils/manualCraftingValidator';
 
 interface RecipeFacilitiesCardProps {
   item: Item;
+  onItemSelect?: (item: Item) => void;
 }
 
-const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item }) => {
+const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onItemSelect }) => {
   const { getInventoryItem, facilities, addFacility, removeFacility } = useGameStore();
   const { recipes } = useItemRecipes(item);
   const dataService = DataService.getInstance();
   const validator = ManualCraftingValidator.getInstance();
 
-  const getLocalizedItemName = (itemId: string): string => {
-    return dataService.getLocalizedItemName(itemId);
+  // 处理设施图标点击
+  const handleFacilityClick = (facilityId: string) => {
+    if (onItemSelect) {
+      const facilityItem = dataService.getItem(facilityId);
+      if (facilityItem) {
+        onItemSelect(facilityItem);
+      }
+    }
   };
 
   // 获取需要设施的配方（排除手动合成配方）
@@ -37,12 +41,17 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item }) => 
     return !validation.canCraftManually && recipe.producers && recipe.producers.length > 0;
   });
 
-  // 获取所有可用的设施类型
+  // 获取所有可用且已解锁的设施类型
   const getAllFacilityTypes = (): string[] => {
     const facilityTypes = new Set<string>();
     facilityRecipes.forEach(recipe => {
       if (recipe.producers) {
-        recipe.producers.forEach(producer => facilityTypes.add(producer));
+        recipe.producers.forEach(producer => {
+          // 只添加已解锁的设施
+          if (dataService.isItemUnlocked(producer)) {
+            facilityTypes.add(producer);
+          }
+        });
       }
     });
     return Array.from(facilityTypes);
@@ -53,6 +62,27 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item }) => 
   // 获取已部署的设施数量
   const getDeployedFacilityCount = (facilityType: string): number => {
     return facilities.filter(f => f.facilityId === facilityType).length;
+  };
+
+  // 计算设施的生产效率
+  const calculateProductionRate = (facilityType: string): number => {
+    // 查找该设施能生产的当前物品的配方
+    const relevantRecipe = facilityRecipes.find(recipe => 
+      recipe.producers?.includes(facilityType)
+    );
+    
+    if (!relevantRecipe || !relevantRecipe.time) {
+      return 0;
+    }
+
+    // 假设设施的制作速度为1.0（可以从设施数据中获取）
+    const facilitySpeed = 1.0;
+    
+    // 计算该配方中当前物品的输出量
+    const outputQuantity = relevantRecipe.out[item.id] || 0;
+    
+    // 产能 = 输出量 / 制作时间 * 设施速度
+    return (outputQuantity / relevantRecipe.time) * facilitySpeed;
   };
 
   // 添加设施
@@ -93,16 +123,15 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item }) => 
   }
 
   return (
-    <Card sx={{ mb: 2 }}>
-      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-        <Typography variant="subtitle2" gutterBottom sx={{ 
-          fontSize: '0.9rem',
-          fontWeight: 600,
-          color: 'text.primary',
-          mb: 1.5
-        }}>
-          生产设施
-        </Typography>
+    <Box sx={{ mb: 2 }}>
+      <Typography variant="subtitle2" gutterBottom sx={{ 
+        fontSize: '0.9rem',
+        fontWeight: 600,
+        color: 'text.primary',
+        mb: 1.5
+      }}>
+        生产设施
+      </Typography>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           {facilityTypes.map((facilityType) => {
@@ -110,6 +139,8 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item }) => 
             const deployedCount = getDeployedFacilityCount(facilityType);
             const canAdd = facilityInventory.currentAmount > 0;
             const canRemove = deployedCount > 0;
+            const productionRate = calculateProductionRate(facilityType);
+            const totalProductionRate = productionRate * deployedCount;
 
             return (
               <Box
@@ -118,52 +149,40 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item }) => 
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  p: 1.5,
+                  p: 1,
                   border: '1px solid',
                   borderColor: 'divider',
-                  borderRadius: 1,
-                  bgcolor: 'background.default'
+                  borderRadius: 1
                 }}
               >
-                {/* 左侧：设施信息 */}
-                <Box display="flex" alignItems="center" gap={1.5}>
-                  <FactorioIcon
-                    itemId={facilityType}
-                    size={40}
-                    quantity={deployedCount}
-                  />
-                  <Box>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {getLocalizedItemName(facilityType)}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      库存: {facilityInventory.currentAmount} | 已部署: {deployedCount}
-                    </Typography>
-                    
-                    {/* 显示可以生产的配方 */}
-                    <Box sx={{ mt: 0.5 }}>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                        可生产: 
-                      </Typography>
-                      <Box display="flex" gap={0.5} mt={0.25}>
-                        {facilityRecipes
-                          .filter(recipe => recipe.producers?.includes(facilityType))
-                          .map(recipe => (
-                            <Chip
-                              key={recipe.id}
-                              label={dataService.getLocalizedRecipeName(recipe.id)}
-                              size="small"
-                              sx={{ 
-                                fontSize: '0.6rem', 
-                                height: 20,
-                                '& .MuiChip-label': { px: 0.5 }
-                              }}
-                            />
-                          ))
-                        }
-                      </Box>
-                    </Box>
+                {/* 左侧：设施图标和产能信息 */}
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Box 
+                    onClick={() => handleFacilityClick(facilityType)}
+                    sx={{ 
+                      cursor: 'pointer',
+                      '&:hover': { opacity: 0.8 }
+                    }}
+                  >
+                    <FactorioIcon
+                      itemId={facilityType}
+                      size={40}
+                      quantity={deployedCount}
+                    />
                   </Box>
+                  
+                  {/* 产能信息 */}
+                  {deployedCount > 0 && (
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                        产能: {totalProductionRate.toFixed(1)}/s
+                      </Typography>
+                      <br />
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                        单机: {productionRate.toFixed(2)}/s
+                      </Typography>
+                    </Box>
+                  )}
                 </Box>
 
                 {/* 右侧：添加和移除按钮 */}
@@ -201,15 +220,14 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item }) => 
           })}
         </Box>
 
-        {facilityTypes.some(type => getInventoryItem(type).currentAmount === 0) && (
-          <Alert severity="info" sx={{ mt: 2, fontSize: '0.8rem' }}>
-            <Typography variant="body2">
-              部分设施库存不足，无法部署。请先制作或获取所需的设施。
-            </Typography>
-          </Alert>
-        )}
-      </CardContent>
-    </Card>
+      {facilityTypes.some(type => getInventoryItem(type).currentAmount === 0) && (
+        <Alert severity="info" sx={{ mt: 2, fontSize: '0.8rem' }}>
+          <Typography variant="body2">
+            部分设施库存不足，无法部署。请先制作或获取所需的设施。
+          </Typography>
+        </Alert>
+      )}
+    </Box>
   );
 };
 

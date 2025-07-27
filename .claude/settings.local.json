@@ -35,7 +35,13 @@
       "Bash(npm run lint)",
       "mcp__ide__getDiagnostics",
       "Bash(npm run lint:*)",
-      "mcp__browser-tools__takeScreenshot"
+      "mcp__browser-tools__takeScreenshot",
+      "mcp__browser-tools__getConsoleLogs",
+      "mcp__browser-tools__getNetworkLogs",
+      "mcp__browser-tools__runDebuggerMode",
+      "mcp__browser-tools__wipeLogs",
+      "mcp__browser-tools__getConsoleErrors",
+      "mcp__browser-tools__getNetworkErrors"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -83,5 +83,5 @@ export class StorageService {
   }
 }
 
-// 导出单例实例
-export const storageService = StorageService.getInstance(); 
+// 导出单例实例获取函数，避免循环依赖
+export const getStorageService = () => StorageService.getInstance(); 

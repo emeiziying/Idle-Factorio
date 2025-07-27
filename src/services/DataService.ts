@@ -3,6 +3,7 @@
 import type { GameData, Item, Recipe, Category } from '../types/index';
 import { UserProgressService } from './UserProgressService';
 import { RecipeService } from './RecipeService';
+import { TechnologyService } from './TechnologyService';
 
 // 异步导入游戏数据
 import gameData from '../data/spa/data.json';
@@ -213,7 +214,7 @@ export class DataService {
     if (!this.gameData) return [];
     
     return this.gameData.items.filter(item => 
-      this.userProgressService.isItemUnlocked(item.id)
+      this.isItemUnlocked(item.id)
     );
   }
 
@@ -222,7 +223,7 @@ export class DataService {
     if (!this.gameData) return [];
     
     return this.gameData.items.filter(item => 
-      item.category === categoryId && this.userProgressService.isItemUnlocked(item.id)
+      item.category === categoryId && this.isItemUnlocked(item.id)
     );
   }
 
@@ -260,9 +261,88 @@ export class DataService {
     return this.gameData.categories.find(cat => cat.id === categoryId);
   }
 
-  // 检查物品是否解锁
+  // 检查物品是否解锁 - 基于游戏逻辑判断
   isItemUnlocked(itemId: string): boolean {
-    return this.userProgressService.isItemUnlocked(itemId);
+    return this.isItemUnlockedInternal(itemId, new Set());
+  }
+
+  // 内部递归检查方法，带循环检测
+  private isItemUnlockedInternal(itemId: string, visiting: Set<string>): boolean {
+    // 防止循环依赖
+    if (visiting.has(itemId)) {
+      return false;
+    }
+    visiting.add(itemId);
+
+    try {
+      const techService = TechnologyService.getInstance();
+
+      // 1. 检查是否为科技直接解锁的物品（设备、工具等）
+      if (techService.isItemUnlocked(itemId)) {
+        return true;
+      }
+
+      // 2. 检查是否为原材料（无配方的物品，可直接采集）
+      const recipes = RecipeService.getRecipesThatProduce(itemId);
+      if (recipes.length === 0) {
+        return true; // 原材料始终可用
+      }
+
+      // 全局过滤：只允许Nauvis星球的配方（暂时限制）
+      const nauvisRecipes = recipes.filter(recipe => 
+        !recipe.locations || 
+        recipe.locations.length === 0 || 
+        recipe.locations.includes('nauvis')
+      );
+
+      // 3. 优先检查mining配方（采矿配方始终可用）
+      for (const recipe of nauvisRecipes) {
+        if (recipe.flags && recipe.flags.includes('mining')) {
+          return true; // Nauvis星球的采矿配方
+        }
+      }
+
+      // 4. 检查是否有可以手动制作的基础配方（无locked标记且材料简单）
+      for (const recipe of nauvisRecipes) {
+        // 跳过有locked标记的配方（如科技包等需要科技解锁的配方）
+        if (recipe.flags && recipe.flags.includes('locked')) {
+          continue;
+        }
+
+        // 检查是否所有原材料都可用
+        if (recipe.in) {
+          const allIngredientsAvailable = Object.keys(recipe.in).every(ingredientId => 
+            this.isItemUnlockedInternal(ingredientId, visiting)
+          );
+
+          if (allIngredientsAvailable) {
+            return true; // 可以手动制作
+          }
+        }
+      }
+
+      // 5. 检查是否有任何配方被解锁且可用
+      for (const recipe of nauvisRecipes) {
+        // 检查配方是否通过科技解锁
+        if (techService.isRecipeUnlocked(recipe.id)) {
+          // 检查配方的生产设备是否可用
+          if (!recipe.producers || recipe.producers.length === 0) {
+            return true; // 手动制作或无需设备
+          }
+
+          // 检查是否有任何生产设备被解锁
+          for (const producerId of recipe.producers) {
+            if (this.isItemUnlockedInternal(producerId, visiting)) {
+              return true; // 至少有一个生产设备可用
+            }
+          }
+        }
+      }
+
+      return false;
+    } finally {
+      visiting.delete(itemId);
+    }
   }
 
   // 解锁物品
@@ -275,7 +355,7 @@ export class DataService {
     if (!this.gameData) return new Map();
     
     const items = Object.values(this.gameData.items).filter(item => 
-      item.category === categoryId && this.userProgressService.isItemUnlocked(item.id)
+      item.category === categoryId && this.isItemUnlocked(item.id)
     );
     
     const itemsByRow = new Map<number, Item[]>();
@@ -307,7 +387,19 @@ export class DataService {
         0: '原材料',
         1: '基础材料', 
         2: '组件',
-        3: '科技包'
+        3: '科技包',
+        4: '高级组件',
+        5: '特殊材料',
+        6: '生产模块',
+        7: '军用装备',
+        8: '高级材料',
+        9: '核能材料',
+        10: '太空材料',
+        11: '科技包', // automation-science-pack在row 11
+        12: '高级科技包',
+        13: '特殊科技包',
+        14: '终极材料',
+        15: '扩展材料'
       },
       'production': {
         0: '工具',

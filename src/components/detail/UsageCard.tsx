@@ -1,9 +1,7 @@
 import React from 'react';
 import {
   Typography,
-  Box,
-  Chip,
-  useTheme
+  Box
 } from '@mui/material';
 import type { Recipe } from '../../types/index';
 import FactorioIcon from '../common/FactorioIcon';
@@ -11,14 +9,26 @@ import { DataService } from '../../services/DataService';
 
 interface UsageCardProps {
   usedInRecipes: Recipe[];
+  onItemSelect?: (item: import('../../types/index').Item) => void;
 }
 
-const UsageCard: React.FC<UsageCardProps> = ({ usedInRecipes }) => {
-  const theme = useTheme();
+const UsageCard: React.FC<UsageCardProps> = ({ usedInRecipes, onItemSelect }) => {
   const dataService = DataService.getInstance();
 
-  const getLocalizedItemName = (itemId: string): string => {
-    return dataService.getLocalizedItemName(itemId);
+  // 处理物品点击
+  const handleItemClick = (itemId: string) => {
+    console.log('UsageCard: Item clicked:', itemId);
+    if (onItemSelect) {
+      const clickedItem = dataService.getItem(itemId);
+      if (clickedItem) {
+        console.log('UsageCard: Navigating to item:', clickedItem.name, 'Category:', clickedItem.category);
+        onItemSelect(clickedItem);
+      } else {
+        console.warn('UsageCard: Item not found:', itemId);
+      }
+    } else {
+      console.warn('UsageCard: onItemSelect callback not provided');
+    }
   };
 
   if (usedInRecipes.length === 0) {
@@ -37,19 +47,30 @@ const UsageCard: React.FC<UsageCardProps> = ({ usedInRecipes }) => {
       </Typography>
       <Box display="flex" flexWrap="wrap" gap={0.5}>
         {usedInRecipes.map((recipe) => {
-          const outputItemId = Object.keys(recipe.out)[0];
+          // 获取配方的主要输出物品（数量最多的输出物品）
+          const outputEntries = Object.entries(recipe.out);
+          const mainOutputEntry = outputEntries.reduce((max, current) => 
+            current[1] > max[1] ? current : max
+          );
+          const outputItemId = mainOutputEntry[0];
+          
           return (
-            <Chip
+            <Box
               key={recipe.id}
-              icon={<FactorioIcon itemId={outputItemId} size={16} />}
-              label={getLocalizedItemName(outputItemId)}
-              size="small"
-              variant="outlined"
+              onClick={() => handleItemClick(outputItemId)}
               sx={{
-                borderColor: 'divider',
-                bgcolor: 'background.paper'
+                cursor: onItemSelect ? 'pointer' : 'default',
+                borderRadius: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                '&:hover': onItemSelect ? { 
+                  backgroundColor: 'action.hover'
+                } : {}
               }}
-            />
+            >
+              <FactorioIcon itemId={outputItemId} size={32} />
+            </Box>
           );
         })}
       </Box>
