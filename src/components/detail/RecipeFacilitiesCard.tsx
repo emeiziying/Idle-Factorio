@@ -103,8 +103,8 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
 
     addFacility(newFacility);
     
-    // 这里应该调用减少库存的方法，但目前gameStore没有这个方法
-    // 可能需要在实际项目中添加
+    // 扣除库存中的设施
+    useGameStore.getState().updateInventory(facilityType, -1);
   };
 
   // 移除设施
@@ -113,8 +113,8 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
     if (facilityToRemove) {
       removeFacility(facilityToRemove.id);
       
-      // 这里应该将设施返回到库存，但目前gameStore没有这个方法
-      // 可能需要在实际项目中添加
+      // 将设施返回到库存
+      useGameStore.getState().updateInventory(facilityType, 1);
     }
   };
 

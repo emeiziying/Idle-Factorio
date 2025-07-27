@@ -65,6 +65,7 @@ interface GameState {
   updateFacility: (facilityId: string, updates: Partial<FacilityInstance>) => void;
   removeFacility: (facilityId: string) => void;
   incrementGameTime: (deltaTime: number) => void;
+  setGameTime: (time: number) => void;
   clearGameData: () => void;
   
   // 存储容器相关 Actions
@@ -181,9 +182,19 @@ const useGameStore = create<GameState>()(
         const baseStacks = 1; // 默认1个堆叠
         const totalStacks = baseStacks + additionalStacks;
         
+        // 设置一些测试用的初始库存
+        let initialAmount = 0;
+        if (itemId === 'iron-ore') {
+          initialAmount = 1000; // 给1000个铁矿石用于测试
+        } else if (itemId === 'stone-furnace') {
+          initialAmount = 10; // 给10个石炉用于测试
+        } else if (itemId === 'stone') {
+          initialAmount = 100; // 给100个石头用于制作石炉
+        }
+        
         return {
           itemId,
-          currentAmount: 0,
+          currentAmount: initialAmount,
           stackSize,
           baseStacks,
           additionalStacks,
@@ -309,6 +320,12 @@ const useGameStore = create<GameState>()(
       incrementGameTime: (deltaTime: number) => {
         set((state) => ({
           gameTime: state.gameTime + deltaTime
+        }));
+      },
+
+      setGameTime: (time: number) => {
+        set(() => ({
+          gameTime: time
         }));
       },
 

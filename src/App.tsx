@@ -27,6 +27,7 @@ import ProductionModule from './components/production/ProductionModule';
 import FacilitiesModule from './components/facilities/FacilitiesModule';
 import TechnologyModule from './components/technology/TechnologyModule';
 import ManualCraftingTestPage from './components/test/ManualCraftingTestPage';
+import { useGameLoop } from './hooks/useGameLoop';
 
 import { DataService } from './services/DataService';
 import CraftingEngine from './utils/craftingEngine';
@@ -41,6 +42,9 @@ const App: React.FC = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const isMobile = useIsMobile();
   const { clearGameData } = useGameStore();
+  
+  // 启动游戏循环
+  useGameLoop();
   
   // 使用ref来跟踪初始化状态，避免重复初始化
   const initializationRef = useRef<{
