@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is **异星工厂 v2** (Factorio v2) - a React-based idle factory management game inspired by Factorio. The application is built with modern React architecture and implements core game mechanics for production management.
 
 **Current State**: Active development - Core modules implemented  
-**Tech Stack**: React 19.1.0 + TypeScript + Vite + Material-UI + Zustand  
+**Tech Stack**: React 18.3.1 + TypeScript + Vite + Material-UI + Zustand  
 **Package Manager**: npm (both package-lock.json and pnpm-lock.yaml present - use npm consistently)
 
 ## Development Commands
@@ -39,6 +39,8 @@ The application follows a service-oriented architecture with clear separation of
 - **DataService**: Singleton pattern for game data loading from `/public/data/spa/`, inventory management
 - **RecipeService**: Static class for recipe analysis, efficiency calculations, and dependency chains
 - **UserProgressService**: Item unlock status management (implemented)
+- **StorageService**: Storage configuration management with capacity and fluid handling
+- **TechnologyService**: Technology tree management and research progression
 - **GameStore (Zustand)**: Reactive state management with localStorage persistence
 
 ### Phase 1 Implementation Status
@@ -281,9 +283,10 @@ const favoriteRecipes = useGameStore(state => state.favoriteRecipes); // Set<str
 ## Critical Development Patterns
 
 ### ESLint Configuration
-The project uses a modern ESLint setup with TypeScript support:
-- Files: `eslint.config.js` with `typescript-eslint` integration
-- Rules: React hooks, React refresh, and TypeScript recommended rules
+The project uses ESLint 9 with modern flat config:
+- Config: `eslint.config.js` with TypeScript ESLint v8+ integration
+- Plugins: React hooks, React refresh, TypeScript recommended rules
+- Target: Browser environment with ES2020
 - **Always run `npm run lint` before committing changes**
 
 ### TypeScript Configuration
@@ -309,3 +312,27 @@ const item = DataService.getInstance().getItem(itemId);
 // Incorrect - don't implement business logic in components
 const recipes = gameData.recipes.filter(r => r.out[itemId]);
 ```
+
+## Browser Debugging & UI Design Guidelines
+
+### Browser Tools Integration
+The project includes specialized browser debugging support via Cursor rules:
+- **UI Inspection**: Use `takeScreenshot()`, `getConsoleErrors()`, `getConsoleLogs()` for debugging
+- **Performance Monitoring**: `runPerformanceAudit()`, `runAccessibilityAudit()` for optimization
+- **Production Module Debugging**: Specific patterns for checking CategoryTabs, ItemList, ItemDetailPanel, and CraftingQueue components
+
+### UI Design System Compliance
+Following established design patterns from `.cursor/rules/ui-design-system.mdc`:
+- **Flat Design**: Avoid nested Card components, use Box with border instead of Divider
+- **Color System**: Orange primary (#ff6b35), blue secondary (#2196f3), dark theme backgrounds
+- **Spacing**: Use 8px-based spacing system (1, 1.5, 2, 3 units)
+- **Icons**: Standardize FactorioIcon to 24px default size
+- **Mobile-First**: 44px minimum touch targets, responsive breakpoints
+
+### Component Debugging Checklist
+For production module issues:
+1. Check CategoryTabs layout and selection state
+2. Verify ItemList categorization and selection 
+3. Validate ItemDetailPanel layout and content
+4. Test CraftingQueue display and interactions
+5. Monitor console for initialization errors (avoid double-initialization)

@@ -1,5 +1,5 @@
-import React, { useMemo, useCallback } from 'react';
-import { FixedSizeGrid as Grid } from 'react-window';
+import React, { useMemo, useCallback, useRef } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Box, useTheme } from '@mui/material';
 import TechGridCard from './TechGridCard';
 import type { Technology, TechStatus } from '../../types/technology';
@@ -68,23 +68,37 @@ const TechVirtualizedGrid: React.FC<TechVirtualizedGridProps> = ({
     return index < technologies.length ? technologies[index] : null;
   }, [technologies, gridConfig.itemsPerRow]);
 
-  // 渲染单个网格项
-  const renderGridItem = useCallback(({ columnIndex, rowIndex, style }: {
-    columnIndex: number;
-    rowIndex: number;
-    style: React.CSSProperties;
-  }) => {
-    const tech = getTechnologyAtPosition(rowIndex, columnIndex);
-    
-    if (!tech) {
-      return <div style={style} />;
-    }
+  // 容器引用
+  const parentRef = useRef<HTMLDivElement>(null);
 
-    const state = techStates.get(tech.id) || { status: 'locked' as TechStatus };
-    
-    return (
-      <div style={style}>
-        <Box sx={{ p: gridConfig.gap / 2 }}>
+  // 创建虚拟化器
+  const rowVirtualizer = useVirtualizer({
+    count: gridConfig.totalRows,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => gridConfig.itemHeight,
+    overscan: 2,
+  });
+
+  // 渲染单行中的所有科技卡片
+  const renderRow = useCallback((rowIndex: number) => {
+    const items = [];
+    for (let colIndex = 0; colIndex < gridConfig.itemsPerRow; colIndex++) {
+      const tech = getTechnologyAtPosition(rowIndex, colIndex);
+      if (!tech) break;
+
+      const state = techStates.get(tech.id) || { status: 'locked' as TechStatus };
+      
+      items.push(
+        <Box
+          key={`${rowIndex}-${colIndex}`}
+          sx={{
+            display: 'inline-block',
+            width: GRID_CONFIG.itemWidth,
+            height: GRID_CONFIG.itemHeight,
+            p: gridConfig.gap / 2,
+            verticalAlign: 'top'
+          }}
+        >
           <TechGridCard
             technology={tech}
             status={state.status}
@@ -93,9 +107,10 @@ const TechVirtualizedGrid: React.FC<TechVirtualizedGridProps> = ({
             onClick={onTechClick}
           />
         </Box>
-      </div>
-    );
-  }, [getTechnologyAtPosition, techStates, queuedTechIds, onTechClick, gridConfig.gap]);
+      );
+    }
+    return items;
+  }, [getTechnologyAtPosition, techStates, queuedTechIds, onTechClick, gridConfig]);
 
   // 如果没有科技，显示空状态
   if (technologies.length === 0) {
@@ -117,17 +132,38 @@ const TechVirtualizedGrid: React.FC<TechVirtualizedGridProps> = ({
   }
 
   return (
-    <Box sx={{ height, width }}>
-      <Grid
-        columnCount={gridConfig.itemsPerRow}
-        columnWidth={gridConfig.itemWidth}
-        height={height}
-        rowCount={gridConfig.totalRows}
-        rowHeight={gridConfig.itemHeight}
-        width={width}
+    <Box
+      ref={parentRef}
+      sx={{
+        height,
+        width,
+        overflow: 'auto'
+      }}
+    >
+      <div
+        style={{
+          height: rowVirtualizer.getTotalSize(),
+          width: '100%',
+          position: 'relative'
+        }}
       >
-        {renderGridItem}
-      </Grid>
+        {rowVirtualizer.getVirtualItems().map(virtualRow => (
+          <div
+            key={virtualRow.index}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: virtualRow.size,
+              transform: `translateY(${virtualRow.start}px)`,
+              textAlign: 'left'
+            }}
+          >
+            {renderRow(virtualRow.index)}
+          </div>
+        ))}
+      </div>
     </Box>
   );
 };

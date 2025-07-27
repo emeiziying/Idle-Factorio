@@ -434,6 +434,15 @@ export class ManualCraftingValidator {
       };
     }
 
+    // 腐败转化器 - 生物过程，不能手动制作
+    if (producers.includes('spoilage')) {
+      return {
+        canCraftManually: false,
+        reason: ValidationReason.SPECIAL_EQUIPMENT,
+        category: ValidationCategory.RESTRICTED
+      };
+    }
+
     // 装配机配方 - 根据Factorio规则，基础物品可以手动制作
     // 这里不做限制，让后续逻辑处理
     return {

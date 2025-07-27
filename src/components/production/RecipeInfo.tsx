@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { Recipe } from '../../types';
 import useGameStore from '../../store/gameStore';
 import { DataService } from '../../services/DataService';
-import { getRecipeTypeDescription } from '../../utils/customRecipeUtils';
+// import { getRecipeTypeDescription } from '../../utils/customRecipeUtils'; // 已删除
 
 interface RecipeInfoProps {
   itemId: string;
@@ -100,7 +100,7 @@ const RecipeInfo: React.FC<RecipeInfoProps> = ({ itemId, onRecipeSelect }) => {
                       {dataService.getLocalizedRecipeName(recipe.id)}
                     </span>
                     <span className="text-xs px-2 py-1 bg-gray-100 rounded">
-                      {getRecipeTypeDescription(recipe)}
+                      {recipe.category || '制造'}
                     </span>
                   </div>
                   <div className="text-xs text-gray-600 mt-1">

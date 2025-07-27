@@ -157,7 +157,7 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({
                         }`
                       : (() => {
                           const itemData = dataService.getItem(item.id);
-                          const stackSize = itemData?.stackSize || 50; // 默认堆叠大小
+                          const stackSize = itemData?.stack || 50; // 默认堆叠大小
                           const additionalStacks = storageConfig.additionalStacks || 0;
                           const additionalCapacity = additionalStacks * stackSize;
                           return `额外库存: +${additionalCapacity.toLocaleString()}`;
