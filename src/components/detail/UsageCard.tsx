@@ -17,11 +17,11 @@ const UsageCard: React.FC<UsageCardProps> = ({ usedInRecipes, onItemSelect }) =>
 
   // 处理物品点击
   const handleItemClick = (itemId: string) => {
-    console.log('UsageCard: Item clicked:', itemId);
+    // Navigate to item detail
     if (onItemSelect) {
       const clickedItem = dataService.getItem(itemId);
       if (clickedItem) {
-        console.log('UsageCard: Navigating to item:', clickedItem.name, 'Category:', clickedItem.category);
+        // Navigate to clicked item
         onItemSelect(clickedItem);
       } else {
         console.warn('UsageCard: Item not found:', itemId);

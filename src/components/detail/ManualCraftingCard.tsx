@@ -2,16 +2,18 @@ import React from 'react';
 import {
   Box,
   Typography,
-  Alert
+  Alert,
+  Chip
 } from '@mui/material';
 import type { Item, Recipe } from '../../types/index';
-import FactorioIcon from '../common/FactorioIcon';
-import { DataService } from '../../services/DataService';
 import { RecipeService } from '../../services/RecipeService';
+import { DataService } from '../../services/DataService';
 import useGameStore from '../../store/gameStore';
 import { getValidationReasonText } from '../../utils/manualCraftingValidator';
 import CraftingButtons from './CraftingButtons';
 import RecipeFlowDisplay from './RecipeFlowDisplay';
+import FactorioIcon from '../common/FactorioIcon';
+// import ChainCraftingDialog from '../common/ChainCraftingDialog';
 
 interface ManualCraftingCardProps {
   item: Item;
@@ -25,10 +27,6 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
   
   // 使用 RecipeService 的新方法获取手动制作信息
   const manualCraftingInfo = RecipeService.getManualCraftingInfo(item.id);
-
-  const getLocalizedItemName = (itemId: string): string => {
-    return dataService.getLocalizedItemName(itemId);
-  };
   
   // 如果不能手动制作，显示受限提示
   if (!manualCraftingInfo.canCraft) {
@@ -71,7 +69,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
           </Typography>
           <FactorioIcon itemId={item.id} size={32} />
           <Typography variant="body2">
-            {getLocalizedItemName(item.id)} x1
+            {dataService.getLocalizedItemName(item.id)} x1
           </Typography>
         </Box>
 
@@ -93,12 +91,23 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
     const manualEfficiency = 0.5; // 手动效率 50%
     const actualTime = recipe.time / manualEfficiency;
     
-    // 采矿配方或无输入材料的配方总是可以制作
-    const canCraft = !hasInputMaterials || isMiningRecipe || Object.entries(recipe.in).every(([itemId, required]) => {
+    // 检查材料可用性
+    const materialStatus = hasInputMaterials ? Object.entries(recipe.in).map(([itemId, required]) => {
       const available = getInventoryItem(itemId).currentAmount;
-      return available >= required;
-    });
-
+      return {
+        itemId,
+        required,
+        available,
+        sufficient: available >= required
+      };
+    }) : [];
+    
+    // 采矿配方或无输入材料的配方总是可以制作
+    const canCraft = !hasInputMaterials || isMiningRecipe || materialStatus.every(m => m.sufficient);
+    
+    // 查找缺少的材料
+    const missingMaterials = materialStatus.filter(m => !m.sufficient);
+    
     return (
       <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
         {/* 配方流程显示 */}
@@ -113,10 +122,36 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
           />
         </Box>
 
+        {/* 材料不足提示 */}
+        {missingMaterials.length > 0 && (
+          <Box sx={{ mb: 1.5 }}>
+            <Alert severity="warning" sx={{ py: 1 }}>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                材料不足：
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {missingMaterials.map(({ itemId, required, available }) => (
+                  <Chip
+                    key={itemId}
+                    size="small"
+                    avatar={<FactorioIcon itemId={itemId} size={16} />}
+                    label={`${dataService.getLocalizedItemName(itemId)}: ${available}/${required}`}
+                    color="warning"
+                    variant="outlined"
+                    onClick={() => onItemSelect && onItemSelect({ id: itemId } as Item)}
+                    sx={{ cursor: onItemSelect ? 'pointer' : 'default' }}
+                  />
+                ))}
+              </Box>
+            </Alert>
+          </Box>
+        )}
+
         {/* 制作按钮 */}
         <CraftingButtons 
           onCraft={(quantity) => onManualCraft(item.id, quantity, recipe)}
-          disabled={!canCraft}
+          disabled={!canCraft && missingMaterials.length === 0}  // 只有在无材料需求或其他错误时才禁用
+          variant={!canCraft && missingMaterials.length > 0 ? 'outlined' : 'contained'}  // 材料不足时使用轮廓样式
         />
       </Box>
     );

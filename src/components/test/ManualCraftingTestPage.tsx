@@ -546,6 +546,7 @@ const ManualCraftingTestPage: React.FC = () => {
           </Alert>
         </Paper>
       </TabPanel>
+
     </Container>
   );
 };

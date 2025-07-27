@@ -223,6 +223,7 @@ const CraftingQueue: React.FC<CraftingQueueProps> = ({
     '& .MuiDialog-paper': {
       margin: 0,
       maxHeight: '70vh',
+      minHeight: isMobile ? '350px' : '400px', // 移动端稍小的最小高度
       width: '100%',
       maxWidth: isMobile ? '100vw' : '600px',
       borderRadius: isMobile ? '16px 16px 0 0' : '16px',
@@ -254,9 +255,9 @@ const CraftingQueue: React.FC<CraftingQueueProps> = ({
         alignItems: 'center',
         pb: 1
       }}>
-        <Typography variant="h6">
+        <Box component="span">
           制作队列 ({craftingQueue.length}/{QUEUE_CAPACITY})
-        </Typography>
+        </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
           {craftingQueue.length > 1 && (
             <Button
@@ -281,17 +282,21 @@ const CraftingQueue: React.FC<CraftingQueueProps> = ({
         </Box>
       </DialogTitle>
       
-      <DialogContent sx={{ px: 2, pb: 2 }}>
+      <DialogContent sx={{ px: 2, pb: 2, minHeight: 'calc(100% - 80px)' }}>
         {craftingQueue.length === 0 ? (
           <Box 
             display="flex" 
+            flexDirection="column"
             justifyContent="center" 
             alignItems="center" 
-            height="100px"
+            minHeight="250px"
             color="text.secondary"
           >
-            <Typography variant="body2">
+            <Typography variant="body2" sx={{ mb: 1 }}>
               制作队列为空
+            </Typography>
+            <Typography variant="caption" sx={{ textAlign: 'center', maxWidth: '300px' }}>
+              添加手动制作任务或启用自动化设备来开始生产
             </Typography>
           </Box>
         ) : (

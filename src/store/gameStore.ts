@@ -779,7 +779,7 @@ const useGameStore = create<GameState>()(
                 unlockedTechs: new Set([...state.unlockedTechs, recipe.id])
               }));
               
-              console.log(`Research unlocked by trigger: ${recipe.name} (${recipe.id})`);
+              // Research unlocked by trigger
               
               // 可以在这里添加通知系统
               // TODO: 添加科技解锁通知
@@ -813,7 +813,7 @@ const useGameStore = create<GameState>()(
           techCategories: [],
         }));
         
-        console.log('Game data cleared successfully');
+        // Game data cleared
       }
     }),
     {

@@ -76,7 +76,7 @@ const App: React.FC = () => {
           // 启动制作引擎
           CraftingEngine.getInstance().start();
 
-          console.log('App initialized successfully');
+          // App initialized successfully
           
           // 标记为已初始化
           initializationRef.current.isInitialized = true;

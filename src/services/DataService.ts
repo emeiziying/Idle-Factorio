@@ -67,10 +67,10 @@ export class DataService {
       // 初始化配方服务
       if (this.gameData.recipes) {
         RecipeService.initializeRecipes(this.gameData.recipes);
-        console.log('RecipeService initialized with game data');
+        // RecipeService initialized
       }
       
-      console.log('Game data loaded successfully');
+      // Game data loaded successfully
       return this.gameData;
     } catch (error) {
       console.error('Error loading game data:', error);
@@ -107,7 +107,7 @@ export class DataService {
       // 使用动态import替代fetch
       const i18nModule = await import(`../data/spa/i18n/${locale}.json`);
       this.i18nData = i18nModule.default as I18nData;
-      console.log('I18n data loaded successfully');
+      // I18n data loaded successfully
       return this.i18nData;
     } catch (error) {
       console.error('Error loading i18n data:', error);

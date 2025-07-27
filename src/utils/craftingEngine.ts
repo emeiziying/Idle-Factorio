@@ -64,10 +64,10 @@ class CraftingEngine {
 
     try {
       this.intervalId = window.setInterval(() => {
-        // this.updateCraftingQueue();
+        this.updateCraftingQueue();
       }, this.UPDATE_INTERVAL);
 
-      console.log('Crafting engine started');
+      // Crafting engine started
     } finally {
       this.isStarting = false;
     }
@@ -78,7 +78,7 @@ class CraftingEngine {
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
       this.intervalId = null;
-      console.log('Crafting engine stopped');
+      // Crafting engine stopped
     }
   }
 
@@ -251,31 +251,63 @@ class CraftingEngine {
   private completeCraft(task: CraftingTask, recipe: Recipe): void {
     const { updateInventory, completeCraftingTask } = useGameStore.getState();
 
-    // 计算生产力加成后的产出
+    // 1. 先消耗输入材料
+    if (recipe.in) {
+      Object.entries(recipe.in).forEach(([itemId, required]) => {
+        const totalRequired = (required as number) * task.quantity;
+        updateInventory(itemId, -totalRequired);
+      });
+    }
+
+    // 2. 计算生产力加成后的产出
     const productivityBonus = this.calculateProductivityBonus(recipe);
     const bonusMultiplier = 1 + productivityBonus;
 
-    // 添加产品到库存（包含生产力加成）
+    // 3. 添加产品到库存（包含生产力加成）
     Object.entries(recipe.out).forEach(([itemId, quantity]) => {
       const baseQuantity = (quantity as number) * task.quantity;
       const bonusQuantity = Math.floor(baseQuantity * bonusMultiplier);
       updateInventory(itemId, bonusQuantity);
     });
 
-    // 完成任务
+    // 4. 完成任务
     completeCraftingTask(task.id);
 
-    console.log(`Completed crafting: ${recipe.name} x${task.quantity} (Productivity: +${(productivityBonus * 100).toFixed(1)}%)`);
+    // Completed crafting task
   }
 
   // 完成手动合成
   private completeManualCraft(task: CraftingTask): void {
-    const { completeCraftingTask } = useGameStore.getState();
+    const { updateInventory, completeCraftingTask } = useGameStore.getState();
 
-    // 完成任务（completeCraftingTask会自动调用updateInventory）
+    // 获取手动合成的配方信息
+    const itemId = task.itemId;
+    const recipes = RecipeService.getRecipesThatProduce(itemId);
+    
+    // 找到合适的配方（优先mining配方）
+    let selectedRecipe = null;
+    if (recipes.length > 0) {
+      const miningRecipe = recipes.find(r => r.flags?.includes('mining'));
+      if (miningRecipe) {
+        selectedRecipe = miningRecipe;
+      } else {
+        const nonRecyclingRecipe = recipes.find(r => !r.flags?.includes('recycling'));
+        selectedRecipe = nonRecyclingRecipe || recipes[0];
+      }
+    }
+
+    // 如果有配方且有输入材料，则消耗材料
+    if (selectedRecipe && selectedRecipe.in) {
+      Object.entries(selectedRecipe.in).forEach(([inputItemId, required]) => {
+        const totalRequired = (required as number) * task.quantity;
+        updateInventory(inputItemId, -totalRequired);
+      });
+    }
+
+    // 完成任务（completeCraftingTask会自动调用updateInventory添加产品）
     completeCraftingTask(task.id);
 
-    console.log(`Completed manual crafting: ${task.itemId} x${task.quantity}`);
+    // Completed manual crafting task
   }
 }
 

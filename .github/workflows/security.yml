@@ -1,0 +1,41 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, develop, next ]
+  pull_request:
+    branches: [ main, develop, next ]
+  schedule:
+    # 每天凌晨 2 点运行安全检查
+    - cron: '0 2 * * *'
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 8
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'pnpm'
+        
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+      
+    - name: Run npm audit
+      run: pnpm audit --audit-level moderate
+      
+    - name: Run dependency check
+      run: |
+        # 检查是否有已知的安全漏洞
+        npx audit-ci --config audit-ci.json || echo "⚠️ 发现安全漏洞，请检查依赖项"
+      continue-on-error: true 

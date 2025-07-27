@@ -21,6 +21,7 @@ const ProductionModule: React.FC = () => {
   const [showCraftingQueue, setShowCraftingQueue] = useState(false); // 控制制作队列显示
   const selectedItemRef = useRef<Item | null>(null);
   const selectedCategoryRef = useRef<string>('');
+  const loadingRef = useRef<boolean>(true);
   
   // 获取制作队列状态
   const craftingQueue = useGameStore((state) => state.craftingQueue);
@@ -34,6 +35,10 @@ const ProductionModule: React.FC = () => {
   useEffect(() => {
     selectedCategoryRef.current = selectedCategory;
   }, [selectedCategory]);
+
+  useEffect(() => {
+    loadingRef.current = loading;
+  }, [loading]);
 
   // 初始化数据加载 - 包含热重载时的数据重新加载
   useEffect(() => {
@@ -54,14 +59,18 @@ const ProductionModule: React.FC = () => {
         
         // 加载分类（按推荐顺序），过滤掉没有可用物品的分类
         const allCategories = dataService.getAllCategories();
+        // Categories loaded
+        
         const categoriesWithAvailableItems = allCategories
           .filter(category => category.id !== 'technology') // 过滤掉科技分类
           .filter(category => {
             const items = dataService.getItemsByCategory(category.id);
             return items.some(item => dataService.isItemUnlocked(item.id));
           });
+                  // Available categories filtered
         setCategories(categoriesWithAvailableItems);
         
+                  // Loading complete
         setLoading(false);
       } catch (error) {
         console.error('Failed to load production data:', error);
@@ -74,14 +83,14 @@ const ProductionModule: React.FC = () => {
     // 热重载检测：监听DataService的数据变化
     const checkDataInterval = setInterval(() => {
       const dataService = DataService.getInstance();
-      if (!dataService.isDataLoaded() && !loading) {
-        console.log('Data lost during hot reload, reloading...');
+      if (!dataService.isDataLoaded() && !loadingRef.current) {
+        // Data lost during hot reload, reloading
         loadData();
       }
     }, 1000);
 
     return () => clearInterval(checkDataInterval);
-  }, []); // 只在组件挂载时执行一次
+  }, []); // 移除loading依赖，避免循环
 
   // 设置默认分类
   useEffect(() => {

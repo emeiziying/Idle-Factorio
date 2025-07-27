@@ -75,11 +75,11 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({
 
   // 处理物品图标点击
   const handleItemClick = (itemId: string) => {
-    console.log('InventoryManagementCard: Item clicked:', itemId);
+    // Navigate to item detail
     if (onItemSelect) {
       const clickedItem = dataService.getItem(itemId);
       if (clickedItem) {
-        console.log('InventoryManagementCard: Navigating to item:', clickedItem.name, 'Category:', clickedItem.category);
+        // Navigate to clicked item
         onItemSelect(clickedItem);
       } else {
         console.warn('InventoryManagementCard: Item not found:', itemId);

@@ -77,7 +77,7 @@ const RecipeFlowDisplay: React.FC<RecipeFlowDisplayProps> = ({
       display="flex" 
       alignItems="center" 
       justifyContent="center" 
-      gap={0.5}
+      gap={0.25}
       sx={{ 
         p: 1.5,
         bgcolor: 'background.default',

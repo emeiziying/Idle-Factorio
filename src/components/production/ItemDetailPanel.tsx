@@ -28,7 +28,11 @@ const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item, onItemSelect })
     hasFacilityRecipes
   } = useItemRecipes(item);
   
-  const { handleManualCraft, showMessage, closeMessage } = useCrafting();
+  const { 
+    handleManualCraft, 
+    showMessage, 
+    closeMessage
+  } = useCrafting();
   const manualCraftingStatus = useManualCraftingStatus(item);
 
   return (
