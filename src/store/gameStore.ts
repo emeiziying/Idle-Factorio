@@ -360,6 +360,9 @@ const useGameStore = create<GameState>()(
         set((state) => ({
           facilities: [...state.facilities, facility]
         }));
+        
+        // 追踪建造的实体（用于研究触发器）
+        get().trackBuiltEntity(facility.facilityId, 1);
       },
 
       updateFacility: (facilityId: string, updates) => {

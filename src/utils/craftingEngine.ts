@@ -250,7 +250,7 @@ class CraftingEngine {
 
   // 完成制作
   private completeCraft(task: CraftingTask, recipe: Recipe): void {
-    const { updateInventory, completeCraftingTask } = useGameStore.getState();
+    const { updateInventory, completeCraftingTask, trackMinedEntity } = useGameStore.getState();
 
     // 1. 先消耗输入材料
     if (recipe.in) {
@@ -269,9 +269,14 @@ class CraftingEngine {
       const baseQuantity = (quantity as number) * task.quantity;
       const bonusQuantity = Math.floor(baseQuantity * bonusMultiplier);
       updateInventory(itemId, bonusQuantity);
+      
+      // 4. 如果是采矿配方，追踪挖掘的实体（用于研究触发器）
+      if (recipe.flags?.includes('mining')) {
+        trackMinedEntity(itemId, bonusQuantity);
+      }
     });
 
-    // 4. 完成任务
+    // 5. 完成任务
     completeCraftingTask(task.id);
 
     // Completed crafting task
@@ -279,7 +284,7 @@ class CraftingEngine {
 
   // 完成手动合成
   private completeManualCraft(task: CraftingTask): void {
-    const { updateInventory, completeCraftingTask } = useGameStore.getState();
+    const { updateInventory, completeCraftingTask, trackMinedEntity } = useGameStore.getState();
 
     // 获取手动合成的配方信息
     const itemId = task.itemId;
@@ -303,6 +308,11 @@ class CraftingEngine {
         const totalRequired = (required as number) * task.quantity;
         updateInventory(inputItemId, -totalRequired);
       });
+    }
+
+    // 如果是采矿配方，追踪挖掘的实体（用于研究触发器）
+    if (selectedRecipe && selectedRecipe.flags?.includes('mining')) {
+      trackMinedEntity(itemId, task.quantity);
     }
 
     // 完成任务（completeCraftingTask会自动调用updateInventory添加产品）

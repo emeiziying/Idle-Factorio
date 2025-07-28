@@ -25,7 +25,9 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
     updateInventory,
     getInventoryItem,
     updateFuelConsumption,
-    autoRefuelFacilities
+    autoRefuelFacilities,
+    trackCraftedItem,
+    trackMinedEntity
   } = useGameStore();
   
   const lastUpdateRef = useRef<number>(Date.now());
@@ -69,6 +71,12 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
         // 添加产出
         for (const [itemId, quantity] of Object.entries(recipe.out)) {
           updateInventory(itemId, quantity as number);
+          // 追踪制造的物品（用于研究触发器）
+          trackCraftedItem(itemId, quantity as number);
+          // 如果是采矿配方，同时追踪挖掘的实体
+          if (recipe.flags?.includes('mining')) {
+            trackMinedEntity(itemId, quantity as number);
+          }
         }
         
         // 重置进度
