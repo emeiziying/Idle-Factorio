@@ -14,7 +14,7 @@ const logger = new Logger();
 logger.configure({ prefix: '[Game] [GameLoop]' });
 
 // 全局游戏循环状态，防止在 StrictMode 下重复启动
-let globalGameLoopStarted = false;
+const globalGameLoopRef = { started: false };
 
 /**
  * 游戏主循环Hook
@@ -154,11 +154,37 @@ export const useGameLoop = () => {
 
 
 
-  // 启动游戏循环
-  const startGameLoop = useCallback(() => {
+
+
+  // 停止游戏循环
+  const stopGameLoop = () => {
+    if (gameLoopRef.current) {
+      cancelAnimationFrame(gameLoopRef.current);
+      gameLoopRef.current = null;
+    }
+  };
+
+  // 重置游戏循环
+  const resetGameLoop = () => {
+    stopGameLoop();
+    productionAccumulatorRef.current = {};
+    lastUpdateTimeRef.current = Date.now();
+  };
+
+  // 组件挂载时自动启动游戏循环
+  useEffect(() => {
+    if (globalGameLoopRef.started) {
+      logger.debug('游戏循环已经在全局启动，跳过重复启动');
+      return;
+    }
+    
+    logger.info('游戏循环启动');
+    globalGameLoopRef.started = true;
+    
+    // 直接在 useEffect 中启动游戏循环，避免依赖项问题
     if (gameLoopRef.current) {
       logger.debug('游戏循环已经在运行中');
-      return; // 已经在运行
+      return;
     }
 
     logger.info('正在启动游戏循环...');
@@ -208,41 +234,14 @@ export const useGameLoop = () => {
     
     gameLoopRef.current = requestAnimationFrame(gameLoop);
     logger.info('游戏循环已启动，ID:', gameLoopRef.current);
-  }, [calculateFacilityProduction, checkInputAvailability, consumeInputs, produceOutputs]);
-
-  // 停止游戏循环
-  const stopGameLoop = () => {
-    if (gameLoopRef.current) {
-      cancelAnimationFrame(gameLoopRef.current);
-      gameLoopRef.current = null;
-    }
-  };
-
-  // 重置游戏循环
-  const resetGameLoop = () => {
-    stopGameLoop();
-    productionAccumulatorRef.current = {};
-    lastUpdateTimeRef.current = Date.now();
-  };
-
-  // 组件挂载时自动启动游戏循环
-  useEffect(() => {
-    if (globalGameLoopStarted) {
-      logger.debug('游戏循环已经在全局启动，跳过重复启动');
-      return;
-    }
-    
-    logger.info('游戏循环启动');
-    globalGameLoopStarted = true;
-    startGameLoop();
     
     // 组件卸载时清理
     return () => {
       logger.info('游戏循环停止');
-      globalGameLoopStarted = false;
+      globalGameLoopRef.started = false;
       stopGameLoop();
     };
-  }, [startGameLoop]);
+  }, [calculateFacilityProduction, checkInputAvailability, consumeInputs, produceOutputs]);
 
   // 当设施列表变化时重置游戏循环状态
   useEffect(() => {
@@ -250,7 +249,6 @@ export const useGameLoop = () => {
   }, [facilities]);
 
   return {
-    startGameLoop,
     stopGameLoop,
     resetGameLoop,
     isRunning: gameLoopRef.current !== null
