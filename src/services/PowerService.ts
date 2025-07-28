@@ -169,7 +169,7 @@ export class PowerService {
   /**
    * 获取设施的发电量
    */
-  getFacilityPowerGeneration(facility: FacilityInstance): number {
+  getFacilityPowerGeneration(facility: FacilityInstance, steamSupply?: number): number {
     if (facility.status !== FacilityStatus.RUNNING) {
       return 0;
     }
@@ -184,11 +184,32 @@ export class PowerService {
     
     // 蒸汽机和汽轮机需要有蒸汽供应
     if (facility.facilityId === 'steam-engine' || facility.facilityId === 'steam-turbine') {
-      // 这里应该检查蒸汽供应，暂时假设满负荷运行
-      return basePower * facility.count * facility.efficiency;
+      if (!steamSupply || steamSupply <= 0) {
+        return 0; // 没有蒸汽供应，无法发电
+      }
+      
+      // 计算蒸汽消耗率
+      const steamConsumption = facility.facilityId === 'steam-engine' ? 30 : 60; // 单位/秒
+      const totalSteamNeeded = steamConsumption * facility.count;
+      
+      // 如果蒸汽不足，按比例降低发电量
+      const steamRatio = Math.min(1, steamSupply / totalSteamNeeded);
+      return basePower * facility.count * steamRatio;
     }
     
     return basePower * facility.count;
+  }
+  
+  /**
+   * 获取蒸汽供应量（从生产系统获取）
+   */
+  getSteamSupply(): { normal: number; highTemp: number } {
+    // TODO: 从生产系统获取实际蒸汽产量
+    // 暂时返回模拟数据
+    return {
+      normal: 0,    // 165°C 蒸汽
+      highTemp: 0   // 500°C 蒸汽
+    };
   }
   
   /**

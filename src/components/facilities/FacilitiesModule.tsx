@@ -2,6 +2,8 @@ import React from 'react';
 import { Box, Typography, Tab, Tabs } from '@mui/material';
 import PowerManagement from './PowerManagement';
 import FuelPrioritySettings from './FuelPrioritySettings';
+import ProductionMonitor from './ProductionMonitor';
+import EfficiencyOptimizer from './EfficiencyOptimizer';
 import { FuelService } from '../../services/FuelService';
 
 const FacilitiesModule: React.FC = () => {
@@ -28,29 +30,17 @@ const FacilitiesModule: React.FC = () => {
         sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}
       >
         <Tab label="电力管理" />
+        <Tab label="生产监控" />
+        <Tab label="效率优化" />
         <Tab label="燃料设置" />
-        <Tab label="生产监控" disabled />
-        <Tab label="效率优化" disabled />
       </Tabs>
       
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
         {currentTab === 0 && <PowerManagement />}
-        {currentTab === 1 && (
-          <FuelPrioritySettings onPriorityChange={handleFuelPriorityChange} />
-        )}
-        {currentTab === 2 && (
-          <Box sx={{ textAlign: 'center', mt: 4 }}>
-            <Typography color="text.secondary">
-              生产监控功能开发中...
-            </Typography>
-          </Box>
-        )}
+        {currentTab === 1 && <ProductionMonitor />}
+        {currentTab === 2 && <EfficiencyOptimizer />}
         {currentTab === 3 && (
-          <Box sx={{ textAlign: 'center', mt: 4 }}>
-            <Typography color="text.secondary">
-              效率优化功能开发中...
-            </Typography>
-          </Box>
+          <FuelPrioritySettings onPriorityChange={handleFuelPriorityChange} />
         )}
       </Box>
     </Box>

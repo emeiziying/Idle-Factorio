@@ -94,3 +94,30 @@ export interface PowerFacilityState {
   fuelAvailable?: number;
   status: 'running' | 'fuel_shortage' | 'stopped';
 }
+
+// 设施分组
+export interface FacilityGroup {
+  id: string;
+  name: string;
+  facilityIds: string[];  // 组内设施ID列表
+  enabled: boolean;       // 是否启用
+  priority: number;       // 优先级（电力不足时的关闭顺序）
+  createdAt: number;
+  updatedAt: number;
+}
+
+// 设施分组管理
+export interface FacilityGroupSettings {
+  groups: FacilityGroup[];
+  defaultGroupId?: string;  // 新设施默认分组
+}
+
+// 设施运行统计
+export interface FacilityStats {
+  facilityId: string;
+  totalRunTime: number;      // 总运行时间（秒）
+  totalProduction: number;   // 总产量
+  totalConsumption: number;  // 总消耗（电力/燃料）
+  efficiency: number;        // 平均效率
+  lastUpdate: number;
+}
