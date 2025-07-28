@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { Box, Typography, Tab, Tabs } from '@mui/material';
 import PowerManagement from './PowerManagement';
 import FuelPrioritySettings from './FuelPrioritySettings';
@@ -6,17 +6,18 @@ import ProductionMonitor from './ProductionMonitor';
 import EfficiencyOptimizer from './EfficiencyOptimizer';
 import { FuelService } from '../../services/FuelService';
 
-const FacilitiesModule: React.FC = () => {
+const FacilitiesModule: React.FC = React.memo(() => {
   const [currentTab, setCurrentTab] = React.useState(0);
   const fuelService = FuelService.getInstance();
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+  // 使用useCallback缓存事件处理函数，避免重复创建
+  const handleTabChange = useCallback((_event: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
-  };
+  }, []);
 
-  const handleFuelPriorityChange = (newPriority: string[]) => {
+  const handleFuelPriorityChange = useCallback((newPriority: string[]) => {
     fuelService.setFuelPriority(newPriority);
-  };
+  }, [fuelService]);
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -36,15 +37,25 @@ const FacilitiesModule: React.FC = () => {
       </Tabs>
       
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-        {currentTab === 0 && <PowerManagement />}
-        {currentTab === 1 && <ProductionMonitor />}
-        {currentTab === 2 && <EfficiencyOptimizer />}
-        {currentTab === 3 && (
-          <FuelPrioritySettings onPriorityChange={handleFuelPriorityChange} />
-        )}
+        {useMemo(() => {
+          switch (currentTab) {
+            case 0:
+              return <PowerManagement />;
+            case 1:
+              return <ProductionMonitor />;
+            case 2:
+              return <EfficiencyOptimizer />;
+            case 3:
+              return <FuelPrioritySettings onPriorityChange={handleFuelPriorityChange} />;
+            default:
+              return <PowerManagement />;
+          }
+        }, [currentTab, handleFuelPriorityChange])}
       </Box>
     </Box>
   );
-};
+});
+
+FacilitiesModule.displayName = 'FacilitiesModule';
 
 export default FacilitiesModule;

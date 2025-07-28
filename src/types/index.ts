@@ -9,6 +9,24 @@ export interface Category {
   icon?: string;
 }
 
+// 机器接口
+export interface Machine {
+  speed: number;
+  type: 'burner' | 'electric';
+  fuelCategories?: string[];
+  usage: number; // 功率消耗（kW）
+  pollution?: number;
+  size: [number, number];
+  entityType: string;
+  locations?: string[];
+  modules?: number;
+  drain?: number;
+  disallowedEffects?: string[];
+  baseEffect?: {
+    productivity?: number;
+  };
+}
+
 // 物品接口
 export interface Item {
   id: string;
@@ -32,7 +50,7 @@ export interface Item {
   belt?: {
     speed: number;
   };
-  machine?: unknown;
+  machine?: Machine;
 }
 
 // 研究触发器接口
@@ -94,6 +112,23 @@ export interface CraftingTask {
   startTime: number;
   craftingTime: number;
   status?: 'pending' | 'crafting' | 'completed';
+  // 链式任务相关字段
+  chainId?: string;           // 所属任务链ID
+  isIntermediateProduct?: boolean; // 是否为中间产物（不显示在库存中）
+  dependsOnTasks?: string[];  // 依赖的任务ID列表
+}
+
+// 任务链接口
+export interface CraftingChain {
+  id: string;
+  name: string;               // 链式任务的显示名称（如"制作石炉(含依赖)"）
+  tasks: CraftingTask[];      // 任务列表，按执行顺序排列
+  finalProduct: {            // 最终产物信息
+    itemId: string;
+    quantity: number;
+  };
+  status: 'pending' | 'crafting' | 'completed';
+  totalProgress: number;      // 整个链的总进度 (0-1)
 }
 
 // 图标数据接口

@@ -14,6 +14,7 @@ import useGameStore from '../../store/gameStore';
 import FactorioIcon from '../common/FactorioIcon';
 import ManualCraftingValidator from '../../utils/manualCraftingValidator';
 import { FuelStatusDisplay } from '../facilities/FuelStatusDisplay';
+import { FuelService } from '../../services/FuelService';
 
 interface RecipeFacilitiesCardProps {
   item: Item;
@@ -36,10 +37,12 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
     }
   };
 
-  // 获取需要设施的配方（排除手动合成配方）
+  // 获取需要设施的配方（排除手动合成配方，但保留采矿配方）
   const facilityRecipes = recipes.filter(recipe => {
     const validation = validator.validateRecipe(recipe);
-    return !validation.canCraftManually && recipe.producers && recipe.producers.length > 0;
+    // 允许采矿配方显示在设施列表中，即使它们被认为是手动可制作的
+    const isMiningRecipe = recipe.flags && recipe.flags.includes('mining');
+    return (isMiningRecipe || !validation.canCraftManually) && recipe.producers && recipe.producers.length > 0;
   });
 
   // 获取所有可用且已解锁的设施类型
@@ -60,16 +63,18 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
 
   const facilityTypes = getAllFacilityTypes();
 
-  // 获取已部署的设施数量
+  // 获取已部署的设施数量（只计算当前物品的设施）
   const getDeployedFacilityCount = (facilityType: string): number => {
-    return facilities.filter(f => f.facilityId === facilityType).length;
+    return facilities.filter(f => 
+      f.facilityId === facilityType && f.targetItemId === item.id
+    ).length;
   };
 
   // 计算设施的生产效率
   const calculateProductionRate = (facilityType: string): number => {
     // 查找该设施能生产的当前物品的配方
     const relevantRecipe = facilityRecipes.find(recipe => 
-      recipe.producers?.includes(facilityType)
+      recipe.producers?.includes(facilityType) && recipe.out && recipe.out[item.id] !== undefined
     );
     
     if (!relevantRecipe || !relevantRecipe.time) {
@@ -93,13 +98,32 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
       return;
     }
 
-    // 扣除库存中的设施
+    // 找到该设施能生产的当前物品的配方
+    const relevantRecipe = facilityRecipes.find(recipe => 
+      recipe.producers?.includes(facilityType) && recipe.out && recipe.out[item.id] !== undefined
+    );
+
+    // 初始化燃料缓存区（如果需要）
+    const fuelService = FuelService.getInstance();
+    const fuelBuffer = fuelService.initializeFuelBuffer(facilityType);
+
+    // 创建新设施实例，添加目标物品关联
     const newFacility: FacilityInstance = {
       id: `facility_${facilityType}_${Date.now()}`,
       facilityId: facilityType,
+      targetItemId: item.id, // 关联目标物品
       count: 1,
       status: 'running',
-      efficiency: 1.0
+      efficiency: 1.0,
+      // 自动设置生产配方
+      production: relevantRecipe ? {
+        currentRecipeId: relevantRecipe.id,
+        progress: 0,
+        inputBuffer: [],
+        outputBuffer: []
+      } : undefined,
+      // 设置燃料缓存区（如果设施需要燃料）
+      fuelBuffer: fuelBuffer || undefined
     };
 
     addFacility(newFacility);
@@ -108,9 +132,11 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
     useGameStore.getState().updateInventory(facilityType, -1);
   };
 
-  // 移除设施
+  // 移除设施（只移除当前物品的设施）
   const handleRemoveFacility = (facilityType: string) => {
-    const facilityToRemove = facilities.find(f => f.facilityId === facilityType);
+    const facilityToRemove = facilities.find(f => 
+      f.facilityId === facilityType && f.targetItemId === item.id
+    );
     if (facilityToRemove) {
       removeFacility(facilityToRemove.id);
       
@@ -143,8 +169,10 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
             const productionRate = calculateProductionRate(facilityType);
             const totalProductionRate = productionRate * deployedCount;
 
-            // 获取已部署的此类型设施实例
-            const deployedFacilities = facilities.filter(f => f.facilityId === facilityType);
+            // 获取已部署的此类型设施实例（只显示当前物品的设施）
+            const deployedFacilities = facilities.filter(f => 
+              f.facilityId === facilityType && f.targetItemId === item.id
+            );
             
             return (
               <Box

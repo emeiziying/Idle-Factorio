@@ -36,6 +36,7 @@ import { useIsMobile } from './hooks/useIsMobile';
 import { usePersistentState } from './hooks/usePersistentState';
 import { useInventoryRepair } from './hooks/useInventoryRepair';
 import { useUnlockedTechsRepair } from './hooks/useUnlockedTechsRepair';
+import { useFacilityRepair } from './hooks/useFacilityRepair';
 import theme from './theme';
 import { error as logError } from './utils/logger';
 
@@ -55,6 +56,9 @@ const App: React.FC = () => {
   // 安全修复unlockedTechs状态
   useUnlockedTechsRepair();
   
+  // 安全修复设施状态
+  useFacilityRepair();
+  
   // 使用ref来跟踪初始化状态，避免重复初始化
   const initializationRef = useRef<{
     isInitialized: boolean;
@@ -63,6 +67,25 @@ const App: React.FC = () => {
     isInitialized: false,
     initPromise: null
   });
+
+  // 页面卸载时强制存档
+  useEffect(() => {
+    const handleBeforeUnload = async () => {
+      const { forceSaveGame } = useGameStore.getState();
+      try {
+        // 强制存档（不等待，避免阻塞页面关闭）
+        forceSaveGame().catch(console.error);
+      } catch (error) {
+        console.error('页面卸载时存档失败:', error);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   // 初始化游戏数据
   useEffect(() => {

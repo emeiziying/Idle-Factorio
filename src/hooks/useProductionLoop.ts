@@ -22,7 +22,7 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
   const { 
     facilities, 
     updateFacility,
-    updateInventory,
+    batchUpdateInventory, // 新增：批量更新
     getInventoryItem,
     updateFuelConsumption,
     autoRefuelFacilities,
@@ -46,6 +46,23 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
     const recipe = RecipeService.getRecipeById(currentRecipeId);
     if (!recipe) return;
     
+    // 检查是否有足够的输入材料
+    let hasEnoughMaterials = true;
+    if (recipe.in) {
+      for (const [itemId, required] of Object.entries(recipe.in)) {
+        const inventory = getInventoryItem(itemId);
+        if (inventory.currentAmount < (required as number)) {
+          hasEnoughMaterials = false;
+          break;
+        }
+      }
+    }
+    
+    // 如果材料不足，不更新生产进度
+    if (!hasEnoughMaterials) {
+      return;
+    }
+    
     // 计算生产进度
     const progressIncrement = (deltaTime / recipe.time) * facility.efficiency;
     const newProgress = progress + progressIncrement;
@@ -63,14 +80,17 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
       }
       
       if (canProduce) {
+        // 准备批量更新数据
+        const inventoryUpdates: Array<{ itemId: string; amount: number }> = [];
+        
         // 消耗输入材料
         for (const [itemId, quantity] of Object.entries(recipe.in)) {
-          updateInventory(itemId, -(quantity as number));
+          inventoryUpdates.push({ itemId, amount: -(quantity as number) });
         }
         
         // 添加产出
         for (const [itemId, quantity] of Object.entries(recipe.out)) {
-          updateInventory(itemId, quantity as number);
+          inventoryUpdates.push({ itemId, amount: quantity as number });
           // 追踪制造的物品（用于研究触发器）
           trackCraftedItem(itemId, quantity as number);
           // 如果是采矿配方，同时追踪挖掘的实体
@@ -78,6 +98,9 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
             trackMinedEntity(itemId, quantity as number);
           }
         }
+        
+        // 批量更新库存（减少存档触发频率）
+        batchUpdateInventory(inventoryUpdates);
         
         // 重置进度
         updateFacility(facility.id, {
@@ -101,7 +124,7 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
         }
       });
     }
-  }, [updateFacility, updateInventory, getInventoryItem]);
+  }, [updateFacility, getInventoryItem, batchUpdateInventory, trackCraftedItem, trackMinedEntity]);
   
   // 主更新循环
   const updateProduction = useCallback(() => {

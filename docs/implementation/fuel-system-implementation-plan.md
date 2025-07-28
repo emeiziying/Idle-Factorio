@@ -1,78 +1,90 @@
 # 燃料系统实现计划
 
-## 实现步骤
+## 系统概述
 
-### 第一阶段：核心数据结构 (2-3小时)
+燃料系统将为所有燃料型设施（石炉、钢炉、热能采矿机等）提供燃料管理功能。每个设施实例都有独立的燃料缓存区，可以存储一定量的燃料来维持运行。
 
-1. **更新类型定义** `src/types/facilities.ts`
-   - 添加 `FuelBuffer`、`FuelSlot` 接口
-   - 更新 `FacilityInstance` 接口
-   - 添加 `no_fuel` 状态到 `FacilityStatus`
+## 核心设计
 
-2. **创建燃料配置** `src/data/fuelConfigs.ts`
-   - 定义 `FuelConfig` 接口
-   - 创建 `FACILITY_FUEL_CONFIGS` 配置对象
-   - 定义 `FUEL_PRIORITY` 数组
-
-### 第二阶段：服务层实现 (3-4小时)
-
-3. **实现 FuelService** `src/services/FuelService.ts`
-   - 基础框架和单例模式
-   - `initializeFuelBuffer` 方法
-   - `updateFuelConsumption` 方法
-   - `addFuel` 方法
-   - `autoRefuel` 方法
-   - `getFuelStatus` 方法
-
-4. **更新 GameStore** `src/store/gameStore.ts`
-   - 修改 `addFacility` 方法，初始化燃料缓存
-   - 添加 `refuelFacility` 方法
-   - 添加 `autoRefuelFacilities` 方法
-
-### 第三阶段：UI组件开发 (2-3小时)
-
-5. **创建燃料显示组件** `src/components/facilities/FuelStatusDisplay.tsx`
-   - 紧凑模式和完整模式
-   - 燃料进度条
-   - 剩余时间显示
-   - 燃料槽位显示
-
-6. **更新设施卡片** `src/components/detail/RecipeFacilitiesCard.tsx`
-   - 集成燃料状态显示
-   - 添加手动加燃料按钮（可选）
-   - 显示燃料警告状态
-
-### 第四阶段：游戏循环集成 (2-3小时)
-
-7. **创建生产循环Hook** `src/hooks/useProductionLoop.ts`
-   - 燃料消耗更新逻辑
-   - 自动补充燃料
-   - 状态切换处理
-
-8. **集成到主循环**
-   - 在 `ProductionModule` 中使用 `useProductionLoop`
-   - 设置更新频率（建议1秒）
-
-### 第五阶段：测试和优化 (2-3小时)
-
-9. **单元测试**
-   - FuelService 各方法测试
-   - 边界条件测试
-   - 性能测试
-
-10. **集成测试**
-    - 多设施燃料管理
-    - UI响应测试
-    - 内存泄漏检查
-
-## 实现细节
-
-### 燃料消耗计算示例
+### 1. 数据结构
 
 ```typescript
-// 石炉生产铁板的燃料消耗
+// src/types/facilities.ts
+export interface FuelBuffer {
+  slots: FuelSlot[];
+  maxSlots: number;
+  totalEnergy: number;
+  maxEnergy: number;
+  consumptionRate: number;
+  lastUpdate: number;
+}
+
+export interface FuelSlot {
+  itemId: string;
+  quantity: number;
+  remainingEnergy: number;
+}
+```
+
+### 2. 燃料配置
+
+```typescript
+// src/data/fuelConfigs.ts
+export const FACILITY_FUEL_CONFIGS: Record<string, FuelConfig> = {
+  'stone-furnace': {
+    acceptedCategories: ['chemical'],
+    fuelSlots: 1,
+    maxStackPerSlot: 50,
+    basePowerConsumption: 0.09  // 90kW (基于data.json)
+  },
+  'steel-furnace': {
+    acceptedCategories: ['chemical'],
+    fuelSlots: 1,
+    maxStackPerSlot: 50,
+    basePowerConsumption: 0.09  // 90kW (基于data.json)
+  }
+};
+```
+
+## 实现步骤
+
+### 阶段1：核心服务
+
+1. **FuelService 实现**
+   - 初始化燃料缓存
+   - 更新燃料消耗
+   - 添加燃料
+   - 自动补充
+
+2. **GameStore 集成**
+   - 添加燃料相关状态
+   - 实现燃料管理动作
+
+### 阶段2：UI组件
+
+1. **FuelStatusDisplay 组件**
+   - 显示燃料状态
+   - 进度条显示
+   - 剩余时间计算
+
+2. **燃料管理界面**
+   - 手动添加燃料
+   - 燃料分配策略
+
+### 阶段3：游戏循环
+
+1. **useProductionLoop 集成**
+   - 每秒更新燃料消耗
+   - 自动补充燃料
+
+## 关键计算
+
+### 燃料消耗计算
+
+```typescript
+// 基于data.json中的usage字段
 const stoneFurnaceConfig = {
-  basePowerConsumption: 0.18, // MW
+  basePowerConsumption: 0.09, // MW (90kW)
   craftingSpeed: 1.0
 };
 
@@ -83,10 +95,10 @@ const ironPlateRecipe = {
 
 // 每个铁板消耗的能量
 const energyPerPlate = stoneFurnaceConfig.basePowerConsumption * ironPlateRecipe.time;
-// = 0.18 * 3.2 = 0.576 MJ
+// = 0.09 * 3.2 = 0.288 MJ
 
 // 使用煤炭（4 MJ）
-const platesPerCoal = 4 / 0.576; // ≈ 6.94 个铁板
+const platesPerCoal = 4 / 0.288; // ≈ 13.89 个铁板
 ```
 
 ### 性能优化建议
@@ -148,7 +160,6 @@ const platesPerCoal = 4 / 0.576; // ≈ 6.94 个铁板
 ### 性能测试
 - [ ] 100个石炉同时运行时性能正常
 - [ ] 内存使用稳定，无泄漏
-- [ ] UI更新流畅，无卡顿
 
 ## 后续扩展
 

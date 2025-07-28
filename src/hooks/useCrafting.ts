@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Recipe } from '../types/index';
 import useGameStore from '../store/gameStore';
-import DependencyService, { type CraftingChain } from '../services/DependencyService';
+import DependencyService, { type CraftingChainAnalysis } from '../services/DependencyService';
 
 export const useCrafting = () => {
   const [showMessage, setShowMessage] = useState({
@@ -18,7 +18,7 @@ export const useCrafting = () => {
     onCancel: () => {}
   });
   
-  const { getInventoryItem, addCraftingTask, inventory } = useGameStore();
+  const { getInventoryItem, addCraftingTask, addCraftingChain, inventory } = useGameStore();
   const dependencyService = DependencyService.getInstance();
 
   const handleCraft = (recipe: Recipe, quantity: number = 1) => {
@@ -160,28 +160,38 @@ export const useCrafting = () => {
     setShowMessage(prev => ({ ...prev, open: false }));
   };
 
-  const executeChainCrafting = (chain: CraftingChain) => {
-    let successCount = 0;
-    
-    // 按顺序添加所有任务（依赖任务在前）
-    for (const task of chain.tasks) {
-      const success = addCraftingTask(task);
-      if (success) {
-        successCount++;
-      }
-    }
+  const executeChainCrafting = (chainAnalysis: CraftingChainAnalysis) => {
+    // 创建链式任务数据结构
+    const chainTasks = chainAnalysis.tasks.map((task, index) => ({
+      ...task,
+      // 标记中间产物（除了最后一个任务）
+      isIntermediateProduct: index < chainAnalysis.tasks.length - 1,
+      // 设置任务依赖关系
+      dependsOnTasks: index > 0 ? [chainAnalysis.tasks[index - 1].id] : undefined
+    }));
 
-    if (successCount > 0) {
-      const duration = dependencyService.calculateChainDuration(chain);
+    const chainData = {
+      name: `制作${chainAnalysis.mainTask.itemId}(含依赖)`,
+      tasks: chainTasks,
+      finalProduct: {
+        itemId: chainAnalysis.mainTask.itemId,
+        quantity: chainAnalysis.mainTask.quantity
+      }
+    };
+
+    const chainId = addCraftingChain(chainData);
+    
+    if (chainId) {
+      const duration = dependencyService.calculateChainDuration(chainAnalysis);
       setShowMessage({
         open: true,
-        message: `已自动创建${successCount}个制作任务，预计${Math.ceil(duration)}秒完成`,
+        message: `已创建链式制作任务: ${chainData.name}，预计${Math.ceil(duration)}秒完成`,
         severity: 'success'
       });
     } else {
       setShowMessage({
         open: true,
-        message: '制作队列已满，无法添加任务',
+        message: '制作队列已满，无法添加链式任务',
         severity: 'warning'
       });
     }

@@ -77,13 +77,13 @@ export const FACILITY_FUEL_CONFIGS: Record<string, FuelConfig> = {
     acceptedCategories: ['chemical'],
     fuelSlots: 1,
     maxStackPerSlot: 50,
-    basePowerConsumption: 0.18  // 180kW
+    basePowerConsumption: 0.09  // 90kW (基于data.json)
   },
   'steel-furnace': {
     acceptedCategories: ['chemical'],
     fuelSlots: 1,
     maxStackPerSlot: 50,
-    basePowerConsumption: 0.36  // 360kW
+    basePowerConsumption: 0.09  // 90kW (基于data.json)
   },
   'burner-mining-drill': {
     acceptedCategories: ['chemical'],

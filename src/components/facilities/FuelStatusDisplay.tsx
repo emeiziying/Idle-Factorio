@@ -43,8 +43,8 @@ export const FuelStatusDisplay: React.FC<FuelStatusDisplayProps> = ({
         />
         <LinearProgress
           variant="determinate"
-          value={status.fillPercentage}
-          color={getProgressColor(status.fillPercentage)}
+          value={status.burnProgress}
+          color={getProgressColor(status.burnProgress)}
           sx={{ 
             width: 60, 
             height: 6,
@@ -77,8 +77,8 @@ export const FuelStatusDisplay: React.FC<FuelStatusDisplayProps> = ({
       
       <LinearProgress
         variant="determinate"
-        value={status.fillPercentage}
-        color={getProgressColor(status.fillPercentage)}
+        value={status.burnProgress}
+        color={getProgressColor(status.burnProgress)}
         sx={{ 
           height: 8, 
           borderRadius: 1, 

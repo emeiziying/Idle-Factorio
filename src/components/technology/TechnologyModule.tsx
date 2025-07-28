@@ -40,26 +40,25 @@ const TechnologyModule: React.FC = React.memo(() => {
     updateResearchProgress
   } = useGameStore();
 
-  // 本地状态
-  const [loading, setLoading] = useState(true);
+  // 本地状态 - 智能初始化loading状态
+  const [loading, setLoading] = useState(() => technologies.size === 0);
   const [error, setError] = useState<string | null>(null);
   const [selectedTechId, setSelectedTechId] = usePersistentState<string | null>('technology-selected-tech', null);
 
-  // 初始化科技服务
+  // 初始化科技服务 - 优化版本，避免不必要的loading
   useEffect(() => {
     const initializeTech = async () => {
       try {
-        setLoading(true);
-        
         // 检查科技数据是否已经加载
         if (technologies.size > 0) {
-          // 科技数据已存在，直接完成初始化
+          // 科技数据已存在，直接完成初始化，不显示loading
           setError(null);
           setLoading(false);
           return;
         }
         
-        // 如果科技数据不存在，则初始化服务
+        // 只有数据不存在时才显示loading并加载数据
+        setLoading(true);
         await initializeTechnologyService();
         
         setError(null);

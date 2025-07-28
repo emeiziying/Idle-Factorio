@@ -13,7 +13,7 @@ export interface CraftingDependency {
   canCraftManually: boolean;
 }
 
-export interface CraftingChain {
+export interface CraftingChainAnalysis {
   mainTask: {
     itemId: string;
     quantity: number;

@@ -28,7 +28,7 @@ interface TechSimpleGridProps {
   useVirtualization?: boolean;
 }
 
-const TechSimpleGrid: React.FC<TechSimpleGridProps> = ({
+const TechSimpleGrid: React.FC<TechSimpleGridProps> = React.memo(({
   technologies,
   techStates,
   queuedTechIds,
@@ -42,19 +42,21 @@ const TechSimpleGrid: React.FC<TechSimpleGridProps> = ({
     return TechnologyService.getTechnologiesSortedByStatus(technologies, techStates);
   }, [technologies, techStates]);
 
-  // 过滤逻辑：只显示当前可研究的和依赖当前可研究的项目
-  const filteredTechnologies = TechnologyService.getDisplayTechnologies(sortedTechnologies, techStates);
+  // 过滤逻辑：只显示当前可研究的和依赖当前可研究的项目 - 使用useMemo缓存
+  const filteredTechnologies = React.useMemo(() => {
+    return TechnologyService.getDisplayTechnologies(sortedTechnologies, techStates);
+  }, [sortedTechnologies, techStates]);
 
 
-  // 获取科技状态
-  const getTechState = (techId: string) => {
+  // 获取科技状态 - 使用useCallback缓存
+  const getTechState = React.useCallback((techId: string) => {
     return techStates.get(techId) || { status: 'locked' as TechStatus };
-  };
+  }, [techStates]);
 
-  // 处理科技点击
-  const handleTechClick = (techId: string) => {
+  // 处理科技点击 - 使用useCallback缓存
+  const handleTechClick = React.useCallback((techId: string) => {
     onTechClick?.(techId);
-  };
+  }, [onTechClick]);
 
   if (filteredTechnologies.length === 0) {
     return (
@@ -127,6 +129,8 @@ const TechSimpleGrid: React.FC<TechSimpleGridProps> = ({
       </Box>
     </Box>
   );
-};
+});
+
+TechSimpleGrid.displayName = 'TechSimpleGrid';
 
 export default TechSimpleGrid;

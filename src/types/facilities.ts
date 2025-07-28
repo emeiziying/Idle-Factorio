@@ -42,6 +42,7 @@ export interface FuelSlot {
 export interface FacilityInstance {
   id: string;
   facilityId: string;
+  targetItemId?: string; // 新增：目标物品ID，用于关联设施配置的目标物品
   count: number;
   status: FacilityStatus;
   efficiency: number;

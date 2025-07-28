@@ -49,7 +49,9 @@
       "Bash(gh run list:*)",
       "Bash(pnpm lint:*)",
       "Bash(pnpm build:*)",
-      "mcp__browser-tools__runPerformanceAudit"
+      "mcp__browser-tools__runPerformanceAudit",
+      "mcp__ide__executeCode",
+      "Bash(cat:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

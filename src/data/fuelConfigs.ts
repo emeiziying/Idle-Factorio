@@ -1,6 +1,6 @@
 // 燃料系统配置
 
-export type FuelCategory = 'chemical' | 'nuclear';
+export type FuelCategory = 'chemical' | 'nuclear' | 'nutrients' | 'food';
 
 export interface FuelConfig {
   // 可接受的燃料类别
@@ -12,40 +12,6 @@ export interface FuelConfig {
   // 基础能耗 (MW)
   basePowerConsumption: number;
 }
-
-// 设施燃料配置
-export const FACILITY_FUEL_CONFIGS: Record<string, FuelConfig> = {
-  'stone-furnace': {
-    acceptedCategories: ['chemical'],
-    fuelSlots: 1,
-    maxStackPerSlot: 50,
-    basePowerConsumption: 0.18  // 180kW
-  },
-  'steel-furnace': {
-    acceptedCategories: ['chemical'],
-    fuelSlots: 1,
-    maxStackPerSlot: 50,
-    basePowerConsumption: 0.36  // 360kW (2x stone furnace)
-  },
-  'burner-mining-drill': {
-    acceptedCategories: ['chemical'],
-    fuelSlots: 1,
-    maxStackPerSlot: 50,
-    basePowerConsumption: 0.15  // 150kW
-  },
-  'burner-inserter': {
-    acceptedCategories: ['chemical'],
-    fuelSlots: 1,
-    maxStackPerSlot: 50,
-    basePowerConsumption: 0.0134  // 13.4kW
-  },
-  'locomotive': {
-    acceptedCategories: ['chemical'],
-    fuelSlots: 3,
-    maxStackPerSlot: 50,
-    basePowerConsumption: 0.6  // 600kW
-  }
-};
 
 // 燃料优先级（从低到高）
 export const FUEL_PRIORITY = [

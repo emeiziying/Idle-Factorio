@@ -41,6 +41,12 @@ export class DataService {
     this.cacheVersion++;
   }
   
+  // 清理解锁缓存（当科技状态改变时调用）
+  public clearUnlockCache(): void {
+    this.itemUnlockedCache.clear();
+    this.cacheVersion++;
+  }
+  
   // 性能优化：带缓存的物品解锁检查
   private isItemUnlockedCached(itemId: string): boolean {
     const cacheKey = `${itemId}_v${this.cacheVersion}`;
@@ -363,8 +369,21 @@ export class DataService {
       // 5. 检查是否有任何配方被解锁且可用
       for (const recipe of nauvisRecipes) {
         // 检查配方是否通过科技解锁
-        // TODO: 修复 techService 引用
-        // 暂时跳过科技检查，直接检查生产设备
+        if (recipe.flags && recipe.flags.includes('locked')) {
+          // 对于locked配方，需要检查科技是否已解锁
+          if (ServiceLocator.has(SERVICE_NAMES.TECHNOLOGY)) {
+            const techService = ServiceLocator.get<TechnologyService>(SERVICE_NAMES.TECHNOLOGY);
+            // 检查是否有科技解锁了这个配方
+            const isRecipeUnlocked = techService.isRecipeUnlocked(recipe.id);
+            if (!isRecipeUnlocked) {
+              continue; // 配方未通过科技解锁，跳过
+            }
+          } else {
+            // 如果没有科技服务，locked配方默认不可用
+            continue;
+          }
+        }
+        
         // 检查配方的生产设备是否可用
         if (!recipe.producers || recipe.producers.length === 0) {
           return true; // 手动制作或无需设备

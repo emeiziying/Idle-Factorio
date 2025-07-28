@@ -69,6 +69,36 @@ class DebouncedStorage implements StateStorage {
     });
   }
 
+  // 新增：强制存档方法，绕过防抖
+  forceSetItem(name: string, value: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // 取消现有的防抖存档
+      const existingTimeout = this.saveTimeouts.get(name);
+      if (existingTimeout) {
+        clearTimeout(existingTimeout);
+        this.saveTimeouts.delete(name);
+      }
+
+      // 拒绝现有的待保存项
+      const existingPending = this.pendingSaves.get(name);
+      if (existingPending) {
+        existingPending.reject(new Error('Superseded by force save'));
+        this.pendingSaves.delete(name);
+      }
+      
+      // 使用.then()链式调用替代async/await
+      asyncStorage.setItem(name, value)
+        .then(() => {
+          console.log(`[Save] 强制存档成功: ${name} (${Math.round(value.length / 1024)}KB)`);
+          resolve();
+        })
+        .catch((error) => {
+          console.error(`[Save] 强制存档失败: ${name}`, error);
+          reject(error);
+        });
+    });
+  }
+
   removeItem(name: string): void | Promise<void> {
     // 清理待保存的数据
     const existingTimeout = this.saveTimeouts.get(name);

@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage, subscribeWithSelector } from 'zustand/middleware';
 import { createDebouncedStorage } from '../utils/debouncedStorage';
-import type { InventoryItem, CraftingTask, Recipe, DeployedContainer, OperationResult } from '../types/index';
+import type { InventoryItem, CraftingTask, CraftingChain, Recipe, DeployedContainer, OperationResult } from '../types/index';
 import type { 
   Technology, 
   TechResearchState, 
@@ -18,7 +18,6 @@ import { getStorageConfig } from '../data/storageConfigs';
 import { DataService } from '../services/DataService';
 import { TechnologyService } from '../services/TechnologyService';
 import { FuelService } from '../services/FuelService';
-import { FACILITY_FUEL_CONFIGS } from '../data/fuelConfigs';
 
 // 页面卸载时立即保存
 if (typeof window !== 'undefined') {
@@ -34,6 +33,7 @@ interface GameState {
   
   // 制作队列
   craftingQueue: CraftingTask[];
+  craftingChains: CraftingChain[];
   maxQueueSize: number;
   
   // 设施系统
@@ -71,15 +71,19 @@ interface GameState {
   _repairInventoryState: () => void;
   _repairUnlockedTechsState: () => void;
   addCraftingTask: (task: Omit<CraftingTask, 'id'>) => boolean;
+  addCraftingChain: (chain: Omit<CraftingChain, 'id'>) => string;
   removeCraftingTask: (taskId: string) => void;
   updateCraftingProgress: (taskId: string, progress: number) => void;
   completeCraftingTask: (taskId: string) => void;
   addFacility: (facility: FacilityInstance) => void;
   updateFacility: (facilityId: string, updates: Partial<FacilityInstance>) => void;
   removeFacility: (facilityId: string) => void;
+  _repairFacilityState: () => void; // 新增：修复设施状态
   saveKey: string; // 存档触发键，只有这个值变化时才触发存档
   clearGameData: () => Promise<void>;
   saveGame: () => void;
+  forceSaveGame: () => Promise<void>; // 新增：强制存档方法
+  batchUpdateInventory: (updates: Array<{ itemId: string; amount: number }>) => void; // 新增：批量更新库存
   
   // 存储容器相关 Actions
   deployChestForStorage: (chestType: string, targetItemId: string) => OperationResult;
@@ -132,7 +136,7 @@ interface GameState {
 }
 
 // 确保Map对象正确初始化的辅助函数
-const ensureMap = <K, V>(map: any, typeName: string): Map<K, V> => {
+const ensureMap = <K, V>(map: unknown, typeName: string): Map<K, V> => {
   if (map instanceof Map) {
     return map;
   }
@@ -157,11 +161,11 @@ const ensureMap = <K, V>(map: any, typeName: string): Map<K, V> => {
 };
 
 // 确保inventory始终是Map的辅助函数
-const ensureInventoryMap = (inventory: any): Map<string, InventoryItem> => {
+const ensureInventoryMap = (inventory: unknown): Map<string, InventoryItem> => {
   return ensureMap<string, InventoryItem>(inventory, 'inventory');
 };
 
-const ensureSet = <T>(set: any, typeName: string): Set<T> => {
+const ensureSet = <T>(set: unknown, typeName: string): Set<T> => {
   if (set instanceof Set) {
     return set;
   }
@@ -176,7 +180,7 @@ const ensureSet = <T>(set: any, typeName: string): Set<T> => {
   return new Set();
 };
 
-const ensureUnlockedTechsSet = (unlockedTechs: any): Set<string> => {
+const ensureUnlockedTechsSet = (unlockedTechs: unknown): Set<string> => {
   return ensureSet<string>(unlockedTechs, 'unlockedTechs');
 };
 
@@ -195,6 +199,7 @@ const useGameStore = create<GameState>()(
         }
       })(),
       craftingQueue: [],
+      craftingChains: [],
       maxQueueSize: 50,
       facilities: [],
       deployedContainers: [],
@@ -243,6 +248,38 @@ const useGameStore = create<GameState>()(
         });
       },
 
+      // 批量更新库存
+      batchUpdateInventory: (updates: Array<{ itemId: string; amount: number }>) => {
+        // 在更新库存前修复状态
+        get()._repairInventoryState();
+        
+        set((state) => {
+          const safeInventory = ensureInventoryMap(state.inventory);
+          const newInventory = new Map(safeInventory);
+          let totalItemsAdded = 0;
+
+          // 批量处理所有更新
+          updates.forEach(({ itemId, amount }) => {
+            const currentItem = newInventory.get(itemId) || get().getInventoryItem(itemId);
+            const newAmount = Math.max(0, currentItem.currentAmount + amount);
+            const updatedItem = {
+              ...currentItem,
+              currentAmount: Math.min(newAmount, currentItem.maxCapacity)
+            };
+            newInventory.set(itemId, updatedItem);
+            
+            if (amount > 0) {
+              totalItemsAdded += amount;
+            }
+          });
+          
+          return {
+            inventory: newInventory,
+            totalItemsProduced: state.totalItemsProduced + totalItemsAdded
+          };
+        });
+      },
+
       // 修复inventory状态的内部函数
         _repairInventoryState: () => {
     const inventory = get().inventory;
@@ -258,6 +295,30 @@ const useGameStore = create<GameState>()(
       const safeUnlockedTechs = ensureUnlockedTechsSet(unlockedTechs);
       set(() => ({ unlockedTechs: safeUnlockedTechs }));
       console.log('Repaired unlockedTechs state');
+    }
+  },
+  _repairFacilityState: () => {
+    const facilities = get().facilities;
+    const dataService = DataService.getInstance();
+    const needsRepair = facilities.filter(facility => 
+      !facility.targetItemId && facility.production?.currentRecipeId
+    );
+    
+    if (needsRepair.length > 0) {
+      set((state) => ({
+        facilities: state.facilities.map(facility => {
+          if (!facility.targetItemId && facility.production?.currentRecipeId) {
+            const recipe = dataService.getRecipe(facility.production.currentRecipeId);
+            if (recipe && recipe.out) {
+              // 从配方的输出物品中找到第一个作为目标物品
+              const targetItemId = Object.keys(recipe.out)[0];
+              console.log(`Repaired facility ${facility.id}: targetItemId set to ${targetItemId}`);
+              return { ...facility, targetItemId };
+            }
+          }
+          return facility;
+        })
+      }));
     }
   },
 
@@ -347,6 +408,38 @@ const useGameStore = create<GameState>()(
         return true;
       },
 
+      addCraftingChain: (chainData) => {
+        const chainId = `chain_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        // 为链中的每个任务分配ID和链ID
+        const tasksWithIds = chainData.tasks.map((task, index) => ({
+          ...task,
+          id: `${chainId}_task_${index}`,
+          chainId: chainId
+        }));
+
+        const newChain: CraftingChain = {
+          ...chainData,
+          id: chainId,
+          tasks: tasksWithIds,
+          status: 'pending',
+          totalProgress: 0
+        };
+
+        // 将任务添加到队列中
+        const currentTaskCount = get().craftingQueue.length;
+        if (currentTaskCount + tasksWithIds.length > get().maxQueueSize) {
+          return ''; // 队列空间不足
+        }
+
+        set((state) => ({
+          craftingQueue: [...state.craftingQueue, ...tasksWithIds],
+          craftingChains: [...state.craftingChains, newChain]
+        }));
+
+        return chainId;
+      },
+
       removeCraftingTask: (taskId: string) => {
         const state = get();
         const task = state.craftingQueue.find(t => t.id === taskId);
@@ -382,14 +475,56 @@ const useGameStore = create<GameState>()(
       completeCraftingTask: (taskId: string) => {
         const state = get();
         const task = state.craftingQueue.find(t => t.id === taskId);
-        if (task) {
-          // 添加产品到库存
+        if (!task) return;
+
+        // 追踪制造的物品（用于研究触发器）
+        get().trackCraftedItem(task.itemId, task.quantity);
+
+        // 如果是链式任务的中间产物，不添加到库存
+        if (task.isIntermediateProduct && task.chainId) {
+          console.log(`中间产物完成: ${task.itemId} x${task.quantity} (不添加到库存)`);
+          
+          // 检查链中是否有依赖于此任务的任务，如果有则可以开始执行
+          const chain = state.craftingChains.find(c => c.id === task.chainId);
+          if (chain) {
+            // 更新链的进度
+            const completedTasks = chain.tasks.filter(t => 
+              state.craftingQueue.find(qt => qt.id === t.id)?.status === 'completed'
+            ).length + 1; // +1 for the current task
+            const totalProgress = completedTasks / chain.tasks.length;
+            
+            set((state) => ({
+              craftingChains: state.craftingChains.map(c => 
+                c.id === task.chainId 
+                  ? { ...c, totalProgress }
+                  : c
+              )
+            }));
+            
+            // 检查是否是链的最后一个任务
+            const isLastTask = chain.tasks[chain.tasks.length - 1].id === taskId;
+            if (isLastTask) {
+              // 最后一个任务完成，将最终产物添加到库存
+              get().updateInventory(task.itemId, task.quantity);
+              console.log(`链式任务完成: ${chain.name}, 最终产物: ${task.itemId} x${task.quantity}`);
+              
+              // 标记链为完成
+              set((state) => ({
+                craftingChains: state.craftingChains.map(c => 
+                  c.id === task.chainId 
+                    ? { ...c, status: 'completed' as const, totalProgress: 1 }
+                    : c
+                )
+              }));
+            }
+          }
+        } else {
+          // 普通任务，直接添加产品到库存
           get().updateInventory(task.itemId, task.quantity);
-          // 追踪制造的物品（用于研究触发器）
-          get().trackCraftedItem(task.itemId, task.quantity);
-          // 移除任务
-          get().removeCraftingTask(taskId);
         }
+        
+        // 移除任务
+        get().removeCraftingTask(taskId);
       },
 
       // 设施管理
@@ -397,9 +532,9 @@ const useGameStore = create<GameState>()(
         const fuelService = FuelService.getInstance();
         
         // 检查是否需要燃料缓存
-        // 检查燃料配置而不是 powerType，因为 powerType 可能在 item 中没有定义
-        if (FACILITY_FUEL_CONFIGS[facility.facilityId]) {
-          facility.fuelBuffer = fuelService.initializeFuelBuffer(facility.facilityId) || undefined;
+        const fuelBuffer = fuelService.initializeFuelBuffer(facility.facilityId);
+        if (fuelBuffer) {
+          facility.fuelBuffer = fuelBuffer;
         }
         
         set((state) => ({
@@ -714,6 +849,10 @@ const useGameStore = create<GameState>()(
           researchState: currentResearch || null,
           researchQueue: queue
         }));
+        
+        // 清理DataService的解锁缓存，使新解锁的配方生效
+        const dataService = DataService.getInstance();
+        dataService.clearUnlockCache();
       },
 
       // 添加到研究队列
@@ -901,6 +1040,10 @@ const useGameStore = create<GameState>()(
                 unlockedTechs: new Set([...state.unlockedTechs, recipe.id])
               }));
               
+              // 清理DataService的解锁缓存，使新解锁的配方生效
+              const dataService = DataService.getInstance();
+              dataService.clearUnlockCache();
+              
               // Research unlocked by trigger
               
               // 可以在这里添加通知系统
@@ -937,19 +1080,17 @@ const useGameStore = create<GameState>()(
         const fuelService = FuelService.getInstance();
         const facilities = get().facilities;
         
+        // 使用智能燃料分配
+        fuelService.smartFuelDistribution(
+          facilities,
+          get().getInventoryItem,
+          get().updateInventory
+        );
+        
+        // 更新设施状态
         facilities.forEach(facility => {
-          if (facility.fuelBuffer && facility.status !== 'stopped') {
-            const result = fuelService.autoRefuel(facility, get().getInventoryItem);
-            
-            if (result.success) {
-              // 扣除库存
-              Object.entries(result.itemsConsumed).forEach(([itemId, amount]) => {
-                get().updateInventory(itemId, -amount);
-              });
-              
-              // 更新设施
-              get().updateFacility(facility.id, { fuelBuffer: facility.fuelBuffer });
-            }
+          if (facility.fuelBuffer) {
+            get().updateFacility(facility.id, { fuelBuffer: facility.fuelBuffer });
           }
         });
       },
@@ -961,7 +1102,7 @@ const useGameStore = create<GameState>()(
         facilities.forEach(facility => {
           if (facility.fuelBuffer) {
             const isProducing = facility.status === 'running' && facility.production?.progress !== undefined;
-            const result = fuelService.updateFuelConsumption(facility, deltaTime, isProducing);
+            const result = fuelService.updateFuelConsumption(facility, deltaTime, isProducing, get().getInventoryItem);
             
             if (!result.success && facility.status === 'running') {
               // 燃料耗尽，更新状态
@@ -1001,6 +1142,7 @@ const useGameStore = create<GameState>()(
         set(() => ({
           inventory: new Map(),
           craftingQueue: [],
+          craftingChains: [],
           facilities: [],
           deployedContainers: [],
           gameTime: 0,
@@ -1031,6 +1173,55 @@ const useGameStore = create<GameState>()(
           lastSaveTime: Date.now(),
           saveKey: `save_${Date.now()}`
         }));
+      },
+
+      // 新增：强制存档方法，绕过防抖
+      forceSaveGame: async () => {
+        const state = get();
+        const storage = createDebouncedStorage();
+        
+        const serializedData = {
+          // 核心游戏数据
+          inventory: Array.from(state.inventory.entries()),
+          craftingQueue: state.craftingQueue,
+          craftingChains: state.craftingChains,
+          facilities: state.facilities,
+          deployedContainers: state.deployedContainers,
+          totalItemsProduced: state.totalItemsProduced,
+          favoriteRecipes: Array.from(state.favoriteRecipes),
+          recentRecipes: state.recentRecipes,
+          // 科技进度状态
+          researchState: state.researchState,
+          researchQueue: state.researchQueue,
+          unlockedTechs: Array.from(state.unlockedTechs),
+          autoResearch: state.autoResearch,
+          // 统计数据
+          craftedItemCounts: Array.from(state.craftedItemCounts.entries()),
+          builtEntityCounts: Array.from(state.builtEntityCounts.entries()),
+          minedEntityCounts: Array.from(state.minedEntityCounts.entries()),
+          // 时间数据
+          lastSaveTime: Date.now(),
+          saveKey: `force_${Date.now()}`
+        };
+
+        try {
+          // 扩展接口以支持forceSetItem方法
+          interface ExtendedStorage {
+            forceSetItem?: (key: string, value: string) => Promise<void>;
+            setItem: (key: string, value: string) => Promise<void>;
+          }
+          const debouncedStorage = storage as ExtendedStorage;
+          if (debouncedStorage.forceSetItem) {
+            await debouncedStorage.forceSetItem('factorio-game-storage', JSON.stringify(serializedData));
+          } else {
+            // 降级到普通存档
+            await storage.setItem('factorio-game-storage', JSON.stringify(serializedData));
+          }
+          console.log('[ForceSave] 强制存档完成');
+        } catch (error) {
+          console.error('[ForceSave] 强制存档失败:', error);
+          throw error;
+        }
       }
     }),
     {
@@ -1042,6 +1233,7 @@ const useGameStore = create<GameState>()(
           // 核心游戏数据
           inventory: Array.from(state.inventory.entries()),
           craftingQueue: state.craftingQueue,
+          craftingChains: state.craftingChains,
           facilities: state.facilities,
           deployedContainers: state.deployedContainers,
           totalItemsProduced: state.totalItemsProduced,
@@ -1078,6 +1270,11 @@ const useGameStore = create<GameState>()(
           // 类型断言 - 确保正确的类型转换
           const craftingQueue = state.craftingQueue as CraftingTask[];
           state.craftingQueue = craftingQueue;
+          
+          // 确保craftingChains数组存在
+          if (!Array.isArray(state.craftingChains)) {
+            state.craftingChains = [];
+          }
           
           const facilities = state.facilities as FacilityInstance[];
           state.facilities = facilities;
@@ -1127,18 +1324,55 @@ const useGameStore = create<GameState>()(
   )
 );
 
-// 设置定期自动存档 - 每10秒触发一次存档
+// 全局变量存储定时器ID，防止热更新时创建多个定时器
+let autoSaveIntervalId: number | null = null;
 let lastAutoSaveTime = Date.now();
-setInterval(() => {
-  const state = useGameStore.getState();
-  const now = Date.now();
-  
-  // 只有当游戏时间有变化时才存档（说明游戏在运行）
-  if (now - lastAutoSaveTime > 10000) {
-    console.log('[AutoSave] 定期自动存档触发');
-    state.saveGame(); // 触发存档
-    lastAutoSaveTime = now;
+
+// 清理自动存档定时器
+const clearAutoSaveInterval = () => {
+  if (autoSaveIntervalId) {
+    clearInterval(autoSaveIntervalId);
+    autoSaveIntervalId = null;
+    console.log('[AutoSave] 清理自动存档定时器');
   }
-}, 10000);
+};
+
+// 创建自动存档定时器
+const createAutoSaveInterval = () => {
+  // 先清理旧的定时器，防止热更新时重复创建
+  clearAutoSaveInterval();
+  
+  // 创建新的定时器
+  autoSaveIntervalId = setInterval(async () => {
+    const state = useGameStore.getState();
+    const now = Date.now();
+    
+    // 只有当游戏时间有变化时才存档（说明游戏在运行）
+    if (now - lastAutoSaveTime > 10000) {
+      console.log('[AutoSave] 定期强制存档触发');
+      try {
+        await state.forceSaveGame(); // 使用强制存档确保可靠性
+        lastAutoSaveTime = now;
+      } catch (error) {
+        console.error('[AutoSave] 自动存档失败:', error);
+        // 如果强制存档失败，尝试普通存档作为降级
+        state.saveGame();
+      }
+    }
+  }, 10000);
+  
+  console.log('[AutoSave] 创建自动存档定时器');
+};
+
+// 初始化自动存档定时器
+createAutoSaveInterval();
+
+// 在开发环境中，监听热更新事件（如果可用）
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    console.log('[AutoSave] 热更新时清理定时器');
+    clearAutoSaveInterval();
+  });
+}
 
 export default useGameStore;

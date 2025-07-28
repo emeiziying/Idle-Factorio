@@ -54,7 +54,7 @@ interface ResearchQueueProps {
   collapsible?: boolean;
 }
 
-const ResearchQueue: React.FC<ResearchQueueProps> = ({
+const ResearchQueue: React.FC<ResearchQueueProps> = React.memo(({
   queue,
   currentResearch,
   autoResearch,
@@ -68,16 +68,16 @@ const ResearchQueue: React.FC<ResearchQueueProps> = ({
   const [expanded, setExpanded] = React.useState(!!currentResearch);
   const techService = TechnologyService.getInstance();
 
-  // 格式化时间显示
-  const formatTime = (seconds: number) => {
+  // 格式化时间显示 - 使用useCallback缓存
+  const formatTime = React.useCallback((seconds: number) => {
     if (seconds < 60) return `${seconds}秒`;
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return remainingSeconds > 0 ? `${minutes}分${remainingSeconds}秒` : `${minutes}分钟`;
-  };
+  }, []);
 
-  // 获取队列总时间
-  const getTotalQueueTime = () => {
+  // 获取队列总时间 - 使用useMemo缓存
+  const totalQueueTime = React.useMemo(() => {
     let totalTime = 0;
     queue.forEach(item => {
       const tech = techService.getTechnology(item.techId);
@@ -86,19 +86,18 @@ const ResearchQueue: React.FC<ResearchQueueProps> = ({
       }
     });
     return totalTime;
-  };
+  }, [queue, techService]);
 
-  // 获取优先级显示
-  const getPriorityLabel = (priority: number) => {
+  // 获取优先级显示 - 使用useCallback缓存
+  const getPriorityLabel = React.useCallback((priority: number) => {
     switch (priority) {
       case 0: return { label: '高', color: 'error' as const };
       case 1: return { label: '普通', color: 'primary' as const };
       case 2: return { label: '低', color: 'default' as const };
       default: return { label: '普通', color: 'primary' as const };
     }
-  };
+  }, []);
 
-  const totalQueueTime = getTotalQueueTime();
 
   // 监听当前研究状态变化，自动展开/收起队列
   React.useEffect(() => {
@@ -360,6 +359,8 @@ const ResearchQueue: React.FC<ResearchQueueProps> = ({
       </CardContent>
     </Card>
   );
-};
+});
+
+ResearchQueue.displayName = 'ResearchQueue';
 
 export default ResearchQueue;

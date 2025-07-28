@@ -42,7 +42,7 @@ export const useItemRecipes = (item: Item) => {
       recipes: filteredRecipes,
       usedInRecipes: filteredUsageRecipes
     };
-  }, [item?.id]); // 只依赖item.id，减少重复计算
+  }, [item, dataService]); // 包含dataService依赖
   
   // 进一步优化：分类配方计算也使用useMemo
   const { manualCraftable, restricted, producer } = useMemo(() => {
