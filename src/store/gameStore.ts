@@ -1022,30 +1022,56 @@ const useGameStore = create<GameState>()(
             console.error('Failed to rehydrate inventory:', error);
             state.inventory = new Map();
           }
-          state.craftingQueue = state.craftingQueue as CraftingTask[];
-          state.facilities = state.facilities as FacilityInstance[];
-          state.deployedContainers = state.deployedContainers as DeployedContainer[];
+          // 类型断言 - 确保正确的类型转换
+          const craftingQueue = state.craftingQueue as CraftingTask[];
+          state.craftingQueue = craftingQueue;
           
+          const facilities = state.facilities as FacilityInstance[];
+          state.facilities = facilities;
+          
+          const deployedContainers = state.deployedContainers as DeployedContainer[];
+          state.deployedContainers = deployedContainers;
+          
+          // 时间补偿机制已关闭
           // 基于时间戳恢复游戏时间，补偿离线时间
-          const savedGameTime = state.gameTime as number;
-          const savedLastSaveTime = state.lastSaveTime as number;
-          const currentTime = Date.now();
-          const offlineTime = currentTime - savedLastSaveTime;
+          // const savedGameTime = state.gameTime as number;
+          // const savedLastSaveTime = state.lastSaveTime as number;
+          // const currentTime = Date.now();
+          // const offlineTime = currentTime - savedLastSaveTime;
           // 限制离线时间补偿，避免异常情况
-          const maxOfflineTime = 24 * 60 * 60 * 1000; // 最多补偿24小时
-          const compensatedOfflineTime = Math.min(offlineTime, maxOfflineTime);
-          state.gameTime = savedGameTime + compensatedOfflineTime;
-          state.lastSaveTime = currentTime;
+          // const maxOfflineTime = 24 * 60 * 60 * 1000; // 最多补偿24小时
+          // const compensatedOfflineTime = Math.min(offlineTime, maxOfflineTime);
+          // state.gameTime = savedGameTime + compensatedOfflineTime;
+          // state.lastSaveTime = currentTime;
           
-          state.totalItemsProduced = state.totalItemsProduced as number;
+          // 只更新lastSaveTime，不进行时间补偿
+          state.lastSaveTime = Date.now();
+          
+          // 类型断言 - 确保正确的类型转换
+          const totalItemsProduced = state.totalItemsProduced as number;
+          state.totalItemsProduced = totalItemsProduced;
+          
           state.favoriteRecipes = new Set(state.favoriteRecipes as unknown as string[]);
-          state.recentRecipes = state.recentRecipes as string[];
+          
+          const recentRecipes = state.recentRecipes as string[];
+          state.recentRecipes = recentRecipes;
+          
           state.technologies = new Map(state.technologies as unknown as [string, Technology][]);
-          state.researchState = state.researchState as TechResearchState | null;
-          state.researchQueue = state.researchQueue as ResearchQueueItem[];
+          
+          const researchState = state.researchState as TechResearchState | null;
+          state.researchState = researchState;
+          
+          const researchQueue = state.researchQueue as ResearchQueueItem[];
+          state.researchQueue = researchQueue;
+          
           state.unlockedTechs = new Set(state.unlockedTechs as unknown as string[]);
-          state.autoResearch = state.autoResearch as boolean;
-          state.techCategories = state.techCategories as TechCategory[];
+          
+          const autoResearch = state.autoResearch as boolean;
+          state.autoResearch = autoResearch;
+          
+          const techCategories = state.techCategories as TechCategory[];
+          state.techCategories = techCategories;
+          
           state.craftedItemCounts = new Map(state.craftedItemCounts as unknown as [string, number][]);
           state.builtEntityCounts = new Map(state.builtEntityCounts as unknown as [string, number][]);
           state.minedEntityCounts = new Map(state.minedEntityCounts as unknown as [string, number][]);
