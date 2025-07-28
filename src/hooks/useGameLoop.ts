@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import useGameStore from '../store/gameStore';
 import { DataService } from '../services/DataService';
 import { RecipeService } from '../services/RecipeService';
@@ -33,7 +33,7 @@ export const useGameLoop = () => {
   const dataService = DataService.getInstance();
 
   // 计算设施的生产效率
-  const calculateFacilityProduction = (facilityId: string, count: number = 1) => {
+  const calculateFacilityProduction = useCallback((facilityId: string, count: number = 1) => {
     const facilityItem = dataService.getItem(facilityId);
     if (!facilityItem || !facilityItem.machine) {
       logger.warn(`设施 ${facilityId} 没有找到或没有机器属性`);
@@ -87,10 +87,10 @@ export const useGameLoop = () => {
     logger.debug(`设施 ${facilityId} x${count} 输出产量:`, Array.from(outputRate.entries()));
 
     return { inputRate, outputRate };
-  };
+  }, [dataService]);
 
   // 检查设施是否有足够的输入材料
-  const checkInputAvailability = (inputRate: Map<string, number>, deltaTimeInSeconds: number): boolean => {
+  const checkInputAvailability = useCallback((inputRate: Map<string, number>, deltaTimeInSeconds: number): boolean => {
     for (const [itemId, rate] of inputRate) {
       const requiredAmount = rate * deltaTimeInSeconds;
       const availableAmount = getInventoryItem(itemId).currentAmount;
@@ -101,18 +101,18 @@ export const useGameLoop = () => {
       }
     }
     return true;
-  };
+  }, [getInventoryItem]);
 
   // 消耗输入材料
-  const consumeInputs = (inputRate: Map<string, number>, deltaTimeInSeconds: number) => {
+  const consumeInputs = useCallback((inputRate: Map<string, number>, deltaTimeInSeconds: number) => {
     for (const [itemId, rate] of inputRate) {
       const consumeAmount = rate * deltaTimeInSeconds;
       updateInventory(itemId, -consumeAmount);
     }
-  };
+  }, [updateInventory]);
 
   // 生产输出物品
-  const produceOutputs = (outputRate: Map<string, number>, deltaTimeInSeconds: number) => {
+  const produceOutputs = useCallback((outputRate: Map<string, number>, deltaTimeInSeconds: number) => {
     for (const [itemId, rate] of outputRate) {
       const produceAmount = rate * deltaTimeInSeconds;
       
@@ -129,10 +129,10 @@ export const useGameLoop = () => {
         productionAccumulatorRef.current[itemId] = newAccumulator;
       }
     }
-  };
+  }, [updateInventory]);
 
   // 游戏循环更新函数
-  const updateGameLoop = () => {
+  const updateGameLoop = useCallback(() => {
     const currentTime = Date.now();
     const deltaTime = currentTime - lastUpdateTimeRef.current;
     const deltaTimeInSeconds = deltaTime / 1000;
@@ -169,10 +169,10 @@ export const useGameLoop = () => {
     }
 
     lastUpdateTimeRef.current = currentTime;
-  };
+  }, [facilities, gameTime, setGameTime, calculateFacilityProduction, checkInputAvailability, consumeInputs, produceOutputs]);
 
   // 启动游戏循环
-  const startGameLoop = () => {
+  const startGameLoop = useCallback(() => {
     if (gameLoopRef.current) {
       logger.debug('游戏循环已经在运行中');
       return; // 已经在运行
@@ -188,7 +188,7 @@ export const useGameLoop = () => {
     
     gameLoopRef.current = requestAnimationFrame(gameLoop);
           logger.info('游戏循环已启动，ID:', gameLoopRef.current);
-  };
+  }, [updateGameLoop]);
 
   // 停止游戏循环
   const stopGameLoop = () => {
@@ -215,7 +215,7 @@ export const useGameLoop = () => {
       logger.info('游戏循环停止');
       stopGameLoop();
     };
-  }, []);
+  }, [startGameLoop]);
 
   // 当设施列表变化时重置游戏循环状态
   useEffect(() => {

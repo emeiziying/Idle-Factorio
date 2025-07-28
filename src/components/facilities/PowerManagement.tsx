@@ -30,7 +30,7 @@ const PowerManagement: React.FC = () => {
   // 计算电力平衡
   const powerBalance = useMemo(() => {
     return powerService.calculatePowerBalance(facilities);
-  }, [facilities]);
+  }, [facilities, powerService]);
   
   // 发电设施统计
   const generatorStats = useMemo(() => {
@@ -48,7 +48,7 @@ const PowerManagement: React.FC = () => {
     });
     
     return stats;
-  }, [facilities]);
+  }, [facilities, powerService]);
   
   // 格式化功率显示
   const formatPower = (kw: number): string => {

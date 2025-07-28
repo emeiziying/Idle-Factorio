@@ -67,7 +67,7 @@ const ProductionMonitor: React.FC = () => {
     });
 
     return groups;
-  }, [facilities, searchTerm]);
+  }, [facilities, searchTerm, dataService]);
 
   // 获取设施类别
   const getFacilityCategory = (facilityId: string): string => {

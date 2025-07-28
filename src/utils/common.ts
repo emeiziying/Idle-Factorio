@@ -46,16 +46,16 @@ export const formatNumber = (num: number, decimals: number = 2): string => {
  * 安全地获取对象属性值
  */
 export const safeGet = <T>(
-  obj: any,
+  obj: Record<string, unknown>,
   path: string,
   defaultValue: T
 ): T => {
   const keys = path.split('.');
-  let result = obj;
+  let result: unknown = obj;
   
   for (const key of keys) {
     if (result && typeof result === 'object' && key in result) {
-      result = result[key];
+      result = (result as Record<string, unknown>)[key];
     } else {
       return defaultValue;
     }
@@ -67,7 +67,7 @@ export const safeGet = <T>(
 /**
  * 防抖函数
  */
-export const debounce = <T extends (...args: any[]) => any>(
+export const debounce = <T extends (...args: unknown[]) => unknown>(
   fn: T,
   delay: number
 ): ((...args: Parameters<T>) => void) => {
@@ -82,7 +82,7 @@ export const debounce = <T extends (...args: any[]) => any>(
 /**
  * 节流函数
  */
-export const throttle = <T extends (...args: any[]) => any>(
+export const throttle = <T extends (...args: unknown[]) => unknown>(
   fn: T,
   limit: number
 ): ((...args: Parameters<T>) => void) => {
@@ -108,16 +108,16 @@ export const deepClone = <T>(obj: T): T => {
   }
   
   if (obj instanceof Date) {
-    return new Date(obj.getTime()) as any;
+    return new Date(obj.getTime()) as T;
   }
   
   if (obj instanceof Array) {
-    return obj.map(item => deepClone(item)) as any;
+    return obj.map(item => deepClone(item)) as T;
   }
   
   const clonedObj = {} as T;
   for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
       clonedObj[key] = deepClone(obj[key]);
     }
   }

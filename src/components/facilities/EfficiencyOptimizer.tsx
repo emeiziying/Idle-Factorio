@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -49,6 +49,25 @@ const EfficiencyOptimizer: React.FC = () => {
   const powerService = PowerService.getInstance();
   const dataService = DataService.getInstance();
 
+  // 识别生产瓶颈
+  const identifyBottlenecks = useCallback((): Map<string, number> => {
+    const itemDeficits = new Map<string, number>();
+    
+    // 分析每个设施的输入需求
+    facilities.forEach(facility => {
+      if (facility.status === FacilityStatus.NO_RESOURCE && facility.production?.currentRecipeId) {
+        const recipe = RecipeService.getRecipeById(facility.production.currentRecipeId);
+        if (recipe?.in) {
+          Object.entries(recipe.in).forEach(([itemId, amount]) => {
+            const current = itemDeficits.get(itemId) || 0;
+            itemDeficits.set(itemId, current + (amount as number));
+          });
+        }
+      }
+    });
+    
+    return itemDeficits;
+  }, [facilities]);
 
   // 计算各种效率指标
   const efficiencyMetrics = useMemo(() => {
@@ -73,27 +92,7 @@ const EfficiencyOptimizer: React.FC = () => {
       avgEfficiency,
       bottlenecks
     };
-  }, [facilities]);
-
-  // 识别生产瓶颈
-  const identifyBottlenecks = (): Map<string, number> => {
-    const itemDeficits = new Map<string, number>();
-    
-    // 分析每个设施的输入需求
-    facilities.forEach(facility => {
-      if (facility.status === FacilityStatus.NO_RESOURCE && facility.production?.currentRecipeId) {
-        const recipe = RecipeService.getRecipeById(facility.production.currentRecipeId);
-        if (recipe?.in) {
-          Object.entries(recipe.in).forEach(([itemId, amount]) => {
-            const current = itemDeficits.get(itemId) || 0;
-            itemDeficits.set(itemId, current + (amount as number));
-          });
-        }
-      }
-    });
-    
-    return itemDeficits;
-  };
+  }, [facilities, identifyBottlenecks, powerService]);
 
   // 生成优化建议
   const suggestions = useMemo((): OptimizationSuggestion[] => {
@@ -169,7 +168,7 @@ const EfficiencyOptimizer: React.FC = () => {
       const priority = { critical: 0, warning: 1, improvement: 2 };
       return priority[a.type] - priority[b.type];
     });
-  }, [efficiencyMetrics]);
+  }, [efficiencyMetrics, dataService, facilities]);
 
   // 获取建议图标
   const getSuggestionIcon = (suggestion: OptimizationSuggestion) => {

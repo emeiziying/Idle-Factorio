@@ -7,29 +7,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is **异星工厂 v2** (Factorio v2) - a React-based idle factory management game inspired by Factorio. The application is built with modern React architecture and implements core game mechanics for production management.
 
 **Current State**: Active development - Core modules implemented  
-**Tech Stack**: React 18.3.1 + TypeScript + Vite + Material-UI + Zustand  
-**Package Manager**: npm (both package-lock.json and pnpm-lock.yaml present - use npm consistently)
+**Tech Stack**: React 19.1.0 + TypeScript + Vite + Material-UI v7.2.0 + Zustand  
+**Package Manager**: pnpm (configured with pnpm@9.15.0)
 
 ## Development Commands
 
 ```bash
 # Start development server (with hot reload)
-npm run dev
+pnpm dev
 
 # Build for production (TypeScript compilation + Vite build)  
-npm run build
+pnpm build
 
 # Lint code (ESLint with TypeScript support)
-npm run lint
+pnpm lint
 
 # Preview production build
-npm run preview
+pnpm preview
 
 # Install dependencies
-npm install
+pnpm install
 ```
 
-**Note**: Always run `npm run lint` after making code changes to ensure TypeScript and React code quality.
+**Note**: Always run `pnpm lint` after making code changes to ensure TypeScript and React code quality.
 
 ## Current Architecture
 

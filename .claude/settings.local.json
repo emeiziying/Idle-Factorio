@@ -44,7 +44,11 @@
       "mcp__browser-tools__getNetworkErrors",
       "Bash(npm uninstall:*)",
       "Bash(open \"http://localhost:5173/#/test\")",
-      "Bash(osascript:*)"
+      "Bash(osascript:*)",
+      "Bash(gh workflow:*)",
+      "Bash(gh run list:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm build:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

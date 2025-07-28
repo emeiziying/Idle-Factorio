@@ -3,7 +3,7 @@
  * 用于管理和获取服务实例，避免循环依赖
  */
 export class ServiceLocator {
-  private static services = new Map<string, any>();
+  private static services = new Map<string, unknown>();
 
   /**
    * 注册服务

@@ -30,7 +30,6 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
   
   const lastUpdateRef = useRef<number>(Date.now());
   const fuelService = FuelService.getInstance();
-  const recipeService = RecipeService.getInstance();
   const powerService = PowerService.getInstance();
   
   // 更新单个设施的生产
@@ -94,7 +93,7 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
         }
       });
     }
-  }, [updateFacility, updateInventory, getInventoryItem, recipeService]);
+  }, [updateFacility, updateInventory, getInventoryItem]);
   
   // 主更新循环
   const updateProduction = useCallback(() => {

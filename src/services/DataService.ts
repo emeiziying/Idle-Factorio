@@ -3,6 +3,8 @@
 import type { GameData, Item, Recipe, Category } from '../types/index';
 import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
 import type { UserProgressService } from './UserProgressService';
+import { RecipeService } from './RecipeService';
+import type { TechnologyService } from './TechnologyService';
 import { error as logError } from '../utils/logger';
 
 // 异步导入游戏数据
@@ -246,8 +248,7 @@ export class DataService {
   // 获取配方（保留常用方法，其他通过RecipeService直接调用）
   getRecipe(recipeId: string): Recipe | undefined {
     if (ServiceLocator.has(SERVICE_NAMES.RECIPE)) {
-      const recipeService = ServiceLocator.get<any>(SERVICE_NAMES.RECIPE);
-      return recipeService.getRecipeById(recipeId);
+      return RecipeService.getRecipeById(recipeId);
     }
     return undefined;
   }
@@ -282,7 +283,7 @@ export class DataService {
     try {
       // 1. 检查是否为科技直接解锁的物品（设备、工具等）
       if (ServiceLocator.has(SERVICE_NAMES.TECHNOLOGY)) {
-        const techService = ServiceLocator.get<any>(SERVICE_NAMES.TECHNOLOGY);
+        const techService = ServiceLocator.get<TechnologyService>(SERVICE_NAMES.TECHNOLOGY);
         if (techService.isItemUnlocked(itemId)) {
           return true;
         }
@@ -290,15 +291,15 @@ export class DataService {
 
       // 2. 检查是否为原材料（无配方的物品，可直接采集）
       const recipeService = ServiceLocator.has(SERVICE_NAMES.RECIPE) 
-        ? ServiceLocator.get<any>(SERVICE_NAMES.RECIPE) 
+        ? ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE) 
         : null;
-      const recipes = recipeService ? recipeService.getRecipesThatProduce(itemId) : [];
+      const recipes = recipeService ? RecipeService.getRecipesThatProduce(itemId) : [];
       if (recipes.length === 0) {
         return true; // 原材料始终可用
       }
 
       // 全局过滤：只允许Nauvis星球的配方（暂时限制）
-      const nauvisRecipes = recipes.filter((recipe: any) => 
+      const nauvisRecipes = recipes.filter((recipe: Recipe) => 
         !recipe.locations || 
         recipe.locations.length === 0 || 
         recipe.locations.includes('nauvis')
@@ -466,8 +467,7 @@ export class DataService {
     // 优先从配方获取iconText和icon
     let recipe: Recipe | undefined;
     if (ServiceLocator.has(SERVICE_NAMES.RECIPE)) {
-      const recipeService = ServiceLocator.get<any>(SERVICE_NAMES.RECIPE);
-      recipe = recipeService.getRecipeById(itemId);
+      recipe = RecipeService.getRecipeById(itemId);
     }
     
     if (recipe?.iconText) {
@@ -504,17 +504,17 @@ export class DataService {
     if (!item) return null;
 
     const recipeService = ServiceLocator.has(SERVICE_NAMES.RECIPE) 
-      ? ServiceLocator.get<any>(SERVICE_NAMES.RECIPE) 
+      ? ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE) 
       : null;
 
     return {
       item,
-      recipes: recipeService ? recipeService.getRecipesThatProduce(itemId) : [],
-      usedInRecipes: recipeService ? recipeService.getRecipesThatUse(itemId) : [],
+      recipes: recipeService ? RecipeService.getRecipesThatProduce(itemId) : [],
+      usedInRecipes: recipeService ? RecipeService.getRecipesThatUse(itemId) : [],
       // 新增：配方统计信息
-      recipeStats: recipeService ? recipeService.getRecipeStats(itemId) : null,
+      recipeStats: recipeService ? RecipeService.getRecipeStats(itemId) : null,
       // 新增：推荐配方
-      recommendedRecipe: recipeService ? recipeService.getMostEfficientRecipe(itemId) : null
+      recommendedRecipe: recipeService ? RecipeService.getMostEfficientRecipe(itemId) : null
     };
   }
 

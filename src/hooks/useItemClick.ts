@@ -61,7 +61,7 @@ export const useItemsClick = (
  * 物品点击处理 Hook（带额外数据）
  * 在点击时可以传递额外的上下文数据
  */
-export const useItemClickWithContext = <T = any>(
+export const useItemClickWithContext = <T = unknown>(
   componentName: string,
   onItemSelect?: (item: Item, context?: T) => void
 ) => {
