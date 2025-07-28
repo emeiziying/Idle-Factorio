@@ -57,7 +57,7 @@ export const useGameLoop = () => {
     const facilityItem = dataService.getItem(facilityId);
     if (!facilityItem || !facilityItem.machine) {
       logger.warn(`设施 ${facilityId} 没有找到或没有机器属性`);
-      return { inputRate: new Map(), outputRate: new Map() };
+      return { inputRate: new Map(), outputRate: new Map(), recipe: null };
     }
 
     // 找到该设施能生产的配方
@@ -73,7 +73,7 @@ export const useGameLoop = () => {
     const recipe = applicableRecipes[0];
     if (!recipe || !recipe.time) {
       logger.warn(`设施 ${facilityId} 没有找到有效配方`);
-      return { inputRate, outputRate };
+      return { inputRate, outputRate, recipe: null };
     }
 
 
@@ -98,7 +98,7 @@ export const useGameLoop = () => {
     }
 
 
-    return { inputRate, outputRate };
+    return { inputRate, outputRate, recipe };
   };
 
 
@@ -132,7 +132,7 @@ export const useGameLoop = () => {
 
       // 处理每种设施类型的生产
       for (const [facilityId, totalCount] of facilityGroups) {
-        const { inputRate, outputRate } = calculateFacilityProduction(facilityId, totalCount);
+        const { inputRate, outputRate, recipe } = calculateFacilityProduction(facilityId, totalCount);
         
         // 检查是否有足够的输入材料
         let hasEnoughInputs = true;
@@ -167,6 +167,10 @@ export const useGameLoop = () => {
               store.updateInventory(itemId, wholeUnits);
               // 追踪制造的物品（用于研究触发器）
               store.trackCraftedItem(itemId, wholeUnits);
+              // 如果是采矿配方，同时追踪挖掘的实体
+              if (recipe && recipe.flags?.includes('mining')) {
+                store.trackMinedEntity(itemId, wholeUnits);
+              }
               globalStateRef.current.productionAccumulator[itemId] = newAccumulator - wholeUnits;
             } else {
               globalStateRef.current.productionAccumulator[itemId] = newAccumulator;
