@@ -16,10 +16,14 @@ import { TechnologyService } from '../../services/TechnologyService';
 import type { TechStatus } from '../../types/technology';
 import { ResearchPriority } from '../../types/technology';
 import { usePersistentState } from '../../hooks/usePersistentState';
+import { useUnlockedTechsRepair } from '../../hooks/useUnlockedTechsRepair';
 
-const TechnologyModule: React.FC = () => {
+const TechnologyModule: React.FC = React.memo(() => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
+  // 安全修复unlockedTechs状态
+  useUnlockedTechsRepair();
   
   // 从store获取状态
   const {
@@ -46,19 +50,17 @@ const TechnologyModule: React.FC = () => {
     const initializeTech = async () => {
       try {
         setLoading(true);
-        await initializeTechnologyService();
         
-        // 强制刷新科技数据
-        const techService = TechnologyService.getInstance();
-        if (techService.isServiceInitialized()) {
-          // 强制重新初始化以应用最新修改
-          await techService.forceReinitialize();
-          
-          // 重新获取排序后的科技数据
-          techService.getAllTechnologies();
+        // 检查科技数据是否已经加载
+        if (technologies.size > 0) {
+          // 科技数据已存在，直接完成初始化
+          setError(null);
+          setLoading(false);
+          return;
         }
         
-        // 科技数据加载完成
+        // 如果科技数据不存在，则初始化服务
+        await initializeTechnologyService();
         
         setError(null);
       } catch (err) {
@@ -70,7 +72,7 @@ const TechnologyModule: React.FC = () => {
     };
 
     initializeTech();
-  }, [initializeTechnologyService]);
+  }, [initializeTechnologyService, technologies.size]);
 
   // 研究进度更新定时器
   useEffect(() => {
@@ -121,16 +123,26 @@ const TechnologyModule: React.FC = () => {
   const techStates = React.useMemo(() => {
     const states = new Map<string, { status: TechStatus; progress?: number }>();
     
+    // 安全检查unlockedTechs是否为Set
+    const safeUnlockedTechs = unlockedTechs instanceof Set ? unlockedTechs : new Set();
+    
+    // 只有当有科技数据时才计算状态
+    if (technologies.size === 0) {
+      return states;
+    }
+    
+    const techService = TechnologyService.getInstance();
+    
     Array.from(technologies.values()).forEach(tech => {
       let status: TechStatus = 'locked';
       let progress: number | undefined;
 
-      if (unlockedTechs.has(tech.id)) {
+      if (safeUnlockedTechs.has(tech.id)) {
         status = 'unlocked';
       } else if (researchState?.techId === tech.id) {
         status = 'researching';
-        progress = researchState.progress;
-      } else if (TechnologyService.getInstance().isTechAvailable(tech.id)) {
+        progress = researchState?.progress;
+      } else if (techService.isServiceInitialized() && techService.isTechAvailable(tech.id)) {
         status = 'available';
       }
 
@@ -141,24 +153,22 @@ const TechnologyModule: React.FC = () => {
   }, [technologies, unlockedTechs, researchState]);
 
   // 获取队列中的科技ID
-  const queuedTechIds = new Set(researchQueue.map(item => item.techId));
+  const queuedTechIds = React.useMemo(() => {
+    return new Set(researchQueue.map(item => item.techId));
+  }, [researchQueue]);
 
   // 筛选科技列表
   const filteredTechnologies = React.useMemo(() => {
-    // 直接从TechnologyService获取排序后的科技数据
-    const techService = TechnologyService.getInstance();
-    if (techService.isServiceInitialized()) {
-      const sortedTechs = techService.getAllTechnologies();
-
-      
-      // 科技排序完成
-      
-      return sortedTechs;
+    // 如果没有科技数据，返回空数组
+    if (technologies.size === 0) {
+      return [];
     }
     
-    // 如果服务未初始化，使用store中的数据作为后备
+    // 直接使用store中的科技数据，避免重复调用service
     const allTechs = Array.from(technologies.values());
-    return allTechs;
+    
+    // 按row属性排序（如果需要特定排序逻辑）
+    return allTechs.sort((a, b) => (a.row || 0) - (b.row || 0));
   }, [technologies]);
 
   // 加载状态
@@ -274,6 +284,8 @@ const TechnologyModule: React.FC = () => {
       )}
     </Box>
   );
-};
+});
+
+TechnologyModule.displayName = 'TechnologyModule';
 
 export default TechnologyModule;

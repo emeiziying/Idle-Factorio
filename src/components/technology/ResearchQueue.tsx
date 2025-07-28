@@ -282,23 +282,23 @@ const ResearchQueue: React.FC<ResearchQueueProps> = ({
                         </Box>
                       }
                       secondary={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 0.5 }}>
-                          <Typography variant="caption" color="text.secondary">
+                        <>
+                          <Typography variant="caption" color="text.secondary" component="span" display="inline">
                             队列位置: {index + 1}
                           </Typography>
                           
                           {tech && (
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography variant="caption" color="text.secondary" component="span" display="inline" sx={{ ml: 2 }}>
                               研究时间: {formatTime(tech.researchTime)}
                             </Typography>
                           )}
                           
                           {item.estimatedStartTime && (
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography variant="caption" color="text.secondary" component="span" display="inline" sx={{ ml: 2 }}>
                               预计开始: {new Date(item.estimatedStartTime).toLocaleTimeString()}
                             </Typography>
                           )}
-                        </Box>
+                        </>
                       }
                     />
                     

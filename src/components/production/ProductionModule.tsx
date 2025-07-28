@@ -13,11 +13,23 @@ import { useProductionLoop } from '../../hooks/useProductionLoop';
 import useGameStore from '../../store/gameStore';
 import type { Category, Item } from '../../types/index';
 
-const ProductionModule: React.FC = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
+const ProductionModule: React.FC = React.memo(() => {
+  // 智能初始categories状态：如果数据已加载则直接设置
+  const [categories, setCategories] = useState<Category[]>(() => {
+    const dataService = DataService.getInstance();
+    if (dataService.isDataLoaded()) {
+      const allCategories = dataService.getAllCategories();
+      return allCategories.filter(category => category.id !== 'technology');
+    }
+    return [];
+  });
   const [selectedCategory, setSelectedCategory] = usePersistentState<string>('production-selected-category', '');
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
-  const [loading, setLoading] = useState(true);
+  // 智能初始loading状态：如果数据已加载则不显示loading
+  const [loading, setLoading] = useState(() => {
+    const dataService = DataService.getInstance();
+    return !dataService.isDataLoaded();
+  });
   const [isItemJump, setIsItemJump] = useState(false); // 标识是否是通过物品跳转切换的分类
   const [showCraftingQueue, setShowCraftingQueue] = useState(false); // 控制制作队列显示
   const selectedItemRef = useRef<Item | null>(null);
@@ -44,12 +56,24 @@ const ProductionModule: React.FC = () => {
     loadingRef.current = loading;
   }, [loading]);
 
-  // 初始化数据加载 - 包含热重载时的数据重新加载
+  // 初始化数据加载 - 优化版本，避免重复加载
   useEffect(() => {
     const loadData = async () => {
       try {
-        setLoading(true);
         const dataService = DataService.getInstance();
+        
+        // 优化：如果数据已经加载，直接加载分类而不显示loading
+        if (dataService.isDataLoaded()) {
+          // 数据已存在，直接加载分类
+          const allCategories = dataService.getAllCategories();
+          const nonTechCategories = allCategories.filter(category => category.id !== 'technology');
+          setCategories(nonTechCategories);
+          setLoading(false);
+          return;
+        }
+        
+        // 只有在需要加载数据时才显示loading
+        setLoading(true);
         
         // 先加载游戏数据
         await dataService.loadGameData();
@@ -61,18 +85,15 @@ const ProductionModule: React.FC = () => {
           await dataService.loadGameData();
         }
         
-        // 加载分类（按推荐顺序），过滤掉没有可用物品的分类
+        // 加载分类（按推荐顺序），优化性能
         const allCategories = dataService.getAllCategories();
         // Categories loaded
         
-        const categoriesWithAvailableItems = allCategories
-          .filter(category => category.id !== 'technology') // 过滤掉科技分类
-          .filter(category => {
-            const items = dataService.getItemsByCategory(category.id);
-            return items.some(item => dataService.isItemUnlocked(item.id));
-          });
-                  // Available categories filtered
-        setCategories(categoriesWithAvailableItems);
+        // 性能优化：直接过滤科技分类，避免进一步的昂贵检查
+        const nonTechCategories = allCategories.filter(category => category.id !== 'technology');
+        
+        // Available categories filtered (performance optimized)
+        setCategories(nonTechCategories);
         
                   // Loading complete
         setLoading(false);
@@ -84,16 +105,8 @@ const ProductionModule: React.FC = () => {
 
     loadData();
     
-    // 热重载检测：监听DataService的数据变化
-    const checkDataInterval = setInterval(() => {
-      const dataService = DataService.getInstance();
-      if (!dataService.isDataLoaded() && !loadingRef.current) {
-        // Data lost during hot reload, reloading
-        loadData();
-      }
-    }, 1000);
-
-    return () => clearInterval(checkDataInterval);
+    // 移除持续的数据检查定时器以提升性能
+    // 如果需要热重载检测，可以通过其他更高效的方式实现
   }, []); // 移除loading依赖，避免循环
 
   // 设置默认分类
@@ -131,6 +144,11 @@ const ProductionModule: React.FC = () => {
     }
     
     const dataService = DataService.getInstance();
+    
+    // 确保数据已加载
+    if (!dataService.isDataLoaded()) {
+      return null;
+    }
     
     try {
       const itemsByRow = dataService.getItemsByRow(selectedCategory);
@@ -282,6 +300,8 @@ const ProductionModule: React.FC = () => {
       <CraftingQueue open={showCraftingQueue} onClose={() => setShowCraftingQueue(false)} />
     </Box>
   );
-};
+});
+
+ProductionModule.displayName = 'ProductionModule';
 
 export default ProductionModule;

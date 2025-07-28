@@ -48,7 +48,8 @@
       "Bash(gh workflow:*)",
       "Bash(gh run list:*)",
       "Bash(pnpm lint:*)",
-      "Bash(pnpm build:*)"
+      "Bash(pnpm build:*)",
+      "mcp__browser-tools__runPerformanceAudit"
     ]
   },
   "enableAllProjectMcpServers": true,

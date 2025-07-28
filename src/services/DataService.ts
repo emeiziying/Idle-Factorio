@@ -24,9 +24,35 @@ export class DataService {
   private i18nData: I18nData | null = null;
   private i18nLoadingPromise: Promise<I18nData> | null = null;
   private gameDataLoadingPromise: Promise<GameData> | null = null;
+  
+  // 性能优化：添加缓存
+  private itemsByRowCache = new Map<string, Map<number, Item[]>>();
+  private itemUnlockedCache = new Map<string, boolean>();
+  private cacheVersion = 0; // 用于缓存失效
 
   private constructor() {
     // 不再在构造函数中获取其他服务，避免循环依赖
+  }
+  
+  // 性能优化：清理缓存
+  private clearCache(): void {
+    this.itemsByRowCache.clear();
+    this.itemUnlockedCache.clear();
+    this.cacheVersion++;
+  }
+  
+  // 性能优化：带缓存的物品解锁检查
+  private isItemUnlockedCached(itemId: string): boolean {
+    const cacheKey = `${itemId}_v${this.cacheVersion}`;
+    
+    if (this.itemUnlockedCache.has(cacheKey)) {
+      return this.itemUnlockedCache.get(cacheKey)!;
+    }
+    
+    const result = this.isItemUnlocked(itemId);
+    this.itemUnlockedCache.set(cacheKey, result);
+    
+    return result;
   }
 
   static getInstance(): DataService {
@@ -64,6 +90,9 @@ export class DataService {
     try {
       // 直接使用导入的数据，无需fetch
       this.gameData = gameData as unknown as GameData;
+      
+      // 性能优化：数据加载后清理缓存
+      this.clearCache();
       
       // 配方初始化将在 ServiceInitializer 中进行
       // 这里只负责加载数据
@@ -363,12 +392,19 @@ export class DataService {
     }
   }
 
-  // 按行号获取分类内的物品子分组
+  // 按行号获取分类内的物品子分组 - 性能优化版本
   getItemsByRow(categoryId: string): Map<number, Item[]> {
     if (!this.gameData) return new Map();
     
+    // 性能优化：检查缓存
+    const cacheKey = `${categoryId}_v${this.cacheVersion}`;
+    if (this.itemsByRowCache.has(cacheKey)) {
+      return this.itemsByRowCache.get(cacheKey)!;
+    }
+    
+    // 恢复解锁过滤，但使用缓存优化性能
     const items = Object.values(this.gameData.items).filter(item => 
-      item.category === categoryId && this.isItemUnlocked(item.id)
+      item.category === categoryId && this.isItemUnlockedCached(item.id)
     );
     
     const itemsByRow = new Map<number, Item[]>();
@@ -389,6 +425,9 @@ export class DataService {
         return aIndex - bIndex;
       });
     });
+    
+    // 缓存结果
+    this.itemsByRowCache.set(cacheKey, itemsByRow);
     
     return itemsByRow;
   }

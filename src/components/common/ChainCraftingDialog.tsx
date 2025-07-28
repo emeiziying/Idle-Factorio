@@ -116,7 +116,7 @@ const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
                     </Box>
                   }
                   secondary={
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="text.secondary" component="span">
                       需要 {dep.required} | 拥有 {dep.available}
                       {dep.canCraftManually ? ' | 可手动制作' : ' | 无法制作'}
                     </Typography>
@@ -170,7 +170,7 @@ const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
                       </Box>
                     }
                     secondary={
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary" component="span">
                         {formatTime((task.craftingTime || 1) / 0.5 * task.quantity)}
                       </Typography>
                     }

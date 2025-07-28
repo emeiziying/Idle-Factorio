@@ -68,6 +68,8 @@ interface GameState {
   updateInventory: (itemId: string, amount: number) => void;
   getInventoryItem: (itemId: string) => InventoryItem;
   recalculateItemCapacity: (itemId: string) => void;
+  _repairInventoryState: () => void;
+  _repairUnlockedTechsState: () => void;
   addCraftingTask: (task: Omit<CraftingTask, 'id'>) => boolean;
   removeCraftingTask: (taskId: string) => void;
   updateCraftingProgress: (taskId: string, progress: number) => void;
@@ -129,12 +131,69 @@ interface GameState {
   updateFuelConsumption: (deltaTime: number) => void;
 }
 
+// 确保Map对象正确初始化的辅助函数
+const ensureMap = <K, V>(map: any, typeName: string): Map<K, V> => {
+  if (map instanceof Map) {
+    return map;
+  }
+  
+  if (Array.isArray(map)) {
+    try {
+      // 验证数组格式是否正确
+      const isValidArray = map.every(entry => 
+        Array.isArray(entry) && entry.length === 2
+      );
+      
+      if (isValidArray) {
+        return new Map(map as [K, V][]);
+      }
+    } catch (error) {
+      console.error(`Failed to convert ${typeName} array to Map:`, error);
+    }
+  }
+  
+  console.warn(`Invalid ${typeName} format, creating empty Map`);
+  return new Map();
+};
+
+// 确保inventory始终是Map的辅助函数
+const ensureInventoryMap = (inventory: any): Map<string, InventoryItem> => {
+  return ensureMap<string, InventoryItem>(inventory, 'inventory');
+};
+
+const ensureSet = <T>(set: any, typeName: string): Set<T> => {
+  if (set instanceof Set) {
+    return set;
+  }
+  if (Array.isArray(set)) {
+    try {
+      return new Set(set as T[]);
+    } catch (error) {
+      console.error(`Failed to convert ${typeName} array to Set:`, error);
+    }
+  }
+  console.warn(`Invalid ${typeName} format, creating empty Set`);
+  return new Set();
+};
+
+const ensureUnlockedTechsSet = (unlockedTechs: any): Set<string> => {
+  return ensureSet<string>(unlockedTechs, 'unlockedTechs');
+};
+
 const useGameStore = create<GameState>()(
   subscribeWithSelector(
     persist(
       (set, get) => ({
       // 初始状态
-      inventory: new Map(),
+      inventory: (() => {
+        // 确保初始状态是有效的Map
+        try {
+          return new Map();
+        } catch (error) {
+          console.error('Failed to initialize inventory Map:', error);
+          return new Map();
+        }
+      })(),
       craftingQueue: [],
       maxQueueSize: 50,
       facilities: [],
@@ -161,8 +220,12 @@ const useGameStore = create<GameState>()(
 
       // 库存管理
       updateInventory: (itemId: string, amount: number) => {
+        // 在更新库存前修复状态
+        get()._repairInventoryState();
+        
         set((state) => {
-          const newInventory = new Map(state.inventory);
+          const safeInventory = ensureInventoryMap(state.inventory);
+          const newInventory = new Map(safeInventory);
           const currentItem = newInventory.get(itemId) || get().getInventoryItem(itemId);
 
           const newAmount = Math.max(0, currentItem.currentAmount + amount);
@@ -180,54 +243,32 @@ const useGameStore = create<GameState>()(
         });
       },
 
+      // 修复inventory状态的内部函数
+        _repairInventoryState: () => {
+    const inventory = get().inventory;
+    if (!(inventory instanceof Map)) {
+      const safeInventory = ensureInventoryMap(inventory);
+      set(() => ({ inventory: safeInventory }));
+      console.log('Repaired inventory state');
+    }
+  },
+  _repairUnlockedTechsState: () => {
+    const unlockedTechs = get().unlockedTechs;
+    if (!(unlockedTechs instanceof Set)) {
+      const safeUnlockedTechs = ensureUnlockedTechsSet(unlockedTechs);
+      set(() => ({ unlockedTechs: safeUnlockedTechs }));
+      console.log('Repaired unlockedTechs state');
+    }
+  },
+
       getInventoryItem: (itemId: string) => {
         const inventory = get().inventory;
         
-        // 安全检查：确保inventory是Map对象
-        if (!(inventory instanceof Map)) {
-          console.warn('Inventory is not a Map, attempting to fix...', typeof inventory, inventory);
-          
-          // 在渲染过程中不更新状态，而是返回默认值
-          // 使用setTimeout在下一个事件循环中修复状态，避免React渲染错误
-          setTimeout(() => {
-            try {
-              if (Array.isArray(inventory)) {
-                const fixedInventory = new Map(inventory as [string, InventoryItem][]);
-                set(() => ({ inventory: fixedInventory }));
-                console.log('Successfully converted inventory array to Map');
-              } else {
-                console.warn('Inventory is neither Map nor Array, resetting to empty Map');
-                const emptyInventory = new Map();
-                set(() => ({ inventory: emptyInventory }));
-              }
-            } catch (error) {
-              console.error('Failed to fix inventory:', error);
-              const emptyInventory = new Map();
-              set(() => ({ inventory: emptyInventory }));
-            }
-          }, 0);
-          
-          // 返回默认的库存项，避免渲染错误
-          const dataService = DataService.getInstance();
-          const item = dataService.getItem(itemId);
-          const stackSize = item?.stack || 100;
-          
-          return {
-            itemId,
-            currentAmount: 0,
-            stackSize,
-            baseStacks: 1,
-            additionalStacks: 0,
-            totalStacks: 1,
-            maxCapacity: stackSize,
-            productionRate: 0,
-            consumptionRate: 0,
-            status: 'normal' as const
-          };
-        }
+        // 使用辅助函数确保inventory是Map
+        const safeInventory = ensureInventoryMap(inventory);
         
-        const existing = inventory.get(itemId);
-        
+        // 从安全的inventory中获取项目
+        const existing = safeInventory.get(itemId);
         if (existing) {
           return existing;
         }
@@ -259,8 +300,12 @@ const useGameStore = create<GameState>()(
       },
 
       recalculateItemCapacity: (itemId: string) => {
+        // 在重新计算容量前修复状态
+        get()._repairInventoryState();
+        
         set(state => {
-          const newInventory = new Map(state.inventory);
+          const safeInventory = ensureInventoryMap(state.inventory);
+          const newInventory = new Map(safeInventory);
           const currentItem = newInventory.get(itemId);
           
           if (currentItem) {
@@ -576,59 +621,61 @@ const useGameStore = create<GameState>()(
       initializeTechnologyService: async () => {
         try {
           const techService = TechnologyService.getInstance();
+          
+          // 如果服务未初始化，先初始化
           if (!techService.isServiceInitialized()) {
             await techService.initialize();
-            
-            // 创建库存操作实现并注入到科技服务
-            const inventoryOps: InventoryOperations = {
-              getItemAmount: (itemId: string) => {
-                return get().getInventoryItem(itemId).currentAmount;
-              },
-              updateItemAmount: (itemId: string, change: number) => {
-                get().updateInventory(itemId, change);
-              },
-              hasEnoughItems: (requirements: Record<string, number>) => {
-                return Object.entries(requirements).every(([itemId, required]) => {
-                  const available = get().getInventoryItem(itemId).currentAmount;
-                  return available >= required;
-                });
-              },
-              consumeItems: (requirements: Record<string, number>) => {
-                // 先检查是否有足够的物品
-                const hasEnough = Object.entries(requirements).every(([itemId, required]) => {
-                  const available = get().getInventoryItem(itemId).currentAmount;
-                  return available >= required;
-                });
-                
-                if (!hasEnough) {
-                  return false;
-                }
-                
-                // 消耗物品
-                Object.entries(requirements).forEach(([itemId, required]) => {
-                  get().updateInventory(itemId, -required);
-                });
-                
-                return true;
-              }
-            };
-            
-            // 注入库存操作到科技服务
-            techService.setInventoryOperations(inventoryOps);
-            
-            // 同步科技状态到store
-            const allTechs = techService.getAllTechnologies();
-            const techMap = new Map(allTechs.map(tech => [tech.id, tech]));
-            const techTreeState = techService.getTechTreeState();
-            const unlockedTechs = new Set(techTreeState.unlockedTechs);
-            const techCategories = techService.getTechCategories();
-            
-            set(() => ({
-              technologies: techMap,
-              unlockedTechs,
-              techCategories
-            }));
           }
+          
+          // 创建库存操作实现并注入到科技服务
+          const inventoryOps: InventoryOperations = {
+            getItemAmount: (itemId: string) => {
+              return get().getInventoryItem(itemId).currentAmount;
+            },
+            updateItemAmount: (itemId: string, change: number) => {
+              get().updateInventory(itemId, change);
+            },
+            hasEnoughItems: (requirements: Record<string, number>) => {
+              return Object.entries(requirements).every(([itemId, required]) => {
+                const available = get().getInventoryItem(itemId).currentAmount;
+                return available >= required;
+              });
+            },
+            consumeItems: (requirements: Record<string, number>) => {
+              // 先检查是否有足够的物品
+              const hasEnough = Object.entries(requirements).every(([itemId, required]) => {
+                const available = get().getInventoryItem(itemId).currentAmount;
+                return available >= required;
+              });
+              
+              if (!hasEnough) {
+                return false;
+              }
+              
+              // 消耗物品
+              Object.entries(requirements).forEach(([itemId, required]) => {
+                get().updateInventory(itemId, -required);
+              });
+              
+              return true;
+            }
+          };
+          
+          // 注入库存操作到科技服务
+          techService.setInventoryOperations(inventoryOps);
+          
+          // 总是同步科技状态到store（无论服务是否已初始化）
+          const allTechs = techService.getAllTechnologies();
+          const techMap = new Map(allTechs.map(tech => [tech.id, tech]));
+          const techTreeState = techService.getTechTreeState();
+          const unlockedTechs = new Set(techTreeState.unlockedTechs);
+          const techCategories = techService.getTechCategories();
+          
+          set(() => ({
+            technologies: techMap,
+            unlockedTechs,
+            techCategories
+          }));
         } catch (error) {
           logError('Failed to initialize TechnologyService:', error);
         }
@@ -728,9 +775,10 @@ const useGameStore = create<GameState>()(
       },
 
       // 检查科技是否已解锁
-      isTechUnlocked: (techId: string) => {
-        return get().unlockedTechs.has(techId);
-      },
+        isTechUnlocked: (techId: string) => {
+    get()._repairUnlockedTechsState();
+    return get().unlockedTechs.has(techId);
+  },
 
       // 检查科技是否可研究
       isTechAvailable: (techId: string) => {
@@ -755,7 +803,8 @@ const useGameStore = create<GameState>()(
       // 研究触发器相关方法
       trackCraftedItem: (itemId: string, count: number) => {
         set((state) => {
-          const newCraftedItemCounts = new Map(state.craftedItemCounts);
+          const safeCraftedItemCounts = ensureMap<string, number>(state.craftedItemCounts, 'craftedItemCounts');
+          const newCraftedItemCounts = new Map(safeCraftedItemCounts);
           const currentCount = newCraftedItemCounts.get(itemId) || 0;
           newCraftedItemCounts.set(itemId, currentCount + count);
           return { craftedItemCounts: newCraftedItemCounts };
@@ -767,7 +816,8 @@ const useGameStore = create<GameState>()(
 
       trackBuiltEntity: (entityId: string, count: number) => {
         set((state) => {
-          const newBuiltEntityCounts = new Map(state.builtEntityCounts);
+          const safeBuiltEntityCounts = ensureMap<string, number>(state.builtEntityCounts, 'builtEntityCounts');
+          const newBuiltEntityCounts = new Map(safeBuiltEntityCounts);
           const currentCount = newBuiltEntityCounts.get(entityId) || 0;
           newBuiltEntityCounts.set(entityId, currentCount + count);
           return { builtEntityCounts: newBuiltEntityCounts };
@@ -779,7 +829,8 @@ const useGameStore = create<GameState>()(
 
       trackMinedEntity: (entityId: string, count: number) => {
         set((state) => {
-          const newMinedEntityCounts = new Map(state.minedEntityCounts);
+          const safeMinedEntityCounts = ensureMap<string, number>(state.minedEntityCounts, 'minedEntityCounts');
+          const newMinedEntityCounts = new Map(safeMinedEntityCounts);
           const currentCount = newMinedEntityCounts.get(entityId) || 0;
           newMinedEntityCounts.set(entityId, currentCount + count);
           return { minedEntityCounts: newMinedEntityCounts };
@@ -810,7 +861,8 @@ const useGameStore = create<GameState>()(
             switch (trigger.type) {
               case 'craft-item':
                 if (trigger.item) {
-                  const craftedCount = state.craftedItemCounts.get(trigger.item) || 0;
+                  const safeCraftedItemCounts = ensureMap<string, number>(state.craftedItemCounts, 'craftedItemCounts');
+                  const craftedCount = safeCraftedItemCounts.get(trigger.item) || 0;
                   const requiredCount = trigger.count || 1;
                   shouldUnlock = craftedCount >= requiredCount;
                 }
@@ -818,7 +870,8 @@ const useGameStore = create<GameState>()(
                 
               case 'build-entity':
                 if (trigger.entity) {
-                  const builtCount = state.builtEntityCounts.get(trigger.entity) || 0;
+                  const safeBuiltEntityCounts = ensureMap<string, number>(state.builtEntityCounts, 'builtEntityCounts');
+                  const builtCount = safeBuiltEntityCounts.get(trigger.entity) || 0;
                   const requiredCount = trigger.count || 1;
                   shouldUnlock = builtCount >= requiredCount;
                 }
@@ -826,7 +879,8 @@ const useGameStore = create<GameState>()(
                 
               case 'mine-entity':
                 if (trigger.entity) {
-                  const minedCount = state.minedEntityCounts.get(trigger.entity) || 0;
+                  const safeMinedEntityCounts = ensureMap<string, number>(state.minedEntityCounts, 'minedEntityCounts');
+                  const minedCount = safeMinedEntityCounts.get(trigger.entity) || 0;
                   const requiredCount = trigger.count || 1;
                   shouldUnlock = minedCount >= requiredCount;
                 }
@@ -993,12 +1047,12 @@ const useGameStore = create<GameState>()(
           totalItemsProduced: state.totalItemsProduced,
           favoriteRecipes: Array.from(state.favoriteRecipes),
           recentRecipes: state.recentRecipes,
-          technologies: Array.from(state.technologies.entries()),
+          // 只存储科技进度状态，不存储完整科技数据
           researchState: state.researchState,
           researchQueue: state.researchQueue,
           unlockedTechs: Array.from(state.unlockedTechs),
           autoResearch: state.autoResearch,
-          techCategories: state.techCategories,
+          // 不存储 technologies 和 techCategories，这些是静态数据应该从游戏文件加载
           craftedItemCounts: Array.from(state.craftedItemCounts.entries()),
           builtEntityCounts: Array.from(state.builtEntityCounts.entries()),
           minedEntityCounts: Array.from(state.minedEntityCounts.entries()),
@@ -1012,19 +1066,15 @@ const useGameStore = create<GameState>()(
       },
       onRehydrateStorage: () => (state) => {
         if (state) {
-          // 确保inventory正确转换为Map
-          try {
-            if (Array.isArray(state.inventory)) {
-              state.inventory = new Map(state.inventory as [string, InventoryItem][]);
-              console.log('Successfully rehydrated inventory from storage');
-            } else if (!(state.inventory instanceof Map)) {
-              console.warn('Invalid inventory format in storage, resetting to empty Map');
-              state.inventory = new Map();
-            }
-          } catch (error) {
-            console.error('Failed to rehydrate inventory:', error);
-            state.inventory = new Map();
-          }
+          // 使用辅助函数确保所有Map对象正确转换
+          state.inventory = ensureInventoryMap(state.inventory);
+          // technologies 和 techCategories 不从存档恢复，将通过 initializeTechnologyService 重新加载
+          state.craftedItemCounts = ensureMap<string, number>(state.craftedItemCounts, 'craftedItemCounts');
+          state.builtEntityCounts = ensureMap<string, number>(state.builtEntityCounts, 'builtEntityCounts');
+          state.minedEntityCounts = ensureMap<string, number>(state.minedEntityCounts, 'minedEntityCounts');
+          
+          console.log('Successfully rehydrated all Map objects from storage');
+          
           // 类型断言 - 确保正确的类型转换
           const craftingQueue = state.craftingQueue as CraftingTask[];
           state.craftingQueue = craftingQueue;
@@ -1034,18 +1084,6 @@ const useGameStore = create<GameState>()(
           
           const deployedContainers = state.deployedContainers as DeployedContainer[];
           state.deployedContainers = deployedContainers;
-          
-          // 时间补偿机制已关闭
-          // 基于时间戳恢复游戏时间，补偿离线时间
-          // const savedGameTime = state.gameTime as number;
-          // const savedLastSaveTime = state.lastSaveTime as number;
-          // const currentTime = Date.now();
-          // const offlineTime = currentTime - savedLastSaveTime;
-          // 限制离线时间补偿，避免异常情况
-          // const maxOfflineTime = 24 * 60 * 60 * 1000; // 最多补偿24小时
-          // const compensatedOfflineTime = Math.min(offlineTime, maxOfflineTime);
-          // state.gameTime = savedGameTime + compensatedOfflineTime;
-          // state.lastSaveTime = currentTime;
           
           // 只更新lastSaveTime，不进行时间补偿
           state.lastSaveTime = Date.now();
@@ -1059,25 +1097,24 @@ const useGameStore = create<GameState>()(
           const recentRecipes = state.recentRecipes as string[];
           state.recentRecipes = recentRecipes;
           
-          state.technologies = new Map(state.technologies as unknown as [string, Technology][]);
-          
           const researchState = state.researchState as TechResearchState | null;
           state.researchState = researchState;
           
           const researchQueue = state.researchQueue as ResearchQueueItem[];
           state.researchQueue = researchQueue;
           
-          state.unlockedTechs = new Set(state.unlockedTechs as unknown as string[]);
+          state.unlockedTechs = ensureUnlockedTechsSet(state.unlockedTechs);
           
           const autoResearch = state.autoResearch as boolean;
           state.autoResearch = autoResearch;
           
-          const techCategories = state.techCategories as TechCategory[];
-          state.techCategories = techCategories;
-          
-          state.craftedItemCounts = new Map(state.craftedItemCounts as unknown as [string, number][]);
-          state.builtEntityCounts = new Map(state.builtEntityCounts as unknown as [string, number][]);
-          state.minedEntityCounts = new Map(state.minedEntityCounts as unknown as [string, number][]);
+          // techCategories 和 technologies 将通过 initializeTechnologyService 重新加载，确保初始状态
+          if (!state.technologies) {
+            state.technologies = new Map();
+          }
+          if (!state.techCategories) {
+            state.techCategories = [];
+          }
           
           // 确保saveKey存在
           if (!state.saveKey) {
@@ -1090,18 +1127,18 @@ const useGameStore = create<GameState>()(
   )
 );
 
-// 设置定期自动存档 - 每5秒触发一次存档
+// 设置定期自动存档 - 每10秒触发一次存档
 let lastAutoSaveTime = Date.now();
 setInterval(() => {
   const state = useGameStore.getState();
   const now = Date.now();
   
   // 只有当游戏时间有变化时才存档（说明游戏在运行）
-  if (now - lastAutoSaveTime > 5000) {
+  if (now - lastAutoSaveTime > 10000) {
     console.log('[AutoSave] 定期自动存档触发');
     state.saveGame(); // 触发存档
     lastAutoSaveTime = now;
   }
-}, 5000);
+}, 10000);
 
 export default useGameStore;

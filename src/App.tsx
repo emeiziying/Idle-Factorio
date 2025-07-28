@@ -34,6 +34,8 @@ import CraftingEngine from './utils/craftingEngine';
 import useGameStore from './store/gameStore';
 import { useIsMobile } from './hooks/useIsMobile';
 import { usePersistentState } from './hooks/usePersistentState';
+import { useInventoryRepair } from './hooks/useInventoryRepair';
+import { useUnlockedTechsRepair } from './hooks/useUnlockedTechsRepair';
 import theme from './theme';
 import { error as logError } from './utils/logger';
 
@@ -46,6 +48,12 @@ const App: React.FC = () => {
   
   // 启动游戏循环
   useGameLoop();
+  
+  // 安全修复inventory状态
+  useInventoryRepair();
+  
+  // 安全修复unlockedTechs状态
+  useUnlockedTechsRepair();
   
   // 使用ref来跟踪初始化状态，避免重复初始化
   const initializationRef = useRef<{
@@ -74,6 +82,10 @@ const App: React.FC = () => {
         try {
           // 初始化所有服务
           await ServiceInitializer.initialize();
+
+          // 同步科技数据到gameStore（确保科技数据可用）
+          const { initializeTechnologyService } = useGameStore.getState();
+          await initializeTechnologyService();
 
           // 启动制作引擎
           CraftingEngine.getInstance().start();

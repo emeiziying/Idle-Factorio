@@ -93,29 +93,29 @@ const FuelPrioritySettings: React.FC<FuelPrioritySettingsProps> = ({ onPriorityC
                 <ListItemText
                   primary={fuelInfo.name}
                   secondary={
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Typography variant="caption">
-                        能量值: {fuelInfo.energy}
-                      </Typography>
-                      {index === 0 && (
-                        <Chip
-                          label="优先使用"
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                        />
-                      )}
-                      {fuelId === 'wood' && (
-                        <Chip
-                          label="建议保留"
-                          size="small"
-                          color="warning"
-                          variant="outlined"
-                        />
-                      )}
-                    </Box>
+                    <Typography variant="caption" component="span">
+                      能量值: {fuelInfo.energy}
+                    </Typography>
                   }
                 />
+                <Box display="flex" alignItems="center" gap={1} sx={{ mr: 1 }}>
+                  {index === 0 && (
+                    <Chip
+                      label="优先使用"
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                    />
+                  )}
+                  {fuelId === 'wood' && (
+                    <Chip
+                      label="建议保留"
+                      size="small"
+                      color="warning"
+                      variant="outlined"
+                    />
+                  )}
+                </Box>
                 <Box>
                   <IconButton
                     size="small"

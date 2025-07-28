@@ -213,14 +213,14 @@ const PowerManagement: React.FC = () => {
                       </Box>
                     }
                     secondary={
-                      <Box>
-                        <Typography variant="body2">
+                      <>
+                        <Typography variant="body2" component="span" display="block">
                           部署: {stats.count} 台 | 发电: {formatPower(stats.power)}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant="caption" color="text.secondary" component="span" display="block">
                           库存: {inventory.currentAmount} 台
                         </Typography>
-                      </Box>
+                      </>
                     }
                   />
                   <Box display="flex" alignItems="center">
