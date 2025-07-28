@@ -13,6 +13,7 @@ import { DataService } from '../../services/DataService';
 import useGameStore from '../../store/gameStore';
 import FactorioIcon from '../common/FactorioIcon';
 import ManualCraftingValidator from '../../utils/manualCraftingValidator';
+import { FuelStatusDisplay } from '../facilities/FuelStatusDisplay';
 
 interface RecipeFacilitiesCardProps {
   item: Item;
@@ -142,21 +143,28 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
             const productionRate = calculateProductionRate(facilityType);
             const totalProductionRate = productionRate * deployedCount;
 
+            // 获取已部署的此类型设施实例
+            const deployedFacilities = facilities.filter(f => f.facilityId === facilityType);
+            
             return (
               <Box
                 key={facilityType}
                 sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
                   p: 1,
                   border: '1px solid',
                   borderColor: 'divider',
                   borderRadius: 1
                 }}
               >
-                {/* 左侧：设施图标和产能信息 */}
-                <Box display="flex" alignItems="center" gap={1}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  {/* 左侧：设施图标和产能信息 */}
+                  <Box display="flex" alignItems="center" gap={1}>
                   <Box 
                     onClick={() => handleFacilityClick(facilityType)}
                     sx={{ 
@@ -216,8 +224,20 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
                   </Button>
                 </Box>
               </Box>
-            );
-          })}
+              
+              {/* 燃料状态显示 */}
+              {deployedCount > 0 && deployedFacilities.length > 0 && deployedFacilities[0].fuelBuffer && (
+                <Box sx={{ mt: 1, bgcolor: 'background.default', borderRadius: 1 }}>
+                  <FuelStatusDisplay
+                    fuelBuffer={deployedFacilities[0].fuelBuffer}
+                    facilityId={facilityType}
+                    compact={false}
+                  />
+                </Box>
+              )}
+            </Box>
+          );
+        })}
         </Box>
 
       {facilityTypes.some(type => getInventoryItem(type).currentAmount === 0) && (
