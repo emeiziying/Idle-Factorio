@@ -5,6 +5,7 @@ import useGameStore from '../store/gameStore';
 import { FuelService } from '../services/FuelService';
 import { DataService } from '../services/DataService';
 import { RecipeService } from '../services/RecipeService';
+import { PowerService } from '../services/PowerService';
 import type { FacilityInstance } from '../types/facilities';
 
 interface UseProductionLoopOptions {
@@ -31,6 +32,7 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
   const fuelService = FuelService.getInstance();
   const dataService = DataService.getInstance();
   const recipeService = RecipeService.getInstance();
+  const powerService = PowerService.getInstance();
   
   // 更新单个设施的生产
   const updateFacilityProduction = useCallback((facility: FacilityInstance, deltaTime: number) => {
@@ -101,13 +103,35 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
     const deltaTime = (currentTime - lastUpdateRef.current) / 1000; // 转换为秒
     lastUpdateRef.current = currentTime;
     
-    // 1. 更新燃料消耗
+    // 1. 计算电力平衡
+    const powerBalance = powerService.calculatePowerBalance(facilities);
+    
+    // 2. 根据电力平衡更新设施效率
+    const updatedFacilities = facilities.map(facility => 
+      powerService.updateFacilityPowerStatus(facility, powerBalance)
+    );
+    
+    // 批量更新设施状态（如果有变化）
+    updatedFacilities.forEach((updatedFacility, index) => {
+      const originalFacility = facilities[index];
+      if (
+        originalFacility.efficiency !== updatedFacility.efficiency ||
+        originalFacility.status !== updatedFacility.status
+      ) {
+        updateFacility(updatedFacility.id, {
+          efficiency: updatedFacility.efficiency,
+          status: updatedFacility.status
+        });
+      }
+    });
+    
+    // 3. 更新燃料消耗
     updateFuelConsumption(deltaTime);
     
-    // 2. 尝试自动补充燃料
+    // 4. 尝试自动补充燃料
     autoRefuelFacilities();
     
-    // 3. 更新生产进度
+    // 5. 更新生产进度
     facilities.forEach(facility => {
       // 检查设施状态
       if (facility.status === 'no_fuel' && facility.fuelBuffer) {
@@ -123,7 +147,7 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
         updateFacilityProduction(facility, deltaTime);
       }
     });
-  }, [facilities, updateFuelConsumption, autoRefuelFacilities, updateFacility, fuelService, updateFacilityProduction]);
+  }, [facilities, updateFuelConsumption, autoRefuelFacilities, updateFacility, fuelService, updateFacilityProduction, powerService]);
   
   // 设置定时器
   useEffect(() => {
