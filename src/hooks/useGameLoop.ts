@@ -13,6 +13,9 @@ interface ProductionAccumulator {
 const logger = new Logger();
 logger.configure({ prefix: '[Game] [GameLoop]' });
 
+// 全局游戏循环状态，防止在 StrictMode 下重复启动
+let globalGameLoopStarted = false;
+
 /**
  * 游戏主循环Hook
  * 负责处理设施的自动化生产、库存更新等定时任务
@@ -224,12 +227,19 @@ export const useGameLoop = () => {
 
   // 组件挂载时自动启动游戏循环
   useEffect(() => {
+    if (globalGameLoopStarted) {
+      logger.debug('游戏循环已经在全局启动，跳过重复启动');
+      return;
+    }
+    
     logger.info('游戏循环启动');
+    globalGameLoopStarted = true;
     startGameLoop();
     
     // 组件卸载时清理
     return () => {
       logger.info('游戏循环停止');
+      globalGameLoopStarted = false;
       stopGameLoop();
     };
   }, [startGameLoop]);
