@@ -40,9 +40,19 @@ export interface FuelStatus {
 export class FuelService {
   private static instance: FuelService;
   private dataService: DataService;
+  private customFuelPriority: string[] | null = null;
   
   private constructor() {
     this.dataService = DataService.getInstance();
+    // 从本地存储加载自定义优先级
+    const stored = localStorage.getItem('fuelPriority');
+    if (stored) {
+      try {
+        this.customFuelPriority = JSON.parse(stored);
+      } catch (e) {
+        console.error('Failed to load fuel priority:', e);
+      }
+    }
   }
   
   static getInstance(): FuelService {
@@ -50,6 +60,21 @@ export class FuelService {
       FuelService.instance = new FuelService();
     }
     return FuelService.instance;
+  }
+  
+  /**
+   * 设置自定义燃料优先级
+   */
+  setFuelPriority(priority: string[]): void {
+    this.customFuelPriority = priority;
+    localStorage.setItem('fuelPriority', JSON.stringify(priority));
+  }
+  
+  /**
+   * 获取当前燃料优先级
+   */
+  getFuelPriority(): string[] {
+    return this.customFuelPriority || FUEL_PRIORITY;
   }
   
   /**
@@ -238,7 +263,8 @@ export class FuelService {
     }
     
     // 按优先级尝试添加燃料
-    for (const fuelId of FUEL_PRIORITY) {
+    const fuelPriority = this.getFuelPriority();
+    for (const fuelId of fuelPriority) {
       const inventory = getInventoryItem(fuelId);
       if (inventory.currentAmount <= 0) continue;
       
@@ -339,7 +365,8 @@ export class FuelService {
       });
     
     // 分配燃料
-    for (const fuelType of FUEL_PRIORITY) {
+    const fuelPriority = this.getFuelPriority();
+    for (const fuelType of fuelPriority) {
       let available = getInventoryItem(fuelType).currentAmount;
       if (available <= 0) continue;
       
