@@ -17,11 +17,12 @@ import type {
 } from '../types/technology';
 import { ResearchPriority } from '../types/technology';
 import type { InventoryOperations } from '../types/inventory';
-import { UserProgressService } from './UserProgressService';
-import { DataService } from './DataService';
-import { RecipeService } from './RecipeService';
-import useGameStore from '../store/gameStore';
+import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
+import type { UserProgressService } from './UserProgressService';
+import type { DataService } from './DataService';
+import type { RecipeService } from './RecipeService';
 import type { FacilityInstance } from '../types/facilities';
+import type { GameStateProvider } from './interfaces';
 
 // 从data.json加载的科技配方接口
 interface TechRecipe {
@@ -1131,16 +1132,24 @@ export class TechnologyService {
    * 获取研究室数量
    */
   private getLabCount(): number {
-    // 从gameStore获取研究室数量
+    // 从GameStateProvider获取研究室数量
     try {
-      const gameStore = useGameStore.getState();
-      const labFacilities = gameStore.facilities.filter(facility => 
+      const gameStateProvider = ServiceLocator.has(SERVICE_NAMES.GAME_STATE)
+        ? ServiceLocator.get<GameStateProvider>(SERVICE_NAMES.GAME_STATE)
+        : null;
+      
+      if (!gameStateProvider) {
+        return 1; // 默认1个研究室
+      }
+      
+      const facilities = gameStateProvider.getFacilities();
+      const labFacilities = facilities.filter(facility => 
         facility.facilityId === 'lab' || facility.facilityId === 'biolab'
       );
       
       return labFacilities.reduce((total: number, facility: FacilityInstance) => total + facility.count, 0);
     } catch (error) {
-      console.warn('Failed to get lab count from gameStore:', error);
+      console.warn('Failed to get lab count from GameStateProvider:', error);
       return 1; // 默认1个研究室
     }
   }

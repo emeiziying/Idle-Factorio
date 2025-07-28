@@ -1,15 +1,22 @@
 // 存储服务 - 合并data.json和特定配置
 
 import type { StorageConfig } from '../types/index';
-import { STORAGE_SPECIFIC_CONFIGS } from '../data/storageConfigs';
-import { DataService } from './DataService';
+import { STORAGE_SPECIFIC_CONFIGS } from '../data/storageConfigData';
+import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
+import type { DataService } from './DataService';
 
 export class StorageService {
   private static instance: StorageService;
-  private dataService: DataService;
 
   private constructor() {
-    this.dataService = DataService.getInstance();
+    // 延迟初始化，避免循环依赖
+  }
+
+  private getDataService(): DataService | null {
+    if (ServiceLocator.has(SERVICE_NAMES.DATA)) {
+      return ServiceLocator.get<DataService>(SERVICE_NAMES.DATA);
+    }
+    return null;
   }
 
   public static getInstance(): StorageService {
@@ -24,9 +31,12 @@ export class StorageService {
     const specificConfig = STORAGE_SPECIFIC_CONFIGS[storageType];
     if (!specificConfig) return undefined;
 
+    const dataService = this.getDataService();
+    if (!dataService) return undefined;
+
     // 从data.json获取基础信息
-    const item = this.dataService.getItem(storageType);
-    const recipe = this.dataService.getRecipe(storageType);
+    const item = dataService.getItem(storageType);
+    const recipe = dataService.getRecipe(storageType);
 
     if (!item || !recipe) return undefined;
 

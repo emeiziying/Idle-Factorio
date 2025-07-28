@@ -29,7 +29,7 @@ import TechnologyModule from './components/technology/TechnologyModule';
 import ManualCraftingTestPage from './components/test/ManualCraftingTestPage';
 import { useGameLoop } from './hooks/useGameLoop';
 
-import { DataService } from './services/DataService';
+import { ServiceInitializer } from './services/ServiceInitializer';
 import CraftingEngine from './utils/craftingEngine';
 import useGameStore from './store/gameStore';
 import { useIsMobile } from './hooks/useIsMobile';
@@ -71,11 +71,8 @@ const App: React.FC = () => {
       // 开始新的初始化过程
       initializationRef.current.initPromise = (async () => {
         try {
-          // 加载游戏数据
-          await DataService.getInstance().loadGameData();
-
-          // 加载国际化数据
-          await DataService.getInstance().loadI18nData('zh');
+          // 初始化所有服务
+          await ServiceInitializer.initialize();
 
           // 启动制作引擎
           CraftingEngine.getInstance().start();

@@ -1,9 +1,8 @@
 // 游戏数据管理服务
 
 import type { GameData, Item, Recipe, Category } from '../types/index';
-import { UserProgressService } from './UserProgressService';
-import { RecipeService } from './RecipeService';
-import { TechnologyService } from './TechnologyService';
+import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
+import type { UserProgressService } from './UserProgressService';
 
 // 异步导入游戏数据
 import gameData from '../data/spa/data.json';
@@ -22,10 +21,9 @@ export class DataService {
   private i18nData: I18nData | null = null;
   private i18nLoadingPromise: Promise<I18nData> | null = null;
   private gameDataLoadingPromise: Promise<GameData> | null = null;
-  private userProgressService: UserProgressService;
 
   private constructor() {
-    this.userProgressService = UserProgressService.getInstance();
+    // 不再在构造函数中获取其他服务，避免循环依赖
   }
 
   static getInstance(): DataService {
@@ -64,11 +62,8 @@ export class DataService {
       // 直接使用导入的数据，无需fetch
       this.gameData = gameData as unknown as GameData;
       
-      // 初始化配方服务
-      if (this.gameData.recipes) {
-        RecipeService.initializeRecipes(this.gameData.recipes);
-        // RecipeService initialized
-      }
+      // 配方初始化将在 ServiceInitializer 中进行
+      // 这里只负责加载数据
       
       // Game data loaded successfully
       return this.gameData;
@@ -249,7 +244,11 @@ export class DataService {
 
   // 获取配方（保留常用方法，其他通过RecipeService直接调用）
   getRecipe(recipeId: string): Recipe | undefined {
-    return RecipeService.getRecipeById(recipeId);
+    if (ServiceLocator.has(SERVICE_NAMES.RECIPE)) {
+      const recipeService = ServiceLocator.get<any>(SERVICE_NAMES.RECIPE);
+      return recipeService.getRecipeById(recipeId);
+    }
+    return undefined;
   }
 
   // 获取所有分类（按原始数据顺序）
@@ -280,15 +279,19 @@ export class DataService {
     visiting.add(itemId);
 
     try {
-      const techService = TechnologyService.getInstance();
-
       // 1. 检查是否为科技直接解锁的物品（设备、工具等）
-      if (techService.isItemUnlocked(itemId)) {
-        return true;
+      if (ServiceLocator.has(SERVICE_NAMES.TECHNOLOGY)) {
+        const techService = ServiceLocator.get<any>(SERVICE_NAMES.TECHNOLOGY);
+        if (techService.isItemUnlocked(itemId)) {
+          return true;
+        }
       }
 
       // 2. 检查是否为原材料（无配方的物品，可直接采集）
-      const recipes = RecipeService.getRecipesThatProduce(itemId);
+      const recipeService = ServiceLocator.has(SERVICE_NAMES.RECIPE) 
+        ? ServiceLocator.get<any>(SERVICE_NAMES.RECIPE) 
+        : null;
+      const recipes = recipeService ? recipeService.getRecipesThatProduce(itemId) : [];
       if (recipes.length === 0) {
         return true; // 原材料始终可用
       }
@@ -352,7 +355,10 @@ export class DataService {
 
   // 解锁物品
   unlockItem(itemId: string): void {
-    this.userProgressService.unlockItem(itemId);
+    if (ServiceLocator.has(SERVICE_NAMES.USER_PROGRESS)) {
+      const userProgressService = ServiceLocator.get<UserProgressService>(SERVICE_NAMES.USER_PROGRESS);
+      userProgressService.unlockItem(itemId);
+    }
   }
 
   // 按行号获取分类内的物品子分组
@@ -457,7 +463,12 @@ export class DataService {
    */
   getIconInfo(itemId: string): { iconId: string; iconText?: string } {
     // 优先从配方获取iconText和icon
-    const recipe = RecipeService.getRecipeById(itemId);
+    let recipe: Recipe | undefined;
+    if (ServiceLocator.has(SERVICE_NAMES.RECIPE)) {
+      const recipeService = ServiceLocator.get<any>(SERVICE_NAMES.RECIPE);
+      recipe = recipeService.getRecipeById(itemId);
+    }
+    
     if (recipe?.iconText) {
       return {
         iconId: recipe.icon || itemId,
@@ -491,14 +502,18 @@ export class DataService {
     const item = this.getItem(itemId);
     if (!item) return null;
 
+    const recipeService = ServiceLocator.has(SERVICE_NAMES.RECIPE) 
+      ? ServiceLocator.get<any>(SERVICE_NAMES.RECIPE) 
+      : null;
+
     return {
       item,
-      recipes: RecipeService.getRecipesThatProduce(itemId),
-      usedInRecipes: RecipeService.getRecipesThatUse(itemId),
+      recipes: recipeService ? recipeService.getRecipesThatProduce(itemId) : [],
+      usedInRecipes: recipeService ? recipeService.getRecipesThatUse(itemId) : [],
       // 新增：配方统计信息
-      recipeStats: RecipeService.getRecipeStats(itemId),
+      recipeStats: recipeService ? recipeService.getRecipeStats(itemId) : null,
       // 新增：推荐配方
-      recommendedRecipe: RecipeService.getMostEfficientRecipe(itemId)
+      recommendedRecipe: recipeService ? recipeService.getMostEfficientRecipe(itemId) : null
     };
   }
 
