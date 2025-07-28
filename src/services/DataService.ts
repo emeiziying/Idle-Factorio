@@ -3,6 +3,7 @@
 import type { GameData, Item, Recipe, Category } from '../types/index';
 import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
 import type { UserProgressService } from './UserProgressService';
+import { error as logError } from '../utils/logger';
 
 // 异步导入游戏数据
 import gameData from '../data/spa/data.json';
@@ -68,7 +69,7 @@ export class DataService {
       // Game data loaded successfully
       return this.gameData;
     } catch (error) {
-      console.error('Error loading game data:', error);
+      logError('Error loading game data:', error);
       throw error;
     }
   }
@@ -105,7 +106,7 @@ export class DataService {
       // I18n data loaded successfully
       return this.i18nData;
     } catch (error) {
-      console.error('Error loading i18n data:', error);
+              logError('Error loading i18n data:', error);
       // 返回空数据作为fallback
       const fallbackData = {
         categories: {},

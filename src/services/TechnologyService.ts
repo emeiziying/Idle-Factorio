@@ -23,6 +23,7 @@ import type { DataService } from './DataService';
 import type { RecipeService } from './RecipeService';
 import type { FacilityInstance } from '../types/facilities';
 import type { GameStateProvider } from './interfaces';
+import Logger from '../utils/logger';
 
 // 从data.json加载的科技配方接口
 interface TechRecipe {
@@ -66,6 +67,7 @@ export class TechnologyService {
   private techState: TechTreeState;
   private eventEmitter: EventTarget = new EventTarget();
   private userProgressService: UserProgressService;
+  private logger: Logger;
   
   // 库存操作接口（依赖注入）
   private inventoryOps: InventoryOperations | null = null;
@@ -77,6 +79,8 @@ export class TechnologyService {
   private constructor() {
     this.userProgressService = UserProgressService.getInstance();
     this.techState = this.createInitialState();
+    this.logger = new Logger();
+    this.logger.configure({ prefix: '[Game] [Technology]' });
   }
 
   /**
@@ -273,7 +277,7 @@ export class TechnologyService {
       
       // 科技数据加载完成
     } catch (error) {
-      console.error('Failed to load technologies from data.json:', error);
+      this.logger.error('Failed to load technologies from data.json:', error);
       throw new Error('无法加载科技数据，请检查data.json文件');
     }
   }
@@ -309,7 +313,7 @@ export class TechnologyService {
       
       return techCategories;
     } catch (error) {
-      console.error('Failed to load categories from data.json:', error);
+      this.logger.error('Failed to load categories from data.json:', error);
       // 如果加载失败，返回空数组
       return [];
     }
@@ -369,7 +373,7 @@ export class TechnologyService {
       this.isInitialized = true;
       // TechnologyService initialized successfully
     } catch (error) {
-      console.error('Failed to initialize TechnologyService:', error);
+      this.logger.error('Failed to initialize TechnologyService:', error);
       throw error;
     }
   }
@@ -517,7 +521,7 @@ export class TechnologyService {
     const dfs = (techId: string): void => {
       if (visiting.has(techId)) {
         // 检测到循环依赖，跳过
-        console.warn(`Circular dependency detected involving tech: ${techId}`);
+        this.logger.warn(`Circular dependency detected involving tech: ${techId}`);
         return;
       }
       
@@ -1088,7 +1092,7 @@ export class TechnologyService {
     
     // 如果没有库存操作接口，则跳过检查
     if (!this.inventoryOps) {
-      console.warn('No inventory operations available, skipping science pack check');
+      this.logger.warn('No inventory operations available, skipping science pack check');
       return true;
     }
     
@@ -1096,7 +1100,7 @@ export class TechnologyService {
       // 使用依赖注入的库存操作接口检查科技包
       return this.inventoryOps.hasEnoughItems(tech.researchCost);
     } catch (error) {
-      console.warn('Failed to check science pack availability:', error);
+      this.logger.warn('Failed to check science pack availability:', error);
       return false;
     }
   }
@@ -1115,7 +1119,7 @@ export class TechnologyService {
     
     // 如果没有库存操作接口，则跳过消耗
     if (!this.inventoryOps) {
-      console.warn('No inventory operations available, skipping science pack consumption');
+      this.logger.warn('No inventory operations available, skipping science pack consumption');
       return true;
     }
     
@@ -1123,7 +1127,7 @@ export class TechnologyService {
       // 使用依赖注入的库存操作接口消耗科技包
       return this.inventoryOps.consumeItems(tech.researchCost);
     } catch (error) {
-      console.warn('Failed to consume science packs:', error);
+      this.logger.warn('Failed to consume science packs:', error);
       return false;
     }
   }
@@ -1149,7 +1153,7 @@ export class TechnologyService {
       
       return labFacilities.reduce((total: number, facility: FacilityInstance) => total + facility.count, 0);
     } catch (error) {
-      console.warn('Failed to get lab count from GameStateProvider:', error);
+      this.logger.warn('Failed to get lab count from GameStateProvider:', error);
       return 1; // 默认1个研究室
     }
   }

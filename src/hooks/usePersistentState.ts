@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { warn as logWarn } from '../utils/logger';
 
 /**
  * 持久化状态Hook
@@ -16,7 +17,7 @@ export function usePersistentState<T>(
       const item = localStorage.getItem(key);
       return item ? JSON.parse(item) : defaultValue;
     } catch (error) {
-      console.warn(`Failed to parse localStorage key "${key}":`, error);
+              logWarn(`Failed to parse localStorage key "${key}":`, error);
       return defaultValue;
     }
   };
@@ -28,7 +29,7 @@ export function usePersistentState<T>(
     try {
       localStorage.setItem(key, JSON.stringify(state));
     } catch (error) {
-      console.warn(`Failed to save to localStorage key "${key}":`, error);
+      logWarn(`Failed to save to localStorage key "${key}":`, error);
     }
   }, [key, state]);
 

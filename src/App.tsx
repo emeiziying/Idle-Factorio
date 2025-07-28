@@ -35,6 +35,7 @@ import useGameStore from './store/gameStore';
 import { useIsMobile } from './hooks/useIsMobile';
 import { usePersistentState } from './hooks/usePersistentState';
 import theme from './theme';
+import { error as logError } from './utils/logger';
 
 const App: React.FC = () => {
   const [currentModule, setCurrentModule] = usePersistentState('app-current-module', 0);
@@ -82,7 +83,7 @@ const App: React.FC = () => {
           // 标记为已初始化
           initializationRef.current.isInitialized = true;
         } catch (error) {
-          console.error('Failed to initialize app:', error);
+          logError('Failed to initialize app:', error);
           // 初始化失败时重置状态，允许重试
           initializationRef.current.isInitialized = false;
         } finally {

@@ -2,10 +2,16 @@ import { useEffect, useRef } from 'react';
 import useGameStore from '../store/gameStore';
 import { DataService } from '../services/DataService';
 import { RecipeService } from '../services/RecipeService';
+import Logger from '../utils/logger';
+import { calculateRate } from '../utils/common';
 
 interface ProductionAccumulator {
   [itemId: string]: number; // 累积的生产量（包含小数）
 }
+
+// 创建游戏循环专用的日志器
+const logger = new Logger();
+logger.configure({ prefix: '[Game] [GameLoop]' });
 
 /**
  * 游戏主循环Hook
@@ -30,7 +36,7 @@ export const useGameLoop = () => {
   const calculateFacilityProduction = (facilityId: string, count: number = 1) => {
     const facilityItem = dataService.getItem(facilityId);
     if (!facilityItem || !facilityItem.machine) {
-      console.warn(`设施 ${facilityId} 没有找到或没有机器属性`);
+      logger.warn(`设施 ${facilityId} 没有找到或没有机器属性`);
       return { inputRate: new Map(), outputRate: new Map() };
     }
 
@@ -40,9 +46,9 @@ export const useGameLoop = () => {
       recipe.producers && recipe.producers.includes(facilityId)
     );
 
-    console.log(`设施 ${facilityId} 可用配方数量:`, applicableRecipes.length);
+    logger.debug(`设施 ${facilityId} 可用配方数量:`, applicableRecipes.length);
     if (applicableRecipes.length > 0) {
-      console.log(`设施 ${facilityId} 可用配方:`, applicableRecipes.map(r => `${r.id} (${Object.keys(r.out).join(', ')})`));
+      logger.debug(`设施 ${facilityId} 可用配方:`, applicableRecipes.map(r => `${r.id} (${Object.keys(r.out).join(', ')})`));
     }
 
     const inputRate = new Map<string, number>();
@@ -51,34 +57,34 @@ export const useGameLoop = () => {
     // 暂时选择第一个适用的配方（未来可以根据需求优化）
     const recipe = applicableRecipes[0];
     if (!recipe || !recipe.time) {
-      console.warn(`设施 ${facilityId} 没有找到有效配方`);
+      logger.warn(`设施 ${facilityId} 没有找到有效配方`);
       return { inputRate, outputRate };
     }
 
-    console.log(`设施 ${facilityId} 选择配方:`, recipe.id, '输出:', recipe.out);
+    logger.debug(`设施 ${facilityId} 选择配方:`, recipe.id, '输出:', recipe.out);
 
     const machineRecord = facilityItem.machine as Record<string, unknown>;
     const machineSpeed = typeof machineRecord?.speed === 'number' ? machineRecord.speed : 1.0;
     const efficiency = 1.0; // 基础效率，未来可以根据设施状态调整
     
-    // 计算输入需求速率
-    if (recipe.in) {
-      Object.entries(recipe.in).forEach(([itemId, amount]) => {
-        const rate = (amount / recipe.time) * machineSpeed * efficiency * count;
-        inputRate.set(itemId, rate);
-      });
-    }
+          // 计算输入需求速率
+      if (recipe.in) {
+        Object.entries(recipe.in).forEach(([itemId, amount]) => {
+          const rate = calculateRate(amount, recipe.time, machineSpeed, efficiency, count);
+          inputRate.set(itemId, rate);
+        });
+      }
 
-    // 计算输出生产速率
-    if (recipe.out) {
-      Object.entries(recipe.out).forEach(([itemId, amount]) => {
-        const rate = (amount / recipe.time) * machineSpeed * efficiency * count;
-        outputRate.set(itemId, rate);
-      });
-    }
+      // 计算输出生产速率
+      if (recipe.out) {
+        Object.entries(recipe.out).forEach(([itemId, amount]) => {
+          const rate = calculateRate(amount, recipe.time, machineSpeed, efficiency, count);
+          outputRate.set(itemId, rate);
+        });
+      }
 
-    console.log(`设施 ${facilityId} x${count} 输入需求:`, Array.from(inputRate.entries()));
-    console.log(`设施 ${facilityId} x${count} 输出产量:`, Array.from(outputRate.entries()));
+    logger.debug(`设施 ${facilityId} x${count} 输入需求:`, Array.from(inputRate.entries()));
+    logger.debug(`设施 ${facilityId} x${count} 输出产量:`, Array.from(outputRate.entries()));
 
     return { inputRate, outputRate };
   };
@@ -90,7 +96,7 @@ export const useGameLoop = () => {
       const availableAmount = getInventoryItem(itemId).currentAmount;
       
       if (availableAmount < requiredAmount) {
-        console.log(`材料不足: ${itemId} 需要 ${requiredAmount.toFixed(3)}, 可用 ${availableAmount}`);
+        logger.debug(`材料不足: ${itemId} 需要 ${requiredAmount.toFixed(3)}, 可用 ${availableAmount}`);
         return false; // 材料不足
       }
     }
@@ -142,9 +148,9 @@ export const useGameLoop = () => {
     });
 
     if (facilityGroups.size > 0) {
-      console.log('当前运行的设施:', Array.from(facilityGroups.entries()));
+      logger.debug('当前运行的设施:', Array.from(facilityGroups.entries()));
     } else if (facilities.length > 0) {
-      console.log('有设施但没有分组:', facilities);
+      logger.debug('有设施但没有分组:', facilities);
     }
 
     // 处理每种设施类型的生产
@@ -168,11 +174,11 @@ export const useGameLoop = () => {
   // 启动游戏循环
   const startGameLoop = () => {
     if (gameLoopRef.current) {
-      console.log('游戏循环已经在运行中');
+      logger.debug('游戏循环已经在运行中');
       return; // 已经在运行
     }
 
-    console.log('正在启动游戏循环...');
+    logger.info('正在启动游戏循环...');
     lastUpdateTimeRef.current = Date.now();
     
     const gameLoop = () => {
@@ -181,7 +187,7 @@ export const useGameLoop = () => {
     };
     
     gameLoopRef.current = requestAnimationFrame(gameLoop);
-    console.log('游戏循环已启动，ID:', gameLoopRef.current);
+          logger.info('游戏循环已启动，ID:', gameLoopRef.current);
   };
 
   // 停止游戏循环
@@ -201,12 +207,12 @@ export const useGameLoop = () => {
 
   // 组件挂载时自动启动游戏循环
   useEffect(() => {
-    console.log('游戏循环启动');
+    logger.info('游戏循环启动');
     startGameLoop();
     
     // 组件卸载时清理
     return () => {
-      console.log('游戏循环停止');
+      logger.info('游戏循环停止');
       stopGameLoop();
     };
   }, []);

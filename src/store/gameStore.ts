@@ -18,6 +18,7 @@ import { DataService } from '../services/DataService';
 import { TechnologyService } from '../services/TechnologyService';
 import { FuelService } from '../services/FuelService';
 import { FACILITY_FUEL_CONFIGS } from '../data/fuelConfigs';
+import { error as logError } from '../utils/logger';
 
 interface GameState {
   // 库存系统
@@ -598,7 +599,7 @@ const useGameStore = create<GameState>()(
             }));
           }
         } catch (error) {
-          console.error('Failed to initialize TechnologyService:', error);
+          logError('Failed to initialize TechnologyService:', error);
         }
       },
 
@@ -822,7 +823,7 @@ const useGameStore = create<GameState>()(
             }
           }
         } catch (error) {
-          console.error('Error checking research triggers:', error);
+                      logError('Error checking research triggers:', error);
         }
       },
       

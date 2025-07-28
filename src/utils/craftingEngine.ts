@@ -4,6 +4,7 @@ import type { CraftingTask, Recipe } from '../types/index';
 import useGameStore from '../store/gameStore';
 import { DataService } from '../services/DataService';
 import { RecipeService } from '../services/RecipeService';
+import { secondsToMs } from '../utils/common';
 
 // 设备效率配置 - 基于Factorio的采矿机设计
 interface DeviceEfficiency {
@@ -182,7 +183,7 @@ class CraftingEngine {
         // 使用手动合成效率计算时间
         const manualEfficiency = 0.5; // 玩家默认效率
         const baseTime = selectedRecipe.time || 1; // 基础时间
-        const craftingTime = (baseTime / manualEfficiency) * currentTask.quantity * 1000; // 转换为毫秒，考虑数量
+                  const craftingTime = secondsToMs((baseTime / manualEfficiency) * currentTask.quantity);
         
         // 确保有开始时间 - 只在第一次执行时设定
         if (!currentTask.startTime || currentTask.startTime === 0) {
