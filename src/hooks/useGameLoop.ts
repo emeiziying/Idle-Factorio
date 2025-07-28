@@ -165,6 +165,8 @@ export const useGameLoop = () => {
             const wholeUnits = Math.floor(newAccumulator);
             if (wholeUnits > 0) {
               store.updateInventory(itemId, wholeUnits);
+              // 追踪制造的物品（用于研究触发器）
+              store.trackCraftedItem(itemId, wholeUnits);
               globalStateRef.current.productionAccumulator[itemId] = newAccumulator - wholeUnits;
             } else {
               globalStateRef.current.productionAccumulator[itemId] = newAccumulator;
