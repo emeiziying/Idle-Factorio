@@ -29,6 +29,12 @@ export const useGameLoop = () => {
   const lastUpdateTimeRef = useRef<number>(Date.now());
   const productionAccumulatorRef = useRef<ProductionAccumulator>({});
   const gameLoopRef = useRef<number | null>(null);
+  const gameTimeRef = useRef<number>(gameTime);
+  
+  // 同步 gameTime 到 ref
+  useEffect(() => {
+    gameTimeRef.current = gameTime;
+  }, [gameTime]);
   
   const dataService = DataService.getInstance();
 
@@ -131,45 +137,7 @@ export const useGameLoop = () => {
     }
   }, [updateInventory]);
 
-  // 游戏循环更新函数
-  const updateGameLoop = useCallback(() => {
-    const currentTime = Date.now();
-    const deltaTime = currentTime - lastUpdateTimeRef.current;
-    const deltaTimeInSeconds = deltaTime / 1000;
-    
-    // 更新游戏时间
-    setGameTime(gameTime + deltaTime);
 
-    // 按设施类型分组统计
-    const facilityGroups = new Map<string, number>();
-    facilities.forEach(facility => {
-      const count = facilityGroups.get(facility.facilityId) || 0;
-      facilityGroups.set(facility.facilityId, count + facility.count);
-    });
-
-    if (facilityGroups.size > 0) {
-      logger.debug('当前运行的设施:', Array.from(facilityGroups.entries()));
-    } else if (facilities.length > 0) {
-      logger.debug('有设施但没有分组:', facilities);
-    }
-
-    // 处理每种设施类型的生产
-    for (const [facilityId, totalCount] of facilityGroups) {
-      const { inputRate, outputRate } = calculateFacilityProduction(facilityId, totalCount);
-      
-      // 检查是否有足够的输入材料
-      if (checkInputAvailability(inputRate, deltaTimeInSeconds)) {
-        // 消耗输入材料
-        consumeInputs(inputRate, deltaTimeInSeconds);
-        
-        // 生产输出物品
-        produceOutputs(outputRate, deltaTimeInSeconds);
-      }
-      // 如果材料不足，设施暂停生产（可以在未来添加状态显示）
-    }
-
-    lastUpdateTimeRef.current = currentTime;
-  }, [facilities, gameTime, setGameTime, calculateFacilityProduction, checkInputAvailability, consumeInputs, produceOutputs]);
 
   // 启动游戏循环
   const startGameLoop = useCallback(() => {
@@ -182,13 +150,50 @@ export const useGameLoop = () => {
     lastUpdateTimeRef.current = Date.now();
     
     const gameLoop = () => {
-      updateGameLoop();
+      // 直接在 gameLoop 中实现更新逻辑，避免依赖问题
+      const currentTime = Date.now();
+      const deltaTime = currentTime - lastUpdateTimeRef.current;
+      const deltaTimeInSeconds = deltaTime / 1000;
+      
+      // 更新游戏时间
+      setGameTime(gameTimeRef.current + deltaTime);
+
+      // 按设施类型分组统计
+      const facilityGroups = new Map<string, number>();
+      facilities.forEach(facility => {
+        const count = facilityGroups.get(facility.facilityId) || 0;
+        facilityGroups.set(facility.facilityId, count + facility.count);
+      });
+
+      if (facilityGroups.size > 0) {
+        logger.debug('当前运行的设施:', Array.from(facilityGroups.entries()));
+      } else if (facilities.length > 0) {
+        logger.debug('有设施但没有分组:', facilities);
+      }
+
+      // 处理每种设施类型的生产
+      for (const [facilityId, totalCount] of facilityGroups) {
+        const { inputRate, outputRate } = calculateFacilityProduction(facilityId, totalCount);
+        
+        // 检查是否有足够的输入材料
+        if (checkInputAvailability(inputRate, deltaTimeInSeconds)) {
+          // 消耗输入材料
+          consumeInputs(inputRate, deltaTimeInSeconds);
+          
+          // 生产输出物品
+          produceOutputs(outputRate, deltaTimeInSeconds);
+        }
+        // 如果材料不足，设施暂停生产（可以在未来添加状态显示）
+      }
+
+      lastUpdateTimeRef.current = currentTime;
+      
       gameLoopRef.current = requestAnimationFrame(gameLoop);
     };
     
     gameLoopRef.current = requestAnimationFrame(gameLoop);
-          logger.info('游戏循环已启动，ID:', gameLoopRef.current);
-  }, [updateGameLoop]);
+    logger.info('游戏循环已启动，ID:', gameLoopRef.current);
+  }, [facilities, setGameTime, calculateFacilityProduction, checkInputAvailability, consumeInputs, produceOutputs]);
 
   // 停止游戏循环
   const stopGameLoop = () => {
