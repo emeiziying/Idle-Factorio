@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import useGameStore from '../store/gameStore';
+import useGameTimeStore from '../store/gameTimeStore';
 import { DataService } from '../services/DataService';
 import { RecipeService } from '../services/RecipeService';
 import Logger from '../utils/logger';
@@ -113,12 +114,13 @@ export const useGameLoop = () => {
     const gameLoop = () => {
       // 直接从store获取最新状态，避免依赖React hooks
       const store = useGameStore.getState();
+      const timeStore = useGameTimeStore.getState();
       const currentTime = Date.now();
       const deltaTime = currentTime - globalStateRef.current.lastUpdateTime;
       const deltaTimeInSeconds = deltaTime / 1000;
       
-      // 更新游戏时间
-      store.setGameTime(store.gameTime + deltaTime);
+      // 更新游戏时间（使用独立的store，不触发主store的persist）
+      timeStore.setGameTime(timeStore.gameTime + deltaTime);
 
       // 按设施类型分组统计
       const facilityGroups = new Map<string, number>();

@@ -1,5 +1,5 @@
 // 异步存储适配器 - 使用IndexedDB替代localStorage
-import { StateStorage } from 'zustand/middleware';
+import type { StateStorage } from 'zustand/middleware';
 
 const DB_NAME = 'FactorioGameDB';
 const DB_VERSION = 1;

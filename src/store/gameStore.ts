@@ -1,7 +1,7 @@
 // 游戏状态管理 - Zustand Store
 
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist, createJSONStorage, subscribeWithSelector } from 'zustand/middleware';
 import { createDebouncedStorage } from '../utils/debouncedStorage';
 import type { InventoryItem, CraftingTask, Recipe, DeployedContainer, OperationResult } from '../types/index';
 import type { 
@@ -43,7 +43,6 @@ interface GameState {
   deployedContainers: DeployedContainer[];
   
   // 游戏统计
-  gameTime: number;
   lastSaveTime: number; // 上次保存时的时间戳
   totalItemsProduced: number;
   
@@ -76,8 +75,7 @@ interface GameState {
   addFacility: (facility: FacilityInstance) => void;
   updateFacility: (facilityId: string, updates: Partial<FacilityInstance>) => void;
   removeFacility: (facilityId: string) => void;
-  incrementGameTime: (deltaTime: number) => void;
-  setGameTime: (time: number) => void;
+  saveKey: string; // 存档触发键，只有这个值变化时才触发存档
   clearGameData: () => Promise<void>;
   saveGame: () => void;
   
@@ -132,20 +130,21 @@ interface GameState {
 }
 
 const useGameStore = create<GameState>()(
-  persist(
-    (set, get) => ({
+  subscribeWithSelector(
+    persist(
+      (set, get) => ({
       // 初始状态
       inventory: new Map(),
       craftingQueue: [],
       maxQueueSize: 50,
       facilities: [],
       deployedContainers: [],
-      gameTime: 0,
       lastSaveTime: Date.now(),
       totalItemsProduced: 0,
       favoriteRecipes: new Set(),
       recentRecipes: [],
       maxRecentRecipes: 10,
+      saveKey: 'initial', // 存档触发键
 
       // 科技系统初始状态
       technologies: new Map(),
@@ -183,6 +182,50 @@ const useGameStore = create<GameState>()(
 
       getInventoryItem: (itemId: string) => {
         const inventory = get().inventory;
+        
+        // 安全检查：确保inventory是Map对象
+        if (!(inventory instanceof Map)) {
+          console.warn('Inventory is not a Map, attempting to fix...', typeof inventory, inventory);
+          
+          // 在渲染过程中不更新状态，而是返回默认值
+          // 使用setTimeout在下一个事件循环中修复状态，避免React渲染错误
+          setTimeout(() => {
+            try {
+              if (Array.isArray(inventory)) {
+                const fixedInventory = new Map(inventory as [string, InventoryItem][]);
+                set(() => ({ inventory: fixedInventory }));
+                console.log('Successfully converted inventory array to Map');
+              } else {
+                console.warn('Inventory is neither Map nor Array, resetting to empty Map');
+                const emptyInventory = new Map();
+                set(() => ({ inventory: emptyInventory }));
+              }
+            } catch (error) {
+              console.error('Failed to fix inventory:', error);
+              const emptyInventory = new Map();
+              set(() => ({ inventory: emptyInventory }));
+            }
+          }, 0);
+          
+          // 返回默认的库存项，避免渲染错误
+          const dataService = DataService.getInstance();
+          const item = dataService.getItem(itemId);
+          const stackSize = item?.stack || 100;
+          
+          return {
+            itemId,
+            currentAmount: 0,
+            stackSize,
+            baseStacks: 1,
+            additionalStacks: 0,
+            totalStacks: 1,
+            maxCapacity: stackSize,
+            productionRate: 0,
+            consumptionRate: 0,
+            status: 'normal' as const
+          };
+        }
+        
         const existing = inventory.get(itemId);
         
         if (existing) {
@@ -333,18 +376,6 @@ const useGameStore = create<GameState>()(
         }));
       },
 
-      // 游戏时间
-      incrementGameTime: (deltaTime: number) => {
-        set((state) => ({
-          gameTime: state.gameTime + deltaTime
-        }));
-      },
-
-      setGameTime: (time: number) => {
-        set(() => ({
-          gameTime: time
-        }));
-      },
 
       // 配方相关 Actions
       addFavoriteRecipe: (recipeId: string) => {
@@ -938,40 +969,59 @@ const useGameStore = create<GameState>()(
       },
 
       saveGame: () => {
-        // 这个方法主要用于触发存档的更新
-        // 通过更新lastSaveTime来触发persist中间件保存
+        // 通过更新saveKey来触发persist中间件保存
         set(() => ({
-          lastSaveTime: Date.now()
+          lastSaveTime: Date.now(),
+          saveKey: `save_${Date.now()}`
         }));
       }
     }),
     {
       name: 'factorio-game-storage',
       storage: createJSONStorage(() => createDebouncedStorage(2000)), // 2秒防抖
-      partialize: (state) => ({
-        inventory: Array.from(state.inventory.entries()),
-        craftingQueue: state.craftingQueue,
-        facilities: state.facilities,
-        deployedContainers: state.deployedContainers,
-        // 保存游戏时间和时间戳用于恢复计算
-        gameTime: state.gameTime,
-        lastSaveTime: Date.now(), // 保存当前时间戳
-        totalItemsProduced: state.totalItemsProduced,
-        favoriteRecipes: Array.from(state.favoriteRecipes),
-        recentRecipes: state.recentRecipes,
-        technologies: Array.from(state.technologies.entries()),
-        researchState: state.researchState,
-        researchQueue: state.researchQueue,
-        unlockedTechs: Array.from(state.unlockedTechs),
-        autoResearch: state.autoResearch,
-        techCategories: state.techCategories,
-        craftedItemCounts: Array.from(state.craftedItemCounts.entries()),
-        builtEntityCounts: Array.from(state.builtEntityCounts.entries()),
-        minedEntityCounts: Array.from(state.minedEntityCounts.entries())
-      }),
+      partialize: (state) => {
+        // 只有saveKey变化时才触发存档
+        const serializedData = {
+          // 核心游戏数据
+          inventory: Array.from(state.inventory.entries()),
+          craftingQueue: state.craftingQueue,
+          facilities: state.facilities,
+          deployedContainers: state.deployedContainers,
+          totalItemsProduced: state.totalItemsProduced,
+          favoriteRecipes: Array.from(state.favoriteRecipes),
+          recentRecipes: state.recentRecipes,
+          technologies: Array.from(state.technologies.entries()),
+          researchState: state.researchState,
+          researchQueue: state.researchQueue,
+          unlockedTechs: Array.from(state.unlockedTechs),
+          autoResearch: state.autoResearch,
+          techCategories: state.techCategories,
+          craftedItemCounts: Array.from(state.craftedItemCounts.entries()),
+          builtEntityCounts: Array.from(state.builtEntityCounts.entries()),
+          minedEntityCounts: Array.from(state.minedEntityCounts.entries()),
+          // 时间数据
+          lastSaveTime: state.lastSaveTime,
+          // 存档触发键 - 只有这个值变化时才触发真正的存储
+          saveKey: state.saveKey
+        };
+        console.log('[Persist] 触发存档, saveKey:', serializedData.saveKey);
+        return serializedData;
+      },
       onRehydrateStorage: () => (state) => {
         if (state) {
-          state.inventory = new Map(state.inventory as unknown as [string, InventoryItem][]);
+          // 确保inventory正确转换为Map
+          try {
+            if (Array.isArray(state.inventory)) {
+              state.inventory = new Map(state.inventory as [string, InventoryItem][]);
+              console.log('Successfully rehydrated inventory from storage');
+            } else if (!(state.inventory instanceof Map)) {
+              console.warn('Invalid inventory format in storage, resetting to empty Map');
+              state.inventory = new Map();
+            }
+          } catch (error) {
+            console.error('Failed to rehydrate inventory:', error);
+            state.inventory = new Map();
+          }
           state.craftingQueue = state.craftingQueue as CraftingTask[];
           state.facilities = state.facilities as FacilityInstance[];
           state.deployedContainers = state.deployedContainers as DeployedContainer[];
@@ -999,10 +1049,30 @@ const useGameStore = create<GameState>()(
           state.craftedItemCounts = new Map(state.craftedItemCounts as unknown as [string, number][]);
           state.builtEntityCounts = new Map(state.builtEntityCounts as unknown as [string, number][]);
           state.minedEntityCounts = new Map(state.minedEntityCounts as unknown as [string, number][]);
+          
+          // 确保saveKey存在
+          if (!state.saveKey) {
+            state.saveKey = 'loaded';
+          }
         }
       }
     }
+    )
   )
 );
+
+// 设置定期自动存档 - 每5秒触发一次存档
+let lastAutoSaveTime = Date.now();
+setInterval(() => {
+  const state = useGameStore.getState();
+  const now = Date.now();
+  
+  // 只有当游戏时间有变化时才存档（说明游戏在运行）
+  if (now - lastAutoSaveTime > 5000) {
+    console.log('[AutoSave] 定期自动存档触发');
+    state.saveGame(); // 触发存档
+    lastAutoSaveTime = now;
+  }
+}, 5000);
 
 export default useGameStore;

@@ -61,7 +61,6 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, validation }) => {
           "&:hover": {
             bgcolor: "action.hover",
             borderColor: "primary.main",
-            transform: "scale(1.05)",
             zIndex: 10,
             boxShadow: "0 2px 8px rgba(33, 150, 243, 0.2)",
           },

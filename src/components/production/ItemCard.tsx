@@ -77,13 +77,6 @@ const ItemCard: React.FC<ItemCardProps> = React.memo(({ item, onClick, selected 
           MozUserSelect: 'none',
           msUserSelect: 'none',
           userSelect: 'none',
-          '&:hover': {
-            transform: 'scale(1.05)',
-            zIndex: 10,
-          },
-          '&:active': {
-            transform: 'scale(1.02)',
-          },
         }}
         onClick={onClick}
       >

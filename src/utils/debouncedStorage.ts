@@ -1,5 +1,5 @@
 // 防抖存储包装器 - 减少高频存档对性能的影响
-import { StateStorage } from 'zustand/middleware';
+import type { StateStorage } from 'zustand/middleware';
 import { asyncStorage } from './asyncStorage';
 
 interface PendingSave {
@@ -11,7 +11,7 @@ interface PendingSave {
 
 class DebouncedStorage implements StateStorage {
   private pendingSaves = new Map<string, PendingSave>();
-  private saveTimeouts = new Map<string, NodeJS.Timeout>();
+  private saveTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
   private readonly debounceMs: number;
 
   constructor(debounceMs: number = 1000) {
@@ -30,7 +30,7 @@ class DebouncedStorage implements StateStorage {
     return asyncStorage.getItem(name);
   }
 
-  setItem(name: string, value: string): void | Promise<void> {
+  setItem(name: string, value: string): Promise<void> {
     return new Promise((resolve, reject) => {
       // 取消之前的保存计划
       const existingTimeout = this.saveTimeouts.get(name);
@@ -38,7 +38,7 @@ class DebouncedStorage implements StateStorage {
         clearTimeout(existingTimeout);
       }
 
-      // 如果有待保存的同名项，先拒绝它
+      // 如果有待保存的同名项，先拒绝它（静默处理）
       const existingPending = this.pendingSaves.get(name);
       if (existingPending) {
         existingPending.reject(new Error('Superseded by newer save'));
@@ -56,8 +56,10 @@ class DebouncedStorage implements StateStorage {
           
           try {
             await asyncStorage.setItem(pending.name, pending.value);
+            console.log(`[Save] 存档成功: ${pending.name} (${Math.round(pending.value.length / 1024)}KB)`);
             pending.resolve();
           } catch (error) {
+            console.error(`[Save] 存档失败: ${pending.name}`, error);
             pending.reject(error);
           }
         }
@@ -98,8 +100,14 @@ class DebouncedStorage implements StateStorage {
       
       promises.push(
         asyncStorage.setItem(pending.name, pending.value)
-          .then(() => pending.resolve())
-          .catch((error) => pending.reject(error))
+          .then(() => {
+            console.log(`[Save] 立即存档成功: ${pending.name}`);
+            pending.resolve();
+          })
+          .catch((error) => {
+            console.error(`[Save] 立即存档失败: ${pending.name}`, error);
+            pending.reject(error);
+          })
       );
     }
     
@@ -125,8 +133,10 @@ class DebouncedStorage implements StateStorage {
         
         try {
           await asyncStorage.setItem(pending.name, pending.value);
+          console.log(`[Save] 手动存档成功: ${pending.name}`);
           pending.resolve();
         } catch (error) {
+          console.error(`[Save] 手动存档失败: ${pending.name}`, error);
           pending.reject(error);
         }
       }
@@ -148,7 +158,15 @@ export const createDebouncedStorage = (debounceMs: number = 2000) => {
       return storage.getItem(name);
     },
     setItem: (name: string, value: string): void | Promise<void> => {
-      return storage.setItem(name, value);
+      // 捕获并静默处理"superseded"错误
+      return storage.setItem(name, value).catch((error: unknown) => {
+        if (error instanceof Error && error.message === 'Superseded by newer save') {
+          // 这是正常的防抖行为，静默忽略
+          return;
+        }
+        // 其他错误继续抛出
+        throw error;
+      });
     },
     removeItem: (name: string): void | Promise<void> => {
       return storage.removeItem(name);
