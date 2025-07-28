@@ -1,9 +1,9 @@
 // 燃料服务 - 管理所有燃料相关逻辑
 
 import { DataService } from './DataService';
-import type { FacilityInstance, FuelBuffer, FuelSlot } from '../types/facilities';
+import type { FacilityInstance, FuelBuffer } from '../types/facilities';
 import { FacilityStatus } from '../types/facilities';
-import type { InventoryItem, Item } from '../types/index';
+import type { InventoryItem } from '../types/index';
 import { FACILITY_FUEL_CONFIGS, FUEL_PRIORITY, getFuelCategory, type FuelConfig } from '../data/fuelConfigs';
 
 // 燃料更新结果
@@ -332,8 +332,7 @@ export class FuelService {
    */
   private isFuelBufferFull(buffer: FuelBuffer, config?: FuelConfig): boolean {
     if (!config && buffer.slots.length > 0) {
-      // 尝试从第一个槽位推断配置
-      const firstSlot = buffer.slots[0];
+      // 使用默认最大堆叠数
       const maxStack = 50; // 默认值
       return buffer.slots.length >= buffer.maxSlots && 
              buffer.slots.every(s => s.quantity >= maxStack);

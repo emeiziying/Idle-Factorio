@@ -42,23 +42,15 @@ const ProductionMonitor: React.FC = () => {
   const dataService = DataService.getInstance();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   // 过滤和分组设施
   const groupedFacilities = useMemo(() => {
     const filtered = facilities.filter(facility => {
-      const item = dataService.getItem(facility.facilityId);
       const name = dataService.getItemName(facility.facilityId);
       
       // 搜索过滤
       if (searchTerm && !name.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
-      }
-      
-      // 类别过滤
-      if (categoryFilter !== 'all') {
-        const category = getFacilityCategory(facility.facilityId);
-        if (category !== categoryFilter) return false;
       }
       
       return true;
@@ -75,7 +67,7 @@ const ProductionMonitor: React.FC = () => {
     });
 
     return groups;
-  }, [facilities, searchTerm, categoryFilter]);
+  }, [facilities, searchTerm]);
 
   // 获取设施类别
   const getFacilityCategory = (facilityId: string): string => {
@@ -242,7 +234,6 @@ const ProductionMonitor: React.FC = () => {
                       {facility.fuelBuffer && (
                         <FuelStatusDisplay
                           fuelBuffer={facility.fuelBuffer}
-                          facilityId={facility.id}
                           compact
                         />
                       )}

@@ -3,7 +3,6 @@
 import { useEffect, useCallback, useRef } from 'react';
 import useGameStore from '../store/gameStore';
 import { FuelService } from '../services/FuelService';
-import { DataService } from '../services/DataService';
 import { RecipeService } from '../services/RecipeService';
 import { PowerService } from '../services/PowerService';
 import type { FacilityInstance } from '../types/facilities';
@@ -30,7 +29,6 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
   
   const lastUpdateRef = useRef<number>(Date.now());
   const fuelService = FuelService.getInstance();
-  const dataService = DataService.getInstance();
   const recipeService = RecipeService.getInstance();
   const powerService = PowerService.getInstance();
   

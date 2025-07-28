@@ -9,13 +9,11 @@ import FactorioIcon from '../common/FactorioIcon';
 
 interface FuelStatusDisplayProps {
   fuelBuffer: FuelBuffer;
-  facilityId: string;
   compact?: boolean;
 }
 
 export const FuelStatusDisplay: React.FC<FuelStatusDisplayProps> = ({
   fuelBuffer,
-  facilityId,
   compact = false
 }) => {
   const fuelService = FuelService.getInstance();

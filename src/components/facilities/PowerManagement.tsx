@@ -12,14 +12,10 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
-  IconButton,
-  Tooltip
+  IconButton
 } from '@mui/material';
 import {
   Bolt,
-  PowerSettingsNew,
-  Warning,
-  CheckCircle,
   Add,
   Remove
 } from '@mui/icons-material';
