@@ -1,6 +1,7 @@
 // 防抖存储包装器 - 减少高频存档对性能的影响
 import type { StateStorage } from 'zustand/middleware';
 import { asyncStorage } from './asyncStorage';
+import LZString from 'lz-string';
 
 interface PendingSave {
   name: string;
@@ -13,9 +14,11 @@ class DebouncedStorage implements StateStorage {
   private pendingSaves = new Map<string, PendingSave>();
   private saveTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
   private readonly debounceMs: number;
+  private readonly enableCompression: boolean = true; // 启用压缩
 
-  constructor(debounceMs: number = 1000) {
+  constructor(debounceMs: number = 1000, enableCompression: boolean = true) {
     this.debounceMs = debounceMs;
+    this.enableCompression = enableCompression;
     
     // 页面卸载时立即保存所有待保存的数据
     if (typeof window !== 'undefined') {
@@ -27,7 +30,25 @@ class DebouncedStorage implements StateStorage {
 
   getItem(name: string): string | null | Promise<string | null> {
     // 读取操作不需要防抖，直接调用异步存储
-    return asyncStorage.getItem(name);
+    return asyncStorage.getItem(name).then(value => {
+      if (!value || !this.enableCompression) return value;
+      
+      // 尝试解压数据
+      try {
+        // 检查是否是压缩数据（以特定前缀开始）
+        if (value.startsWith('ᯡ')) { // LZString压缩的UTF16数据特征
+          const decompressed = LZString.decompressFromUTF16(value);
+          if (decompressed) {
+            console.log(`[Storage] 解压数据成功: ${name}`);
+            return decompressed;
+          }
+        }
+      } catch (error) {
+        console.warn(`[Storage] 解压失败，返回原始数据: ${name}`, error);
+      }
+      
+      return value;
+    });
   }
 
   setItem(name: string, value: string): Promise<void> {
@@ -55,8 +76,27 @@ class DebouncedStorage implements StateStorage {
           this.saveTimeouts.delete(name);
           
           try {
-            await asyncStorage.setItem(pending.name, pending.value);
-            console.log(`[Save] 存档成功: ${pending.name} (${Math.round(pending.value.length / 1024)}KB)`);
+            let dataToSave = pending.value;
+            let sizeInfo = '';
+            
+            if (this.enableCompression) {
+              const originalSize = pending.value.length;
+              const compressed = LZString.compressToUTF16(pending.value);
+              const compressedSize = compressed.length * 2; // UTF-16每字符2字节
+              
+              if (compressedSize < originalSize) {
+                dataToSave = compressed;
+                const reduction = Math.round((1 - compressedSize / originalSize) * 100);
+                sizeInfo = ` (压缩: ${Math.round(originalSize / 1024)}KB → ${Math.round(compressedSize / 1024)}KB, -${reduction}%)`;
+              } else {
+                sizeInfo = ` (未压缩: ${Math.round(originalSize / 1024)}KB)`;
+              }
+            } else {
+              sizeInfo = ` (${Math.round(pending.value.length / 1024)}KB)`;
+            }
+            
+            await asyncStorage.setItem(pending.name, dataToSave);
+            console.log(`[Save] 存档成功: ${pending.name}${sizeInfo}`);
             pending.resolve();
           } catch (error) {
             console.error(`[Save] 存档失败: ${pending.name}`, error);
@@ -86,10 +126,30 @@ class DebouncedStorage implements StateStorage {
         this.pendingSaves.delete(name);
       }
       
+      // 压缩数据
+      let dataToSave = value;
+      let sizeInfo = '';
+      
+      if (this.enableCompression) {
+        const originalSize = value.length;
+        const compressed = LZString.compressToUTF16(value);
+        const compressedSize = compressed.length * 2;
+        
+        if (compressedSize < originalSize) {
+          dataToSave = compressed;
+          const reduction = Math.round((1 - compressedSize / originalSize) * 100);
+          sizeInfo = ` (压缩: ${Math.round(originalSize / 1024)}KB → ${Math.round(compressedSize / 1024)}KB, -${reduction}%)`;
+        } else {
+          sizeInfo = ` (未压缩: ${Math.round(originalSize / 1024)}KB)`;
+        }
+      } else {
+        sizeInfo = ` (${Math.round(value.length / 1024)}KB)`;
+      }
+      
       // 使用.then()链式调用替代async/await
-      asyncStorage.setItem(name, value)
+      asyncStorage.setItem(name, dataToSave)
         .then(() => {
-          console.log(`[Save] 强制存档成功: ${name} (${Math.round(value.length / 1024)}KB)`);
+          console.log(`[Save] 强制存档成功: ${name}${sizeInfo}`);
           resolve();
         })
         .catch((error) => {

@@ -1,10 +1,12 @@
 /**
  * 存档优化服务
  * 实现第一阶段优化：移除冗余字段，降低精度，简化数据结构
+ * 实现第二阶段优化：LZ-String压缩
  */
 
 import { DataService } from './DataService';
 import type { FacilityInstance } from '../types/facilities';
+import LZString from 'lz-string';
 
 // 优化后的存档格式
 export interface OptimizedSaveData {
@@ -193,24 +195,67 @@ export class SaveOptimizationService {
   }
 
   /**
+   * 使用LZ-String压缩数据
+   */
+  compress(data: any): string {
+    const jsonStr = JSON.stringify(data);
+    return LZString.compressToUTF16(jsonStr);
+  }
+
+  /**
+   * 解压LZ-String压缩的数据
+   */
+  decompress(compressed: string): any {
+    try {
+      const jsonStr = LZString.decompressFromUTF16(compressed);
+      if (!jsonStr) {
+        throw new Error('解压失败：数据损坏');
+      }
+      return JSON.parse(jsonStr);
+    } catch (error) {
+      console.error('解压数据失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 计算压缩后的大小
+   */
+  calculateCompressedSize(data: any): number {
+    const compressed = this.compress(data);
+    return compressed.length * 2; // UTF-16每个字符占2字节
+  }
+
+  /**
    * 比较优化前后的存档大小
    */
   compareSizes(original: any, optimized: OptimizedSaveData): {
     originalSize: number;
     optimizedSize: number;
+    compressedSize: number;
     reduction: number;
     percentage: number;
+    compressionReduction: number;
+    compressionPercentage: number;
   } {
     const originalSize = this.calculateSize(original);
     const optimizedSize = this.calculateSize(optimized);
+    const compressedSize = this.calculateCompressedSize(optimized);
+    
     const reduction = originalSize - optimizedSize;
     const percentage = Math.round((reduction / originalSize) * 100);
+    
+    const compressionReduction = originalSize - compressedSize;
+    const compressionPercentage = Math.round((compressionReduction / originalSize) * 100);
 
     return {
       originalSize,
       optimizedSize,
+      compressedSize,
       reduction,
-      percentage
+      percentage,
+      compressionReduction,
+      compressionPercentage
     };
   }
 

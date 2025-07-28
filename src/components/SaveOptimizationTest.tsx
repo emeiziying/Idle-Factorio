@@ -9,8 +9,11 @@ export const SaveOptimizationTest: React.FC = () => {
   const [optimizationResult, setOptimizationResult] = useState<{
     originalSize: number;
     optimizedSize: number;
+    compressedSize: number;
     reduction: number;
     percentage: number;
+    compressionReduction: number;
+    compressionPercentage: number;
   } | null>(null);
 
   const handleOptimize = () => {
@@ -61,6 +64,7 @@ export const SaveOptimizationTest: React.FC = () => {
         sx={{ mb: 3 }}
       >
         第一阶段优化通过移除冗余字段、降低数值精度和简化数据结构来减少存档大小。
+        第二阶段使用LZ-String压缩进一步减少存储空间。
       </Alert>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -88,32 +92,51 @@ export const SaveOptimizationTest: React.FC = () => {
                   </Paper>
                   <Paper elevation={0} sx={{ p: 2, flex: '1 1 200px', textAlign: 'center', bgcolor: 'grey.100' }}>
                     <Typography variant="caption" color="text.secondary">优化后大小</Typography>
-                    <Typography variant="h6" color="success.main">
+                    <Typography variant="h6" color="warning.main">
                       {formatBytes(optimizationResult.optimizedSize)}
                     </Typography>
-                  </Paper>
-                  <Paper elevation={0} sx={{ p: 2, flex: '1 1 200px', textAlign: 'center', bgcolor: 'grey.100' }}>
-                    <Typography variant="caption" color="text.secondary">减少大小</Typography>
-                    <Typography variant="h6" color="info.main">
-                      {formatBytes(optimizationResult.reduction)}
+                    <Typography variant="caption" color="text.secondary">
+                      减少 {optimizationResult.percentage}%
                     </Typography>
                   </Paper>
                   <Paper elevation={0} sx={{ p: 2, flex: '1 1 200px', textAlign: 'center', bgcolor: 'grey.100' }}>
-                    <Typography variant="caption" color="text.secondary">压缩率</Typography>
+                    <Typography variant="caption" color="text.secondary">压缩后大小</Typography>
+                    <Typography variant="h6" color="success.main">
+                      {formatBytes(optimizationResult.compressedSize)}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      减少 {optimizationResult.compressionPercentage}%
+                    </Typography>
+                  </Paper>
+                  <Paper elevation={0} sx={{ p: 2, flex: '1 1 200px', textAlign: 'center', bgcolor: 'grey.100' }}>
+                    <Typography variant="caption" color="text.secondary">总压缩率</Typography>
                     <Typography variant="h6" color="info.main">
-                      {optimizationResult.percentage}%
+                      {optimizationResult.compressionPercentage}%
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      节省 {formatBytes(optimizationResult.compressionReduction)}
                     </Typography>
                   </Paper>
                 </Box>
                 
                 <Box sx={{ mt: 3 }}>
                   <Typography variant="body2" color="text.secondary" gutterBottom>
-                    压缩进度
+                    优化进度
                   </Typography>
                   <LinearProgress 
                     variant="determinate" 
                     value={optimizationResult.percentage} 
+                    sx={{ height: 8, borderRadius: 4, mb: 2 }}
+                    color="warning"
+                  />
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    压缩进度
+                  </Typography>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={optimizationResult.compressionPercentage} 
                     sx={{ height: 8, borderRadius: 4 }}
+                    color="success"
                   />
                 </Box>
               </CardContent>
@@ -148,11 +171,15 @@ export const SaveOptimizationTest: React.FC = () => {
                 <Divider sx={{ my: 2 }} />
 
                 <Typography variant="subtitle1" gutterBottom>存档优化效果展示</Typography>
-                <Box sx={{ mt: 2 }}>
-                  <Alert severity="success">
-                    通过第一阶段优化，存档大小减少了 <strong>{optimizationResult.percentage}%</strong>，
+                <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Alert severity="warning">
+                    <strong>第一阶段优化：</strong>存档大小减少了 <strong>{optimizationResult.percentage}%</strong>，
                     从 <strong>{formatBytes(optimizationResult.originalSize)}</strong> 减少到 
                     <strong> {formatBytes(optimizationResult.optimizedSize)}</strong>
+                  </Alert>
+                  <Alert severity="success">
+                    <strong>第二阶段压缩：</strong>最终存档大小减少了 <strong>{optimizationResult.compressionPercentage}%</strong>，
+                    压缩后仅为 <strong>{formatBytes(optimizationResult.compressedSize)}</strong>
                   </Alert>
                 </Box>
               </CardContent>
