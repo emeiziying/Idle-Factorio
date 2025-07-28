@@ -309,10 +309,8 @@ const useGameStore = create<GameState>()(
       // 设施管理
       addFacility: (facility) => {
         const fuelService = FuelService.getInstance();
-        const dataService = DataService.getInstance();
         
         // 检查是否需要燃料缓存
-        const facilityItem = dataService.getItem(facility.facilityId);
         // 检查燃料配置而不是 powerType，因为 powerType 可能在 item 中没有定义
         if (FACILITY_FUEL_CONFIGS[facility.facilityId]) {
           facility.fuelBuffer = fuelService.initializeFuelBuffer(facility.facilityId) || undefined;

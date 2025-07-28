@@ -1,9 +1,9 @@
 // 燃料服务 - 管理所有燃料相关逻辑
 
 import { DataService } from './DataService';
-import type { FacilityInstance, FuelBuffer, FuelSlot } from '../types/facilities';
+import type { FacilityInstance, FuelBuffer } from '../types/facilities';
 import { FacilityStatus } from '../types/facilities';
-import type { InventoryItem, Item } from '../types/index';
+import type { InventoryItem } from '../types/index';
 import { FACILITY_FUEL_CONFIGS, FUEL_PRIORITY, getFuelCategory, type FuelConfig } from '../data/fuelConfigs';
 
 // 燃料更新结果
@@ -40,9 +40,19 @@ export interface FuelStatus {
 export class FuelService {
   private static instance: FuelService;
   private dataService: DataService;
+  private customFuelPriority: string[] | null = null;
   
   private constructor() {
     this.dataService = DataService.getInstance();
+    // 从本地存储加载自定义优先级
+    const stored = localStorage.getItem('fuelPriority');
+    if (stored) {
+      try {
+        this.customFuelPriority = JSON.parse(stored);
+      } catch (e) {
+        console.error('Failed to load fuel priority:', e);
+      }
+    }
   }
   
   static getInstance(): FuelService {
@@ -50,6 +60,21 @@ export class FuelService {
       FuelService.instance = new FuelService();
     }
     return FuelService.instance;
+  }
+  
+  /**
+   * 设置自定义燃料优先级
+   */
+  setFuelPriority(priority: string[]): void {
+    this.customFuelPriority = priority;
+    localStorage.setItem('fuelPriority', JSON.stringify(priority));
+  }
+  
+  /**
+   * 获取当前燃料优先级
+   */
+  getFuelPriority(): string[] {
+    return this.customFuelPriority || FUEL_PRIORITY;
   }
   
   /**
@@ -238,7 +263,8 @@ export class FuelService {
     }
     
     // 按优先级尝试添加燃料
-    for (const fuelId of FUEL_PRIORITY) {
+    const fuelPriority = this.getFuelPriority();
+    for (const fuelId of fuelPriority) {
       const inventory = getInventoryItem(fuelId);
       if (inventory.currentAmount <= 0) continue;
       
@@ -306,8 +332,7 @@ export class FuelService {
    */
   private isFuelBufferFull(buffer: FuelBuffer, config?: FuelConfig): boolean {
     if (!config && buffer.slots.length > 0) {
-      // 尝试从第一个槽位推断配置
-      const firstSlot = buffer.slots[0];
+      // 使用默认最大堆叠数
       const maxStack = 50; // 默认值
       return buffer.slots.length >= buffer.maxSlots && 
              buffer.slots.every(s => s.quantity >= maxStack);
@@ -339,7 +364,8 @@ export class FuelService {
       });
     
     // 分配燃料
-    for (const fuelType of FUEL_PRIORITY) {
+    const fuelPriority = this.getFuelPriority();
+    for (const fuelType of fuelPriority) {
       let available = getInventoryItem(fuelType).currentAmount;
       if (available <= 0) continue;
       

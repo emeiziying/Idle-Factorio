@@ -49,11 +49,11 @@ export const FACILITY_FUEL_CONFIGS: Record<string, FuelConfig> = {
 
 // 燃料优先级（从低到高）
 export const FUEL_PRIORITY = [
-  'wood',           // 2 MJ
-  'coal',           // 4 MJ
-  'solid-fuel',     // 12 MJ
-  'rocket-fuel',    // 100 MJ
-  'nuclear-fuel'    // 1.21 GJ
+  'coal',           // 4 MJ - 优先使用煤炭
+  'solid-fuel',     // 12 MJ - 其次使用固体燃料
+  'rocket-fuel',    // 100 MJ - 高级燃料
+  'nuclear-fuel',   // 1.21 GJ - 核燃料
+  'wood'            // 2 MJ - 最后使用木材（通常另作他用）
 ];
 
 // 获取物品的燃料类别
