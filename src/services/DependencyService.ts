@@ -52,7 +52,7 @@ export class DependencyService {
     itemId: string, 
     quantity: number, 
     inventory: Map<string, { currentAmount: number }>
-  ): CraftingChain | null {
+  ): CraftingChainAnalysis | null {
     // 获取主要制作配方
     const mainRecipe = this.getBestManualCraftingRecipe(itemId);
     if (!mainRecipe) {
@@ -194,7 +194,7 @@ export class DependencyService {
    * @param chain 制作链
    * @returns 总时间（秒）
    */
-  calculateChainDuration(chain: CraftingChain): number {
+  calculateChainDuration(chain: CraftingChainAnalysis): number {
     const manualEfficiency = 0.5; // 手动效率
     let totalTime = 0;
 

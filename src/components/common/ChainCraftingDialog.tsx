@@ -17,11 +17,12 @@ import {
 import { Warning as WarningIcon, Build as BuildIcon } from '@mui/icons-material';
 import FactorioIcon from './FactorioIcon';
 import { DataService } from '../../services/DataService';
-import type { CraftingChain } from '../../services/DependencyService';
+import type { CraftingChainAnalysis, CraftingDependency } from '../../services/DependencyService';
+import type { CraftingTask } from '../../types';
 
 interface ChainCraftingDialogProps {
   open: boolean;
-  chain: CraftingChain | null;
+  chain: CraftingChainAnalysis | null;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -47,7 +48,7 @@ const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
   };
 
   // 计算总预计时间
-  const totalDuration = chain.tasks.reduce((total, task) => {
+  const totalDuration = chain.tasks.reduce((total: number, task: CraftingTask) => {
     const baseTime = task.craftingTime || 1;
     const manualEfficiency = 0.5;
     const actualTime = baseTime / manualEfficiency;
@@ -92,7 +93,7 @@ const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
             缺少材料：
           </Typography>
           <List dense>
-            {chain.dependencies.map((dep) => (
+            {chain.dependencies.map((dep: CraftingDependency) => (
               <ListItem key={dep.itemId} sx={{ px: 0 }}>
                 <ListItemAvatar sx={{ minWidth: 40 }}>
                   <FactorioIcon 
@@ -135,7 +136,7 @@ const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
             制作计划：
           </Typography>
           <List dense>
-            {chain.tasks.map((task, taskIndex) => {
+            {chain.tasks.map((task: CraftingTask, taskIndex: number) => {
               const isMainTask = taskIndex === chain.tasks.length - 1;
               return (
                 <ListItem key={task.id} sx={{ px: 0 }}>

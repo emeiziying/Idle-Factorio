@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import type { Recipe } from '../../types';
 import useGameStore from '../../store/gameStore';
 import { DataService } from '../../services/DataService';
-// import { getRecipeTypeDescription } from '../../utils/customRecipeUtils'; // 已删除
 
 interface RecipeInfoProps {
   itemId: string;

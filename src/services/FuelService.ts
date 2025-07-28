@@ -5,7 +5,7 @@ import { RecipeService } from './RecipeService';
 import type { FacilityInstance, FuelBuffer } from '../types/facilities';
 import { FacilityStatus } from '../types/facilities';
 import type { InventoryItem } from '../types/index';
-import { FUEL_PRIORITY, getFuelCategory, type FuelConfig } from '../data/fuelConfigs';
+import { FUEL_PRIORITY, getFuelCategory } from '../data/fuelConfigs';
 import { warn as logWarn, error as logError } from '../utils/logger';
 import { msToSeconds } from '../utils/common';
 
@@ -362,12 +362,7 @@ export class FuelService {
     }, 0);
   }
   
-  /**
-   * 计算最大能量存储
-   */
-  private calculateMaxEnergy(config: FuelConfig): number {
-    return config.fuelSlots * config.maxStackPerSlot * 100;
-  }
+
 
   /**
    * 从功率计算最大能量存储
@@ -489,10 +484,10 @@ export class FuelService {
     
     if (hasShortage) {
       // 燃料短缺时的分配策略
-      this.distributeFuelWithShortage(needsFuel, fuelPriority, fuelAvailable, getInventoryItem, updateInventory);
+      this.distributeFuelWithShortage(needsFuel, fuelPriority, fuelAvailable, updateInventory);
     } else {
       // 燃料充足时的正常分配
-      this.distributeFuelNormally(needsFuel, fuelPriority, fuelAvailable, getInventoryItem, updateInventory);
+      this.distributeFuelNormally(needsFuel, fuelPriority, fuelAvailable, updateInventory);
     }
   }
   
@@ -503,7 +498,6 @@ export class FuelService {
     facilities: FacilityInstance[],
     fuelPriority: string[],
     fuelAvailable: Record<string, number>,
-    getInventoryItem: (itemId: string) => InventoryItem,
     updateInventory: (itemId: string, amount: number) => void
   ): void {
     for (const facility of facilities) {
@@ -533,7 +527,6 @@ export class FuelService {
     facilities: FacilityInstance[],
     fuelPriority: string[],
     fuelAvailable: Record<string, number>,
-    getInventoryItem: (itemId: string) => InventoryItem,
     updateInventory: (itemId: string, amount: number) => void
   ): void {
     // 按优先级分配燃料

@@ -15,7 +15,7 @@ import ManualCraftingCard from '../detail/ManualCraftingCard';
 import RecipeFacilitiesCard from '../detail/RecipeFacilitiesCard';
 import UsageCard from '../detail/UsageCard';
 import InventoryManagementCard from '../detail/InventoryManagementCard';
-// import RecipeAnalysis from './RecipeAnalysis';
+
 
 interface ItemDetailPanelProps {
   item: Item;
@@ -95,11 +95,7 @@ const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item, onItemSelect })
         {/* 库存管理 */}
         <InventoryManagementCard item={item} onItemSelect={onItemSelect} />
 
-        {/* 配方分析 - 暂时移除 */}
-        {/* <RecipeAnalysis 
-          itemId={item.id} 
-          unlockedItems={[]} // 这里可以传入已解锁的物品列表
-        /> */}
+
       </Box>
 
       {/* 消息提示 */}

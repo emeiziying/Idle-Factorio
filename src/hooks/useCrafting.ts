@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Recipe } from '../types/index';
 import useGameStore from '../store/gameStore';
-import DependencyService, { type CraftingChainAnalysis } from '../services/DependencyService';
+import DependencyService, { type CraftingChainAnalysis, type CraftingDependency } from '../services/DependencyService';
 
 export const useCrafting = () => {
   const [showMessage, setShowMessage] = useState({
@@ -111,7 +111,7 @@ export const useCrafting = () => {
           
           if (chain && chain.dependencies.length > 0) {
             // 检查是否所有依赖都可以手动制作
-            const allDependenciesCraftable = chain.dependencies.every(dep => dep.canCraftManually);
+            const allDependenciesCraftable = chain.dependencies.every((dep: CraftingDependency) => dep.canCraftManually);
             
             if (allDependenciesCraftable) {
               // 直接执行链式制作，无需确认
@@ -176,7 +176,9 @@ export const useCrafting = () => {
       finalProduct: {
         itemId: chainAnalysis.mainTask.itemId,
         quantity: chainAnalysis.mainTask.quantity
-      }
+      },
+      status: 'pending' as const,
+      totalProgress: 0
     };
 
     const chainId = addCraftingChain(chainData);
