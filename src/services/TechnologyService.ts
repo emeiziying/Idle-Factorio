@@ -18,9 +18,9 @@ import type {
 import { ResearchPriority } from '../types/technology';
 import type { InventoryOperations } from '../types/inventory';
 import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
-import type { UserProgressService } from './UserProgressService';
-import type { DataService } from './DataService';
-import type { RecipeService } from './RecipeService';
+import { UserProgressService } from './UserProgressService';
+import { DataService } from './DataService';
+import { RecipeService } from './RecipeService';
 import type { FacilityInstance } from '../types/facilities';
 import type { GameStateProvider } from './interfaces';
 import Logger from '../utils/logger';

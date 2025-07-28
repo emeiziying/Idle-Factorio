@@ -230,7 +230,6 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
                 <Box sx={{ mt: 1, bgcolor: 'background.default', borderRadius: 1 }}>
                   <FuelStatusDisplay
                     fuelBuffer={deployedFacilities[0].fuelBuffer}
-                    facilityId={facilityType}
                     compact={false}
                   />
                 </Box>

@@ -112,7 +112,7 @@ const ItemList: React.FC<ItemListProps> = React.memo(({
                 px: 0.5
               }}
             >
-              {items.map((item) => (
+              {items.map((item: any) => (
                 <ItemCard
                   key={`${categoryId}-${item.id}`}
                   item={item}

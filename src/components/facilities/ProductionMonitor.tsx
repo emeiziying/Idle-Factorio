@@ -200,7 +200,7 @@ const ProductionMonitor: React.FC = () => {
             {facilityList.map((facility) => {
               const name = dataService.getItemName(facility.facilityId);
               return (
-                <Grid item xs={12} sm={6} md={4} key={facility.id}>
+                <Box key={facility.id} sx={{ gridColumn: { xs: 'span 1', sm: 'span 1', md: 'span 1' } }}>
                   <Card>
                     <CardContent>
                       <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
@@ -258,7 +258,7 @@ const ProductionMonitor: React.FC = () => {
                       )}
                     </CardContent>
                   </Card>
-                </Grid>
+                </Box>
               );
             })}
           </Grid>

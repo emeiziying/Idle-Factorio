@@ -21,6 +21,9 @@ export interface Item {
   icon?: string;
   iconText?: string; // 图标文本（如温度标识 "165°"）
   fuel_value?: string;
+  fuel?: {
+    value: number;
+  };
   type?: string;
   unlocked?: boolean;
   container?: {

@@ -1,6 +1,6 @@
 // 依赖分析服务 - 用于计算制作链式任务
 import type { Recipe, CraftingTask } from '../types/index';
-import { DataService } from './DataService';
+
 import { RecipeService } from './RecipeService';
 import ManualCraftingValidator from '../utils/manualCraftingValidator';
 
@@ -26,11 +26,11 @@ export interface CraftingChain {
 
 export class DependencyService {
   private static instance: DependencyService;
-  private dataService: DataService;
+
   private validator: ManualCraftingValidator;
 
   private constructor() {
-    this.dataService = DataService.getInstance();
+    // this.dataService = DataService.getInstance();
     this.validator = ManualCraftingValidator.getInstance();
   }
 
@@ -79,7 +79,7 @@ export class DependencyService {
           required: totalRequired,
           available,
           shortage,
-          recipe: materialRecipe,
+          recipe: materialRecipe || undefined,
           canCraftManually
         };
 

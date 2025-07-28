@@ -42,7 +42,7 @@ export class StorageService {
 
     return {
       itemId: storageType,
-      name: this.dataService.getLocalizedItemName(storageType),
+      name: this.getDataService()?.getLocalizedItemName(storageType) || storageType,
       category: specificConfig.category!,
       additionalStacks: specificConfig.additionalStacks,
       fluidCapacity: specificConfig.fluidCapacity,

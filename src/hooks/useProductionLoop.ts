@@ -42,7 +42,7 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
     const { currentRecipeId, progress } = facility.production;
     if (!currentRecipeId) return;
     
-    const recipe = recipeService.getRecipeById(currentRecipeId);
+    const recipe = RecipeService.getRecipeById(currentRecipeId);
     if (!recipe) return;
     
     // 计算生产进度
@@ -55,7 +55,7 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
       let canProduce = true;
       for (const [itemId, quantity] of Object.entries(recipe.out)) {
         const inventory = getInventoryItem(itemId);
-        if (inventory.currentAmount + quantity > inventory.maxCapacity) {
+        if (inventory.currentAmount + (quantity as number) > inventory.maxCapacity) {
           canProduce = false;
           break;
         }
@@ -64,12 +64,12 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
       if (canProduce) {
         // 消耗输入材料
         for (const [itemId, quantity] of Object.entries(recipe.in)) {
-          updateInventory(itemId, -quantity);
+          updateInventory(itemId, -(quantity as number));
         }
         
         // 添加产出
         for (const [itemId, quantity] of Object.entries(recipe.out)) {
-          updateInventory(itemId, quantity);
+          updateInventory(itemId, quantity as number);
         }
         
         // 重置进度

@@ -4,7 +4,7 @@ import {
   Card,
   CardContent,
   Typography,
-  Grid,
+
   LinearProgress,
   Alert,
   Chip,
@@ -120,8 +120,8 @@ const PowerManagement: React.FC = () => {
           </Box>
           
           {/* 发电量 vs 消耗量 */}
-          <Grid container spacing={2} mb={2}>
-            <Grid item xs={6}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 2 }}>
+            <Box>
               <Typography variant="body2" color="text.secondary">
                 发电能力
               </Typography>
@@ -131,8 +131,8 @@ const PowerManagement: React.FC = () => {
               <Typography variant="caption" color="text.secondary">
                 实际发电: {formatPower(powerBalance.actualGeneration)}
               </Typography>
-            </Grid>
-            <Grid item xs={6}>
+            </Box>
+            <Box>
               <Typography variant="body2" color="text.secondary">
                 电力需求
               </Typography>
@@ -142,8 +142,8 @@ const PowerManagement: React.FC = () => {
               <Typography variant="caption" color="text.secondary">
                 实际消耗: {formatPower(powerBalance.actualConsumption)}
               </Typography>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
           
           {/* 满足率进度条 */}
           <Box mb={1}>
@@ -266,9 +266,9 @@ const PowerManagement: React.FC = () => {
             电力消耗分析
           </Typography>
           
-          <Grid container spacing={2}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 2 }}>
             {Object.entries(powerBalance.consumptionByCategory).map(([category, power]) => (
-              <Grid item xs={6} sm={4} key={category}>
+              <Box key={category}>
                 <Box textAlign="center">
                   <Typography variant="body2" color="text.secondary">
                     {category === 'mining' ? '采矿' :
@@ -286,9 +286,9 @@ const PowerManagement: React.FC = () => {
                       : '0%'}
                   </Typography>
                 </Box>
-              </Grid>
+              </Box>
             ))}
-          </Grid>
+          </Box>
         </CardContent>
       </Card>
     </Box>

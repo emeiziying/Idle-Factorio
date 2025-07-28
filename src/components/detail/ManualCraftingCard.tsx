@@ -9,7 +9,7 @@ import type { Item, Recipe } from '../../types/index';
 import { RecipeService } from '../../services/RecipeService';
 import { DataService } from '../../services/DataService';
 import useGameStore from '../../store/gameStore';
-import { getValidationReasonText } from '../../utils/manualCraftingValidator';
+import { getValidationReasonText, type ValidationReasonType } from '../../utils/manualCraftingValidator';
 import CraftingButtons from './CraftingButtons';
 import RecipeFlowDisplay from './RecipeFlowDisplay';
 import FactorioIcon from '../common/FactorioIcon';
@@ -34,7 +34,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
       <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
         <Alert severity="info" sx={{ mb: 2 }}>
           <Typography variant="body2">
-            {getValidationReasonText(manualCraftingInfo.validation.reason, 'zh')}
+            {getValidationReasonText(manualCraftingInfo.validation.reason as ValidationReasonType, 'zh')}
           </Typography>
         </Alert>
         <Typography variant="body2" color="text.secondary">

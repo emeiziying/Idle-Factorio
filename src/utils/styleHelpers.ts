@@ -163,8 +163,9 @@ export const getCenterStyles = (
  * @returns 合并后的样式对象
  */
 export const mergeStyles = (...styles: (SxProps<Theme> | undefined)[]): SxProps<Theme> => {
-  return styles.filter(Boolean).reduce((acc, style) => ({
+  const filteredStyles = styles.filter(Boolean) as SxProps<Theme>[];
+  return filteredStyles.reduce((acc, style) => ({
     ...acc,
-    ...(style as any)
-  }), {});
+    ...style
+  }), {} as SxProps<Theme>);
 };

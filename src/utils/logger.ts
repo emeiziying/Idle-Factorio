@@ -4,24 +4,26 @@
  */
 
 // 日志级别
-export enum LogLevel {
-  DEBUG = 0,
-  INFO = 1,
-  WARN = 2,
-  ERROR = 3,
-  NONE = 4
-}
+export const LogLevel = {
+  DEBUG: 0,
+  INFO: 1,
+  WARN: 2,
+  ERROR: 3,
+  NONE: 4
+} as const;
+
+type LogLevelType = typeof LogLevel[keyof typeof LogLevel];
 
 // 日志配置
 interface LogConfig {
-  level: LogLevel;
+  level: LogLevelType;
   enableInProduction: boolean;
   prefix?: string;
 }
 
 class Logger {
   private config: LogConfig = {
-    level: process.env.NODE_ENV === 'production' ? LogLevel.ERROR : LogLevel.DEBUG,
+    level: (typeof window !== 'undefined' && window.location.hostname === 'localhost') ? LogLevel.DEBUG : LogLevel.ERROR,
     enableInProduction: false,
     prefix: '[Game]'
   };
@@ -36,8 +38,8 @@ class Logger {
   /**
    * 是否应该输出日志
    */
-  private shouldLog(level: LogLevel): boolean {
-    if (process.env.NODE_ENV === 'production' && !this.config.enableInProduction) {
+  private shouldLog(level: LogLevelType): boolean {
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && !this.config.enableInProduction) {
       return false;
     }
     return level >= this.config.level;
@@ -54,7 +56,7 @@ class Logger {
   /**
    * Debug 日志（仅开发环境）
    */
-  debug(message: string, ...args: any[]) {
+  debug(message: string, ...args: unknown[]) {
     if (this.shouldLog(LogLevel.DEBUG)) {
       console.log(this.formatMessage('DEBUG', message), ...args);
     }
@@ -63,7 +65,7 @@ class Logger {
   /**
    * Info 日志
    */
-  info(message: string, ...args: any[]) {
+  info(message: string, ...args: unknown[]) {
     if (this.shouldLog(LogLevel.INFO)) {
       console.info(this.formatMessage('INFO', message), ...args);
     }
@@ -72,7 +74,7 @@ class Logger {
   /**
    * Warning 日志
    */
-  warn(message: string, ...args: any[]) {
+  warn(message: string, ...args: unknown[]) {
     if (this.shouldLog(LogLevel.WARN)) {
       console.warn(this.formatMessage('WARN', message), ...args);
     }
@@ -81,7 +83,7 @@ class Logger {
   /**
    * Error 日志
    */
-  error(message: string, ...args: any[]) {
+  error(message: string, ...args: unknown[]) {
     if (this.shouldLog(LogLevel.ERROR)) {
       console.error(this.formatMessage('ERROR', message), ...args);
     }

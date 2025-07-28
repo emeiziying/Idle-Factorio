@@ -104,7 +104,7 @@ export class FuelService {
    */
   updateFuelConsumption(
     facility: FacilityInstance, 
-    deltaTime: number,
+    _deltaTime: number,
     isProducing: boolean = true
   ): FuelUpdateResult {
     if (!facility.fuelBuffer) {

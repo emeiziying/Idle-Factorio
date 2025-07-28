@@ -15,7 +15,6 @@ import {
   AccordionSummary,
   AccordionDetails,
   Button,
-  Grid
 } from '@mui/material';
 import {
   TipsAndUpdates,
@@ -49,7 +48,7 @@ const EfficiencyOptimizer: React.FC = () => {
   const { facilities } = useGameStore();
   const powerService = PowerService.getInstance();
   const dataService = DataService.getInstance();
-  const recipeService = RecipeService.getInstance();
+
 
   // 计算各种效率指标
   const efficiencyMetrics = useMemo(() => {
@@ -83,11 +82,11 @@ const EfficiencyOptimizer: React.FC = () => {
     // 分析每个设施的输入需求
     facilities.forEach(facility => {
       if (facility.status === FacilityStatus.NO_RESOURCE && facility.production?.currentRecipeId) {
-        const recipe = recipeService.getRecipeById(facility.production.currentRecipeId);
-        if (recipe?.ingredients) {
-          Object.entries(recipe.ingredients).forEach(([itemId, amount]) => {
+        const recipe = RecipeService.getRecipeById(facility.production.currentRecipeId);
+        if (recipe?.in) {
+          Object.entries(recipe.in).forEach(([itemId, amount]) => {
             const current = itemDeficits.get(itemId) || 0;
-            itemDeficits.set(itemId, current + amount);
+            itemDeficits.set(itemId, current + (amount as number));
           });
         }
       }
@@ -140,7 +139,7 @@ const EfficiencyOptimizer: React.FC = () => {
     }
     
     // 瓶颈物品建议
-    efficiencyMetrics.bottlenecks.forEach((deficit, itemId) => {
+    efficiencyMetrics.bottlenecks.forEach((_deficit, itemId) => {
       const itemName = dataService.getItemName(itemId);
       suggestions.push({
         id: `bottleneck-${itemId}`,
@@ -197,80 +196,74 @@ const EfficiencyOptimizer: React.FC = () => {
             效率概览
           </Typography>
           
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={4}>
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  设施利用率
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 2 }}>
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                设施利用率
+              </Typography>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Typography variant="h5">
+                  {(efficiencyMetrics.utilizationRate * 100).toFixed(0)}%
                 </Typography>
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Typography variant="h5">
-                    {(efficiencyMetrics.utilizationRate * 100).toFixed(0)}%
-                  </Typography>
-                  <Chip
-                    size="small"
-                    label={efficiencyMetrics.utilizationRate > 0.8 ? '良好' : '偏低'}
-                    color={efficiencyMetrics.utilizationRate > 0.8 ? 'success' : 'warning'}
-                  />
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={efficiencyMetrics.utilizationRate * 100}
-                  sx={{ mt: 1 }}
+                <Chip
+                  size="small"
+                  label={efficiencyMetrics.utilizationRate > 0.8 ? '良好' : '偏低'}
+                  color={efficiencyMetrics.utilizationRate > 0.8 ? 'success' : 'warning'}
                 />
               </Box>
-            </Grid>
+              <LinearProgress
+                variant="determinate"
+                value={efficiencyMetrics.utilizationRate * 100}
+                sx={{ mt: 1 }}
+              />
+            </Box>
             
-            <Grid item xs={12} sm={4}>
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  平均效率
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                平均效率
+              </Typography>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Typography variant="h5">
+                  {(efficiencyMetrics.avgEfficiency * 100).toFixed(0)}%
                 </Typography>
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Typography variant="h5">
-                    {(efficiencyMetrics.avgEfficiency * 100).toFixed(0)}%
-                  </Typography>
-                  <Chip
-                    size="small"
-                    label={efficiencyMetrics.avgEfficiency > 0.9 ? '优秀' : '需改进'}
-                    color={efficiencyMetrics.avgEfficiency > 0.9 ? 'success' : 'warning'}
-                  />
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={efficiencyMetrics.avgEfficiency * 100}
-                  sx={{ mt: 1 }}
+                <Chip
+                  size="small"
+                  label={efficiencyMetrics.avgEfficiency > 0.9 ? '优秀' : '需改进'}
+                  color={efficiencyMetrics.avgEfficiency > 0.9 ? 'success' : 'warning'}
                 />
               </Box>
-            </Grid>
+              <LinearProgress
+                variant="determinate"
+                value={efficiencyMetrics.avgEfficiency * 100}
+                sx={{ mt: 1 }}
+              />
+            </Box>
             
-            <Grid item xs={12} sm={4}>
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  电力满足率
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                电力满足率
+              </Typography>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Typography variant="h5">
+                  {(efficiencyMetrics.powerBalance.satisfactionRatio * 100).toFixed(0)}%
                 </Typography>
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Typography variant="h5">
-                    {(efficiencyMetrics.powerBalance.satisfactionRatio * 100).toFixed(0)}%
-                  </Typography>
-                  <Chip
-                    size="small"
-                    label={efficiencyMetrics.powerBalance.status}
-                    color={
-                      efficiencyMetrics.powerBalance.status === 'surplus' ? 'success' :
-                      efficiencyMetrics.powerBalance.status === 'balanced' ? 'info' : 'error'
-                    }
-                  />
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={efficiencyMetrics.powerBalance.satisfactionRatio * 100}
-                  sx={{ mt: 1 }}
-                  color={efficiencyMetrics.powerBalance.satisfactionRatio >= 1 ? 'success' : 'error'}
+                <Chip
+                  size="small"
+                  label={efficiencyMetrics.powerBalance.status}
+                  color={
+                    efficiencyMetrics.powerBalance.status === 'surplus' ? 'success' :
+                    efficiencyMetrics.powerBalance.status === 'balanced' ? 'info' : 'error'
+                  }
                 />
               </Box>
-            </Grid>
-          </Grid>
+              <LinearProgress
+                variant="determinate"
+                value={efficiencyMetrics.powerBalance.satisfactionRatio * 100}
+                sx={{ mt: 1 }}
+                color={efficiencyMetrics.powerBalance.satisfactionRatio >= 1 ? 'success' : 'error'}
+              />
+            </Box>
+          </Box>
         </CardContent>
       </Card>
 

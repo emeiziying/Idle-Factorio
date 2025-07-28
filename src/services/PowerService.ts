@@ -2,7 +2,7 @@
 
 import type { FacilityInstance } from '../types/facilities';
 import { FacilityStatus } from '../types/facilities';
-import { DataService } from './DataService';
+
 
 export interface PowerBalance {
   // 发电能力
@@ -29,7 +29,7 @@ export interface FacilityPowerInfo {
 
 export class PowerService {
   private static instance: PowerService;
-  private dataService: DataService;
+
   
   // 发电设施ID
   private readonly POWER_GENERATORS = [
@@ -62,7 +62,7 @@ export class PowerService {
   };
   
   private constructor() {
-    this.dataService = DataService.getInstance();
+    // this.dataService = DataService.getInstance();
   }
   
   static getInstance(): PowerService {
@@ -280,7 +280,7 @@ export class PowerService {
    * 获取电力优先级建议
    */
   getPowerPriorityRecommendations(
-    facilities: FacilityInstance[],
+    _facilities: FacilityInstance[],
     powerBalance: PowerBalance
   ): string[] {
     if (powerBalance.status !== 'deficit') {

@@ -3,9 +3,9 @@
 
 import { ServiceLocator, SERVICE_NAMES } from '../services/ServiceLocator';
 import type { DataService } from '../services/DataService';
-import type { RecipeService } from '../services/RecipeService';
+import { RecipeService } from '../services/RecipeService';
 import type { Recipe } from '../types/index';
-import type { IManualCraftingValidator, ManualCraftingValidation, RecipeValidation } from '../services/interfaces/IManualCraftingValidator';
+import type { IManualCraftingValidator } from '../services/interfaces/IManualCraftingValidator';
 
 // 验证结果类别常量
 export const ValidationCategory = {
@@ -52,7 +52,7 @@ export interface ManualCraftingValidation {
 
 export class ManualCraftingValidator implements IManualCraftingValidator {
   private static instance: ManualCraftingValidator;
-  private dataService: DataService;
+  private dataService!: DataService;
   
   // 缓存机制 - 提升性能
   private validationCache: Map<string, ManualCraftingValidation> = new Map();
@@ -148,7 +148,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
 
     // 获取物品的所有配方
     const recipeService = this.getRecipeService();
-    const recipes = recipeService ? recipeService.getRecipesThatProduce(itemId) : [];
+    const recipes = recipeService ? RecipeService.getRecipesThatProduce(itemId) : [];
 
     // 1. 检查是否为原材料（没有配方）
     if (recipes.length === 0) {
@@ -517,7 +517,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
   getRawMaterials(): string[] {
     return this.filterItemsByCondition(item => {
       const recipeService = this.getRecipeService();
-    const recipes = recipeService ? recipeService.getRecipesThatProduce(item.id) : [];
+    const recipes = recipeService ? RecipeService.getRecipesThatProduce(item.id) : [];
       return recipes.length === 0;
     });
   }
@@ -549,7 +549,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
    */
   getMiningItems(): string[] {
     const recipeService = this.getRecipeService();
-    const allRecipes = recipeService ? recipeService.getAllRecipes() : [];
+    const allRecipes = recipeService ? RecipeService.getAllRecipes() : [];
     const miningItems: string[] = [];
 
     for (const recipe of allRecipes) {
@@ -561,6 +561,11 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
     }
 
     return [...new Set(miningItems)]; // 去重
+  }
+
+  // 添加缺失的方法
+  isEntityMiningRecipe(recipe: Recipe): boolean {
+    return recipe.flags?.includes('mining') || false;
   }
 }
 
@@ -593,7 +598,8 @@ export function getValidationReasonText(reason: ValidationReasonType, locale: st
       [ValidationReason.LAB_REQUIRED]: '研究配方，需要实验室',
       [ValidationReason.COLLECTION_RECIPE]: '采集类配方，可手动操作',
       [ValidationReason.BASIC_CRAFTING]: '基础制作配方，可手动制作',
-      [ValidationReason.SPECIAL_EQUIPMENT]: '需要特殊设备制作'
+      [ValidationReason.SPECIAL_EQUIPMENT]: '需要特殊设备制作',
+      [ValidationReason.DATA_SERVICE_UNAVAILABLE]: '数据服务不可用'
     },
     en: {
       [ValidationReason.ITEM_NOT_FOUND]: 'Item not found',
@@ -614,7 +620,8 @@ export function getValidationReasonText(reason: ValidationReasonType, locale: st
       [ValidationReason.LAB_REQUIRED]: 'Research recipe, requires laboratory',
       [ValidationReason.COLLECTION_RECIPE]: 'Collection recipe, can be operated manually',
       [ValidationReason.BASIC_CRAFTING]: 'Basic crafting recipe, can be crafted manually',
-      [ValidationReason.SPECIAL_EQUIPMENT]: 'Requires special equipment to craft'
+      [ValidationReason.SPECIAL_EQUIPMENT]: 'Requires special equipment to craft',
+      [ValidationReason.DATA_SERVICE_UNAVAILABLE]: 'Data service unavailable'
     }
   };
 
@@ -632,12 +639,14 @@ export function getValidationCategoryText(category: ValidationCategoryType, loca
     zh: {
       [ValidationCategory.RAW_MATERIAL]: '原材料',
       [ValidationCategory.CRAFTABLE]: '可制作',
-      [ValidationCategory.RESTRICTED]: '受限制'
+      [ValidationCategory.RESTRICTED]: '受限制',
+      [ValidationCategory.DATA_ERROR]: '数据错误'
     },
     en: {
       [ValidationCategory.RAW_MATERIAL]: 'Raw Material',
       [ValidationCategory.CRAFTABLE]: 'Craftable',
-      [ValidationCategory.RESTRICTED]: 'Restricted'
+      [ValidationCategory.RESTRICTED]: 'Restricted',
+      [ValidationCategory.DATA_ERROR]: 'Data Error'
     }
   };
 
