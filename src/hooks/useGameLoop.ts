@@ -30,11 +30,23 @@ export const useGameLoop = () => {
   const productionAccumulatorRef = useRef<ProductionAccumulator>({});
   const gameLoopRef = useRef<number | null>(null);
   const gameTimeRef = useRef<number>(gameTime);
+  const facilitiesRef = useRef(facilities);
+  const setGameTimeRef = useRef(setGameTime);
   
   // 同步 gameTime 到 ref
   useEffect(() => {
     gameTimeRef.current = gameTime;
   }, [gameTime]);
+  
+  // 同步 facilities 到 ref
+  useEffect(() => {
+    facilitiesRef.current = facilities;
+  }, [facilities]);
+  
+  // 同步函数到 ref
+  useEffect(() => {
+    setGameTimeRef.current = setGameTime;
+  }, [setGameTime]);
   
   const dataService = DataService.getInstance();
 
@@ -156,19 +168,19 @@ export const useGameLoop = () => {
       const deltaTimeInSeconds = deltaTime / 1000;
       
       // 更新游戏时间
-      setGameTime(gameTimeRef.current + deltaTime);
+      setGameTimeRef.current(gameTimeRef.current + deltaTime);
 
       // 按设施类型分组统计
       const facilityGroups = new Map<string, number>();
-      facilities.forEach(facility => {
+      facilitiesRef.current.forEach(facility => {
         const count = facilityGroups.get(facility.facilityId) || 0;
         facilityGroups.set(facility.facilityId, count + facility.count);
       });
 
       if (facilityGroups.size > 0) {
         logger.debug('当前运行的设施:', Array.from(facilityGroups.entries()));
-      } else if (facilities.length > 0) {
-        logger.debug('有设施但没有分组:', facilities);
+      } else if (facilitiesRef.current.length > 0) {
+        logger.debug('有设施但没有分组:', facilitiesRef.current);
       }
 
       // 处理每种设施类型的生产
@@ -193,7 +205,7 @@ export const useGameLoop = () => {
     
     gameLoopRef.current = requestAnimationFrame(gameLoop);
     logger.info('游戏循环已启动，ID:', gameLoopRef.current);
-  }, [facilities, setGameTime, calculateFacilityProduction, checkInputAvailability, consumeInputs, produceOutputs]);
+  }, [calculateFacilityProduction, checkInputAvailability, consumeInputs, produceOutputs]);
 
   // 停止游戏循环
   const stopGameLoop = () => {
