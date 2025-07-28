@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import useGameStore from '../store/gameStore';
 import { DataService } from '../services/DataService';
 import { RecipeService } from '../services/RecipeService';
@@ -14,47 +14,45 @@ const logger = new Logger();
 logger.configure({ prefix: '[Game] [GameLoop]' });
 
 // 全局游戏循环状态，防止在 StrictMode 下重复启动
-const globalGameLoopRef = { started: false };
+interface GlobalGameLoopState {
+  animationFrameId: number | null;
+  lastUpdateTime: number;
+  productionAccumulator: ProductionAccumulator;
+  isRunning: boolean;
+  instanceCount: number;
+}
+
+// 使用全局变量确保单例模式
+const getGlobalGameLoopState = (): GlobalGameLoopState => {
+  const windowWithState = window as Window & { __gameLoopState?: GlobalGameLoopState };
+  if (!windowWithState.__gameLoopState) {
+    windowWithState.__gameLoopState = {
+      animationFrameId: null,
+      lastUpdateTime: Date.now(),
+      productionAccumulator: {},
+      isRunning: false,
+      instanceCount: 0
+    };
+  }
+  return windowWithState.__gameLoopState;
+};
 
 /**
  * 游戏主循环Hook
  * 负责处理设施的自动化生产、库存更新等定时任务
  */
 export const useGameLoop = () => {
-  const {
-    facilities,
-    updateInventory,
-    getInventoryItem,
-    setGameTime,
-    gameTime
-  } = useGameStore();
-  
-  const lastUpdateTimeRef = useRef<number>(Date.now());
-  const productionAccumulatorRef = useRef<ProductionAccumulator>({});
-  const gameLoopRef = useRef<number | null>(null);
-  const gameTimeRef = useRef<number>(gameTime);
-  const facilitiesRef = useRef(facilities);
-  const setGameTimeRef = useRef(setGameTime);
-  
-  // 同步 gameTime 到 ref
-  useEffect(() => {
-    gameTimeRef.current = gameTime;
-  }, [gameTime]);
-  
-  // 同步 facilities 到 ref
-  useEffect(() => {
-    facilitiesRef.current = facilities;
-  }, [facilities]);
-  
-  // 同步函数到 ref
-  useEffect(() => {
-    setGameTimeRef.current = setGameTime;
-  }, [setGameTime]);
-  
+  // 使用useRef存储globalState引用，避免依赖项问题
+  const globalStateRef = useRef(getGlobalGameLoopState());
+  globalStateRef.current.instanceCount++;
   const dataService = DataService.getInstance();
+  
+  // 使用useRef存储函数引用，避免依赖项问题
+  const startGameLoopRef = useRef<(() => void) | null>(null);
+  const stopGameLoopRef = useRef<(() => void) | null>(null);
 
   // 计算设施的生产效率
-  const calculateFacilityProduction = useCallback((facilityId: string, count: number = 1) => {
+  const calculateFacilityProduction = (facilityId: string, count: number = 1) => {
     const facilityItem = dataService.getItem(facilityId);
     if (!facilityItem || !facilityItem.machine) {
       logger.warn(`设施 ${facilityId} 没有找到或没有机器属性`);
@@ -67,11 +65,6 @@ export const useGameLoop = () => {
       recipe.producers && recipe.producers.includes(facilityId)
     );
 
-    logger.debug(`设施 ${facilityId} 可用配方数量:`, applicableRecipes.length);
-    if (applicableRecipes.length > 0) {
-      logger.debug(`设施 ${facilityId} 可用配方:`, applicableRecipes.map(r => `${r.id} (${Object.keys(r.out).join(', ')})`));
-    }
-
     const inputRate = new Map<string, number>();
     const outputRate = new Map<string, number>();
 
@@ -82,175 +75,149 @@ export const useGameLoop = () => {
       return { inputRate, outputRate };
     }
 
-    logger.debug(`设施 ${facilityId} 选择配方:`, recipe.id, '输出:', recipe.out);
 
     const machineRecord = facilityItem.machine as Record<string, unknown>;
     const machineSpeed = typeof machineRecord?.speed === 'number' ? machineRecord.speed : 1.0;
     const efficiency = 1.0; // 基础效率，未来可以根据设施状态调整
     
-          // 计算输入需求速率
-      if (recipe.in) {
-        Object.entries(recipe.in).forEach(([itemId, amount]) => {
-          const rate = calculateRate(amount, recipe.time, machineSpeed, efficiency, count);
-          inputRate.set(itemId, rate);
-        });
-      }
+    // 计算输入需求速率
+    if (recipe.in) {
+      Object.entries(recipe.in).forEach(([itemId, amount]) => {
+        const rate = calculateRate(amount, recipe.time, machineSpeed, efficiency, count);
+        inputRate.set(itemId, rate);
+      });
+    }
 
-      // 计算输出生产速率
-      if (recipe.out) {
-        Object.entries(recipe.out).forEach(([itemId, amount]) => {
-          const rate = calculateRate(amount, recipe.time, machineSpeed, efficiency, count);
-          outputRate.set(itemId, rate);
-        });
-      }
+    // 计算输出生产速率
+    if (recipe.out) {
+      Object.entries(recipe.out).forEach(([itemId, amount]) => {
+        const rate = calculateRate(amount, recipe.time, machineSpeed, efficiency, count);
+        outputRate.set(itemId, rate);
+      });
+    }
 
-    logger.debug(`设施 ${facilityId} x${count} 输入需求:`, Array.from(inputRate.entries()));
-    logger.debug(`设施 ${facilityId} x${count} 输出产量:`, Array.from(outputRate.entries()));
 
     return { inputRate, outputRate };
-  }, [dataService]);
-
-  // 检查设施是否有足够的输入材料
-  const checkInputAvailability = useCallback((inputRate: Map<string, number>, deltaTimeInSeconds: number): boolean => {
-    for (const [itemId, rate] of inputRate) {
-      const requiredAmount = rate * deltaTimeInSeconds;
-      const availableAmount = getInventoryItem(itemId).currentAmount;
-      
-      if (availableAmount < requiredAmount) {
-        logger.debug(`材料不足: ${itemId} 需要 ${requiredAmount.toFixed(3)}, 可用 ${availableAmount}`);
-        return false; // 材料不足
-      }
-    }
-    return true;
-  }, [getInventoryItem]);
-
-  // 消耗输入材料
-  const consumeInputs = useCallback((inputRate: Map<string, number>, deltaTimeInSeconds: number) => {
-    for (const [itemId, rate] of inputRate) {
-      const consumeAmount = rate * deltaTimeInSeconds;
-      updateInventory(itemId, -consumeAmount);
-    }
-  }, [updateInventory]);
-
-  // 生产输出物品
-  const produceOutputs = useCallback((outputRate: Map<string, number>, deltaTimeInSeconds: number) => {
-    for (const [itemId, rate] of outputRate) {
-      const produceAmount = rate * deltaTimeInSeconds;
-      
-      // 使用累积器处理小数生产
-      const currentAccumulator = productionAccumulatorRef.current[itemId] || 0;
-      const newAccumulator = currentAccumulator + produceAmount;
-      
-      // 只有当累积量达到1个或以上时才添加到库存
-      const wholeUnits = Math.floor(newAccumulator);
-      if (wholeUnits > 0) {
-        updateInventory(itemId, wholeUnits);
-        productionAccumulatorRef.current[itemId] = newAccumulator - wholeUnits;
-      } else {
-        productionAccumulatorRef.current[itemId] = newAccumulator;
-      }
-    }
-  }, [updateInventory]);
-
-
-
-
-
-  // 停止游戏循环
-  const stopGameLoop = () => {
-    if (gameLoopRef.current) {
-      cancelAnimationFrame(gameLoopRef.current);
-      gameLoopRef.current = null;
-    }
   };
 
-  // 重置游戏循环
-  const resetGameLoop = () => {
-    stopGameLoop();
-    productionAccumulatorRef.current = {};
-    lastUpdateTimeRef.current = Date.now();
-  };
 
-  // 组件挂载时自动启动游戏循环
-  useEffect(() => {
-    if (globalGameLoopRef.started) {
-      logger.debug('游戏循环已经在全局启动，跳过重复启动');
-      return;
-    }
-    
-    logger.info('游戏循环启动');
-    globalGameLoopRef.started = true;
-    
-    // 直接在 useEffect 中启动游戏循环，避免依赖项问题
-    if (gameLoopRef.current) {
-      logger.debug('游戏循环已经在运行中');
+  // 启动游戏循环
+  const startGameLoop = () => {
+    if (globalStateRef.current.isRunning) {
       return;
     }
 
-    logger.info('正在启动游戏循环...');
-    lastUpdateTimeRef.current = Date.now();
+    globalStateRef.current.isRunning = true;
+    globalStateRef.current.lastUpdateTime = Date.now();
     
     const gameLoop = () => {
-      // 直接在 gameLoop 中实现更新逻辑，避免依赖问题
+      // 直接从store获取最新状态，避免依赖React hooks
+      const store = useGameStore.getState();
       const currentTime = Date.now();
-      const deltaTime = currentTime - lastUpdateTimeRef.current;
+      const deltaTime = currentTime - globalStateRef.current.lastUpdateTime;
       const deltaTimeInSeconds = deltaTime / 1000;
       
       // 更新游戏时间
-      setGameTimeRef.current(gameTimeRef.current + deltaTime);
+      store.setGameTime(store.gameTime + deltaTime);
 
       // 按设施类型分组统计
       const facilityGroups = new Map<string, number>();
-      facilitiesRef.current.forEach(facility => {
+      store.facilities.forEach(facility => {
         const count = facilityGroups.get(facility.facilityId) || 0;
         facilityGroups.set(facility.facilityId, count + facility.count);
       });
 
-      if (facilityGroups.size > 0) {
-        logger.debug('当前运行的设施:', Array.from(facilityGroups.entries()));
-      } else if (facilitiesRef.current.length > 0) {
-        logger.debug('有设施但没有分组:', facilitiesRef.current);
-      }
 
       // 处理每种设施类型的生产
       for (const [facilityId, totalCount] of facilityGroups) {
         const { inputRate, outputRate } = calculateFacilityProduction(facilityId, totalCount);
         
         // 检查是否有足够的输入材料
-        if (checkInputAvailability(inputRate, deltaTimeInSeconds)) {
+        let hasEnoughInputs = true;
+        for (const [itemId, rate] of inputRate) {
+          const requiredAmount = rate * deltaTimeInSeconds;
+          const availableAmount = store.getInventoryItem(itemId).currentAmount;
+          
+          if (availableAmount < requiredAmount) {
+            hasEnoughInputs = false;
+            break;
+          }
+        }
+        
+        if (hasEnoughInputs) {
           // 消耗输入材料
-          consumeInputs(inputRate, deltaTimeInSeconds);
+          for (const [itemId, rate] of inputRate) {
+            const consumeAmount = rate * deltaTimeInSeconds;
+            store.updateInventory(itemId, -consumeAmount);
+          }
           
           // 生产输出物品
-          produceOutputs(outputRate, deltaTimeInSeconds);
+          for (const [itemId, rate] of outputRate) {
+            const produceAmount = rate * deltaTimeInSeconds;
+            
+            // 使用全局累积器处理小数生产
+            const currentAccumulator = globalStateRef.current.productionAccumulator[itemId] || 0;
+            const newAccumulator = currentAccumulator + produceAmount;
+            
+            // 只有当累积量达到1个或以上时才添加到库存
+            const wholeUnits = Math.floor(newAccumulator);
+            if (wholeUnits > 0) {
+              store.updateInventory(itemId, wholeUnits);
+              globalStateRef.current.productionAccumulator[itemId] = newAccumulator - wholeUnits;
+            } else {
+              globalStateRef.current.productionAccumulator[itemId] = newAccumulator;
+            }
+          }
         }
         // 如果材料不足，设施暂停生产（可以在未来添加状态显示）
       }
 
-      lastUpdateTimeRef.current = currentTime;
-      
-      gameLoopRef.current = requestAnimationFrame(gameLoop);
+      globalStateRef.current.lastUpdateTime = currentTime;
+      globalStateRef.current.animationFrameId = requestAnimationFrame(gameLoop);
     };
     
-    gameLoopRef.current = requestAnimationFrame(gameLoop);
-    logger.info('游戏循环已启动，ID:', gameLoopRef.current);
+    globalStateRef.current.animationFrameId = requestAnimationFrame(gameLoop);
+  };
+
+  // 停止游戏循环
+  const stopGameLoop = () => {
+    if (globalStateRef.current.animationFrameId) {
+      cancelAnimationFrame(globalStateRef.current.animationFrameId);
+      globalStateRef.current.animationFrameId = null;
+      globalStateRef.current.isRunning = false;
+    }
+  };
+
+  // 重置游戏循环
+  const resetGameLoop = () => {
+    stopGameLoop();
+    globalStateRef.current.productionAccumulator = {};
+    globalStateRef.current.lastUpdateTime = Date.now();
+  };
+
+  // 存储函数引用到ref中
+  startGameLoopRef.current = startGameLoop;
+  stopGameLoopRef.current = stopGameLoop;
+
+  // 组件挂载时自动启动游戏循环
+  useEffect(() => {
+    const globalState = globalStateRef.current;
+    startGameLoopRef.current!();
     
     // 组件卸载时清理
     return () => {
-      logger.info('游戏循环停止');
-      globalGameLoopRef.started = false;
-      stopGameLoop();
+      // 只有当没有其他实例时才停止游戏循环
+      globalState.instanceCount--;
+      if (globalState.instanceCount === 0) {
+        stopGameLoopRef.current!();
+      }
     };
-  }, [calculateFacilityProduction, checkInputAvailability, consumeInputs, produceOutputs]);
-
-  // 当设施列表变化时重置游戏循环状态
-  useEffect(() => {
-    lastUpdateTimeRef.current = Date.now();
-  }, [facilities]);
+  }, []); // 空依赖数组，只在挂载时执行一次
 
   return {
+    startGameLoop,
     stopGameLoop,
     resetGameLoop,
-    isRunning: gameLoopRef.current !== null
+    isRunning: globalStateRef.current.isRunning
   };
 }; 

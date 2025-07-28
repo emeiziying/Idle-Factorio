@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { createDebouncedStorage } from '../utils/debouncedStorage';
 import type { InventoryItem, CraftingTask, Recipe, DeployedContainer, OperationResult } from '../types/index';
 import type { 
   Technology, 
@@ -18,6 +19,13 @@ import { DataService } from '../services/DataService';
 import { TechnologyService } from '../services/TechnologyService';
 import { FuelService } from '../services/FuelService';
 import { FACILITY_FUEL_CONFIGS } from '../data/fuelConfigs';
+
+// 页面卸载时立即保存
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    // 页面卸载时会自动触发persist保存
+  });
+}
 import { error as logError } from '../utils/logger';
 
 interface GameState {
@@ -36,6 +44,7 @@ interface GameState {
   
   // 游戏统计
   gameTime: number;
+  lastSaveTime: number; // 上次保存时的时间戳
   totalItemsProduced: number;
   
   // 配方相关
@@ -69,7 +78,8 @@ interface GameState {
   removeFacility: (facilityId: string) => void;
   incrementGameTime: (deltaTime: number) => void;
   setGameTime: (time: number) => void;
-  clearGameData: () => void;
+  clearGameData: () => Promise<void>;
+  saveGame: () => void;
   
   // 存储容器相关 Actions
   deployChestForStorage: (chestType: string, targetItemId: string) => OperationResult;
@@ -131,6 +141,7 @@ const useGameStore = create<GameState>()(
       facilities: [],
       deployedContainers: [],
       gameTime: 0,
+      lastSaveTime: Date.now(),
       totalItemsProduced: 0,
       favoriteRecipes: new Set(),
       recentRecipes: [],
@@ -190,23 +201,9 @@ const useGameStore = create<GameState>()(
         const baseStacks = 1; // 默认1个堆叠
         const totalStacks = baseStacks + additionalStacks;
         
-        // 设置一些测试用的初始库存
-        let initialAmount = 0;
-        if (itemId === 'iron-ore') {
-          initialAmount = 1000; // 给1000个铁矿石用于测试
-        } else if (itemId === 'stone-furnace') {
-          initialAmount = 10; // 给10个石炉用于测试
-        } else if (itemId === 'stone') {
-          initialAmount = 100; // 给100个石头用于制作石炉
-        } else if (itemId === 'coal') {
-          initialAmount = 200; // 给200个煤炭用于燃料
-        } else if (itemId === 'wood') {
-          initialAmount = 50; // 给50个木材用于燃料
-        }
-        
         return {
           itemId,
-          currentAmount: initialAmount,
+          currentAmount: 0,
           stackSize,
           baseStacks,
           additionalStacks,
@@ -907,9 +904,10 @@ const useGameStore = create<GameState>()(
         });
       },
 
-      clearGameData: () => {
-        // 清除localStorage
-        localStorage.removeItem('factorio-game-storage');
+      clearGameData: async () => {
+        // 清除异步存储
+        const storage = createDebouncedStorage();
+        await storage.removeItem('factorio-game-storage');
         
         // 重置状态
         set(() => ({
@@ -918,6 +916,7 @@ const useGameStore = create<GameState>()(
           facilities: [],
           deployedContainers: [],
           gameTime: 0,
+          lastSaveTime: Date.now(),
           totalItemsProduced: 0,
           favoriteRecipes: new Set(),
           recentRecipes: [],
@@ -928,20 +927,43 @@ const useGameStore = create<GameState>()(
           unlockedTechs: new Set(),
           autoResearch: true,
           techCategories: [],
+          // 重置统计数据
+          craftedItemCounts: new Map(),
+          builtEntityCounts: new Map(),
+          minedEntityCounts: new Map(),
         }));
         
-        // Game data cleared
+        // 立即重载页面以确保完全重置
+        window.location.reload();
+      },
+
+      saveGame: () => {
+        // 这个方法主要用于触发存档的更新
+        // 通过更新lastSaveTime来触发persist中间件保存
+        set(() => ({
+          lastSaveTime: Date.now()
+        }));
       }
     }),
     {
       name: 'factorio-game-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => createDebouncedStorage(2000)), // 2秒防抖
       partialize: (state) => ({
         inventory: Array.from(state.inventory.entries()),
         craftingQueue: state.craftingQueue,
+        facilities: state.facilities,
+        deployedContainers: state.deployedContainers,
+        // 保存游戏时间和时间戳用于恢复计算
+        gameTime: state.gameTime,
+        lastSaveTime: Date.now(), // 保存当前时间戳
+        totalItemsProduced: state.totalItemsProduced,
         favoriteRecipes: Array.from(state.favoriteRecipes),
+        recentRecipes: state.recentRecipes,
         technologies: Array.from(state.technologies.entries()),
+        researchState: state.researchState,
+        researchQueue: state.researchQueue,
         unlockedTechs: Array.from(state.unlockedTechs),
+        autoResearch: state.autoResearch,
         techCategories: state.techCategories,
         craftedItemCounts: Array.from(state.craftedItemCounts.entries()),
         builtEntityCounts: Array.from(state.builtEntityCounts.entries()),
@@ -951,9 +973,28 @@ const useGameStore = create<GameState>()(
         if (state) {
           state.inventory = new Map(state.inventory as unknown as [string, InventoryItem][]);
           state.craftingQueue = state.craftingQueue as CraftingTask[];
+          state.facilities = state.facilities as FacilityInstance[];
+          state.deployedContainers = state.deployedContainers as DeployedContainer[];
+          
+          // 基于时间戳恢复游戏时间，补偿离线时间
+          const savedGameTime = state.gameTime as number;
+          const savedLastSaveTime = state.lastSaveTime as number;
+          const currentTime = Date.now();
+          const offlineTime = currentTime - savedLastSaveTime;
+          // 限制离线时间补偿，避免异常情况
+          const maxOfflineTime = 24 * 60 * 60 * 1000; // 最多补偿24小时
+          const compensatedOfflineTime = Math.min(offlineTime, maxOfflineTime);
+          state.gameTime = savedGameTime + compensatedOfflineTime;
+          state.lastSaveTime = currentTime;
+          
+          state.totalItemsProduced = state.totalItemsProduced as number;
           state.favoriteRecipes = new Set(state.favoriteRecipes as unknown as string[]);
+          state.recentRecipes = state.recentRecipes as string[];
           state.technologies = new Map(state.technologies as unknown as [string, Technology][]);
+          state.researchState = state.researchState as TechResearchState | null;
+          state.researchQueue = state.researchQueue as ResearchQueueItem[];
           state.unlockedTechs = new Set(state.unlockedTechs as unknown as string[]);
+          state.autoResearch = state.autoResearch as boolean;
           state.techCategories = state.techCategories as TechCategory[];
           state.craftedItemCounts = new Map(state.craftedItemCounts as unknown as [string, number][]);
           state.builtEntityCounts = new Map(state.builtEntityCounts as unknown as [string, number][]);

@@ -107,14 +107,9 @@ const App: React.FC = () => {
     setCurrentModule(newValue);
   };
 
-  const handleClearGame = () => {
-    clearGameData();
-    setIsClearDialogOpen(false);
-    setShowSuccessMessage(true);
-    // 3秒后重新加载页面
-    setTimeout(() => {
-      window.location.reload();
-    }, 3000);
+  const handleClearGame = async () => {
+    await clearGameData();
+    // clearGameData() 已经包含立即重载，无需额外处理
   };
 
   return (
