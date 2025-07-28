@@ -1,15 +1,18 @@
 // 手动采集验证工具类
 // 基于 Factorio Wiki 官方规则实现
 
-import { DataService } from '../services/DataService';
-import { RecipeService } from '../services/RecipeService';
+import { ServiceLocator, SERVICE_NAMES } from '../services/ServiceLocator';
+import type { DataService } from '../services/DataService';
+import type { RecipeService } from '../services/RecipeService';
 import type { Recipe } from '../types/index';
+import type { IManualCraftingValidator, ManualCraftingValidation, RecipeValidation } from '../services/interfaces/IManualCraftingValidator';
 
 // 验证结果类别常量
 export const ValidationCategory = {
   RAW_MATERIAL: 'raw_material',
   CRAFTABLE: 'craftable',
-  RESTRICTED: 'restricted'
+  RESTRICTED: 'restricted',
+  DATA_ERROR: 'data_error'
 } as const;
 
 export type ValidationCategoryType = typeof ValidationCategory[keyof typeof ValidationCategory];
@@ -17,6 +20,7 @@ export type ValidationCategoryType = typeof ValidationCategory[keyof typeof Vali
 // 验证原因常量 - 支持国际化
 export const ValidationReason = {
   ITEM_NOT_FOUND: 'item_not_found',
+  DATA_SERVICE_UNAVAILABLE: 'data_service_unavailable',
   RAW_MATERIAL: 'raw_material',
   RECIPE_AVAILABLE: 'recipe_available',
   FLUID_INVOLVED: 'fluid_involved',
@@ -46,7 +50,7 @@ export interface ManualCraftingValidation {
   details?: string; // 可选的详细说明
 }
 
-export class ManualCraftingValidator {
+export class ManualCraftingValidator implements IManualCraftingValidator {
   private static instance: ManualCraftingValidator;
   private dataService: DataService;
   
@@ -66,9 +70,24 @@ export class ManualCraftingValidator {
   ];
 
   private constructor() {
-    this.dataService = DataService.getInstance();
+    // 延迟初始化，避免循环依赖
+    // dataService 将在需要时从 ServiceLocator 获取
     // 清除缓存，确保新的验证逻辑生效
     this.clearCache();
+  }
+
+  private getDataService(): DataService | null {
+    if (!this.dataService && ServiceLocator.has(SERVICE_NAMES.DATA)) {
+      this.dataService = ServiceLocator.get<DataService>(SERVICE_NAMES.DATA);
+    }
+    return this.dataService;
+  }
+
+  private getRecipeService(): RecipeService | null {
+    if (ServiceLocator.has(SERVICE_NAMES.RECIPE)) {
+      return ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE);
+    }
+    return null;
   }
 
   static getInstance(): ManualCraftingValidator {
@@ -97,7 +116,15 @@ export class ManualCraftingValidator {
       return this.validationCache.get(itemId)!;
     }
 
-    const item = this.dataService.getItem(itemId);
+    const dataService = this.getDataService();
+    if (!dataService) {
+      return {
+        canCraftManually: false,
+        category: ValidationCategory.DATA_ERROR,
+        reason: ValidationReason.DATA_SERVICE_UNAVAILABLE
+      };
+    }
+    const item = dataService.getItem(itemId);
     if (!item) {
       const result = {
         canCraftManually: false,
@@ -120,7 +147,8 @@ export class ManualCraftingValidator {
     }
 
     // 获取物品的所有配方
-    const recipes = RecipeService.getRecipesThatProduce(itemId);
+    const recipeService = this.getRecipeService();
+    const recipes = recipeService ? recipeService.getRecipesThatProduce(itemId) : [];
 
     // 1. 检查是否为原材料（没有配方）
     if (recipes.length === 0) {
@@ -461,7 +489,10 @@ export class ManualCraftingValidator {
    * @returns 是否为流体
    */
   private isFluidItem(itemId: string): boolean {
-    const item = this.dataService.getItem(itemId);
+    const dataService = this.getDataService();
+    if (!dataService) return false;
+    
+    const item = dataService.getItem(itemId);
     if (!item) return false;
     
     // 基于分类判断 - 这是最准确的方法
@@ -485,7 +516,8 @@ export class ManualCraftingValidator {
    */
   getRawMaterials(): string[] {
     return this.filterItemsByCondition(item => {
-      const recipes = RecipeService.getRecipesThatProduce(item.id);
+      const recipeService = this.getRecipeService();
+    const recipes = recipeService ? recipeService.getRecipesThatProduce(item.id) : [];
       return recipes.length === 0;
     });
   }
@@ -496,7 +528,10 @@ export class ManualCraftingValidator {
    * @returns 符合条件的物品ID列表
    */
   private filterItemsByCondition(condition: (item: import('../types').Item) => boolean): string[] {
-    const allItems = this.dataService.getAllItems();
+    const dataService = this.getDataService();
+    if (!dataService) return [];
+    
+    const allItems = dataService.getAllItems();
     const filteredItems: string[] = [];
 
     for (const item of allItems) {
@@ -513,7 +548,8 @@ export class ManualCraftingValidator {
    * @returns 采矿物品ID列表
    */
   getMiningItems(): string[] {
-    const allRecipes = RecipeService.getAllRecipes();
+    const recipeService = this.getRecipeService();
+    const allRecipes = recipeService ? recipeService.getAllRecipes() : [];
     const miningItems: string[] = [];
 
     for (const recipe of allRecipes) {

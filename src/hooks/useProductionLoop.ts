@@ -6,6 +6,7 @@ import { FuelService } from '../services/FuelService';
 import { RecipeService } from '../services/RecipeService';
 import { PowerService } from '../services/PowerService';
 import type { FacilityInstance } from '../types/facilities';
+import { msToSeconds } from '../utils/common';
 
 interface UseProductionLoopOptions {
   updateInterval?: number; // 更新间隔（毫秒）
@@ -98,7 +99,7 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
   // 主更新循环
   const updateProduction = useCallback(() => {
     const currentTime = Date.now();
-    const deltaTime = (currentTime - lastUpdateRef.current) / 1000; // 转换为秒
+          const deltaTime = msToSeconds(currentTime - lastUpdateRef.current);
     lastUpdateRef.current = currentTime;
     
     // 1. 计算电力平衡

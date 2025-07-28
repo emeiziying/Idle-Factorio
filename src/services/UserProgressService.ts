@@ -1,5 +1,7 @@
 // 用户进度管理服务
 
+import { warn as logWarn } from '../utils/logger';
+
 export class UserProgressService {
   private static instance: UserProgressService;
   private unlockedItems: Set<string>;
@@ -86,7 +88,7 @@ export class UserProgressService {
         this.unlockedTechs = new Set(data.unlockedTechs || []);
       }
     } catch (error) {
-      console.warn('Failed to load user progress:', error);
+      logWarn('Failed to load user progress:', error);
     }
   }
 
@@ -100,7 +102,7 @@ export class UserProgressService {
       };
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
     } catch (error) {
-      console.warn('Failed to save user progress:', error);
+      logWarn('Failed to save user progress:', error);
     }
   }
 }

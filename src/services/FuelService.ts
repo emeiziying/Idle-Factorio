@@ -5,6 +5,8 @@ import type { FacilityInstance, FuelBuffer } from '../types/facilities';
 import { FacilityStatus } from '../types/facilities';
 import type { InventoryItem } from '../types/index';
 import { FACILITY_FUEL_CONFIGS, FUEL_PRIORITY, getFuelCategory, type FuelConfig } from '../data/fuelConfigs';
+import { warn as logWarn, error as logError } from '../utils/logger';
+import { msToSeconds } from '../utils/common';
 
 // 燃料更新结果
 export interface FuelUpdateResult {
@@ -50,7 +52,7 @@ export class FuelService {
       try {
         this.customFuelPriority = JSON.parse(stored);
       } catch (e) {
-        console.error('Failed to load fuel priority:', e);
+        logError('Failed to load fuel priority:', e);
       }
     }
   }
@@ -83,7 +85,7 @@ export class FuelService {
   initializeFuelBuffer(facilityId: string): FuelBuffer | null {
     const config = FACILITY_FUEL_CONFIGS[facilityId];
     if (!config) {
-      console.warn(`No fuel config found for facility: ${facilityId}`);
+      logWarn(`No fuel config found for facility: ${facilityId}`);
       return null;
     }
     
@@ -111,7 +113,7 @@ export class FuelService {
     
     const buffer = facility.fuelBuffer;
     const currentTime = Date.now();
-    const timeDelta = (currentTime - buffer.lastUpdate) / 1000; // 转换为秒
+          const timeDelta = msToSeconds(currentTime - buffer.lastUpdate);
     
     // 更新时间戳
     buffer.lastUpdate = currentTime;

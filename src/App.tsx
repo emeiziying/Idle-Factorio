@@ -29,12 +29,13 @@ import TechnologyModule from './components/technology/TechnologyModule';
 import ManualCraftingTestPage from './components/test/ManualCraftingTestPage';
 import { useGameLoop } from './hooks/useGameLoop';
 
-import { DataService } from './services/DataService';
+import { ServiceInitializer } from './services/ServiceInitializer';
 import CraftingEngine from './utils/craftingEngine';
 import useGameStore from './store/gameStore';
 import { useIsMobile } from './hooks/useIsMobile';
 import { usePersistentState } from './hooks/usePersistentState';
 import theme from './theme';
+import { error as logError } from './utils/logger';
 
 const App: React.FC = () => {
   const [currentModule, setCurrentModule] = usePersistentState('app-current-module', 0);
@@ -71,11 +72,8 @@ const App: React.FC = () => {
       // 开始新的初始化过程
       initializationRef.current.initPromise = (async () => {
         try {
-          // 加载游戏数据
-          await DataService.getInstance().loadGameData();
-
-          // 加载国际化数据
-          await DataService.getInstance().loadI18nData('zh');
+          // 初始化所有服务
+          await ServiceInitializer.initialize();
 
           // 启动制作引擎
           CraftingEngine.getInstance().start();
@@ -85,7 +83,7 @@ const App: React.FC = () => {
           // 标记为已初始化
           initializationRef.current.isInitialized = true;
         } catch (error) {
-          console.error('Failed to initialize app:', error);
+          logError('Failed to initialize app:', error);
           // 初始化失败时重置状态，允许重试
           initializationRef.current.isInitialized = false;
         } finally {
