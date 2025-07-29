@@ -1,79 +1,82 @@
-# 项目文档导航
+# 文档目录
 
-## 📋 文档概述
+## 文档结构
 
-本目录包含 Idle Factorio 项目的完整文档，经过整理和优化，消除了重复内容，提供清晰的文档结构。
+```
+docs/
+├── architecture/       # 架构设计文档
+├── design/            # 设计文档
+├── guides/            # 开发和使用指南
+├── implementation/    # 实现相关文档
+├── systems/           # 系统功能文档
+└── technical/         # 技术规范文档
+```
 
-## 📁 文档结构
+## 核心文档
 
-### 🎨 设计文档 (`design/`)
-- **[异星工厂v2.md](design/异星工厂v2.md)** - 复杂版本的详细游戏设计文档
-- **[异星工厂v3设计文档.md](design/异星工厂v3设计文档.md)** - 简化版移动端友好的设计理念
-- **[物品分类系统设计.md](design/物品分类系统设计.md)** - 游戏物品的分类和组织系统
-- **[UI设计说明文档.md](design/UI设计说明文档.md)** - 完整的用户界面设计规范
+### 🏗️ 架构文档
+- **[系统架构总览](architecture/system-overview.md)** - 整体架构设计
+- **[技术栈选型](architecture/tech-stack.md)** - 技术选型说明
 
-### 🛠️ 实现文档 (`implementation/`)
-- **[第一阶段开发指南.md](implementation/第一阶段开发指南.md)** - **主要文档** - 第一阶段开发的完整指南和任务清单
-- **[第二阶段实现指南.md](implementation/第二阶段实现指南.md)** - 第二阶段的物流系统设计
+### 📐 设计文档
+- **[UI设计说明文档](design/UI设计说明文档.md)** - UI/UX设计规范
+- **[异星工厂v3设计文档](design/异星工厂v3设计文档.md)** - 最新版本设计
+- **[物品分类系统设计](design/物品分类系统设计.md)** - 物品分类逻辑
 
-#### 系统设计文档 (`implementation/systems/`)
-- **[电力系统设计文档.md](systems/电力系统设计文档.md)** - 完整的电力生产和管理系统
-- **[设备管理系统文档.md](systems/设备管理系统文档.md)** - 设施的自动化创建和管理
-- **[科技页面设计文档.md](systems/科技页面设计文档.md)** - 科技树和研究系统的UI/UX设计
-- **[物品解锁系统文档.md](systems/物品解锁系统文档.md)** - 物品解锁机制和用户进度管理
-- **[物流系统功能设计.md](systems/物流系统功能设计.md)** - 传送带和物流网络系统设计
+### 📖 开发指南
+- **[开发指南](guides/development-guide.md)** - 完整的开发指南，包含第一阶段和第二阶段
 
-### 📦 已归档文档 (`archive/`)
-包含已被整合的原始文档，保留作为历史参考：
-- 第一阶段实现指南.md (原版)
-- 第一阶段开发TODO.md
-- 第一阶段开发说明文档.md
-- 第一阶段开发步骤指南.md
-- 第一阶段开发任务文档.md
+### 🔧 系统文档
+- **[存储系统](systems/storage-system.md)** - 完整的存储系统文档（含存档优化）
+- **[燃料系统](systems/fuel-system.md)** - 完整的燃料系统文档
+- **[电力系统设计文档](systems/电力系统设计文档.md)** - 电力系统详细设计
+- **[物流系统功能设计](systems/物流系统功能设计.md)** - 物流系统设计
+- **[科技页面设计文档](systems/科技页面设计文档.md)** - 科技系统设计
+- **[设备管理系统文档](systems/设备管理系统文档.md)** - 设备管理功能
+- **[物品解锁系统文档](systems/物品解锁系统文档.md)** - 解锁机制
+- **[手动采集识别系统](systems/手动采集识别系统.md)** - 采集系统
 
-## 🚀 快速开始
+### 📝 实现文档
+- **[RecipeService应用总结](implementation/RecipeService应用总结.md)** - 配方服务实现
+- **[inventory-management-guide](implementation/inventory-management-guide.md)** - 库存管理指南
+- **[ci-cd.md](ci-cd.md)** - CI/CD配置说明
 
-### 新开发者入门
-1. **了解项目** - 阅读 [异星工厂v3设计文档.md](design/异星工厂v3设计文档.md) 了解游戏理念
-2. **开发指南** - 查看 [第一阶段开发指南.md](implementation/第一阶段开发指南.md) 获取详细的开发任务
-3. **系统设计** - 根据需要参考 `systems/` 目录下的具体系统文档
+## 文档更新历史
 
-### 当前开发状态
-- **✅ 已完成**: 电力系统、设施管理、物品解锁、基础UI
-- **🔄 进行中**: 科技系统、游戏循环优化
-- **📅 待开发**: 高级物流、性能优化、响应式设计
+### 2024-01 重构
+- ✅ 创建新的目录结构（architecture, guides, systems, technical）
+- ✅ 合并存储系统相关文档为 `systems/storage-system.md`
+- ✅ 合并燃料系统相关文档为 `systems/fuel-system.md`
+- ✅ 合并开发指南文档为 `guides/development-guide.md`
+- ✅ 移动系统文档到 `systems/` 目录
+- ✅ 更新文档间的交叉引用
 
-## 🎯 文档整理成果
+### 已删除的过时文档
+- `STORAGE_SYSTEM_README.md` - 已合并到 `systems/storage-system.md`
+- `save-optimization-summary.md` - 已合并到 `systems/storage-system.md`
+- `save-optimization-phase2-summary.md` - 已合并到 `systems/storage-system.md`
+- `第一阶段开发指南.md` - 已合并到 `guides/development-guide.md`
+- `第二阶段实现指南.md` - 已合并到 `guides/development-guide.md`
+- `fuel-system-design.md` - 已合并到 `systems/fuel-system.md`
+- `fuel-buffer-capacity-analysis.md` - 已合并到 `systems/fuel-system.md`
+- `fuel-distribution-scenarios.md` - 已合并到 `systems/fuel-system.md`
+- `fuel-system-implementation-plan.md` - 已合并到 `systems/fuel-system.md`
+- `fuel-system-implementation-summary.md` - 已合并到 `systems/fuel-system.md`
+- `storage-system-refactor.md` - 已合并到 `systems/storage-system.md`
 
-### 解决的问题
-- **消除重复**: 将5个重叠的第一阶段文档合并为1个完整指南
-- **清晰分类**: 按功能和用途分类文档，便于查找
-- **统一格式**: 标准化文档结构和内容组织
-- **减少混淆**: 明确文档间的关系和使用场景
+## 使用指南
 
-### 优化效果
-- 文档数量从 **15个** 减少到 **11个** 有效文档
-- 第一阶段开发文档整合度提升 **80%**
-- 查找效率提升，开发者可快速定位所需信息
-- 维护负担减轻，避免多处更新同步问题
+### 新手入门
+1. 先阅读 [开发指南](guides/development-guide.md) 了解项目概况
+2. 查看 [系统架构总览](architecture/system-overview.md) 理解整体设计
+3. 根据需要深入了解各个系统的具体文档
 
-## 🔗 相关资源
+### 开发参考
+- 实现新功能前，先查看相关系统文档
+- 遵循设计文档中的规范和约定
+- 参考已有实现文档的最佳实践
 
-- **项目根目录**: [CLAUDE.md](../CLAUDE.md) - Claude Code AI助手使用指南
-- **游戏数据**: `/data/1.1/` - Factorio 1.1.107 完整游戏数据
-- **代码实现**: `/src/` - React + TypeScript 项目源码
-
-## 📝 文档维护
-
-### 更新原则
-- 保持文档与代码同步
-- 优先更新主要文档，归档过时版本
-- 新功能需要同时更新相关设计和实现文档
-
-### 版本管理
-- 重大更新会在文档中记录更新日志
-- 归档文档保留但不再主动维护
-- 使用 Git 历史追踪文档演进
-
----
-*最后更新: 2024年 | 整理状态: ✅ 完成*
+### 文档维护
+- 实现新功能时同步更新相关文档
+- 保持文档结构清晰，避免重复内容
+- 定期审查和清理过时文档

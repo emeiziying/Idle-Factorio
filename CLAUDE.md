@@ -209,20 +209,21 @@ const favoriteRecipes = useGameStore(state => state.favoriteRecipes);
 ## Key Documentation Files
 
 ### Development Planning
-- `第一阶段开发TODO.md` - Complete Phase 1 task checklist with progress tracking
-- `第一阶段开发说明文档.md` - Detailed technical specifications and data structures
-- `第一阶段开发任务文档.md` - Implementation roadmap and milestones
+- `docs/guides/development-guide.md` - Comprehensive development guide including all phases
 
 ### System Design Documents  
-- `物品解锁系统文档.md` - Item unlock mechanics and UserProgressService
-- `电力系统设计文档.md` - Power generation/consumption balance system
-- `科技页面设计文档.md` - Research tree and technology unlocking
-- `设备管理系统文档.md` - Facility management and automation
+- `docs/systems/物品解锁系统文档.md` - Item unlock mechanics and UserProgressService
+- `docs/systems/电力系统设计文档.md` - Power generation/consumption balance system
+- `docs/systems/科技页面设计文档.md` - Research tree and technology unlocking
+- `docs/systems/设备管理系统文档.md` - Facility management and automation
+- `docs/systems/storage-system.md` - Complete storage and save optimization system
+- `docs/systems/fuel-system.md` - Complete fuel management system
 
 ### Game Design
-- `异星工厂v2.md` & `异星工厂v3设计文档.md` - Overall game concept and progression (legacy design docs)
-- `物品分类系统设计.md` - Item categorization strategy
-- `物流系统功能设计.md` - Future logistics system (Phase 2+)
+- `docs/design/异星工厂v3设计文档.md` - Latest game design document
+- `docs/design/物品分类系统设计.md` - Item categorization strategy
+- `docs/design/UI设计说明文档.md` - UI/UX design specifications
+- `docs/systems/物流系统功能设计.md` - Logistics system design
 
 ## Development Guidelines
 
