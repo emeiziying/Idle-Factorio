@@ -69,9 +69,9 @@ export const useFuelService = (): FuelService => {
 export const usePowerService = (): PowerService => {
   return useMemo(() => {
     if (ServiceLocator.has(SERVICE_NAMES.POWER)) {
-      return ServiceLocator.get<PowerService>(SERVICE_NAMES.POWER);
+      return ServiceLocator.get<PowerService>(SERVICE_NAMES.POWER) as PowerService;
     }
-    return PowerService.getInstance();
+    return PowerService.getInstance() as PowerService;
   }, []);
 };
 
@@ -81,9 +81,9 @@ export const usePowerService = (): PowerService => {
 export const useStorageService = (): StorageService => {
   return useMemo(() => {
     if (ServiceLocator.has(SERVICE_NAMES.STORAGE)) {
-      return ServiceLocator.get<StorageService>(SERVICE_NAMES.STORAGE);
+      return ServiceLocator.get<StorageService>(SERVICE_NAMES.STORAGE) as StorageService;
     }
-    return StorageService.getInstance();
+    return StorageService.getInstance() as StorageService;
   }, []);
 };
 

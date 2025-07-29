@@ -159,9 +159,24 @@ export class DataService extends BaseService {
     return this.getItems().find(item => item.id === id);
   }
 
+  // 向后兼容的getItem方法
+  getItem(id: string): Item | undefined {
+    return this.getItemById(id);
+  }
+
+  // 获取所有物品（向后兼容）
+  getAllItems(): Item[] {
+    return this.getItems();
+  }
+
   // 通过ID获取配方
   getRecipeById(id: string): Recipe | undefined {
     return this.getRecipes().find(recipe => recipe.id === id);
+  }
+
+  // 向后兼容的getRecipe方法
+  getRecipe(id: string): Recipe | undefined {
+    return this.getRecipeById(id);
   }
 
   // 通过ID获取分类
@@ -189,6 +204,21 @@ export class DataService extends BaseService {
     return this.i18nData?.technologies?.[technologyId] || 
            this.i18nData?.recipes?.[technologyId] || 
            technologyId;
+  }
+
+  // 向后兼容的本地化方法
+  getI18nName(item: Item): string {
+    return this.getItemName(item.id);
+  }
+
+  // 向后兼容的分类本地化方法
+  getCategoryI18nName(categoryId: string): string {
+    return this.getCategoryName(categoryId);
+  }
+
+  // 向后兼容的本地化物品名称获取
+  getLocalizedItemName(itemId: string): string {
+    return this.getItemName(itemId);
   }
 
   // 位置本地化名称

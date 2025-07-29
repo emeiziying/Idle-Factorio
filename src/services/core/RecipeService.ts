@@ -40,6 +40,14 @@ export class RecipeService extends BaseService {
   }
 
   /**
+   * 静态方法：获取所有配方（向后兼容）
+   */
+  static getAllRecipes(): Recipe[] {
+    const instance = RecipeService.getInstance() as RecipeService;
+    return instance.getAllRecipes();
+  }
+
+  /**
    * 根据物品ID获取所有相关配方（带缓存）
    * @param itemId 物品ID
    */
@@ -393,6 +401,104 @@ export class RecipeService extends BaseService {
   }
 
   /**
+   * 获取最高效率的配方
+   * @param itemId 物品ID
+   */
+  getMostEfficientRecipe(itemId: string): Recipe | undefined {
+    const recipes = this.getRecipesThatProduce(itemId);
+    if (recipes.length === 0) return undefined;
+
+    let bestRecipe = recipes[0];
+    let bestEfficiency = this.getRecipeEfficiency(bestRecipe, itemId);
+
+    for (const recipe of recipes) {
+      const efficiency = this.getRecipeEfficiency(recipe, itemId);
+      if (efficiency > bestEfficiency) {
+        bestEfficiency = efficiency;
+        bestRecipe = recipe;
+      }
+    }
+
+    return bestRecipe;
+  }
+
+  /**
+   * 获取配方效率
+   * @param recipe 配方
+   * @param itemId 物品ID
+   */
+  private getRecipeEfficiency(recipe: Recipe, itemId: string): number {
+    const outputAmount = recipe.out[itemId] || 0;
+    const time = recipe.time || 1;
+    return outputAmount / time;
+  }
+
+  /**
+   * 获取配方统计信息
+   * @param itemId 物品ID
+   */
+  getRecipeStats(itemId: string): {
+    totalRecipes: number;
+    manualRecipes: number;
+    automatedRecipes: number;
+    miningRecipes: number;
+    recyclingRecipes: number;
+    mostEfficientRecipe?: Recipe;
+  } {
+    const allRecipes = this.getRecipesThatProduce(itemId);
+    const manualRecipes = this.getManualRecipes(itemId);
+    const automatedRecipes = this.getAutomatedRecipes(itemId);
+    const miningRecipes = this.getMiningRecipes(itemId);
+    const recyclingRecipes = this.getRecyclingRecipes(itemId);
+    const mostEfficientRecipe = this.getMostEfficientRecipe(itemId);
+
+    return {
+      totalRecipes: allRecipes.length,
+      manualRecipes: manualRecipes.length,
+      automatedRecipes: automatedRecipes.length,
+      miningRecipes: miningRecipes.length,
+      recyclingRecipes: recyclingRecipes.length,
+      mostEfficientRecipe
+    };
+  }
+
+  /**
+   * 获取挖矿配方
+   * @param itemId 物品ID（可选）
+   */
+  getMiningRecipes(itemId?: string): Recipe[] {
+    let recipes = RecipeService.allRecipes.filter(recipe => 
+      recipe.flags?.includes("mining")
+    );
+
+    if (itemId) {
+      recipes = recipes.filter(recipe => 
+        recipe.out && recipe.out[itemId] !== undefined
+      );
+    }
+
+    return recipes;
+  }
+
+  /**
+   * 获取回收配方
+   * @param itemId 物品ID（可选）
+   */
+  getRecyclingRecipes(itemId?: string): Recipe[] {
+    let recipes = RecipeService.allRecipes.filter(recipe => 
+      recipe.flags?.includes("recycling")
+    );
+
+    if (itemId) {
+      recipes = recipes.filter(recipe => 
+        recipe.out && recipe.out[itemId] !== undefined
+      );
+    }
+
+    return recipes;
+  }
+
+  /**
    * 清理缓存
    */
   clearCache(): void {
@@ -408,5 +514,36 @@ export class RecipeService extends BaseService {
       recipesByItem: this.recipesByItemCache.getStats(),
       manualCrafting: this.manualCraftingCache.getStats()
     };
+  }
+
+  // 静态方法（向后兼容）
+  static getRecipesThatProduce(itemId: string): Recipe[] {
+    const instance = RecipeService.getInstance() as RecipeService;
+    return instance.getRecipesThatProduce(itemId);
+  }
+
+  static getRecipesThatUse(itemId: string): Recipe[] {
+    const instance = RecipeService.getInstance() as RecipeService;
+    return instance.getRecipesThatUse(itemId);
+  }
+
+  static getRecipeById(id: string): Recipe | undefined {
+    const instance = RecipeService.getInstance() as RecipeService;
+    return instance.getRecipeById(id);
+  }
+
+  static getMostEfficientRecipe(itemId: string): Recipe | undefined {
+    const instance = RecipeService.getInstance() as RecipeService;
+    return instance.getMostEfficientRecipe(itemId);
+  }
+
+  static getRecipeStats(itemId: string) {
+    const instance = RecipeService.getInstance() as RecipeService;
+    return instance.getRecipeStats(itemId);
+  }
+
+  static searchRecipes(query: string): Recipe[] {
+    const instance = RecipeService.getInstance() as RecipeService;
+    return instance.searchRecipes(query);
   }
 }

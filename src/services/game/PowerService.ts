@@ -401,6 +401,58 @@ export class PowerService extends BaseService {
   }
 
   /**
+   * 更新设施电力状态（向后兼容）
+   */
+  updateFacilityPowerStatus(facility: FacilityInstance, powerBalance: PowerBalance): FacilityInstance {
+    try {
+      const powerInfo = this.getFacilityPowerInfo(facility, powerBalance);
+      facility.efficiency = powerInfo.efficiency;
+      
+      // 根据电力供应调整设施状态
+      if (powerInfo.efficiency < 0.1) {
+        facility.status = FacilityStatus.NO_POWER;
+      } else if (facility.status === FacilityStatus.NO_POWER && powerInfo.efficiency >= 0.1) {
+        facility.status = FacilityStatus.RUNNING;
+      }
+      
+      return facility;
+    } catch (error) {
+      this.handleError(error, 'updateFacilityPowerStatus');
+      return facility;
+    }
+  }
+
+  /**
+   * 获取电力优先级建议（向后兼容）
+   */
+  getPowerPriorityRecommendations(facilities: FacilityInstance[], powerBalance: PowerBalance): any[] {
+    try {
+      const recommendations: any[] = [];
+      
+      if (powerBalance.status === 'deficit') {
+        // 建议优先级调整
+        const consumers = facilities.filter(f => this.isConsumer(f));
+        consumers.forEach(facility => {
+          const powerInfo = this.getFacilityPowerInfo(facility, powerBalance);
+          if (powerInfo.efficiency < 0.5) {
+            recommendations.push({
+              facilityId: facility.id,
+              type: 'reduce_priority',
+              reason: 'Low power efficiency',
+              priority: 'low'
+            });
+          }
+        });
+      }
+      
+      return recommendations;
+    } catch (error) {
+      this.handleError(error, 'getPowerPriorityRecommendations');
+      return [];
+    }
+  }
+
+  /**
    * 获取缓存统计
    */
   getCacheStats() {
