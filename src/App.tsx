@@ -105,7 +105,8 @@ const App: React.FC = () => {
       initializationRef.current.initPromise = (async () => {
         try {
           // 初始化所有服务
-          await ServiceInitializer.initialize();
+          const initializer = ServiceInitializer.getInstance();
+          await initializer.initialize();
 
           // 同步科技数据到gameStore（确保科技数据可用）
           const { initializeTechnologyService } = useGameStore.getState();
