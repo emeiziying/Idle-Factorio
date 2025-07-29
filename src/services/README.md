@@ -27,7 +27,7 @@ src/services/
 ├── state/                  # 状态管理服务
 │   ├── GameStorageService.ts # 游戏存储
 │   ├── UserProgressService.ts # 用户进度
-│   └── GameStateAdapter.ts   # 状态适配器
+
 ├── utils/                  # 工具服务
 │   ├── DependencyService.ts # 依赖管理
 │   └── ServiceLocator.ts   # 服务定位器
