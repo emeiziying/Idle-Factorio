@@ -161,6 +161,27 @@ export const useCrafting = () => {
   };
 
   const executeChainCrafting = (chainAnalysis: CraftingChainAnalysis) => {
+    // 预先扣除总原材料库存
+    if (chainAnalysis.totalRawMaterialNeeds) {
+      for (const [materialId, totalNeeded] of chainAnalysis.totalRawMaterialNeeds) {
+        const available = getInventoryItem(materialId).currentAmount;
+        if (available < totalNeeded) {
+          setShowMessage({
+            open: true,
+            message: `原材料${materialId}不足，需要${totalNeeded}个，只有${available}个`,
+            severity: 'error'
+          });
+          return;
+        }
+      }
+      
+      // 扣除原材料库存
+      const { updateInventory } = useGameStore.getState();
+      for (const [materialId, totalNeeded] of chainAnalysis.totalRawMaterialNeeds) {
+        updateInventory(materialId, -totalNeeded);
+      }
+    }
+
     // 创建链式任务数据结构
     const chainTasks = chainAnalysis.tasks.map((task, index) => ({
       ...task,
@@ -178,7 +199,8 @@ export const useCrafting = () => {
         quantity: chainAnalysis.mainTask.quantity
       },
       status: 'pending' as const,
-      totalProgress: 0
+      totalProgress: 0,
+      rawMaterialsConsumed: chainAnalysis.totalRawMaterialNeeds // 记录已消耗的原材料
     };
 
     const chainId = addCraftingChain(chainData);

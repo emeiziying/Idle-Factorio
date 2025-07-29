@@ -22,6 +22,7 @@ export interface CraftingChainAnalysis {
   dependencies: CraftingDependency[];
   tasks: CraftingTask[];
   totalItems: number;
+  totalRawMaterialNeeds?: Map<string, number>; // 总原材料需求
 }
 
 export class DependencyService {
@@ -61,7 +62,20 @@ export class DependencyService {
 
     const dependencies: CraftingDependency[] = [];
     const tasks: CraftingTask[] = [];
+    const totalRawMaterialNeeds = new Map<string, number>(); // 总原材料需求
     let taskIdCounter = 1;
+
+    // 首先计算总的原材料需求
+    this.calculateTotalRawMaterialNeeds(mainRecipe, quantity, totalRawMaterialNeeds);
+
+    // 检查总原材料是否足够
+    for (const [rawMaterialId, totalNeeded] of totalRawMaterialNeeds) {
+      const available = inventory.get(rawMaterialId)?.currentAmount || 0;
+      if (available < totalNeeded) {
+        // 如果总的原材料不够，无法创建链式制作
+        return null;
+      }
+    }
 
     // 分析每个输入材料的依赖
     for (const [inputItemId, requiredPerCraft] of Object.entries(mainRecipe.in)) {
@@ -123,8 +137,37 @@ export class DependencyService {
       },
       dependencies,
       tasks,
-      totalItems: dependencies.length + 1
+      totalItems: dependencies.length + 1,
+      totalRawMaterialNeeds // 添加总原材料需求信息
     };
+  }
+
+  /**
+   * 递归计算总的原材料需求
+   * @param recipe 配方
+   * @param quantity 制作数量
+   * @param totalNeeds 总需求映射
+   */
+  private calculateTotalRawMaterialNeeds(
+    recipe: Recipe, 
+    quantity: number, 
+    totalNeeds: Map<string, number>
+  ): void {
+    for (const [inputItemId, requiredPerCraft] of Object.entries(recipe.in)) {
+      const totalRequired = requiredPerCraft * quantity;
+      
+      // 检查这个材料是否可以进一步制作
+      const inputRecipe = this.getBestManualCraftingRecipe(inputItemId);
+      
+      if (inputRecipe && inputRecipe.in && Object.keys(inputRecipe.in).length > 0) {
+        // 这是一个中间产物，需要递归计算其原材料需求
+        this.calculateTotalRawMaterialNeeds(inputRecipe, Math.ceil(totalRequired / Object.values(inputRecipe.out)[0]), totalNeeds);
+      } else {
+        // 这是原材料，累加需求
+        const existingNeed = totalNeeds.get(inputItemId) || 0;
+        totalNeeds.set(inputItemId, existingNeed + totalRequired);
+      }
+    }
   }
 
   /**

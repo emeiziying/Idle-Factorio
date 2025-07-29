@@ -252,8 +252,9 @@ class CraftingEngine {
   private completeCraft(task: CraftingTask, recipe: Recipe): void {
     const { updateInventory, completeCraftingTask, trackMinedEntity } = useGameStore.getState();
 
-    // 1. 先消耗输入材料
-    if (recipe.in) {
+    // 1. 先消耗输入材料（链式任务的原材料已在创建时扣除，这里只扣除中间产物）
+    if (recipe.in && !task.chainId) {
+      // 非链式任务才扣除材料
       Object.entries(recipe.in).forEach(([itemId, required]) => {
         const totalRequired = (required as number) * task.quantity;
         updateInventory(itemId, -totalRequired);
@@ -302,8 +303,9 @@ class CraftingEngine {
       }
     }
 
-    // 如果有配方且有输入材料，则消耗材料
-    if (selectedRecipe && selectedRecipe.in) {
+    // 如果有配方且有输入材料，则消耗材料（链式任务的原材料已在创建时扣除）
+    if (selectedRecipe && selectedRecipe.in && !task.chainId) {
+      // 非链式任务才扣除材料
       Object.entries(selectedRecipe.in).forEach(([inputItemId, required]) => {
         const totalRequired = (required as number) * task.quantity;
         updateInventory(inputItemId, -totalRequired);

@@ -31,6 +31,35 @@ pnpm install
 
 **Note**: Always run `pnpm lint` after making code changes to ensure TypeScript and React code quality.
 
+## Critical Architecture Patterns
+
+### Service Locator Pattern
+The application uses a service locator pattern for dependency injection:
+```typescript
+// Register services at startup via ServiceInitializer
+ServiceInitializer.initialize()
+
+// Access services through ServiceLocator
+const dataService = ServiceLocator.get<DataService>(SERVICE_NAMES.DATA);
+```
+
+### Zustand State Management with Custom Serialization
+The gameStore.ts implements sophisticated Map/Set serialization for localStorage persistence:
+- **Map types**: inventory, craftedItemCounts, builtEntityCounts, minedEntityCounts
+- **Set types**: favoriteRecipes, unlockedTechs
+- **Custom serialization**: SaveOptimizationService handles compression and v2 format
+
+### Service Layer Business Logic Pattern
+**Critical**: Always use services for business logic, never implement it in components:
+```typescript
+// ✅ Correct - use service methods
+const recipes = RecipeService.getRecipesThatProduce(itemId);
+const isUnlocked = dataService.isItemUnlocked(itemId);
+
+// ❌ Incorrect - business logic in components
+const recipes = gameData.recipes.filter(r => r.out[itemId]);
+```
+
 ## Current Architecture
 
 ### Implemented Service Layer Pattern
@@ -313,6 +342,22 @@ const item = DataService.getInstance().getItem(itemId);
 // Incorrect - don't implement business logic in components
 const recipes = gameData.recipes.filter(r => r.out[itemId]);
 ```
+
+### State Repair Hooks Pattern
+The application includes automatic state repair for Map/Set types:
+```typescript
+// These hooks automatically repair corrupted state on startup
+useInventoryRepair();    // Repairs inventory Map structure
+useUnlockedTechsRepair(); // Repairs unlockedTechs Set structure  
+useFacilityRepair();     // Repairs facility targetItemId issues
+```
+
+### Browser Tools Integration
+Specialized debugging support via browser tools (see .cursor/rules/):
+- `takeScreenshot()` - Visual UI inspection
+- `getConsoleErrors()` / `getConsoleLogs()` - Debug logging
+- `runPerformanceAudit()` - Performance optimization
+- Production module specific debugging patterns for CategoryTabs, ItemList, ItemDetailPanel, CraftingQueue
 
 ## Browser Debugging & UI Design Guidelines
 

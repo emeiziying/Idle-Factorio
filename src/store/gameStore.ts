@@ -447,6 +447,30 @@ const useGameStore = create<GameState>()(
         const task = state.craftingQueue.find(t => t.id === taskId);
         
         if (task) {
+          // 检查是否为链式任务的一部分
+          if (task.chainId) {
+            const chain = state.craftingChains.find(c => c.id === task.chainId);
+            if (chain) {
+              // 如果是链式任务的第一个被取消的任务，归还总原材料
+              const remainingTasks = state.craftingQueue.filter(t => t.chainId === task.chainId && t.id !== taskId);
+              
+              if (remainingTasks.length === 0 && chain.rawMaterialsConsumed) {
+                // 这是链中最后一个任务被取消，归还所有原材料
+                for (const [materialId, amount] of chain.rawMaterialsConsumed) {
+                  get().updateInventory(materialId, amount);
+                }
+              }
+              
+              // 移除整个链
+              set((state) => ({
+                craftingQueue: state.craftingQueue.filter(task => task.chainId !== chain.id),
+                craftingChains: state.craftingChains.filter(c => c.id !== chain.id)
+              }));
+              return;
+            }
+          }
+          
+          // 普通任务处理
           // 如果是手动合成任务，不需要归还库存（因为手动合成没有消耗库存）
           if (!task.recipeId.startsWith('manual_')) {
             // 获取配方信息并归还库存
@@ -1213,6 +1237,67 @@ const useGameStore = create<GameState>()(
     {
       name: 'factorio-game-storage',
       storage: createJSONStorage(() => createDebouncedStorage(2000)), // 2秒防抖
+      // 添加迁移函数处理版本兼容性
+      migrate: (persistedState: unknown, version: number) => {
+        console.log('[Migrate] 开始迁移存档数据，版本:', version);
+        
+        // 类型断言，将 persistedState 转换为可操作的对象
+        const state = persistedState as Record<string, unknown>;
+        
+        // 如果没有版本信息，假设是最旧版本
+        if (version === undefined || version === 0) {
+          console.log('[Migrate] 检测到无版本信息，进行基础迁移');
+          return {
+            ...state,
+            // 确保基础字段存在
+            inventory: ensureInventoryMap(state?.inventory),
+            craftingQueue: Array.isArray(state?.craftingQueue) ? state.craftingQueue : [],
+            craftingChains: Array.isArray(state?.craftingChains) ? state.craftingChains : [],
+            facilities: Array.isArray(state?.facilities) ? state.facilities : [],
+            deployedContainers: Array.isArray(state?.deployedContainers) ? state.deployedContainers : [],
+            totalItemsProduced: typeof state?.totalItemsProduced === 'number' ? state.totalItemsProduced : 0,
+            favoriteRecipes: new Set(Array.isArray(state?.favoriteRecipes) ? state.favoriteRecipes : []),
+            recentRecipes: Array.isArray(state?.recentRecipes) ? state.recentRecipes : [],
+            maxRecentRecipes: typeof state?.maxRecentRecipes === 'number' ? state.maxRecentRecipes : 10,
+            lastSaveTime: typeof state?.lastSaveTime === 'number' ? state.lastSaveTime : Date.now(),
+            saveKey: typeof state?.saveKey === 'string' ? state.saveKey : 'migrated',
+            // 科技系统字段
+            technologies: new Map(),
+            researchState: state?.researchState || null,
+            researchQueue: Array.isArray(state?.researchQueue) ? state.researchQueue : [],
+            unlockedTechs: ensureUnlockedTechsSet(state?.unlockedTechs),
+            autoResearch: typeof state?.autoResearch === 'boolean' ? state.autoResearch : true,
+            techCategories: Array.isArray(state?.techCategories) ? state.techCategories : [],
+            // 统计数据字段
+            craftedItemCounts: ensureMap<string, number>(state?.craftedItemCounts, 'craftedItemCounts'),
+            builtEntityCounts: ensureMap<string, number>(state?.builtEntityCounts, 'builtEntityCounts'),
+            minedEntityCounts: ensureMap<string, number>(state?.minedEntityCounts, 'minedEntityCounts'),
+          };
+        }
+        
+        // 版本 1 到 2 的迁移
+        if (version === 1) {
+          console.log('[Migrate] 从版本 1 迁移到版本 2');
+          return {
+            ...state,
+            // 确保所有新字段都有默认值
+            craftingChains: Array.isArray(state?.craftingChains) ? state.craftingChains : [],
+            maxQueueSize: typeof state?.maxQueueSize === 'number' ? state.maxQueueSize : 50,
+            saveKey: typeof state?.saveKey === 'string' ? state.saveKey : 'migrated_v2',
+          };
+        }
+        
+        // 如果版本已经是 2 或更高，直接返回
+        if (version >= 2) {
+          console.log('[Migrate] 存档版本已是最新，无需迁移');
+          return persistedState;
+        }
+        
+        // 默认情况：返回原始数据
+        console.log('[Migrate] 使用默认迁移策略');
+        return persistedState;
+      },
+      version: 2, // 当前存档版本
       partialize: (state) => {
         // 使用优化后的存档格式
         const optimized = saveOptimizationService.optimize(state);
