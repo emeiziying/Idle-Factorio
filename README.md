@@ -137,6 +137,10 @@ pnpm lint
 
 查看 [CHANGELOG.md](./CHANGELOG.md) 了解详细的版本更新历史。
 
+## 🗺️ 开发路线图
+
+查看 [ROADMAP.md](./ROADMAP.md) 了解项目的未来规划和版本计划。
+
 ## 🤝 贡献指南
 
 欢迎提交 Issue 和 Pull Request！
