@@ -1,20 +1,46 @@
 # 异星工厂 v2 (Idle Factorio)
 
-一个基于 React 的放置类工厂管理游戏，灵感来源于 Factorio。
+<p align="center">
+  <img src="https://img.shields.io/badge/React-19.1.0-blue" alt="React">
+  <img src="https://img.shields.io/badge/TypeScript-5.8.3-blue" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Vite-7.0.4-purple" alt="Vite">
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
+</p>
+
+<p align="center">
+  一个基于 React 的放置类工厂管理游戏，灵感来源于 Factorio
+</p>
+
+<p align="center">
+  <a href="https://emeiziying.github.io/Idle-Factorio/">🎮 在线试玩</a> •
+  <a href="#-快速开始">快速开始</a> •
+  <a href="./ROADMAP.md">开发路线图</a> •
+  <a href="https://github.com/emeiziying/Idle-Factorio/issues">报告问题</a>
+</p>
 
 ## 📋 项目概述
 
 **异星工厂 v2** 是一个现代化的网页游戏，实现了工厂生产管理的核心机制。玩家可以管理资源、配方、科技树，建立自动化生产链，体验工厂扩张的乐趣。
 
-### 技术栈
+### ✨ 特色功能
 
-- **前端框架**: React 19.1.0 + TypeScript
-- **构建工具**: Vite 7.0.4
-- **UI 组件库**: Material-UI v7.2.0
-- **状态管理**: Zustand 5.0.6
-- **包管理器**: pnpm 9.15.0
-- **数据压缩**: LZ-String（用于存档压缩）
-- **虚拟列表**: React Virtual（优化大量数据渲染）
+- 🏭 **自动化生产** - 设置生产链，自动制造物品
+- 🔬 **科技研究** - 解锁新配方和生产能力
+- 📊 **配方优化** - 智能分析最优生产路径
+- 💾 **云端存档** - 自动保存游戏进度（支持压缩）
+- 📱 **移动端适配** - 完美支持触屏操作
+- 🌏 **多语言支持** - 中文、日文界面
+
+### 🛠️ 技术栈
+
+| 技术 | 版本 | 说明 |
+|------|------|------|
+| React | 19.1.0 | 前端框架 |
+| TypeScript | 5.8.3 | 类型安全 |
+| Vite | 7.0.4 | 构建工具 |
+| Material-UI | 7.2.0 | UI 组件库 |
+| Zustand | 5.0.6 | 状态管理 |
+| pnpm | 9.15.0 | 包管理器 |
 
 ## 🚀 快速开始
 
@@ -23,50 +49,45 @@
 - Node.js >= 18.0.0
 - pnpm >= 9.15.0
 
-### 安装依赖
+### 安装步骤
+
+1. **克隆仓库**
+   ```bash
+   git clone https://github.com/emeiziying/Idle-Factorio.git
+   cd Idle-Factorio
+   ```
+
+2. **安装依赖**
+   ```bash
+   pnpm install
+   ```
+
+3. **启动开发服务器**
+   ```bash
+   pnpm dev
+   ```
+   
+   访问 `http://localhost:5173` 开始游戏！
+
+### 其他命令
 
 ```bash
-pnpm install
-```
-
-### 开发模式
-
-```bash
-pnpm dev
-```
-
-启动开发服务器，支持热更新。默认运行在 `http://localhost:5173`
-
-### 构建项目
-
-```bash
+# 构建生产版本
 pnpm build
-```
 
-编译 TypeScript 并构建生产版本。
-
-### 预览构建
-
-```bash
+# 预览生产构建
 pnpm preview
-```
 
-预览生产构建版本。
-
-### 代码检查
-
-```bash
+# 运行代码检查
 pnpm lint
 ```
-
-运行 ESLint 进行代码质量检查。
 
 ## 🏗️ 项目架构
 
 ### 目录结构
 
 ```
-/
+idle-factorio/
 ├── src/
 │   ├── components/        # React 组件
 │   ├── hooks/            # 自定义 React Hooks
@@ -82,84 +103,119 @@ pnpm lint
 └── .github/              # GitHub 相关配置
 ```
 
-### 核心模块
+### 核心架构
 
-#### 服务层架构
+```mermaid
+graph TD
+    A[UI Components] --> B[Zustand Store]
+    B --> C[Service Layer]
+    C --> D[Game Data]
+    
+    C --> E[DataService]
+    C --> F[RecipeService]
+    C --> G[StorageService]
+    C --> H[TechnologyService]
+```
 
-- **DataService**: 单例模式，负责游戏数据加载和库存管理
-- **RecipeService**: 静态类，处理配方分析、效率计算和依赖链
-- **UserProgressService**: 管理物品解锁状态
-- **StorageService**: 存储配置管理，包括容量和流体处理
-- **TechnologyService**: 科技树管理和研究进度
-- **GameStore**: 使用 Zustand 的响应式状态管理，支持 localStorage 持久化
+### 已实现模块
 
-#### 已实现功能
+| 模块 | 状态 | 描述 |
+|------|------|------|
+| 生产系统 | ✅ 完成 | 物品制作、队列管理、库存系统 |
+| 配方系统 | ✅ 完成 | 配方分析、效率计算、依赖链 |
+| 存储系统 | ✅ 完成 | 固体/液体存储、容量管理 |
+| 存档系统 | ✅ 完成 | 自动保存、LZ-String 压缩 |
+| 设施系统 | 🚧 开发中 | 基础框架已完成 |
+| 科技系统 | 📋 计划中 | 科技树、研究进度 |
+| 电力系统 | 📋 计划中 | 发电、配电网络 |
 
-- ✅ **生产模块**: 物品展示、制作队列、库存管理
-- ✅ **游戏数据加载**: 异步数据加载，支持国际化
-- ✅ **配方系统**: 高级配方分析和优化
-- ✅ **存储系统**: 多类型存储管理（普通、流体、气体）
-- ✅ **科技树**: 研究进度和解锁机制
-- ✅ **存档系统**: 自动保存和压缩存档
+## 🎮 游戏玩法
 
-## 🎮 游戏特性
+### 基础流程
 
-- **自动化生产**: 设置生产链，自动制造物品
-- **配方优化**: 智能分析最优生产路径
-- **科技研究**: 解锁新配方和生产能力
-- **资源管理**: 合理分配存储空间和生产能力
-- **离线进度**: 支持离线收益计算
+1. **手动制作** - 从基础材料开始手动制作物品
+2. **建造设施** - 使用资源建造自动化生产设施
+3. **研究科技** - 解锁新的配方和生产方式
+4. **扩展工厂** - 优化生产链，提高效率
+5. **自动化生产** - 实现全自动化的工厂运作
+
+### 游戏界面
+
+- **生产标签** - 查看和制作各类物品
+- **设施标签** - 管理自动化生产设施
+- **科技标签** - 研究新技术
+- **统计标签** - 查看生产数据和效率
+- **设置标签** - 游戏设置和存档管理
 
 ## 🛠️ 开发指南
 
-### 添加新功能
+### 开发流程
 
-1. 在 `src/types/` 中定义相关 TypeScript 类型
-2. 在 `src/services/` 中实现业务逻辑
-3. 在 `src/store/` 中添加状态管理
-4. 在 `src/components/` 中创建 UI 组件
+1. **定义类型** - 在 `src/types/` 中定义 TypeScript 接口
+2. **实现服务** - 在 `src/services/` 中编写业务逻辑
+3. **管理状态** - 在 `src/store/` 中处理状态变更
+4. **创建组件** - 在 `src/components/` 中实现 UI
 
 ### 代码规范
 
-- 使用 TypeScript 进行类型安全编程
-- 遵循 ESLint 配置的代码规范
-- 组件使用函数式组件和 Hooks
-- 服务层使用单例或静态类模式
+- 使用 TypeScript 严格模式
+- 遵循 ESLint 配置规则
+- 组件使用函数式写法
+- 服务使用单例/静态类模式
+- 提交前运行 `pnpm lint`
 
-### 性能优化
+### 性能优化建议
 
-- 使用 React Virtual 处理大列表渲染
-- 实施懒加载和代码分割
-- 优化状态更新，避免不必要的重渲染
-- 使用 Web Workers 处理复杂计算
+- 大列表使用虚拟滚动
+- 组件适当使用 `React.memo`
+- 状态更新注意批处理
+- 复杂计算考虑 Web Worker
 
-## 📝 更新日志
+## 📚 相关文档
 
-查看 [CHANGELOG.md](./CHANGELOG.md) 了解详细的版本更新历史。
-
-## 🗺️ 开发路线图
-
-查看 [ROADMAP.md](./ROADMAP.md) 了解项目的未来规划和版本计划。
+- [更新日志](./CHANGELOG.md) - 版本更新历史
+- [开发路线图](./ROADMAP.md) - 未来版本规划
+- [贡献指南](./CONTRIBUTING.md) - 如何参与开发
+- [API 文档](./docs/api.md) - 服务层 API 说明
 
 ## 🤝 贡献指南
 
-欢迎提交 Issue 和 Pull Request！
+我们欢迎所有形式的贡献！无论是新功能、bug 修复还是文档改进。
+
+### 贡献步骤
 
 1. Fork 本仓库
-2. 创建您的特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交您的更改 (`git commit -m 'Add some AmazingFeature'`)
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add: 新增某某功能'`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启一个 Pull Request
+5. 提交 Pull Request
+
+### 提交规范
+
+- `Add:` 新增功能
+- `Fix:` 修复 bug
+- `Update:` 更新功能
+- `Docs:` 文档更新
+- `Style:` 代码格式调整
+- `Refactor:` 代码重构
 
 ## 📄 许可证
 
-本项目基于 MIT 许可证开源。
+本项目基于 [MIT 许可证](./LICENSE) 开源。
 
-## 🔗 相关链接
+## 🙏 致谢
 
-- [在线演示](https://emeiziying.github.io/Idle-Factorio/)
-- [问题反馈](https://github.com/emeiziying/Idle-Factorio/issues)
+- [Factorio](https://factorio.com/) - 游戏灵感来源
+- [React](https://react.dev/) - 前端框架
+- [Material-UI](https://mui.com/) - UI 组件库
+- 所有贡献者和玩家
 
 ---
 
-<p align="center">使用 ❤️ 基于 React + TypeScript + Vite 构建</p>
+<p align="center">
+  Made with ❤️ by <a href="https://github.com/emeiziying">emeiziying</a>
+</p>
+
+<p align="center">
+  <a href="#异星工厂-v2-idle-factorio">回到顶部 ↑</a>
+</p>
