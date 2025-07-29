@@ -12,7 +12,7 @@ import { RefactoredFuelService as FuelService } from '../game/RefactoredFuelServ
 import { PowerService } from '../game/PowerService';
 import { StorageService } from '../state/StorageService';
 import { GameStorageService } from '../state/GameStorageService';
-import { DependencyService } from '../DependencyService';
+import { DependencyService } from '../game/DependencyService';
 import { GameConfig } from '../GameConfig';
 
 // 服务配置
