@@ -1,4 +1,4 @@
-# 异星工厂 v2 (Idle Factorio)
+# Idle Factorio
 
 <p align="center">
   <img src="https://img.shields.io/badge/React-19.1.0-blue" alt="React">
@@ -20,7 +20,7 @@
 
 ## 📋 项目概述
 
-**异星工厂 v2** 是一个现代化的网页游戏，实现了工厂生产管理的核心机制。玩家可以管理资源、配方、科技树，建立自动化生产链，体验工厂扩张的乐趣。
+**Idle Factorio** 是一个现代化的网页游戏，实现了工厂生产管理的核心机制。玩家可以管理资源、配方、科技树，建立自动化生产链，体验工厂扩张的乐趣。
 
 ### ✨ 特色功能
 
@@ -217,5 +217,5 @@ graph TD
 </p>
 
 <p align="center">
-  <a href="#异星工厂-v2-idle-factorio">回到顶部 ↑</a>
+  <a href="#idle-factorio">回到顶部 ↑</a>
 </p>
