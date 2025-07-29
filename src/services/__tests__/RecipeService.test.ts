@@ -4,6 +4,7 @@ import { ServiceLocator, SERVICE_NAMES } from '../ServiceLocator'
 import type { Recipe } from '../../types'
 import type { DataService } from '../DataService'
 import type { IManualCraftingValidator } from '../interfaces/IManualCraftingValidator'
+import type { ServiceInstance, MockObject } from '../../types/test-utils'
 
 // Mock custom recipes
 vi.mock('../../data/customRecipes', () => ({
@@ -28,7 +29,7 @@ describe('RecipeService', () => {
   let recipeService: RecipeService
   let mockDataService: Partial<DataService>
   let mockCraftingValidator: Partial<IManualCraftingValidator>
-  let mockGameStore: any
+  let mockGameStore: MockObject<{ getInventoryItem: (id: string) => unknown }>
 
   const mockRecipes: Recipe[] = [
     {
@@ -70,9 +71,9 @@ describe('RecipeService', () => {
     ServiceLocator.clear()
     
     // Clear static state
-    ;(RecipeService as any).instance = null
-    ;(RecipeService as any).allRecipes = []
-    ;(RecipeService as any).recipesByItem.clear()
+    ;(RecipeService as ServiceInstance<RecipeService>).instance = null
+    ;(RecipeService as ServiceInstance<RecipeService>).allRecipes = []
+    ;(RecipeService as ServiceInstance<RecipeService>).recipesByItem?.clear()
 
     // Mock services
     mockDataService = {

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { DataService } from '../DataService'
 import { ServiceLocator, SERVICE_NAMES } from '../ServiceLocator'
 import type { GameData } from '../../types/index'
+import type { ServiceInstance, MockObject } from '../../types/test-utils'
 
 // Mock game data
 const mockGameData: Partial<GameData> = {
@@ -81,12 +82,12 @@ vi.mock('../../utils/logger', () => ({
 
 describe('DataService', () => {
   let dataService: DataService
-  let mockUserProgressService: any
-  let mockTechnologyService: any
+  let mockUserProgressService: MockObject<{ isItemInAnyMilestone: () => boolean }>
+  let mockTechnologyService: MockObject<{ getData: () => unknown }>
 
   beforeEach(() => {
     // Clear instance
-    (DataService as any).instance = null
+    ;(DataService as ServiceInstance<DataService>).instance = null
     ServiceLocator.clear()
 
     // Mock services
