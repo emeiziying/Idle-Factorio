@@ -82,10 +82,3 @@
 - 设置 ESLint 和 TypeScript 配置
 - 初始化 Git 仓库
 
----
-
-## 链接
-
-- [项目路线图](./ROADMAP.md) - 查看未来版本规划
-- [README](./README.md) - 项目概述
-- [贡献指南](./README.md#-贡献指南) - 如何参与开发
