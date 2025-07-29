@@ -2,10 +2,10 @@
 
 import { DataService } from './DataService';
 import { RecipeService } from './RecipeService';
+import { GameConfig } from './GameConfig';
 import type { FacilityInstance, FuelBuffer } from '../types/facilities';
 import { FacilityStatus } from '../types/facilities';
 import type { InventoryItem } from '../types/index';
-import { FUEL_PRIORITY, getFuelCategory } from '../data/fuelConfigs';
 import { warn as logWarn, error as logError } from '../utils/logger';
 import { msToSeconds } from '../utils/common';
 
@@ -44,10 +44,12 @@ export interface FuelStatus {
 export class FuelService {
   private static instance: FuelService;
   private dataService: DataService;
+  private gameConfig: GameConfig;
   private customFuelPriority: string[] | null = null;
   
   private constructor() {
     this.dataService = DataService.getInstance();
+    this.gameConfig = GameConfig.getInstance();
     // 从本地存储加载自定义优先级
     const stored = localStorage.getItem('fuelPriority');
     if (stored) {
@@ -78,7 +80,7 @@ export class FuelService {
    * 获取当前燃料优先级
    */
   getFuelPriority(): string[] {
-    return this.customFuelPriority || FUEL_PRIORITY;
+    return this.customFuelPriority || this.gameConfig.getFuelPriority();
   }
   
   /**
@@ -109,11 +111,12 @@ export class FuelService {
     // 从data.json读取功率消耗（kW转换为MW）
     const powerConsumption = (machineData.usage || 0) / 1000; // kW to MW
 
+    const constants = this.gameConfig.getConstants();
     return {
       slots: [],
-      maxSlots: 1, // 默认1个燃料槽位
+      maxSlots: constants.fuel.defaultFuelSlots, // 使用配置的默认槽位数
       totalEnergy: 0,
-      maxEnergy: this.calculateMaxEnergyFromPower(powerConsumption),
+      maxEnergy: this.gameConfig.calculateMaxFuelStorage(powerConsumption),
       consumptionRate: powerConsumption,
       lastUpdate: Date.now()
     };
@@ -346,7 +349,7 @@ export class FuelService {
       burnProgress,
       estimatedRunTime: runTime,
       isEmpty: buffer.slots.length === 0 || totalEnergy === 0,
-      isFull: totalEnergy >= buffer.maxEnergy * 0.95 // 95%以上认为已满
+      isFull: totalEnergy >= buffer.maxEnergy * (this.gameConfig.getConstants().fuel.fuelBufferFullThreshold / 100) // 使用配置的已满阈值
     };
   }
   
@@ -364,13 +367,6 @@ export class FuelService {
   
 
 
-  /**
-   * 从功率计算最大能量存储
-   */
-  private calculateMaxEnergyFromPower(powerConsumption: number): number {
-    // 假设最大能量 = 功率 * 1000秒（约16.7分钟）
-    return powerConsumption * 1000;
-  }
   
   /**
    * 检查燃料缓存区是否已满
@@ -381,39 +377,74 @@ export class FuelService {
     }
     
     const buffer = facility.fuelBuffer;
+    const constants = this.gameConfig.getConstants();
     const status = this.getFuelStatus(buffer);
-    return status.fillPercentage >= 95; // 95%以上认为已满
+    return status.fillPercentage >= constants.fuel.fuelBufferFullThreshold; // 使用配置的已满阈值
   }
   
-  /**
-   * 设施优先级配置
-   * 数值越小优先级越高
-   * 只包含burner类型的设施
-   */
-  private static readonly FACILITY_PRIORITY: Record<string, number> = {
-    // 生产类设施 - 高优先级
-    'burner-mining-drill': 1,    // 热力采掘机 - 生产煤炭，最高优先级
-    
-    // 冶炼类设施 - 中优先级
-    'stone-furnace': 10,         // 石炉 - 冶炼基础材料
-    'steel-furnace': 11,         // 钢炉 - 冶炼高级材料
-    
-    // 发电类设施 - 低优先级
-    'boiler': 20,                // 锅炉 - 发电设备，需要燃料
-    
-    // 其他burner设施 - 最低优先级
-    'burner-inserter': 30,       // 热能机械臂 - 物流设备
-    'locomotive': 31,            // 机车 - 运输设备
-    'heating-tower': 32,         // 加热塔 - 高级设备
-    'agricultural-tower': 33,    // 农业塔 - 农业设备
-    'captive-biter-spawner': 34  // 俘虏虫巢 - 生物设备
-  };
+  // 设施优先级缓存 - 动态从data.json计算
+  private facilityPriorityCache = new Map<string, number>();
 
   /**
-   * 获取设施优先级
+   * 获取设施优先级 - 基于data.json中的设施属性动态计算
    */
   private getFacilityPriority(facilityId: string): number {
-    return FuelService.FACILITY_PRIORITY[facilityId] || 100; // 未知设施优先级最低
+    // 检查缓存
+    if (this.facilityPriorityCache.has(facilityId)) {
+      return this.facilityPriorityCache.get(facilityId)!;
+    }
+
+    const itemData = this.dataService.getItem(facilityId);
+    if (!itemData || !itemData.machine || itemData.machine.type !== 'burner') {
+      // 非burner设施优先级最低
+      this.facilityPriorityCache.set(facilityId, 100);
+      return 100;
+    }
+
+    const machine = itemData.machine;
+    let priority = 50; // 默认中等优先级
+
+    // 根据entityType确定基础优先级
+    switch (machine.entityType) {
+      case 'mining-drill':
+        // 采矿机 - 生产原材料，最高优先级
+        priority = 1;
+        break;
+      case 'furnace':
+        // 熔炉 - 冶炼基础材料，高优先级
+        priority = 10;
+        break;
+      case 'boiler':
+        // 锅炉 - 发电设备，中等优先级
+        priority = 20;
+        break;
+      case 'inserter':
+        // 机械臂 - 物流设备，低优先级
+        priority = 30;
+        break;
+      default:
+        // 其他设施 - 根据category调整
+        if (itemData.category === 'production') {
+          priority = 15; // 生产类设施中等偏高
+        } else if (itemData.category === 'logistics') {
+          priority = 35; // 物流类设施较低
+        } else {
+          priority = 40; // 其他类别较低
+        }
+    }
+
+    // 根据设施速度微调优先级（速度越快优先级越高）
+    if (machine.speed) {
+      const speedAdjustment = Math.max(0, (1 - machine.speed) * 5);
+      priority += speedAdjustment;
+    }
+
+    // 确保优先级在合理范围内
+    priority = Math.max(1, Math.min(priority, 100));
+
+    // 缓存结果
+    this.facilityPriorityCache.set(facilityId, priority);
+    return priority;
   }
   
   /**
@@ -581,7 +612,7 @@ export class FuelService {
     }
 
     // 获取燃料的类别
-    const fuelCategory = getFuelCategory(fuelItemId);
+    const fuelCategory = this.gameConfig.getFuelCategory(fuelItemId);
     if (!fuelCategory) {
       return false;
     }

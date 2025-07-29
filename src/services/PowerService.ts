@@ -2,6 +2,8 @@
 
 import type { FacilityInstance } from '../types/facilities';
 import { FacilityStatus } from '../types/facilities';
+import { DataService } from './DataService';
+import { GameConfig } from './GameConfig';
 
 
 export interface PowerBalance {
@@ -29,6 +31,8 @@ export interface FacilityPowerInfo {
 
 export class PowerService {
   private static instance: PowerService;
+  private dataService: DataService;
+  private gameConfig: GameConfig;
 
   
   // 发电设施ID
@@ -39,30 +43,14 @@ export class PowerService {
     'accumulator'
   ];
   
-  // 发电设施的基础功率 (kW)
-  private readonly GENERATOR_POWER: Record<string, number> = {
-    'steam-engine': 900,        // 900 kW
-    'steam-turbine': 5800,      // 5.8 MW
-    'solar-panel': 60,          // 60 kW (白天)
-    'accumulator': 300          // 300 kW (放电)
-  };
-  
-  // 耗电设施的基础功率 (kW)
-  private readonly CONSUMER_POWER: Record<string, number> = {
-    'electric-mining-drill': 90,      // 90 kW
-    'electric-furnace': 180,          // 180 kW
-    'assembling-machine-1': 75,       // 75 kW
-    'assembling-machine-2': 150,      // 150 kW
-    'assembling-machine-3': 375,      // 375 kW
-    'chemical-plant': 210,            // 210 kW
-    'oil-refinery': 420,              // 420 kW
-    'lab': 60,                        // 60 kW
-    'centrifuge': 350,                // 350 kW
-    'beacon': 480                     // 480 kW
-  };
+  // 发电设施类型标识
+  private readonly GENERATOR_TYPES = [
+    'steam-engine', 'steam-turbine', 'solar-panel', 'accumulator'
+  ];
   
   private constructor() {
-    // this.dataService = DataService.getInstance();
+    this.dataService = DataService.getInstance();
+    this.gameConfig = GameConfig.getInstance();
   }
   
   static getInstance(): PowerService {
@@ -93,11 +81,12 @@ export class PowerService {
     // 实际耗电量 = min(耗电需求, 发电能力)
     const actualConsumption = Math.min(consumption.demand, generation.capacity);
     
-    // 判断状态
+    // 判断状态（使用配置的阈值）
+    const constants = this.gameConfig.getConstants();
     let status: 'surplus' | 'balanced' | 'deficit';
-    if (generation.capacity > consumption.demand * 1.1) {
+    if (generation.capacity > consumption.demand * (constants.power.surplusThreshold / 100)) {
       status = 'surplus';
-    } else if (generation.capacity >= consumption.demand * 0.95) {
+    } else if (generation.capacity >= consumption.demand * (constants.power.balancedThreshold / 100)) {
       status = 'balanced';
     } else {
       status = 'deficit';
@@ -162,7 +151,7 @@ export class PowerService {
       return 0;
     }
     
-    const basePower = this.CONSUMER_POWER[facility.facilityId] || 0;
+    const basePower = this.getFacilityBasePowerConsumption(facility.facilityId);
     return basePower * facility.count;
   }
   
@@ -174,12 +163,13 @@ export class PowerService {
       return 0;
     }
     
-    const basePower = this.GENERATOR_POWER[facility.facilityId] || 0;
+    const basePower = this.getFacilityBasePowerGeneration(facility.facilityId);
     
     // 特殊处理太阳能板（考虑昼夜）
     if (facility.facilityId === 'solar-panel') {
-      // 简化：假设白天70%时间，平均发电量
-      return basePower * facility.count * 0.7;
+      const constants = this.gameConfig.getConstants();
+      // 使用配置的太阳能板平均发电率
+      return basePower * facility.count * constants.power.solarPanelDayRatio;
     }
     
     // 蒸汽机和汽轮机需要有蒸汽供应
@@ -291,7 +281,8 @@ export class PowerService {
     
     // 建议增加发电
     const deficit = powerBalance.consumptionDemand - powerBalance.generationCapacity;
-    const steamEnginesNeeded = Math.ceil(deficit / this.GENERATOR_POWER['steam-engine']);
+    const steamEnginePower = this.getFacilityBasePowerGeneration('steam-engine');
+    const steamEnginesNeeded = Math.ceil(deficit / steamEnginePower);
     recommendations.push(`需要增加 ${steamEnginesNeeded} 台蒸汽机或等效发电设施`);
     
     // 建议关闭低优先级设施
@@ -305,6 +296,38 @@ export class PowerService {
     }
     
     return recommendations;
+  }
+
+  /**
+   * 从data.json获取设施的功率消耗
+   */
+  private getFacilityBasePowerConsumption(facilityId: string): number {
+    const item = this.dataService.getItem(facilityId);
+    if (item?.machine?.usage) {
+      return item.machine.usage; // kW
+    }
+    return 0; // 默认不消耗电力
+  }
+
+  /**
+   * 从data.json获取设施的发电能力
+   */
+  private getFacilityBasePowerGeneration(facilityId: string): number {
+    const item = this.dataService.getItem(facilityId);
+    if (item?.machine?.usage && this.GENERATOR_TYPES.includes(facilityId)) {
+      // 对于发电设施，usage字段表示发电能力
+      return item.machine.usage; // kW
+    }
+    
+    // 硬编码的发电设施功率（data.json中可能没有这些数据）
+    const generatorPower: Record<string, number> = {
+      'steam-engine': 900,        // 900 kW
+      'steam-turbine': 5800,      // 5.8 MW
+      'solar-panel': 60,          // 60 kW (白天)
+      'accumulator': 300          // 300 kW (放电)
+    };
+    
+    return generatorPower[facilityId] || 0;
   }
 }
 

@@ -1,8 +1,7 @@
 // 游戏状态管理 - Zustand Store
 
 import { create } from 'zustand';
-import { persist, createJSONStorage, subscribeWithSelector } from 'zustand/middleware';
-import { createDebouncedStorage } from '../utils/debouncedStorage';
+import { subscribeWithSelector } from 'zustand/middleware';
 import type { InventoryItem, CraftingTask, CraftingChain, Recipe, DeployedContainer, OperationResult } from '../types/index';
 import type { 
   Technology, 
@@ -18,7 +17,7 @@ import { getStorageConfig } from '../data/storageConfigs';
 import { DataService } from '../services/DataService';
 import { TechnologyService } from '../services/TechnologyService';
 import { FuelService } from '../services/FuelService';
-import { saveOptimizationService, type OptimizedSaveData } from '../services/SaveOptimizationService';
+import { gameStorageService } from '../services/GameStorageService';
 
 // 页面卸载时立即保存
 if (typeof window !== 'undefined') {
@@ -82,6 +81,7 @@ interface GameState {
   _repairFacilityState: () => void; // 新增：修复设施状态
   saveKey: string; // 存档触发键，只有这个值变化时才触发存档
   clearGameData: () => Promise<void>;
+  loadGameData: () => Promise<void>; // 新增：加载存档方法
   saveGame: () => void;
   forceSaveGame: () => Promise<void>; // 新增：强制存档方法
   batchUpdateInventory: (updates: Array<{ itemId: string; amount: number }>) => void; // 新增：批量更新库存
@@ -186,9 +186,7 @@ const ensureUnlockedTechsSet = (unlockedTechs: unknown): Set<string> => {
 };
 
 const useGameStore = create<GameState>()(
-  subscribeWithSelector(
-    persist(
-      (set, get) => ({
+  subscribeWithSelector((set, get) => ({
       // 初始状态
       inventory: (() => {
         // 确保初始状态是有效的Map
@@ -248,8 +246,7 @@ const useGameStore = create<GameState>()(
           };
         });
         
-        // 触发存档
-        get().saveGame();
+        // 存档由10秒定时器自动处理
       },
 
       // 批量更新库存
@@ -453,22 +450,33 @@ const useGameStore = create<GameState>()(
           if (task.chainId) {
             const chain = state.craftingChains.find(c => c.id === task.chainId);
             if (chain) {
-              // 如果是链式任务的第一个被取消的任务，归还总原材料
-              const remainingTasks = state.craftingQueue.filter(t => t.chainId === task.chainId && t.id !== taskId);
+              // 检查这是任务完成(completed)还是手动取消
+              const isTaskCompleted = task.status === 'completed';
               
-              if (remainingTasks.length === 0 && chain.rawMaterialsConsumed) {
-                // 这是链中最后一个任务被取消，归还所有原材料
-                for (const [materialId, amount] of chain.rawMaterialsConsumed) {
-                  get().updateInventory(materialId, amount);
+              if (isTaskCompleted) {
+                // 任务完成，只移除这个任务，保留链和其他任务
+                console.log(`[链式任务] 移除已完成任务: ${taskId}`);
+                set((state) => ({
+                  craftingQueue: state.craftingQueue.filter(t => t.id !== taskId)
+                }));
+                return;
+              } else {
+                // 任务被手动取消，需要取消整个链
+                if (chain.rawMaterialsConsumed) {
+                  // 归还所有预扣的原材料
+                  for (const [materialId, amount] of chain.rawMaterialsConsumed) {
+                    get().updateInventory(materialId, amount);
+                  }
                 }
+                
+                console.log(`[链式任务] 取消整个链: ${chain.name}`);
+                // 移除整个链
+                set((state) => ({
+                  craftingQueue: state.craftingQueue.filter(task => task.chainId !== chain.id),
+                  craftingChains: state.craftingChains.filter(c => c.id !== chain.id)
+                }));
+                return;
               }
-              
-              // 移除整个链
-              set((state) => ({
-                craftingQueue: state.craftingQueue.filter(task => task.chainId !== chain.id),
-                craftingChains: state.craftingChains.filter(c => c.id !== chain.id)
-              }));
-              return;
             }
           }
           
@@ -531,10 +539,14 @@ const useGameStore = create<GameState>()(
             
             // 检查是否是链的最后一个任务
             const isLastTask = chain.tasks[chain.tasks.length - 1].id === taskId;
+            console.log(`[链式任务] 任务完成: ${task.itemId} x${task.quantity}, chainId: ${task.chainId}, taskId: ${taskId}`);
+            console.log(`[链式任务] 链中最后任务ID: ${chain.tasks[chain.tasks.length - 1].id}, 当前任务ID: ${taskId}, 是否最后任务: ${isLastTask}`);
+            console.log(`[链式任务] 是否中间产物: ${task.isIntermediateProduct}`);
+            
             if (isLastTask) {
               // 最后一个任务完成，将最终产物添加到库存
               get().updateInventory(task.itemId, task.quantity);
-              console.log(`链式任务完成: ${chain.name}, 最终产物: ${task.itemId} x${task.quantity}`);
+              console.log(`[链式任务] 链式任务完成: ${chain.name}, 最终产物: ${task.itemId} x${task.quantity} 已添加到库存`);
               
               // 标记链为完成
               set((state) => ({
@@ -551,8 +563,17 @@ const useGameStore = create<GameState>()(
           get().updateInventory(task.itemId, task.quantity);
         }
         
+        // 先标记任务为已完成，然后移除
+        set((state) => ({
+          craftingQueue: state.craftingQueue.map(t => 
+            t.id === taskId ? { ...t, status: 'completed' as const } : t
+          )
+        }));
+        
         // 移除任务
         get().removeCraftingTask(taskId);
+        
+        // 存档由10秒定时器自动处理
       },
 
       // 设施管理
@@ -977,9 +998,6 @@ const useGameStore = create<GameState>()(
           return { craftedItemCounts: newCraftedItemCounts };
         });
         
-        // 触发存档
-        get().saveGame();
-        
         // 检查研究触发器
         get().checkResearchTriggers();
       },
@@ -993,9 +1011,6 @@ const useGameStore = create<GameState>()(
           return { builtEntityCounts: newBuiltEntityCounts };
         });
         
-        // 触发存档
-        get().saveGame();
-        
         // 检查研究触发器
         get().checkResearchTriggers();
       },
@@ -1008,9 +1023,6 @@ const useGameStore = create<GameState>()(
           newMinedEntityCounts.set(entityId, currentCount + count);
           return { minedEntityCounts: newMinedEntityCounts };
         });
-        
-        // 触发存档
-        get().saveGame();
         
         // 检查研究触发器
         get().checkResearchTriggers();
@@ -1171,9 +1183,8 @@ const useGameStore = create<GameState>()(
       },
 
       clearGameData: async () => {
-        // 清除异步存储
-        const storage = createDebouncedStorage();
-        await storage.removeItem('factorio-game-storage');
+        // 清除游戏存档
+        await gameStorageService.clearGameData();
         
         // 重置状态
         set(() => ({
@@ -1205,169 +1216,51 @@ const useGameStore = create<GameState>()(
       },
 
       saveGame: () => {
-        // 通过更新saveKey来触发persist中间件保存
-        set(() => ({
-          lastSaveTime: Date.now(),
-          saveKey: `save_${Date.now()}`
-        }));
+        // 使用GameStorageService保存游戏数据
+        const state = get();
+        gameStorageService.saveGame(state).catch(error => {
+          console.error('[SaveGame] 保存失败:', error);
+        });
+      },
+
+      // 加载存档方法
+      loadGameData: async () => {
+        try {
+          const loadedState = await gameStorageService.loadGame();
+          if (loadedState) {
+            set(() => loadedState);
+            console.log('[Load] 存档加载完成');
+          }
+        } catch (error) {
+          console.error('[Load] 存档加载失败:', error);
+        }
       },
 
       // 新增：强制存档方法，绕过防抖
       forceSaveGame: async () => {
         const state = get();
-        const storage = createDebouncedStorage();
-        
-        // 使用优化后的存档格式
-        const optimized = saveOptimizationService.optimize(state);
-        const serializedData = {
-          ...optimized,
-          lastSaveTime: Date.now(),
-          saveKey: `force_${Date.now()}`
-        };
-
         try {
-          // 扩展接口以支持forceSetItem方法
-          interface ExtendedStorage {
-            forceSetItem?: (key: string, value: string) => Promise<void>;
-            setItem: (key: string, value: string) => Promise<void>;
-          }
-          const debouncedStorage = storage as ExtendedStorage;
-          if (debouncedStorage.forceSetItem) {
-            await debouncedStorage.forceSetItem('factorio-game-storage', JSON.stringify(serializedData));
-          } else {
-            // 降级到普通存档
-            await storage.setItem('factorio-game-storage', JSON.stringify(serializedData));
-          }
+          await gameStorageService.forceSaveGame(state);
           console.log('[ForceSave] 强制存档完成');
         } catch (error) {
           console.error('[ForceSave] 强制存档失败:', error);
           throw error;
         }
       }
-    }),
-    {
-      name: 'factorio-game-storage',
-      storage: createJSONStorage(() => createDebouncedStorage(2000)), // 2秒防抖
-      partialize: (state) => {
-        // 使用优化后的存档格式
-        const optimized = saveOptimizationService.optimize(state);
-        
-        // 添加saveKey用于触发存档
-        const serializedData = {
-          ...optimized,
-          saveKey: state.saveKey,
-          lastSaveTime: state.lastSaveTime
-        };
-        
-        // 显示优化效果
-        const originalData = {
-          inventory: Array.from(state.inventory.entries()),
-          craftingQueue: state.craftingQueue,
-          craftingChains: state.craftingChains,
-          facilities: state.facilities,
-          deployedContainers: state.deployedContainers,
-          totalItemsProduced: state.totalItemsProduced,
-          favoriteRecipes: Array.from(state.favoriteRecipes),
-          recentRecipes: state.recentRecipes,
-          researchState: state.researchState,
-          researchQueue: state.researchQueue,
-          unlockedTechs: Array.from(state.unlockedTechs),
-          autoResearch: state.autoResearch,
-          craftedItemCounts: Array.from(state.craftedItemCounts.entries()),
-          builtEntityCounts: Array.from(state.builtEntityCounts.entries()),
-          minedEntityCounts: Array.from(state.minedEntityCounts.entries()),
-          lastSaveTime: state.lastSaveTime,
-          saveKey: state.saveKey
-        };
-        
-        const comparison = saveOptimizationService.compareSizes(originalData, optimized);
-        console.log(`[Persist] 存档优化: ${comparison.originalSize}B -> ${comparison.optimizedSize}B (减少${comparison.percentage}%)`, serializedData.saveKey);
-        
-        return serializedData;
-      },
-      onRehydrateStorage: () => (state) => {
-        if (state) {
-          // 检查是否是优化后的存档格式（通过inventory格式判断）
-          // 优化后的inventory是普通对象，传统格式是Map的序列化数组
-          const isOptimizedFormat = state.inventory && 
-                                   typeof state.inventory === 'object' && 
-                                   !Array.isArray(state.inventory) &&
-                                   !('entries' in state.inventory);
-          
-          if (isOptimizedFormat) {
-            console.log('[Storage] 检测到优化存档格式，正在恢复...');
-            // 使用SaveOptimizationService恢复数据
-            const restored = saveOptimizationService.restore(state as unknown as OptimizedSaveData);
-            // 合并恢复后的数据到state
-            Object.assign(state, restored);
-            console.log('[Storage] 优化存档恢复完成');
-          } else {
-            // 处理传统格式的 Map 和 Set 对象序列化问题
-            state.inventory = ensureInventoryMap(state.inventory);
-            state.craftedItemCounts = ensureMap<string, number>(state.craftedItemCounts, 'craftedItemCounts');
-            state.builtEntityCounts = ensureMap<string, number>(state.builtEntityCounts, 'builtEntityCounts');
-            state.minedEntityCounts = ensureMap<string, number>(state.minedEntityCounts, 'minedEntityCounts');
-            state.favoriteRecipes = new Set(state.favoriteRecipes);
-            state.unlockedTechs = ensureUnlockedTechsSet(state.unlockedTechs);
-          }
-          
-          // 确保数组字段存在
-          if (!Array.isArray(state.craftingQueue)) {
-            state.craftingQueue = [];
-          }
-          if (!Array.isArray(state.craftingChains)) {
-            state.craftingChains = [];
-          }
-          if (!Array.isArray(state.facilities)) {
-            state.facilities = [];
-          }
-          if (!Array.isArray(state.deployedContainers)) {
-            state.deployedContainers = [];
-          }
-          if (!Array.isArray(state.recentRecipes)) {
-            state.recentRecipes = [];
-          }
-          if (!Array.isArray(state.researchQueue)) {
-            state.researchQueue = [];
-          }
-          if (!Array.isArray(state.techCategories)) {
-            state.techCategories = [];
-          }
-          
-          // 确保数值字段有默认值
-          if (typeof state.totalItemsProduced !== 'number') {
-            state.totalItemsProduced = 0;
-          }
-          if (typeof state.maxRecentRecipes !== 'number') {
-            state.maxRecentRecipes = 10;
-          }
-          if (typeof state.lastSaveTime !== 'number') {
-            state.lastSaveTime = Date.now();
-          }
-          if (typeof state.autoResearch !== 'boolean') {
-            state.autoResearch = true;
-          }
-          
-          // 确保字符串字段有默认值
-          if (typeof state.saveKey !== 'string') {
-            state.saveKey = 'loaded';
-          }
-          
-          // 确保对象字段有默认值
-          if (!state.researchState) {
-            state.researchState = null;
-          }
-          if (!state.technologies) {
-            state.technologies = new Map();
-          }
-          
-          console.log('[Persist] 存档数据恢复完成');
-        }
-      }
-    }
-    )
-  )
+    }))
 );
+
+// 初始化加载存档
+const initializeStore = async () => {
+  try {
+    await useGameStore.getState().loadGameData();
+  } catch (error) {
+    console.error('[Init] 存档初始化失败:', error);
+  }
+};
+
+// 立即执行初始化
+initializeStore();
 
 // 全局变量存储定时器ID，防止热更新时创建多个定时器
 let autoSaveIntervalId: number | null = null;
@@ -1400,8 +1293,7 @@ const createAutoSaveInterval = () => {
         lastAutoSaveTime = now;
       } catch (error) {
         console.error('[AutoSave] 自动存档失败:', error);
-        // 如果强制存档失败，尝试普通存档作为降级
-        state.saveGame();
+        // 强制存档失败，但会在下次定时器触发时重试
       }
     }
   }, 10000);

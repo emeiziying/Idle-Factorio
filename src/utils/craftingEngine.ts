@@ -4,6 +4,7 @@ import type { CraftingTask, Recipe } from '../types/index';
 import useGameStore from '../store/gameStore';
 import { DataService } from '../services/DataService';
 import { RecipeService } from '../services/RecipeService';
+import { GameConfig } from '../services/GameConfig';
 import { secondsToMs } from '../utils/common';
 
 // 设备效率配置 - 基于Factorio的采矿机设计
@@ -24,28 +25,18 @@ interface ResourceProperties {
 class CraftingEngine {
   private static instance: CraftingEngine;
   private intervalId: number | null = null;
-  private readonly UPDATE_INTERVAL = 100; // 100ms更新一次
+  private gameConfig: GameConfig;
   private isStarting: boolean = false; // 防止重复启动
 
-  // 设备效率配置 - 参考Factorio的采矿机
-  private readonly DEVICE_EFFICIENCIES: Record<string, DeviceEfficiency> = {
-    'manual': { speed: 0.5, coverage: 1, power: 0, pollution: 0 },           // 手动合成
-    'burner': { speed: 0.25, coverage: 2, power: 150, pollution: 12 },        // 燃烧设备
-    'electric': { speed: 0.5, coverage: 5, power: 90, pollution: 10 },        // 电力设备
-    'advanced': { speed: 2.5, coverage: 13, power: 300, pollution: 40 }       // 高级设备
-  };
+  // 设备效率缓存 - 从data.json的机器数据动态获取
+  private deviceEfficiencyCache = new Map<string, DeviceEfficiency>();
 
-  // 资源特性配置 - 参考Factorio的资源硬度
-  private readonly RESOURCE_PROPERTIES: Record<string, ResourceProperties> = {
-    'iron-ore': { miningTime: 1, category: 'basic', rarity: 1 },
-    'copper-ore': { miningTime: 1, category: 'basic', rarity: 1 },
-    'coal': { miningTime: 1, category: 'basic', rarity: 1 },
-    'stone': { miningTime: 1, category: 'basic', rarity: 1 },
-    'uranium-ore': { miningTime: 2, category: 'advanced', rarity: 3 },
-    'tungsten-ore': { miningTime: 5, category: 'advanced', rarity: 5 }
-  };
+  // 资源特性缓存 - 从data.json的mining配方动态获取
+  private resourcePropertiesCache = new Map<string, ResourceProperties>();
 
-  private constructor() {}
+  private constructor() {
+    this.gameConfig = GameConfig.getInstance();
+  }
 
   static getInstance(): CraftingEngine {
     if (!CraftingEngine.instance) {
@@ -64,9 +55,10 @@ class CraftingEngine {
     this.isStarting = true;
 
     try {
+      const constants = this.gameConfig.getConstants();
       this.intervalId = window.setInterval(() => {
         this.updateCraftingQueue();
-      }, this.UPDATE_INTERVAL);
+      }, constants.crafting.updateInterval);
 
       // Crafting engine started
     } finally {
@@ -83,13 +75,109 @@ class CraftingEngine {
     }
   }
 
-  // 计算设备效率 - 基于Factorio的采矿速度公式
-  private calculateDeviceEfficiency(recipe: Recipe, deviceType: string = 'electric'): number {
-    const device = this.DEVICE_EFFICIENCIES[deviceType] || this.DEVICE_EFFICIENCIES.electric;
+  // 获取资源特性 - 从data.json的mining配方动态获取
+  private getResourceProperties(itemId: string): ResourceProperties {
+    // 检查缓存
+    if (this.resourcePropertiesCache.has(itemId)) {
+      return this.resourcePropertiesCache.get(itemId)!;
+    }
+
+    // 查找该物品的mining配方
+    const miningRecipes = RecipeService.getRecipesThatProduce(itemId)
+      .filter(recipe => recipe.flags?.includes('mining'));
     
-    // 获取主要输入资源的特性
-    const mainInput = Object.keys(recipe.in)[0];
-    const resourceProps = this.RESOURCE_PROPERTIES[mainInput] || { miningTime: 1, category: 'basic', rarity: 1 };
+    let resourceProps: ResourceProperties;
+    
+    if (miningRecipes.length > 0) {
+      const miningRecipe = miningRecipes[0];
+      
+      // 从mining配方获取真实数据
+      const miningTime = miningRecipe.time || 1;
+      const hasInputs = Object.keys(miningRecipe.in || {}).length > 0;
+      
+      // 根据mining配方特征判断资源类别和稀有度
+      let category = 'basic';
+      let rarity = 1;
+      
+      if (hasInputs) {
+        // 需要输入材料的资源（如uranium-ore需要硫酸）
+        category = 'advanced';
+        rarity = 2;
+      }
+      
+      // 根据mining时间进一步调整稀有度
+      if (miningTime >= 5) {
+        category = 'advanced';
+        rarity = 5;
+      } else if (miningTime >= 2) {
+        category = 'advanced';
+        rarity = Math.max(rarity, 3);
+      }
+      
+      resourceProps = {
+        miningTime,
+        category,
+        rarity
+      };
+    } else {
+      // 没有mining配方的物品，使用默认值
+      resourceProps = { miningTime: 1, category: 'basic', rarity: 1 };
+    }
+    
+    // 缓存结果
+    this.resourcePropertiesCache.set(itemId, resourceProps);
+    return resourceProps;
+  }
+
+  // 获取设备效率 - 从配方的生产者机器动态获取
+  private getDeviceEfficiency(recipe: Recipe, preferredMachineId?: string): DeviceEfficiency {
+    // 为手动合成提供固定效率
+    if (!recipe.producers || recipe.producers.length === 0) {
+      return { speed: 0.5, coverage: 1, power: 0, pollution: 0 }; // 手动合成
+    }
+
+    // 选择机器：优先使用指定机器，否则使用第一个生产者
+    const machineId = preferredMachineId && recipe.producers.includes(preferredMachineId) 
+      ? preferredMachineId 
+      : recipe.producers[0];
+
+    // 检查缓存
+    if (this.deviceEfficiencyCache.has(machineId)) {
+      return this.deviceEfficiencyCache.get(machineId)!;
+    }
+
+    const dataService = DataService.getInstance();
+    const machineItem = dataService.getItem(machineId);
+    
+    let deviceEfficiency: DeviceEfficiency;
+    
+    if (machineItem?.machine) {
+      const machine = machineItem.machine;
+      
+      // 从data.json获取真实机器数据
+      deviceEfficiency = {
+        speed: machine.speed || 1,
+        coverage: machine.size ? machine.size[0] * machine.size[1] : 9, // 默认3x3
+        power: machine.usage || 0,
+        pollution: machine.pollution || 0
+      };
+    } else {
+      // 回退到默认值
+      deviceEfficiency = { speed: 1, coverage: 9, power: 0, pollution: 0 };
+    }
+
+    // 缓存结果
+    this.deviceEfficiencyCache.set(machineId, deviceEfficiency);
+    return deviceEfficiency;
+  }
+
+  // 计算设备效率 - 基于Factorio的采矿速度公式
+  private calculateDeviceEfficiency(recipe: Recipe, preferredMachineId?: string): number {
+    const device = this.getDeviceEfficiency(recipe, preferredMachineId);
+    
+    // 获取主要输入资源的特性（动态从data.json获取）
+    const mainInput = Object.keys(recipe.in || {})[0];
+    const resourceProps = mainInput ? this.getResourceProperties(mainInput) : { miningTime: 1, category: 'basic', rarity: 1 };
     
     // 基于Factorio公式：采矿速度 / 采矿时间 = 生产速率
     const baseEfficiency = device.speed / resourceProps.miningTime;
@@ -97,8 +185,8 @@ class CraftingEngine {
     // 考虑资源稀有度的影响
     const rarityMultiplier = 1 / resourceProps.rarity;
     
-    // 考虑设备覆盖范围的影响
-    const coverageMultiplier = Math.min(device.coverage / 5, 2); // 最大2倍效率
+    // 考虑设备覆盖范围的影响（简化为基于面积的加成）
+    const coverageMultiplier = Math.min(device.coverage / 9, 2); // 基于3x3=9的面积，最大2倍效率
     
     return baseEfficiency * rarityMultiplier * coverageMultiplier;
   }
@@ -121,16 +209,17 @@ class CraftingEngine {
       productivityBonus += 0.05 * (outputCount - 1); // 每多一个输出 +5%
     }
     
-    return Math.min(productivityBonus, 0.5); // 最大50%加成
+    const constants = this.gameConfig.getConstants();
+    return Math.min(productivityBonus, constants.crafting.maxProductivityBonus); // 使用配置的最大加成
   }
 
   // 计算最终制作时间 - 基于Factorio的效率公式
-  private calculateCraftingTime(recipe: Recipe, quantity: number, deviceType: string = 'electric'): number {
+  private calculateCraftingTime(recipe: Recipe, quantity: number, preferredMachineId?: string): number {
     // 基础制作时间
     const baseTime = recipe.time;
     
     // 设备效率影响
-    const deviceEfficiency = this.calculateDeviceEfficiency(recipe, deviceType);
+    const deviceEfficiency = this.calculateDeviceEfficiency(recipe, preferredMachineId);
     const efficiencyTime = baseTime / deviceEfficiency;
     
     // 生产力加成影响
@@ -140,7 +229,8 @@ class CraftingEngine {
     // 数量影响
     const totalTime = productivityTime * quantity;
     
-    return Math.max(totalTime, 0.1); // 最小0.1秒
+    const constants = this.gameConfig.getConstants();
+    return Math.max(totalTime, constants.crafting.minCraftingTime); // 使用配置的最小制作时间
   }
 
   // 更新制作队列
@@ -220,9 +310,8 @@ class CraftingEngine {
       }
     }
 
-    // 基于Factorio机制计算制作时间
-    const deviceType = this.determineDeviceType(recipe);
-    const craftingTime = this.calculateCraftingTime(recipe, currentTask.quantity, deviceType) * 1000; // 转换为毫秒
+    // 基于Factorio机制计算制作时间（使用配方的第一个生产者）
+    const craftingTime = this.calculateCraftingTime(recipe, currentTask.quantity) * 1000; // 转换为毫秒
     const elapsed = now - currentTask.startTime;
     const progress = Math.min((elapsed / craftingTime) * 100, 100);
 
@@ -234,19 +323,6 @@ class CraftingEngine {
     }
   }
 
-  // 确定设备类型 - 基于配方特性
-  private determineDeviceType(recipe: Recipe): string {
-    // 根据配方类别确定设备类型
-    if (recipe.category === 'smelting') {
-      return 'electric'; // 冶炼使用电力设备
-    } else if (recipe.category === 'advanced-crafting') {
-      return 'advanced'; // 高级配方使用高级设备
-    } else if (recipe.category === 'basic-crafting') {
-      return 'burner'; // 基础配方使用燃烧设备
-    }
-    
-    return 'electric'; // 默认使用电力设备
-  }
 
   // 完成制作
   private completeCraft(task: CraftingTask, recipe: Recipe): void {

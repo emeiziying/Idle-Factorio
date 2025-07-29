@@ -41,6 +41,7 @@ export interface Item {
   fuel_value?: string;
   fuel?: {
     value: number;
+    category?: string;
   };
   type?: string;
   unlocked?: boolean;

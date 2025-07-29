@@ -191,13 +191,17 @@ export const useCrafting = () => {
     }
 
     // 创建链式任务数据结构
-    const chainTasks = chainAnalysis.tasks.map((task, index) => ({
-      ...task,
-      // 标记中间产物（除了最后一个任务）
-      isIntermediateProduct: index < chainAnalysis.tasks.length - 1,
-      // 设置任务依赖关系
-      dependsOnTasks: index > 0 ? [chainAnalysis.tasks[index - 1].id] : undefined
-    }));
+    const chainTasks = chainAnalysis.tasks.map((task, index) => {
+      const isIntermediate = index < chainAnalysis.tasks.length - 1;
+      console.log(`[链式任务创建] 任务${index}: ${task.itemId} x${task.quantity}, 中间产物: ${isIntermediate}, ID: ${task.id}`);
+      return {
+        ...task,
+        // 标记中间产物（除了最后一个任务）
+        isIntermediateProduct: isIntermediate,
+        // 设置任务依赖关系
+        dependsOnTasks: index > 0 ? [chainAnalysis.tasks[index - 1].id] : undefined
+      };
+    });
 
     const chainData = {
       name: `制作${chainAnalysis.mainTask.itemId}(含依赖)`,
