@@ -55,7 +55,7 @@ export abstract class BaseService {
       // 初始化其他声明的依赖
       this.dependencies.forEach(dep => {
         if (ServiceLocator.has(dep)) {
-          (this as any)[this.toCamelCase(dep)] = ServiceLocator.get(dep);
+          (this as Record<string, unknown>)[this.toCamelCase(dep)] = ServiceLocator.get(dep);
         }
       });
     } catch (error) {
@@ -147,7 +147,7 @@ export abstract class BaseService {
   protected injectDependencies(deps: Record<string, string>): void {
     Object.entries(deps).forEach(([property, serviceName]) => {
       if (ServiceLocator.has(serviceName)) {
-        (this as any)[property] = ServiceLocator.get(serviceName);
+        (this as Record<string, unknown>)[property] = ServiceLocator.get(serviceName);
       } else {
         console.warn(`[${this.serviceName}] Dependency ${serviceName} not found`);
       }

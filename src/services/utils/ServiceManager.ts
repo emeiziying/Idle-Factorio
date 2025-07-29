@@ -5,6 +5,7 @@
 import { ServiceLocator } from '../ServiceLocator';
 import { ServiceRegistry } from '../base/ServiceRegistry';
 import { BaseService } from '../base/BaseService';
+import type { ServiceInfo } from '../interfaces/IService';
 
 interface ServiceStatus {
   name: string;
@@ -174,14 +175,14 @@ export class ServiceManager {
     services: Array<{
       name: string;
       dependencies: string[];
-      info: any;
+      info: ServiceInfo;
     }>;
     dependencyGraph: Record<string, string[]>;
   } {
     const services = Array.from(this.serviceMap.entries()).map(([name, service]) => ({
       name,
       dependencies: this.registry.getDependencyGraph()[name] || [],
-      info: service.getServiceInfo ? service.getServiceInfo() : {}
+      info: service.getServiceInfo ? service.getServiceInfo() : { name: '', version: undefined, dependencies: [], initialized: false, storageKeys: [], description: undefined }
     }));
     
     return {

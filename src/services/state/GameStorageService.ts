@@ -5,7 +5,7 @@
 import { BaseService } from '../base/BaseService';
 import type { DataService } from '../core/DataService';
 import { ServiceLocator } from '../ServiceLocator';
-import type { FacilityInstance, FacilityStatus } from '../../types/facilities';
+import type { FacilityInstance, FacilityStatus, FuelBuffer } from '../../types/facilities';
 import type { CraftingTask, CraftingChain, DeployedContainer, InventoryItem } from '../../types/index';
 import type { TechResearchState, ResearchQueueItem } from '../../types/technology';
 import LZString from 'lz-string';
@@ -478,7 +478,7 @@ export class GameStorageService extends BaseService {
   /**
    * 还原燃料缓存数据
    */
-  private restoreFuelBuffer(facility: OptimizedFacility): any {
+  private restoreFuelBuffer(facility: OptimizedFacility): FuelBuffer | undefined {
     if (!facility.fuel || Object.keys(facility.fuel).length === 0) {
       return undefined;
     }
@@ -500,11 +500,11 @@ export class GameStorageService extends BaseService {
   /**
    * 验证存档数据格式
    */
-  private validateSaveData(data: any): data is OptimizedSaveData {
-    return data &&
+  private validateSaveData(data: unknown): data is OptimizedSaveData {
+    return !!(data &&
       typeof data === 'object' &&
       ('inventory' in data) &&
-      ('time' in data);
+      ('time' in data));
   }
 
   // ========== 服务信息 ==========

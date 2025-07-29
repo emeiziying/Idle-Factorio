@@ -4,6 +4,7 @@
  */
 import { ServiceFactory } from '../base/ServiceFactory';
 import { ServiceManager } from './ServiceManager';
+import { BaseService } from '../base/BaseService';
 import { DataService } from '../core/DataService';
 import { RecipeService } from '../core/RecipeService';
 import { UserProgressService } from '../state/UserProgressService';
@@ -169,7 +170,7 @@ export class ServiceInitializer {
     SERVICE_CONFIG.forEach(config => {
       this.serviceManager.registerService(
         config.name,
-        config.class as any,
+        config.class as typeof BaseService,
         config.dependencies,
         config.priority
       );
@@ -179,8 +180,19 @@ export class ServiceInitializer {
   /**
    * 获取服务状态
    */
-  async getServiceStatus(): Promise<any> {
-    return this.serviceManager.getAllServiceStatus();
+  async getServiceStatus(): Promise<Record<string, { initialized: boolean; healthy: boolean; message?: string }>> {
+    const statuses = await this.serviceManager.getAllServiceStatus();
+    const result: Record<string, { initialized: boolean; healthy: boolean; message?: string }> = {};
+    
+    statuses.forEach(status => {
+      result[status.name] = {
+        initialized: status.initialized,
+        healthy: status.healthy,
+        message: status.message
+      };
+    });
+    
+    return result;
   }
 
   /**
@@ -219,12 +231,13 @@ export class ServiceInitializer {
   /**
    * 导出服务配置
    */
-  exportConfiguration(): any {
+  exportConfiguration(): { serviceConfig: typeof SERVICE_CONFIG; initialized: boolean; services: unknown[]; initializationOrder: string[] } {
     const managerConfig = this.serviceManager.exportConfiguration();
     return {
       serviceConfig: SERVICE_CONFIG,
       initialized: this.initialized,
-      ...managerConfig
+      services: managerConfig.services as unknown[],
+      initializationOrder: []
     };
   }
 }

@@ -1151,7 +1151,7 @@ const useGameStore = create<GameState>()(
         facilities.forEach(facility => {
           if (facility.fuelBuffer) {
             const isProducing = facility.status === 'running' && facility.production?.progress !== undefined;
-            const result = fuelService.updateFuelConsumption(facility, deltaTime, isProducing, get().getInventoryItem);
+            const result = fuelService.updateFuelConsumption(facility, deltaTime, isProducing);
             
             if (!result.success && facility.status === 'running') {
               // 燃料耗尽，更新状态

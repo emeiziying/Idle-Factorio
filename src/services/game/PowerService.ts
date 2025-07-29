@@ -388,7 +388,7 @@ export class PowerService extends BaseService {
   /**
    * 获取设施的发电量（向后兼容方法）
    */
-  getFacilityPowerGeneration(facility: FacilityInstance, _steamSupply?: number): number {
+  getFacilityPowerGeneration(facility: FacilityInstance): number {
     return this.safe(() => {
       if (facility.status !== FacilityStatus.RUNNING) {
         return 0;

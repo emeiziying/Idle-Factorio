@@ -180,7 +180,7 @@ export class RefactoredFuelService extends BaseService {
   /**
    * 计算燃料消耗
    */
-  calculateFuelConsumption(facilityId: string, recipe?: any): number {
+  calculateFuelConsumption(facilityId: string, recipe?: { energy_required?: number }): number {
     return this.safe(() => {
       const facility = this.dataService?.getItem(facilityId);
       if (!facility?.energy_source?.type) return 0;
@@ -265,8 +265,7 @@ export class RefactoredFuelService extends BaseService {
   updateFuelConsumption(
     facility: FacilityInstance, 
     _deltaTime: number,
-    isProducing: boolean = true,
-    _getInventoryItem?: (itemId: string) => { currentAmount: number }
+    isProducing: boolean = true
   ): FuelUpdateResult {
     return this.safe(() => {
       if (!facility.fuelBuffer) {

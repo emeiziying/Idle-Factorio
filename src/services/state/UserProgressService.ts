@@ -13,7 +13,7 @@ interface UserProgress {
   unlockedTechs: string[];
   unlockedRecipes: string[];
   researchedTechnologies: string[];
-  savedBuildings: any[];
+  savedBuildings: unknown[];
   lastUpdated: number;
 }
 
@@ -156,6 +156,7 @@ export class UserProgressService {
   /**
    * 解锁科技相关的配方
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private unlockTechRecipes(_techId: string): void {
     // TODO: 实现科技解锁配方的逻辑
     // 这里需要从科技数据中获取相关配方
@@ -169,7 +170,7 @@ export class UserProgressService {
   getProgress(): {
     unlockedRecipes: string[];
     researchedTechnologies: string[];
-    savedBuildings: any[];
+    savedBuildings: unknown[];
   } {
     return {
       unlockedRecipes: this.getUnlockedRecipes(),

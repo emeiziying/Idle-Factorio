@@ -16,8 +16,8 @@ interface ServiceMetadata {
   autoRegister: boolean;
 }
 
-interface ServiceConstructor<T = any> {
-  new (...args: any[]): T;
+interface ServiceConstructor<T = unknown> {
+  new (...args: unknown[]): T;
 }
 
 interface ServiceOptions {
@@ -45,7 +45,7 @@ export function Service(options: ServiceOptions = {}) {
     
     // 如果需要自动注册
     if (metadata.autoRegister) {
-      ServiceFactory.register(constructor.name, constructor as any);
+              ServiceFactory.register(constructor.name, constructor as ServiceConstructor);
     }
     
     return constructor;
@@ -57,7 +57,7 @@ export function Service(options: ServiceOptions = {}) {
  * 用于自动注入服务依赖
  */
 export function Inject(serviceName: string) {
-  return function (target: any, propertyKey: string | symbol) {
+  return function (target: object, propertyKey: string | symbol) {
     // 创建 getter 来延迟获取服务
     const descriptor = {
       get() {
@@ -75,7 +75,7 @@ export function Inject(serviceName: string) {
  * 服务工厂类
  */
 export class ServiceFactory {
-  private static instances = new Map<string, any>();
+  private static instances = new Map<string, unknown>();
   private static constructors = new Map<string, ServiceConstructor>();
   private static initializers = new Map<string, () => Promise<void>>();
 
@@ -101,7 +101,7 @@ export class ServiceFactory {
     
     // 如果是单例模式，检查是否已存在
     if (metadata?.singleton && this.instances.has(name)) {
-      return this.instances.get(name);
+      return this.instances.get(name) as T;
     }
     
     // 获取构造函数
@@ -125,7 +125,7 @@ export class ServiceFactory {
   /**
    * 创建服务实例
    */
-  private static createInstance(constructor: ServiceConstructor, metadata?: ServiceMetadata): any {
+  private static createInstance(constructor: ServiceConstructor, metadata?: ServiceMetadata): unknown {
     // 创建基础实例
     const instance = new constructor();
     
@@ -143,34 +143,35 @@ export class ServiceFactory {
   /**
    * 注入依赖
    */
-  private static injectDependencies(instance: any, dependencies: string[]): void {
+  private static injectDependencies(instance: unknown, dependencies: string[]): void {
     dependencies.forEach(dep => {
       const depInstance = this.create(dep);
       const propertyName = this.toCamelCase(dep);
-      instance[propertyName] = depInstance;
+      (instance as Record<string, unknown>)[propertyName] = depInstance;
     });
   }
 
   /**
    * 注入通用服务
    */
-  private static injectCommonServices(instance: any): void {
+  private static injectCommonServices(instance: unknown): void {
     // 注入存储管理器
-    if (!instance.storageManager) {
-      instance.storageManager = StorageManager.getInstance();
+    const serviceInstance = instance as Record<string, unknown>;
+    if (!serviceInstance.storageManager) {
+      serviceInstance.storageManager = StorageManager.getInstance();
     }
     
     // 注入日志
-    if (!instance.logger) {
-      instance.logger = console;
+    if (!serviceInstance.logger) {
+      serviceInstance.logger = console;
     }
   }
 
   /**
    * 批量创建服务
    */
-  static createAll(serviceNames: string[]): Map<string, any> {
-    const instances = new Map<string, any>();
+  static createAll(serviceNames: string[]): Map<string, unknown> {
+    const instances = new Map<string, unknown>();
     
     serviceNames.forEach(name => {
       try {
@@ -195,8 +196,8 @@ export class ServiceFactory {
     }
     
     // 如果实例有 initialize 方法
-    if (instance && typeof (instance as any).initialize === 'function') {
-      await (instance as any).initialize();
+    if (instance && typeof (instance as { initialize?: () => Promise<void> }).initialize === 'function') {
+      await (instance as { initialize: () => Promise<void> }).initialize();
     }
   }
 
