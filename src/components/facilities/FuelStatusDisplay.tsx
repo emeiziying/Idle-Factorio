@@ -4,7 +4,7 @@ import React from 'react';
 import { Box, Typography, LinearProgress, Tooltip, Chip } from '@mui/material';
 import { LocalFireDepartment, Timer } from '@mui/icons-material';
 import type { FuelBuffer } from '../../types/facilities';
-import { FuelService } from '../../services/FuelService';
+import { RefactoredFuelService as FuelService } from '../../services/game/RefactoredFuelService';
 import FactorioIcon from '../common/FactorioIcon';
 
 interface FuelStatusDisplayProps {

@@ -1,7 +1,7 @@
 // 游戏配置服务 - 集中管理所有游戏常量和配置
 // 用于替代分散在各个文件中的硬编码常量
 
-import { DataService } from './DataService';
+import { DataService } from './core/DataService';
 
 export interface GameConstants {
   // 制作系统常量

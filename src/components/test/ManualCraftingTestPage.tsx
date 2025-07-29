@@ -27,8 +27,8 @@ import {
   Block as BlockIcon,
   Info as InfoIcon
 } from '@mui/icons-material';
-import { DataService } from '../../services/DataService';
-import { RecipeService } from '../../services/RecipeService';
+import { DataService } from '../../services/core/DataService';
+import { RecipeService } from '../../services/core/RecipeService';
 import ManualCraftingValidator from '../../utils/manualCraftingValidator';
 import type { ManualCraftingValidation } from '../../utils/manualCraftingValidator';
 import ItemCard from './ItemCard';

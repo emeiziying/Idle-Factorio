@@ -1,7 +1,7 @@
 import type { Recipe } from '../../types';
 import { CUSTOM_RECIPES } from '../../data/customRecipes';
 import { ServiceLocator, SERVICE_NAMES } from '../ServiceLocator';
-import type { DataService } from '../DataService';
+import type { DataService } from './DataService';
 import type { IManualCraftingValidator } from '../interfaces/IManualCraftingValidator';
 
 /**

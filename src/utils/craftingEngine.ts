@@ -2,8 +2,8 @@
 
 import type { CraftingTask, Recipe } from '../types/index';
 import useGameStore from '../store/gameStore';
-import { DataService } from '../services/DataService';
-import { RecipeService } from '../services/RecipeService';
+import { DataService } from '../services/core/DataService';
+import { RecipeService } from '../services/core/RecipeService';
 import { GameConfig } from '../services/GameConfig';
 import { secondsToMs } from '../utils/common';
 

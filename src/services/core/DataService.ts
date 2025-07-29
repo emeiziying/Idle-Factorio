@@ -3,9 +3,9 @@
 import type { GameData, Item, Recipe, Category } from '../../types/index';
 import { CacheManager } from '../base/CacheManager';
 import { ServiceLocator, SERVICE_NAMES } from '../ServiceLocator';
-import type { UserProgressService } from '../UserProgressService';
-import { RecipeService } from '../RecipeService';
-import type { TechnologyService } from '../TechnologyService';
+import type { UserProgressService } from '../state/UserProgressService';
+import { RecipeService } from './RecipeService';
+import type { TechnologyService } from '../game/TechnologyService';
 
 // 异步导入游戏数据
 import gameData from '../../data/spa/data.json';

@@ -3,7 +3,7 @@
  * 提供通用的单例模式、依赖注入和错误处理机制
  */
 import { ServiceLocator } from '../ServiceLocator';
-import { DataService } from '../DataService';
+import { DataService } from '../core/DataService';
 import { StorageManager } from './StorageManager';
 
 export abstract class BaseService {

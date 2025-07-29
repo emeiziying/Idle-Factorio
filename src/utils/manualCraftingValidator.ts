@@ -2,8 +2,8 @@
 // 基于 Factorio Wiki 官方规则实现
 
 import { ServiceLocator, SERVICE_NAMES } from '../services/ServiceLocator';
-import type { DataService } from '../services/DataService';
-import { RecipeService } from '../services/RecipeService';
+import type { DataService } from '../services/core/DataService';
+import { RecipeService } from '../services/core/RecipeService';
 import type { Recipe } from '../types/index';
 import type { IManualCraftingValidator } from '../services/interfaces/IManualCraftingValidator';
 

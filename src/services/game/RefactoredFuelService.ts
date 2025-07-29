@@ -6,7 +6,7 @@ import { BaseService } from '../base/BaseService';
 import type { GameConfig } from '../GameConfig';
 import type { FacilityInstance, FuelBuffer } from '../../types/facilities';
 import { FacilityStatus } from '../../types/facilities';
-import type { InventoryItem } from '../../types/index';
+import type { InventoryItem, Item } from '../../types/index';
 import { msToSeconds } from '../../utils/common';
 
 // 燃料更新结果
@@ -130,8 +130,8 @@ export class RefactoredFuelService extends BaseService {
     return this.safe(() => {
       const items = this.dataService?.getAllItems() || [];
       return items
-        .filter(item => item.fuel_value && parseFloat(item.fuel_value) > 0)
-        .map(item => ({
+        .filter((item: Item) => item.fuel_value && parseFloat(item.fuel_value) > 0)
+        .map((item: Item) => ({
           id: item.id,
           name: item.name,
           fuelValue: parseFloat(item.fuel_value!),
@@ -139,7 +139,7 @@ export class RefactoredFuelService extends BaseService {
           accelerationMultiplier: item.fuel_acceleration_multiplier,
           topSpeedMultiplier: item.fuel_top_speed_multiplier
         }))
-        .sort((a, b) => b.fuelValue - a.fuelValue);
+        .sort((a: FuelInfo, b: FuelInfo) => b.fuelValue - a.fuelValue);
     }, 'getAllFuels', []);
   }
 

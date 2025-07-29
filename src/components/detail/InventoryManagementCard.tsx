@@ -8,9 +8,9 @@ import {
 } from "@mui/material";
 import type { Item } from "../../types/index";
 import useGameStore from "../../store/gameStore";
-import { getStorageService } from "../../services/StorageService";
+import { getStorageService } from "../../services/state/StorageService";
 import FactorioIcon from "../common/FactorioIcon";
-import { DataService } from "../../services/DataService";
+import { DataService } from "../../services/core/DataService";
 
 interface InventoryManagementCardProps {
   item: Item;

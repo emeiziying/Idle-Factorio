@@ -27,9 +27,9 @@ import {
   LocalFireDepartment
 } from '@mui/icons-material';
 import useGameStore from '../../store/gameStore';
-import { PowerService } from '../../services/PowerService';
-import { DataService } from '../../services/DataService';
-import { RecipeService } from '../../services/RecipeService';
+import { PowerService } from '../../services/game/PowerService';
+import { DataService } from '../../services/core/DataService';
+import { RecipeService } from '../../services/core/RecipeService';
 import { FacilityStatus } from '../../types/facilities';
 import FactorioIcon from '../common/FactorioIcon';
 

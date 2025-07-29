@@ -5,7 +5,7 @@
 import { ServiceFactory } from '../base/ServiceFactory';
 import { StorageManager } from '../base/StorageManager';
 import { ServiceLocator } from '../ServiceLocator';
-import type { DataService } from '../DataService';
+import type { DataService } from '../core/DataService';
 import { warn as logWarn } from '../../utils/logger';
 
 interface UserProgress {
