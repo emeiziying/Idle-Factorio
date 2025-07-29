@@ -70,6 +70,15 @@ export class UserProgressService {
     return Array.from(this.unlockedTechs);
   }
 
+  // 获取用户进度（兼容性方法）
+  getProgress() {
+    return {
+      unlockedRecipes: [], // 暂时返回空数组，后续可根据需要实现
+      researchedTechnologies: this.getUnlockedTechs(),
+      savedBuildings: [] // 暂时返回空数组，后续可根据需要实现
+    };
+  }
+
   // 重置用户进度
   resetProgress(): void {
     this.unlockedItems.clear();
