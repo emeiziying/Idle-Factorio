@@ -287,7 +287,7 @@ The project uses ESLint 9 with modern flat config:
 - Config: `eslint.config.js` with TypeScript ESLint v8+ integration
 - Plugins: React hooks, React refresh, TypeScript recommended rules
 - Target: Browser environment with ES2020
-- **Always run `npm run lint` before committing changes**
+- **Always run `pnpm lint` before committing changes**
 
 ### TypeScript Configuration
 - Main config: `tsconfig.json` with references to `tsconfig.app.json` and `tsconfig.node.json`
