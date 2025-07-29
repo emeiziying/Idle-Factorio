@@ -20,13 +20,15 @@ import {
   Factory as FactoryIcon,
   Science as ScienceIcon,
   BugReport as TestIcon,
-  Delete as DeleteIcon
+  Delete as DeleteIcon,
+  Compress as CompressIcon
 } from '@mui/icons-material';
 
 import ProductionModule from './components/production/ProductionModule';
 import FacilitiesModule from './components/facilities/FacilitiesModule';
 import TechnologyModule from './components/technology/TechnologyModule';
 import ManualCraftingTestPage from './components/test/ManualCraftingTestPage';
+import { SaveOptimizationTest } from './components/SaveOptimizationTest';
 import { useGameLoop } from './hooks/useGameLoop';
 
 import { ServiceInitializer } from './services/ServiceInitializer';
@@ -170,6 +172,7 @@ const App: React.FC = () => {
           {currentModule === 1 && <FacilitiesModule />}
           {currentModule === 2 && <TechnologyModule />}
           {currentModule === 3 && <ManualCraftingTestPage />}
+          {currentModule === 4 && <SaveOptimizationTest />}
         </Box>
 
         {/* 底部导航 */}
@@ -225,6 +228,13 @@ const App: React.FC = () => {
             <BottomNavigationAction
               label="测试"
               icon={<TestIcon />}
+              showLabel={true} // 强制显示标签
+            />
+          )}
+          {import.meta.env.DEV && (
+            <BottomNavigationAction
+              label="优化"
+              icon={<CompressIcon />}
               showLabel={true} // 强制显示标签
             />
           )}

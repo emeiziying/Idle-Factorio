@@ -18,6 +18,8 @@ import { getStorageConfig } from '../data/storageConfigs';
 import { DataService } from '../services/DataService';
 import { TechnologyService } from '../services/TechnologyService';
 import { FuelService } from '../services/FuelService';
+import { saveOptimizationService } from '../services/SaveOptimizationService';
+import type { OptimizedSaveData } from '../services/SaveOptimizationService';
 
 // 页面卸载时立即保存
 if (typeof window !== 'undefined') {
@@ -1180,26 +1182,10 @@ const useGameStore = create<GameState>()(
         const state = get();
         const storage = createDebouncedStorage();
         
+        // 使用优化后的存档格式
+        const optimized = saveOptimizationService.optimize(state);
         const serializedData = {
-          // 核心游戏数据
-          inventory: Array.from(state.inventory.entries()),
-          craftingQueue: state.craftingQueue,
-          craftingChains: state.craftingChains,
-          facilities: state.facilities,
-          deployedContainers: state.deployedContainers,
-          totalItemsProduced: state.totalItemsProduced,
-          favoriteRecipes: Array.from(state.favoriteRecipes),
-          recentRecipes: state.recentRecipes,
-          // 科技进度状态
-          researchState: state.researchState,
-          researchQueue: state.researchQueue,
-          unlockedTechs: Array.from(state.unlockedTechs),
-          autoResearch: state.autoResearch,
-          // 统计数据
-          craftedItemCounts: Array.from(state.craftedItemCounts.entries()),
-          builtEntityCounts: Array.from(state.builtEntityCounts.entries()),
-          minedEntityCounts: Array.from(state.minedEntityCounts.entries()),
-          // 时间数据
+          ...optimized,
           lastSaveTime: Date.now(),
           saveKey: `force_${Date.now()}`
         };
@@ -1228,9 +1214,18 @@ const useGameStore = create<GameState>()(
       name: 'factorio-game-storage',
       storage: createJSONStorage(() => createDebouncedStorage(2000)), // 2秒防抖
       partialize: (state) => {
-        // 只有saveKey变化时才触发存档
+        // 使用优化后的存档格式
+        const optimized = saveOptimizationService.optimize(state);
+        
+        // 添加saveKey用于触发存档
         const serializedData = {
-          // 核心游戏数据
+          ...optimized,
+          saveKey: state.saveKey,
+          lastSaveTime: state.lastSaveTime
+        };
+        
+        // 显示优化效果
+        const originalData = {
           inventory: Array.from(state.inventory.entries()),
           craftingQueue: state.craftingQueue,
           craftingChains: state.craftingChains,
@@ -1239,71 +1234,91 @@ const useGameStore = create<GameState>()(
           totalItemsProduced: state.totalItemsProduced,
           favoriteRecipes: Array.from(state.favoriteRecipes),
           recentRecipes: state.recentRecipes,
-          // 只存储科技进度状态，不存储完整科技数据
           researchState: state.researchState,
           researchQueue: state.researchQueue,
           unlockedTechs: Array.from(state.unlockedTechs),
           autoResearch: state.autoResearch,
-          // 不存储 technologies 和 techCategories，这些是静态数据应该从游戏文件加载
           craftedItemCounts: Array.from(state.craftedItemCounts.entries()),
           builtEntityCounts: Array.from(state.builtEntityCounts.entries()),
           minedEntityCounts: Array.from(state.minedEntityCounts.entries()),
-          // 时间数据
           lastSaveTime: state.lastSaveTime,
-          // 存档触发键 - 只有这个值变化时才触发真正的存储
           saveKey: state.saveKey
         };
-        console.log('[Persist] 触发存档, saveKey:', serializedData.saveKey);
+        
+        const comparison = saveOptimizationService.compareSizes(originalData, optimized);
+        console.log(`[Persist] 存档优化: ${comparison.originalSize}B -> ${comparison.optimizedSize}B (减少${comparison.percentage}%)`, serializedData.saveKey);
+        
         return serializedData;
       },
       onRehydrateStorage: () => (state) => {
         if (state) {
-          // 使用辅助函数确保所有Map对象正确转换
-          state.inventory = ensureInventoryMap(state.inventory);
-          // technologies 和 techCategories 不从存档恢复，将通过 initializeTechnologyService 重新加载
-          state.craftedItemCounts = ensureMap<string, number>(state.craftedItemCounts, 'craftedItemCounts');
-          state.builtEntityCounts = ensureMap<string, number>(state.builtEntityCounts, 'builtEntityCounts');
-          state.minedEntityCounts = ensureMap<string, number>(state.minedEntityCounts, 'minedEntityCounts');
-          
-          console.log('Successfully rehydrated all Map objects from storage');
-          
-          // 类型断言 - 确保正确的类型转换
-          const craftingQueue = state.craftingQueue as CraftingTask[];
-          state.craftingQueue = craftingQueue;
-          
-          // 确保craftingChains数组存在
-          if (!Array.isArray(state.craftingChains)) {
-            state.craftingChains = [];
+          // 检查是否是优化后的存档格式（有version字段）
+          if ('version' in state && state.version === 2) {
+            console.log('[Persist] 检测到优化后的存档格式 v2');
+            
+            // 使用优化服务恢复数据
+            const restored = saveOptimizationService.restore(state as unknown as OptimizedSaveData);
+            
+            // 将恢复的数据合并到state
+            Object.assign(state, restored);
+            
+            // 确保Map和Set对象正确恢复
+            state.inventory = ensureInventoryMap(state.inventory);
+            state.craftedItemCounts = ensureMap<string, number>(state.craftedItemCounts, 'craftedItemCounts');
+            state.builtEntityCounts = ensureMap<string, number>(state.builtEntityCounts, 'builtEntityCounts');
+            state.minedEntityCounts = ensureMap<string, number>(state.minedEntityCounts, 'minedEntityCounts');
+            state.favoriteRecipes = new Set(state.favoriteRecipes);
+            state.unlockedTechs = ensureUnlockedTechsSet(state.unlockedTechs);
+          } else {
+            // 兼容旧格式
+            console.log('[Persist] 检测到旧版存档格式，进行转换');
+            
+            // 使用辅助函数确保所有Map对象正确转换
+            state.inventory = ensureInventoryMap(state.inventory);
+            state.craftedItemCounts = ensureMap<string, number>(state.craftedItemCounts, 'craftedItemCounts');
+            state.builtEntityCounts = ensureMap<string, number>(state.builtEntityCounts, 'builtEntityCounts');
+            state.minedEntityCounts = ensureMap<string, number>(state.minedEntityCounts, 'minedEntityCounts');
+            
+            // 类型断言 - 确保正确的类型转换
+            const craftingQueue = state.craftingQueue as CraftingTask[];
+            state.craftingQueue = craftingQueue;
+            
+            // 确保craftingChains数组存在
+            if (!Array.isArray(state.craftingChains)) {
+              state.craftingChains = [];
+            }
+            
+            const facilities = state.facilities as FacilityInstance[];
+            state.facilities = facilities;
+            
+            const deployedContainers = state.deployedContainers as DeployedContainer[];
+            state.deployedContainers = deployedContainers;
+            
+            const totalItemsProduced = state.totalItemsProduced as number;
+            state.totalItemsProduced = totalItemsProduced;
+            
+            state.favoriteRecipes = new Set(state.favoriteRecipes as unknown as string[]);
+            
+            const recentRecipes = state.recentRecipes as string[];
+            state.recentRecipes = recentRecipes;
+            
+            const researchState = state.researchState as TechResearchState | null;
+            state.researchState = researchState;
+            
+            const researchQueue = state.researchQueue as ResearchQueueItem[];
+            state.researchQueue = researchQueue;
+            
+            state.unlockedTechs = ensureUnlockedTechsSet(state.unlockedTechs);
+            
+            const autoResearch = state.autoResearch as boolean;
+            state.autoResearch = autoResearch;
           }
           
-          const facilities = state.facilities as FacilityInstance[];
-          state.facilities = facilities;
-          
-          const deployedContainers = state.deployedContainers as DeployedContainer[];
-          state.deployedContainers = deployedContainers;
+          // 通用处理
+          console.log('Successfully rehydrated all Map objects from storage');
           
           // 只更新lastSaveTime，不进行时间补偿
           state.lastSaveTime = Date.now();
-          
-          // 类型断言 - 确保正确的类型转换
-          const totalItemsProduced = state.totalItemsProduced as number;
-          state.totalItemsProduced = totalItemsProduced;
-          
-          state.favoriteRecipes = new Set(state.favoriteRecipes as unknown as string[]);
-          
-          const recentRecipes = state.recentRecipes as string[];
-          state.recentRecipes = recentRecipes;
-          
-          const researchState = state.researchState as TechResearchState | null;
-          state.researchState = researchState;
-          
-          const researchQueue = state.researchQueue as ResearchQueueItem[];
-          state.researchQueue = researchQueue;
-          
-          state.unlockedTechs = ensureUnlockedTechsSet(state.unlockedTechs);
-          
-          const autoResearch = state.autoResearch as boolean;
-          state.autoResearch = autoResearch;
           
           // techCategories 和 technologies 将通过 initializeTechnologyService 重新加载，确保初始状态
           if (!state.technologies) {
