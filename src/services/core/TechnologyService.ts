@@ -58,7 +58,7 @@ export class TechnologyService extends BaseService {
   /**
    * 设置库存操作
    */
-  setInventoryOperations(inventoryOps: any): void {
+  setInventoryOperations(inventoryOps: unknown): void {
     // TODO: 实现库存操作设置
     console.debug('setInventoryOperations:', inventoryOps);
   }
@@ -66,7 +66,7 @@ export class TechnologyService extends BaseService {
   /**
    * 获取所有科技
    */
-  getAllTechnologies(): any[] {
+  getAllTechnologies(): unknown[] {
     // TODO: 实现获取所有科技
     return [];
   }
@@ -74,7 +74,7 @@ export class TechnologyService extends BaseService {
   /**
    * 获取科技树状态
    */
-  getTechTreeState(): any {
+  getTechTreeState(): unknown {
     // TODO: 实现获取科技树状态
     return {};
   }
@@ -82,7 +82,7 @@ export class TechnologyService extends BaseService {
   /**
    * 获取科技分类
    */
-  getTechCategories(): any[] {
+  getTechCategories(): unknown[] {
     // TODO: 实现获取科技分类
     return [];
   }
@@ -90,7 +90,7 @@ export class TechnologyService extends BaseService {
   /**
    * 开始研究科技
    */
-  async startResearch(techId: string): Promise<any> {
+  async startResearch(techId: string): Promise<{ success: boolean }> {
     console.debug('startResearch:', techId);
     // TODO: 实现开始研究
     return { success: true };
@@ -99,7 +99,7 @@ export class TechnologyService extends BaseService {
   /**
    * 获取当前研究
    */
-  getCurrentResearch(): any {
+  getCurrentResearch(): unknown {
     // TODO: 实现获取当前研究
     return null;
   }
@@ -107,7 +107,7 @@ export class TechnologyService extends BaseService {
   /**
    * 获取研究队列
    */
-  getResearchQueue(): any[] {
+  getResearchQueue(): unknown[] {
     // TODO: 实现获取研究队列
     return [];
   }
@@ -123,7 +123,7 @@ export class TechnologyService extends BaseService {
   /**
    * 添加到研究队列
    */
-  addToResearchQueue(techId: string, priority: any): any {
+  addToResearchQueue(techId: string, priority: unknown): { success: boolean } {
     console.debug('addToResearchQueue:', techId, priority);
     // TODO: 实现添加到研究队列
     return { success: true };

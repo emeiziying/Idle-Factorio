@@ -42,6 +42,17 @@ export interface II18nData {
 // 手动制作验证器接口
 export type { IManualCraftingValidator } from './IManualCraftingValidator';
 
+// 具体服务接口类型
+export {
+  type IDataService,
+  type IPowerService,
+  type ITechnologyService,
+  type IGameStorageService,
+  type IStorageService as IStorageGameService,
+  type IRecipeService,
+  type ServiceTypeMap
+} from './ServiceTypes';
+
 // 依赖注入相关接口
 export interface IDependencyMap {
   [serviceName: string]: string[];

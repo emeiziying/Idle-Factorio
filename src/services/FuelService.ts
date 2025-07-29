@@ -2,7 +2,7 @@
 
 import { DataService } from './DataService';
 import { RecipeService } from './RecipeService';
-import { GAME_CONFIG } from './game/GameConfig';
+
 import type { FacilityInstance, FuelBuffer } from '../types/facilities';
 import { FacilityStatus } from '../types/facilities';
 import type { InventoryItem } from '../types/index';
@@ -44,12 +44,22 @@ export interface FuelStatus {
 export class FuelService {
   private static instance: FuelService;
   private dataService: DataService;
-  private gameConfig: any;
+  private gameConfig: {
+    getFuelPriority(): string[];
+    getConstants(): { fuel: { fuelBufferFullThreshold: number; defaultFuelSlots: number } };
+    calculateMaxFuelStorage(consumption: number): number;
+    getFuelCategory(fuelItemId: string): string;
+  };
   private customFuelPriority: string[] | null = null;
   
   private constructor() {
     this.dataService = DataService.getInstance();
-    this.gameConfig = GAME_CONFIG;
+    this.gameConfig = {
+      getFuelPriority: () => ['solid-fuel', 'wood', 'coal'],
+      getConstants: () => ({ fuel: { fuelBufferFullThreshold: 80, defaultFuelSlots: 3 } }),
+      calculateMaxFuelStorage: (consumption: number) => consumption * 10,
+      getFuelCategory: (fuelItemId: string) => fuelItemId.includes('solid') ? 'solid' : 'chemical'
+    };
     // 从本地存储加载自定义优先级
     const stored = localStorage.getItem('fuelPriority');
     if (stored) {

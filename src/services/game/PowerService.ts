@@ -425,9 +425,9 @@ export class PowerService extends BaseService {
   /**
    * 获取电力优先级建议（向后兼容）
    */
-  getPowerPriorityRecommendations(facilities: FacilityInstance[], powerBalance: PowerBalance): any[] {
+  getPowerPriorityRecommendations(facilities: FacilityInstance[], powerBalance: PowerBalance): Array<{ facilityId: string; type: string; reason: string; priority: string }> {
     try {
-      const recommendations: any[] = [];
+              const recommendations: Array<{ facilityId: string; type: string; reason: string; priority: string }> = [];
       
       if (powerBalance.status === 'deficit') {
         // 建议优先级调整

@@ -170,7 +170,7 @@ const PowerManagement: React.FC = () => {
               </Typography>
               {powerService.getPowerPriorityRecommendations(facilities, powerBalance).map((rec: any, i: number) => (
                 <Typography key={i} variant="caption" display="block">
-                  • {rec}
+                  • {JSON.stringify(rec)}
                 </Typography>
               ))}
             </Alert>

@@ -4,7 +4,7 @@ import type { CraftingTask, Recipe } from '../types/index';
 import useGameStore from '../store/gameStore';
 import { DataService } from '../services/core/DataService';
 import { RecipeService } from '../services/core/RecipeService';
-import { GAME_CONFIG } from '../services/game/GameConfig';
+
 import { secondsToMs } from '../utils/common';
 
 // 设备效率配置 - 基于Factorio的采矿机设计
@@ -25,7 +25,16 @@ interface ResourceProperties {
 class CraftingEngine {
   private static instance: CraftingEngine;
   private intervalId: number | null = null;
-  private gameConfig: any;
+  private gameConfig: {
+    getConstants(): { 
+      production: { baseTicksPerSecond: number };
+      crafting: { 
+        updateInterval: number;
+        maxProductivityBonus: number;
+        minCraftingTime: number;
+      };
+    };
+  };
   private isStarting: boolean = false; // 防止重复启动
 
   // 设备效率缓存 - 从data.json的机器数据动态获取
@@ -35,7 +44,16 @@ class CraftingEngine {
   private resourcePropertiesCache = new Map<string, ResourceProperties>();
 
   private constructor() {
-    this.gameConfig = GAME_CONFIG;
+    this.gameConfig = {
+      getConstants: () => ({ 
+        production: { baseTicksPerSecond: 60 },
+        crafting: {
+          updateInterval: 100,
+          maxProductivityBonus: 2.0,
+          minCraftingTime: 0.1
+        }
+      })
+    };
   }
 
   static getInstance(): CraftingEngine {

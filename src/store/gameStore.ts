@@ -850,7 +850,7 @@ const useGameStore = create<GameState>()(
           
           // 总是同步科技状态到store（无论服务是否已初始化）
           const allTechs = (techService as any).getAllTechnologies();
-          const techMap = new Map(allTechs.map((tech: any) => [tech.id, tech]));
+          const techMap = new Map(allTechs.map((tech: { id: string }) => [tech.id, tech]));
           const techTreeState = (techService as any).getTechTreeState();
           const unlockedTechs = new Set(techTreeState.unlockedTechs);
           const techCategories = (techService as any).getTechCategories();
@@ -1218,7 +1218,7 @@ const useGameStore = create<GameState>()(
       saveGame: () => {
         // 使用GameStorageService保存游戏数据
         const state = get();
-        (gameStorageService as any).saveGame(state).catch((error: any) => {
+        (gameStorageService as any).saveGame(state).catch((error: unknown) => {
           console.error('[SaveGame] 保存失败:', error);
         });
       },
