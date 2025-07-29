@@ -45,9 +45,41 @@ const mockI18nData = {
 }
 
 // Mock imports
-vi.mock('../../data/spa/data.json', () => ({
-  default: mockGameData
-}))
+vi.mock('../../data/spa/data.json', () => {
+  const mockGameData = {
+    categories: [
+      { name: 'test-category', displayName: 'Test Category', priority: 1 }
+    ],
+    items: [
+      {
+        name: 'test-item-1',
+        displayName: 'Test Item 1',
+        category: 'test-category',
+        stackSize: 100,
+        row: 1
+      },
+      {
+        name: 'test-item-2',
+        displayName: 'Test Item 2',
+        category: 'test-category',
+        stackSize: 50,
+        row: 1,
+        unlockedBy: 'test-tech'
+      }
+    ],
+    recipes: [
+      {
+        name: 'test-recipe',
+        displayName: 'Test Recipe',
+        category: 'test-category',
+        ingredients: [{ name: 'test-item-1', amount: 2 }],
+        results: [{ name: 'test-item-2', amount: 1 }],
+        craftingTime: 1
+      }
+    ]
+  }
+  return { default: mockGameData }
+})
 
 // Mock services
 const mockUserProgressService = {
