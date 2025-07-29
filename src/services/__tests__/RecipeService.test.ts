@@ -70,9 +70,9 @@ describe('RecipeService', () => {
     ServiceLocator.clear()
     
     // Clear static state
-    (RecipeService as any).instance = null
-    (RecipeService as any).allRecipes = []
-    (RecipeService as any).recipesByItem.clear()
+    ;(RecipeService as any).instance = null
+    ;(RecipeService as any).allRecipes = []
+    ;(RecipeService as any).recipesByItem.clear()
 
     // Mock services
     mockDataService = {

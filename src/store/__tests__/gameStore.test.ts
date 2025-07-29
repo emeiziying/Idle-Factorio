@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { act } from '@testing-library/react'
 import useGameStore from '../gameStore'
-import type { CraftingTask, InventoryItem } from '../../types/index'
+import type { CraftingTask } from '../../types/index'
 
 // Mock services
 vi.mock('../../services/RecipeService')
@@ -77,7 +77,7 @@ describe('gameStore', () => {
       })
 
       it('should remove item when amount reaches zero', () => {
-        const { updateInventory, inventory } = useGameStore.getState()
+        const { updateInventory } = useGameStore.getState()
         
         act(() => {
           updateInventory('iron-plate', 10)
@@ -140,7 +140,7 @@ describe('gameStore', () => {
   describe('crafting queue', () => {
     describe('addCraftingTask', () => {
       it('should add crafting task to queue', () => {
-        const { addCraftingTask, craftingQueue } = useGameStore.getState()
+        const { addCraftingTask } = useGameStore.getState()
         
         const task: Omit<CraftingTask, 'id'> = {
           itemId: 'iron-gear-wheel',

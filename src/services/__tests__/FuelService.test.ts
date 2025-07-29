@@ -122,7 +122,7 @@ describe('FuelService', () => {
       localStorage.setItem('fuelPriority', JSON.stringify(customPriority))
       
       // Create new instance
-      (FuelService as any).instance = null
+      ;(FuelService as any).instance = null
       const newService = FuelService.getInstance()
       
       expect(newService.getFuelPriority()).toEqual(customPriority)

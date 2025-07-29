@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { DataService } from '../DataService'
 import { ServiceLocator, SERVICE_NAMES } from '../ServiceLocator'
-import type { GameData, Item, Recipe, Category } from '../../types/index'
+import type { GameData } from '../../types/index'
 
 // Mock game data
 const mockGameData: Partial<GameData> = {
