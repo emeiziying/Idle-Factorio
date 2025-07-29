@@ -34,7 +34,7 @@ import { FacilityStatus } from '../../types/facilities';
 import type { FacilityInstance } from '../../types/facilities';
 import useGameStore from '../../store/gameStore';
 import FactorioIcon from '../common/FactorioIcon';
-import { DataService } from '../../services/DataService';
+import { DataService } from '../../services/core/DataService';
 import { FuelStatusDisplay } from './FuelStatusDisplay';
 
 const ProductionMonitor: React.FC = () => {

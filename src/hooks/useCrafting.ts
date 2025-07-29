@@ -1,7 +1,24 @@
 import { useState } from 'react';
 import type { Recipe } from '../types/index';
 import useGameStore from '../store/gameStore';
-import DependencyService, { type CraftingChainAnalysis, type CraftingDependency } from '../services/DependencyService';
+import { DependencyService } from '../services/utils/DependencyService';
+
+// 临时类型定义
+interface CraftingDependency {
+  itemId: string;
+  quantity: number;
+  recipe?: Recipe;
+}
+
+interface CraftingChainAnalysis {
+  tasks: Array<{
+    recipeId: string;
+    quantity: number;
+    dependencies: CraftingDependency[];
+  }>;
+  totalInputs: Record<string, number>;
+  totalOutputs: Record<string, number>;
+}
 
 export const useCrafting = () => {
   const [showMessage, setShowMessage] = useState({

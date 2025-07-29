@@ -9,7 +9,7 @@ import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import type { Item } from '../../types/index';
 import type { FacilityInstance } from '../../types/facilities';
 import { useItemRecipes } from '../../hooks/useItemRecipes';
-import { DataService } from '../../services/DataService';
+import { DataService } from '../../services/core/DataService';
 import useGameStore from '../../store/gameStore';
 import FactorioIcon from '../common/FactorioIcon';
 import ManualCraftingValidator from '../../utils/manualCraftingValidator';

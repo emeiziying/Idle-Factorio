@@ -1,7 +1,7 @@
 // 存储配置辅助函数
 
 import type { StorageConfig } from '../types/index';
-import { ServiceLocator, SERVICE_NAMES } from '../services/ServiceLocator';
+import { ServiceLocator, SERVICE_NAMES } from '../services/utils/ServiceLocator';
 import { StorageService } from '../services/game/StorageService';
 
 // 重新导出存储配置数据

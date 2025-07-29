@@ -2,7 +2,7 @@
  * 服务注册表
  * 统一管理服务依赖和生命周期
  */
-import { ServiceLocator } from '../ServiceLocator';
+import { ServiceLocator } from '../utils/ServiceLocator';
 import { BaseService } from './BaseService';
 
 export interface ServiceMetadata {

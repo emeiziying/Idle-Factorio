@@ -1,7 +1,7 @@
 // 燃料服务 - 管理所有燃料相关逻辑
 
-import { DataService } from './DataService';
-import { RecipeService } from './RecipeService';
+import { DataService } from './core/DataService';
+import { RecipeService } from './core/RecipeService';
 
 import type { FacilityInstance, FuelBuffer } from '../types/facilities';
 import { FacilityStatus } from '../types/facilities';

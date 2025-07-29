@@ -10,7 +10,7 @@ import type { Item } from "../../types/index";
 import useGameStore from "../../store/gameStore";
 import { getStorageService } from "../../data/storageConfigs";
 import FactorioIcon from "../common/FactorioIcon";
-import { DataService } from "../../services/DataService";
+import { DataService } from '../../services/core/DataService';
 
 interface InventoryManagementCardProps {
   item: Item;

@@ -12,7 +12,7 @@ import TechDetailPanel from './TechDetailPanel';
 import ResearchQueue from './ResearchQueue';
 
 import useGameStore from '../../store/gameStore';
-import { TechnologyService } from '../../services/TechnologyService';
+import { TechnologyService } from '../../services/core/TechnologyService';
 import type { TechStatus } from '../../types/technology';
 import { ResearchPriority } from '../../types/technology';
 import { usePersistentState } from '../../hooks/usePersistentState';

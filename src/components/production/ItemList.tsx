@@ -5,7 +5,7 @@ import {
   Divider
 } from '@mui/material';
 import ItemCard from './ItemCard';
-import { DataService } from '../../services/DataService';
+import { DataService } from '../../services/core/DataService';
 import type { Item } from '../../types/index';
 
 interface ItemListProps {

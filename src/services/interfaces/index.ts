@@ -143,3 +143,14 @@ export interface ITechnologyInfo {
     buildings?: string[];
   };
 }
+
+// 游戏状态提供者接口（从旧的interfaces.ts迁移）
+export interface GameStateProvider {
+  getFacilities(): any[];
+  getInventoryItem(itemId: string): any;
+}
+
+// 服务工厂接口（从旧的interfaces.ts迁移）
+export interface ServiceFactory {
+  getGameStateProvider(): GameStateProvider;
+}

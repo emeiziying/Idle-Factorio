@@ -29,7 +29,7 @@ import {
 } from '@mui/icons-material';
 import FactorioIcon from '../common/FactorioIcon';
 import type { ResearchQueueItem, TechResearchState } from '../../types/technology';
-import { TechnologyService } from '../../services/TechnologyService';
+import { TechnologyService } from '../../services/core/TechnologyService';
 
 interface ResearchQueueProps {
   /** 研究队列列表 */

@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import { Warning as WarningIcon, Build as BuildIcon } from '@mui/icons-material';
 import FactorioIcon from './FactorioIcon';
-import { DataService } from '../../services/DataService';
+import { DataService } from '../../services/core/DataService';
 import type { CraftingChainAnalysis, CraftingDependency } from '../../services/DependencyService';
 import type { CraftingTask } from '../../types';
 
