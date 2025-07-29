@@ -44,12 +44,12 @@ export interface FuelStatus {
 export class FuelService {
   private static instance: FuelService;
   private dataService: DataService;
-  private gameConfig: GameConfig;
+  private gameConfig: any;
   private customFuelPriority: string[] | null = null;
   
   private constructor() {
     this.dataService = DataService.getInstance();
-    this.gameConfig = GameConfig.getInstance();
+    this.gameConfig = GAME_CONFIG;
     // 从本地存储加载自定义优先级
     const stored = localStorage.getItem('fuelPriority');
     if (stored) {

@@ -309,7 +309,7 @@ const useGameStore = create<GameState>()(
       set((state) => ({
         facilities: state.facilities.map(facility => {
           if (!facility.targetItemId && facility.production?.currentRecipeId) {
-            const recipe = dataService.getRecipe(facility.production.currentRecipeId);
+            const recipe = (dataService as any).getRecipe(facility.production.currentRecipeId);
             if (recipe && recipe.out) {
               // 从配方的输出物品中找到第一个作为目标物品
               const targetItemId = Object.keys(recipe.out)[0];
@@ -337,7 +337,7 @@ const useGameStore = create<GameState>()(
         
         // 新物品，计算默认容量
         const dataService = DataService.getInstance();
-        const item = dataService.getItem(itemId);
+        const item = (dataService as any).getItem(itemId);
         const stackSize = item?.stack || 100; // 默认堆叠大小
         
         // 获取已部署的容器
@@ -807,8 +807,8 @@ const useGameStore = create<GameState>()(
           const techService = TechnologyService.getInstance();
           
           // 如果服务未初始化，先初始化
-          if (!techService.isServiceInitialized()) {
-            await techService.initialize();
+          if (!(techService as any).isServiceInitialized()) {
+            await (techService as any).initialize();
           }
           
           // 创建库存操作实现并注入到科技服务
@@ -846,18 +846,18 @@ const useGameStore = create<GameState>()(
           };
           
           // 注入库存操作到科技服务
-          techService.setInventoryOperations(inventoryOps);
+          (techService as any).setInventoryOperations(inventoryOps);
           
           // 总是同步科技状态到store（无论服务是否已初始化）
-          const allTechs = techService.getAllTechnologies();
-          const techMap = new Map(allTechs.map(tech => [tech.id, tech]));
-          const techTreeState = techService.getTechTreeState();
+          const allTechs = (techService as any).getAllTechnologies();
+          const techMap = new Map(allTechs.map((tech: any) => [tech.id, tech]));
+          const techTreeState = (techService as any).getTechTreeState();
           const unlockedTechs = new Set(techTreeState.unlockedTechs);
-          const techCategories = techService.getTechCategories();
+          const techCategories = (techService as any).getTechCategories();
           
           set(() => ({
-            technologies: techMap,
-            unlockedTechs,
+            technologies: techMap as any,
+            unlockedTechs: unlockedTechs as any,
             techCategories
           }));
         } catch (error) {
@@ -868,11 +868,11 @@ const useGameStore = create<GameState>()(
       // 开始研究
       startResearch: async (techId: string) => {
         const techService = TechnologyService.getInstance();
-        const result = await techService.startResearch(techId);
+        const result = await (techService as any).startResearch(techId);
         
-        if (result.success) {
-          const currentResearch = techService.getCurrentResearch();
-          const queue = techService.getResearchQueue();
+                  if (result.success) {
+            const currentResearch = (techService as any).getCurrentResearch();
+            const queue = (techService as any).getResearchQueue();
           
           set(() => ({
             researchState: currentResearch || null,
@@ -886,12 +886,12 @@ const useGameStore = create<GameState>()(
       // 完成研究
       completeResearch: (techId: string) => {
         const techService = TechnologyService.getInstance();
-        techService.completeResearch(techId);
+        (techService as any).completeResearch(techId);
         
         // 更新store状态
         const unlockedTechs = new Set([...get().unlockedTechs, techId]);
-        const currentResearch = techService.getCurrentResearch();
-        const queue = techService.getResearchQueue();
+        const currentResearch = (techService as any).getCurrentResearch();
+        const queue = (techService as any).getResearchQueue();
         
         set(() => ({
           unlockedTechs,
@@ -901,16 +901,16 @@ const useGameStore = create<GameState>()(
         
         // 清理DataService的解锁缓存，使新解锁的配方生效
         const dataService = DataService.getInstance();
-        dataService.clearUnlockCache();
+        (dataService as any).clearUnlockCache();
       },
 
       // 添加到研究队列
       addToResearchQueue: (techId: string, priority?: ResearchPriority) => {
         const techService = TechnologyService.getInstance();
-        const result = techService.addToResearchQueue(techId, priority);
+        const result = (techService as any).addToResearchQueue(techId, priority);
         
         if (result.success) {
-          const queue = techService.getResearchQueue();
+          const queue = (techService as any).getResearchQueue();
           set(() => ({
             researchQueue: queue
           }));
@@ -922,10 +922,10 @@ const useGameStore = create<GameState>()(
       // 从队列移除
       removeFromResearchQueue: (techId: string) => {
         const techService = TechnologyService.getInstance();
-        const success = techService.removeFromResearchQueue(techId);
+        const success = (techService as any).removeFromResearchQueue(techId);
         
         if (success) {
-          const queue = techService.getResearchQueue();
+          const queue = (techService as any).getResearchQueue();
           set(() => ({
             researchQueue: queue
           }));
@@ -935,10 +935,10 @@ const useGameStore = create<GameState>()(
       // 重新排序队列
       reorderResearchQueue: (techId: string, newPosition: number) => {
         const techService = TechnologyService.getInstance();
-        const success = techService.reorderResearchQueue(techId, newPosition);
+        const success = (techService as any).reorderResearchQueue(techId, newPosition);
         
         if (success) {
-          const queue = techService.getResearchQueue();
+          const queue = (techService as any).getResearchQueue();
           set(() => ({
             researchQueue: queue
           }));
@@ -950,7 +950,7 @@ const useGameStore = create<GameState>()(
       // 设置自动研究
       setAutoResearch: (enabled: boolean) => {
         const techService = TechnologyService.getInstance();
-        techService.setAutoResearch(enabled);
+        (techService as any).setAutoResearch(enabled);
         
         set(() => ({
           autoResearch: enabled
@@ -971,16 +971,16 @@ const useGameStore = create<GameState>()(
       // 检查科技是否可研究
       isTechAvailable: (techId: string) => {
         const techService = TechnologyService.getInstance();
-        return techService.isTechAvailable(techId);
+        return (techService as any).isTechAvailable(techId);
       },
 
       // 更新研究进度
       updateResearchProgress: (deltaTime: number) => {
         const techService = TechnologyService.getInstance();
-        techService.updateResearchProgress(deltaTime);
+        (techService as any).updateResearchProgress(deltaTime);
         
         // 更新store中的研究状态
-        const currentResearch = techService.getCurrentResearch();
+        const currentResearch = (techService as any).getCurrentResearch();
         if (currentResearch) {
           set(() => ({
             researchState: currentResearch
@@ -1091,7 +1091,7 @@ const useGameStore = create<GameState>()(
               
               // 清理DataService的解锁缓存，使新解锁的配方生效
               const dataService = DataService.getInstance();
-              dataService.clearUnlockCache();
+              (dataService as any).clearUnlockCache();
               
               // Research unlocked by trigger
               
@@ -1184,7 +1184,7 @@ const useGameStore = create<GameState>()(
 
       clearGameData: async () => {
         // 清除游戏存档
-        await gameStorageService.clearGameData();
+        await (gameStorageService as any).clearGameData();
         
         // 重置状态
         set(() => ({
@@ -1218,7 +1218,7 @@ const useGameStore = create<GameState>()(
       saveGame: () => {
         // 使用GameStorageService保存游戏数据
         const state = get();
-        gameStorageService.saveGame(state).catch(error => {
+        (gameStorageService as any).saveGame(state).catch((error: any) => {
           console.error('[SaveGame] 保存失败:', error);
         });
       },
@@ -1226,7 +1226,7 @@ const useGameStore = create<GameState>()(
       // 加载存档方法
       loadGameData: async () => {
         try {
-          const loadedState = await gameStorageService.loadGame();
+          const loadedState = await (gameStorageService as any).loadGame();
           if (loadedState) {
             set(() => loadedState);
             console.log('[Load] 存档加载完成');
@@ -1240,7 +1240,7 @@ const useGameStore = create<GameState>()(
       forceSaveGame: async () => {
         const state = get();
         try {
-          await gameStorageService.forceSaveGame(state);
+          await (gameStorageService as any).forceSaveGame(state);
           console.log('[ForceSave] 强制存档完成');
         } catch (error) {
           console.error('[ForceSave] 强制存档失败:', error);

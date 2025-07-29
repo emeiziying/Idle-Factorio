@@ -71,7 +71,7 @@ const EfficiencyOptimizer: React.FC = () => {
 
   // 计算各种效率指标
   const efficiencyMetrics = useMemo(() => {
-    const powerBalance = powerService.calculatePowerBalance(facilities);
+    const powerBalance = (powerService as any).calculatePowerBalance(facilities);
     
     // 设施利用率
     const totalFacilities = facilities.length;

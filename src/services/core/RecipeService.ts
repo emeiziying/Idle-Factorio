@@ -122,41 +122,7 @@ export class RecipeService extends BaseService {
     return recipes;
   }
 
-  /**
-   * 获取采矿配方
-   * @param itemId 物品ID（可选，不指定则获取所有采矿配方）
-   */
-  getMiningRecipes(itemId?: string): Recipe[] {
-    let recipes = RecipeService.allRecipes.filter(recipe => 
-      recipe.flags?.includes("mining")
-    );
 
-    if (itemId) {
-      recipes = recipes.filter(recipe => 
-        recipe.out && recipe.out[itemId] !== undefined
-      );
-    }
-
-    return recipes;
-  }
-
-  /**
-   * 获取回收配方
-   * @param itemId 物品ID（可选，不指定则获取所有回收配方）
-   */
-  getRecyclingRecipes(itemId?: string): Recipe[] {
-    let recipes = RecipeService.allRecipes.filter(recipe => 
-      recipe.flags?.includes("recycling")
-    );
-
-    if (itemId) {
-      recipes = recipes.filter(recipe => 
-        recipe.out && recipe.out[itemId] !== undefined
-      );
-    }
-
-    return recipes;
-  }
 
   /**
    * 获取物品的手动制作配方（带缓存）
@@ -280,40 +246,6 @@ export class RecipeService extends BaseService {
   }
 
   /**
-   * 获取配方的生产效率
-   * @param recipeId 配方ID
-   * @param producerType 生产设备类型
-   */
-  getRecipeEfficiency(recipeId: string, producerType?: string): number {
-    const recipe = this.getRecipeById(recipeId);
-    if (!recipe) return 1;
-
-    // 基础效率
-    let efficiency = 1;
-
-    // 根据生产设备调整效率
-    if (producerType && recipe.producers?.includes(producerType)) {
-      // 这里可以根据不同的生产设备设置不同的效率
-      switch (producerType) {
-        case 'character':
-          efficiency = 0.5; // 手动制作效率较低
-          break;
-        case 'assembling-machine-1':
-          efficiency = 0.5;
-          break;
-        case 'assembling-machine-2':
-          efficiency = 0.75;
-          break;
-        case 'assembling-machine-3':
-          efficiency = 1.25;
-          break;
-        default:
-          efficiency = 1;
-      }
-    }
-
-    return efficiency;
-  }
 
   /**
    * 计算配方的实际产出时间
@@ -323,14 +255,14 @@ export class RecipeService extends BaseService {
    */
   calculateActualTime(
     recipeId: string, 
-    producerType?: string, 
+    _producerType?: string, 
     modules?: { speed?: number; productivity?: number }
   ): number {
     const recipe = this.getRecipeById(recipeId);
     if (!recipe) return 0;
 
     const baseTime = recipe.time || 1;
-    const efficiency = this.getRecipeEfficiency(recipeId, producerType);
+    const efficiency = this.getRecipeEfficiency(recipe, recipeId);
     
     // 应用模块效果
     let speedMultiplier = 1;

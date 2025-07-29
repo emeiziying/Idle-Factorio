@@ -25,7 +25,7 @@ interface ResourceProperties {
 class CraftingEngine {
   private static instance: CraftingEngine;
   private intervalId: number | null = null;
-  private gameConfig: GameConfig;
+  private gameConfig: any;
   private isStarting: boolean = false; // 防止重复启动
 
   // 设备效率缓存 - 从data.json的机器数据动态获取
@@ -35,7 +35,7 @@ class CraftingEngine {
   private resourcePropertiesCache = new Map<string, ResourceProperties>();
 
   private constructor() {
-    this.gameConfig = GameConfig.getInstance();
+    this.gameConfig = GAME_CONFIG;
   }
 
   static getInstance(): CraftingEngine {
@@ -147,7 +147,7 @@ class CraftingEngine {
     }
 
     const dataService = DataService.getInstance();
-    const machineItem = dataService.getItem(machineId);
+    const machineItem = (dataService as any).getItem(machineId);
     
     let deviceEfficiency: DeviceEfficiency;
     
@@ -298,7 +298,7 @@ class CraftingEngine {
       return;
     }
 
-    const recipe = dataService.getRecipe(currentTask.recipeId);
+    const recipe = (dataService as any).getRecipe(currentTask.recipeId);
     if (!recipe) return;
 
     // 如果任务刚开始，设置开始时间并开始制作

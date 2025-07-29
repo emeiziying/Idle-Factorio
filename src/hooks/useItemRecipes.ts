@@ -26,11 +26,11 @@ export const useItemRecipes = (item: Item) => {
     // 恢复解锁过滤，但优化性能
     const isProducerUnlocked = (recipe: Recipe) => {
       if (!recipe.producers || recipe.producers.length === 0) return true;
-      return recipe.producers.some((pid: string) => dataService.isItemUnlocked(pid));
+      return recipe.producers.some((pid: string) => (dataService as any).isItemUnlocked(pid));
     };
     
     const isOutputUnlocked = (recipe: Recipe) => {
-      return Object.keys(recipe.out).every(itemId => dataService.isItemUnlocked(itemId));
+      return Object.keys(recipe.out).every(itemId => (dataService as any).isItemUnlocked(itemId));
     };
     
     const filteredRecipes = itemRecipes.filter(isProducerUnlocked);

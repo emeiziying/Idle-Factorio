@@ -133,11 +133,11 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
     lastUpdateRef.current = currentTime;
     
     // 1. 计算电力平衡
-    const powerBalance = powerService.calculatePowerBalance(facilities);
+    const powerBalance = (powerService as any).calculatePowerBalance(facilities);
     
     // 2. 根据电力平衡更新设施效率
     const updatedFacilities = facilities.map(facility => 
-      powerService.updateFacilityPowerStatus(facility, powerBalance)
+      (powerService as any).updateFacilityPowerStatus(facility, powerBalance)
     );
     
     // 批量更新设施状态（如果有变化）

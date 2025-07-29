@@ -25,7 +25,7 @@ import FactorioIcon from '../common/FactorioIcon';
 
 const PowerManagement: React.FC = () => {
   const { facilities, updateFacility, addFacility, removeFacility, getInventoryItem } = useGameStore();
-  const powerService = PowerService.getInstance();
+  const powerService = PowerService.getInstance() as any;
   
   // 计算电力平衡
   const powerBalance = useMemo(() => {
@@ -168,7 +168,7 @@ const PowerManagement: React.FC = () => {
               <Typography variant="body2">
                 电力不足！所有耗电设施的效率降至 {(powerBalance.satisfactionRatio * 100).toFixed(0)}%
               </Typography>
-              {powerService.getPowerPriorityRecommendations(facilities, powerBalance).map((rec, i) => (
+              {powerService.getPowerPriorityRecommendations(facilities, powerBalance).map((rec: any, i: number) => (
                 <Typography key={i} variant="caption" display="block">
                   • {rec}
                 </Typography>
@@ -278,11 +278,11 @@ const PowerManagement: React.FC = () => {
                      category === 'research' ? '研究' : '其他'}
                   </Typography>
                   <Typography variant="h6">
-                    {formatPower(power)}
+                    {formatPower(power as number)}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     {powerBalance.consumptionDemand > 0 
-                      ? `${((power / powerBalance.consumptionDemand) * 100).toFixed(0)}%`
+                      ? `${(((power as number) / powerBalance.consumptionDemand) * 100).toFixed(0)}%`
                       : '0%'}
                   </Typography>
                 </Box>
