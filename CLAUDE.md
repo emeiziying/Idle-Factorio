@@ -60,6 +60,38 @@ const isUnlocked = dataService.isItemUnlocked(itemId);
 const recipes = gameData.recipes.filter(r => r.out[itemId]);
 ```
 
+### Advanced Chain Crafting System
+The application implements sophisticated chain crafting with proper inventory management:
+
+#### DependencyService Chain Analysis
+```typescript
+// Recursive calculation of total raw material needs
+calculateTotalRawMaterialNeeds(recipe, quantity, totalNeeds);
+
+// Pre-validation of total materials before creating chain
+analyzeCraftingChain(itemId, quantity, inventory): CraftingChainAnalysis | null;
+
+// Returns null if insufficient total raw materials
+// Example: Crafting 1 burner-mining-drill needs 3 gears + 3 iron-plates
+// 3 gears need 6 iron-plates, so total: 9 iron-plates required
+```
+
+#### Chain Crafting Execution Flow
+```typescript
+// 1. Pre-calculate total raw material requirements
+// 2. Pre-deduct all raw materials from inventory immediately  
+// 3. Create chain tasks without additional material deduction
+// 4. CraftingEngine skips material deduction for chain tasks (task.chainId exists)
+// 5. Handle chain cancellation with full raw material refund
+
+executeChainCrafting(chainAnalysis) {
+  // Immediate raw material deduction prevents phantom crafting
+  for (const [materialId, totalNeeded] of chainAnalysis.totalRawMaterialNeeds) {
+    updateInventory(materialId, -totalNeeded);
+  }
+}
+```
+
 ## Current Architecture
 
 ### Implemented Service Layer Pattern
@@ -285,9 +317,23 @@ const recipes = RecipeService.getRecipesThatProduce(itemId);
 const mostEfficient = RecipeService.getMostEfficientRecipe(itemId);
 const stats = RecipeService.getRecipeStats(itemId);
 
-// Cost calculations
-const rawCosts = RecipeService.calculateRawMaterialCosts(recipe);
-const totalCosts = RecipeService.calculateTotalCosts(recipe);
+// Advanced features (700+ lines of methods)
+const dependencyChain = RecipeService.getRecipeDependencyChain(recipe, maxDepth);
+const complexityScore = RecipeService.getRecipeComplexityScore(recipe);
+const recommendations = RecipeService.getRecipeRecommendations(itemId, unlockedItems, 'efficiency');
+```
+
+#### DependencyService for Chain Crafting
+```typescript
+// Critical for chain crafting - validates and calculates material needs
+const dependencyService = DependencyService.getInstance();
+const chainAnalysis = dependencyService.analyzeCraftingChain(itemId, quantity, inventory);
+
+// Returns null if insufficient total raw materials (prevents phantom crafting)
+if (chainAnalysis) {
+  // Safe to execute chain crafting
+  executeChainCrafting(chainAnalysis);
+}
 ```
 
 ### State Management Best Practices
@@ -352,12 +398,99 @@ useUnlockedTechsRepair(); // Repairs unlockedTechs Set structure
 useFacilityRepair();     // Repairs facility targetItemId issues
 ```
 
+#### Critical Fix Pattern for localStorage Map/Set Issues
+```typescript
+// gameStore.ts includes robust Map/Set serialization repair
+const ensureMap = <K, V>(map: unknown, typeName: string): Map<K, V> => {
+  if (map instanceof Map) return map;
+  if (Array.isArray(map)) return new Map(map as [K, V][]);
+  return new Map(); // fallback for corrupted data
+};
+
+// Applied during onRehydrateStorage for all Map/Set fields
+state.inventory = ensureInventoryMap(state.inventory);
+state.favoriteRecipes = new Set(state.favoriteRecipes);
+```
+
+### Advanced Save System with Debounced Storage
+The application implements a sophisticated save system with multiple optimization layers:
+
+#### DebouncedStorage Class
+```typescript
+// 2-second debounce to prevent frequent localStorage writes
+const debouncedStorage = new DebouncedStorage(2000);
+
+// Features:
+// - LZ-String compression (70-80% size reduction)
+// - Automatic compression detection and fallback
+// - Force save on page unload
+// - Pending saves management
+```
+
+#### Save Optimization Service
+```typescript
+// Two-phase optimization:
+// Phase 1: Data structure optimization (50-60% reduction)
+// Phase 2: LZ-String compression (70-80% total reduction)
+
+const optimized = saveOptimizationService.optimize(state);
+const compressed = LZString.compressToUTF16(JSON.stringify(optimized));
+```
+
+#### State Recovery Mechanism
+```typescript
+// Automatic Map/Set serialization repair
+onRehydrateStorage: () => (state) => {
+  state.inventory = ensureInventoryMap(state.inventory);
+  state.favoriteRecipes = new Set(state.favoriteRecipes);
+  state.unlockedTechs = ensureUnlockedTechsSet(state.unlockedTechs);
+  // ... field validation and defaults
+}
+```
+
+#### Save Methods
+```typescript
+// Regular save (debounced)
+saveGame: () => {
+  set(() => ({ saveKey: `save_${Date.now()}` }));
+}
+
+// Force save (bypass debounce)
+forceSaveGame: async () => {
+  const optimized = saveOptimizationService.optimize(state);
+  await storage.forceSetItem('factorio-game-storage', JSON.stringify(optimized));
+}
+
+// Clear save (development only)
+clearGameData: async () => {
+  await storage.removeItem('factorio-game-storage');
+  set(() => ({ /* reset all state */ }));
+  window.location.reload();
+}
+```
+
 ### Browser Tools Integration
 Specialized debugging support via browser tools (see .cursor/rules/):
 - `takeScreenshot()` - Visual UI inspection
 - `getConsoleErrors()` / `getConsoleLogs()` - Debug logging
 - `runPerformanceAudit()` - Performance optimization
 - Production module specific debugging patterns for CategoryTabs, ItemList, ItemDetailPanel, CraftingQueue
+
+## Recent Critical Fixes
+
+### Chain Crafting Inventory Logic (Fixed)
+**Problem**: Chain crafting allowed phantom crafting with insufficient total raw materials.
+
+**Example**: Crafting 1 burner-mining-drill needs 3 gears + 3 iron-plates. 3 gears need 6 iron-plates. Total: 9 iron-plates required, but system allowed crafting with only 6 iron-plates.
+
+**Solution**: Implemented total raw material pre-calculation and immediate deduction:
+1. `DependencyService.calculateTotalRawMaterialNeeds()` recursively calculates all raw materials
+2. `analyzeCraftingChain()` validates total materials before allowing chain creation  
+3. `executeChainCrafting()` immediately deducts all raw materials from inventory
+4. `CraftingEngine` skips material deduction for chain tasks (`task.chainId` check)
+5. Chain cancellation properly refunds all pre-deducted raw materials
+
+**Files modified**: `DependencyService.ts`, `useCrafting.ts`, `gameStore.ts`, `craftingEngine.ts`, `types/index.ts`
 
 ## Browser Debugging & UI Design Guidelines
 

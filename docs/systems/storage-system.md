@@ -9,8 +9,9 @@
 1. [基础存储系统](#基础存储系统)
 2. [容器系统](#容器系统)
 3. [存档优化](#存档优化)
-4. [系统重构](#系统重构)
-5. [API参考](#api参考)
+4. [存档机制](#存档机制)
+5. [系统重构](#系统重构)
+6. [API参考](#api参考)
 
 ---
 
@@ -158,6 +159,157 @@ interface StorageConfig {
 
 ---
 
+## 存档机制
+
+### 核心架构
+
+- **状态管理**: Zustand + persist 中间件
+- **存储方式**: localStorage + 防抖机制
+- **数据格式**: JSON + LZ-String 压缩
+
+### 防抖存储系统
+
+#### DebouncedStorage 类
+
+```typescript
+class DebouncedStorage implements StateStorage {
+  private pendingSaves = new Map<string, PendingSave>();
+  private saveTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+  private readonly debounceMs: number;
+  private readonly enableCompression: boolean;
+}
+```
+
+#### 主要特性
+
+1. **防抖机制**
+   - 2秒内多次保存只执行最后一次
+   - 避免频繁 localStorage 写入
+   - 提升性能和用户体验
+
+2. **压缩优化**
+   - LZ-String 压缩，减少 70-80% 存储空间
+   - 自动检测压缩效果，无效时使用原始数据
+   - 压缩失败时自动降级
+
+3. **强制保存**
+   - 页面卸载时立即保存所有待保存数据
+   - 提供 `forceSetItem` 方法绕过防抖
+   - 确保数据不丢失
+
+### 存档流程
+
+#### 自动存档
+1. **状态变化触发**: 通过更新 `saveKey` 触发保存
+2. **防抖处理**: 2秒内多次变化只保存一次
+3. **数据优化**: 使用优化格式 + 压缩
+4. **强制保存**: 页面卸载时立即保存
+
+#### 手动存档
+```typescript
+// 普通存档
+saveGame: () => {
+  set(() => ({
+    lastSaveTime: Date.now(),
+    saveKey: `save_${Date.now()}`
+  }));
+}
+
+// 强制存档（绕过防抖）
+forceSaveGame: async () => {
+  const optimized = saveOptimizationService.optimize(state);
+  await storage.forceSetItem('factorio-game-storage', JSON.stringify(optimized));
+}
+```
+
+### 状态恢复机制
+
+#### onRehydrateStorage 回调
+
+```typescript
+onRehydrateStorage: () => (state) => {
+  if (state) {
+    // 修复 Map/Set 序列化问题
+    state.inventory = ensureInventoryMap(state.inventory);
+    state.favoriteRecipes = new Set(state.favoriteRecipes);
+    state.unlockedTechs = ensureUnlockedTechsSet(state.unlockedTechs);
+    
+    // 确保所有字段都有默认值
+    if (!Array.isArray(state.craftingQueue)) {
+      state.craftingQueue = [];
+    }
+    // ... 其他字段验证
+  }
+}
+```
+
+#### 辅助函数
+
+```typescript
+// 确保 Map 对象正确恢复
+const ensureInventoryMap = (inventory: unknown): Map<string, InventoryItem> => {
+  if (inventory instanceof Map) return inventory;
+  if (Array.isArray(inventory)) {
+    return new Map(inventory);
+  }
+  return new Map();
+};
+
+// 确保 Set 对象正确恢复
+const ensureUnlockedTechsSet = (unlockedTechs: unknown): Set<string> => {
+  if (unlockedTechs instanceof Set) return unlockedTechs;
+  if (Array.isArray(unlockedTechs)) {
+    return new Set(unlockedTechs);
+  }
+  return new Set();
+};
+```
+
+### 清空存档功能
+
+#### 开发模式特性
+- 仅在开发环境显示清空存档按钮
+- 提供确认对话框防止误操作
+- 清空后自动重载页面
+
+```typescript
+clearGameData: async () => {
+  // 清除 localStorage
+  await storage.removeItem('factorio-game-storage');
+  
+  // 重置所有状态
+  set(() => ({
+    inventory: new Map(),
+    craftingQueue: [],
+    // ... 其他状态重置
+  }));
+  
+  // 重载页面
+  window.location.reload();
+}
+```
+
+### 开发阶段特性
+
+#### 简化版本管理
+- 无复杂版本迁移逻辑
+- 不兼容时直接清空存档
+- 专注于功能开发而非兼容性
+
+#### 错误处理
+- 自动修复 Map/Set 序列化问题
+- 提供字段默认值
+- 优雅降级处理
+
+### 性能优化
+
+1. **防抖机制**: 避免频繁 localStorage 写入
+2. **数据压缩**: LZ-String 压缩减少存储空间
+3. **增量更新**: 只保存变化的数据
+4. **自动清理**: 页面卸载时确保数据不丢失
+
+---
+
 ## 系统重构
 
 ### 从箱子系统到通用存储系统
@@ -200,64 +352,70 @@ canCraftChest(chestType: string, quantity: number): boolean
 // 获取物品的已部署容器
 getDeployedContainersForItem(itemId: string): DeployedContainer[]
 
-// 移除容器
+// 移除已部署的容器
 removeDeployedContainer(containerId: string): void
-
-// 重新计算物品容量
-recalculateItemCapacity(itemId: string): void
 ```
 
-### 组件
+#### 存档相关
+```typescript
+// 普通存档
+saveGame(): void
 
-#### StorageExpansionDialog
-显示和管理存储扩展选项的对话框组件：
-- 显示可用容器类型和库存状态
-- 支持立即使用现有容器
-- 支持制造新容器
-- 显示制造材料需求
+// 强制存档（绕过防抖）
+forceSaveGame(): Promise<void>
 
-#### InventoryCard
-更新的库存卡片组件：
-- 显示堆叠信息 (x/y 堆叠)
-- 区分基础堆叠和容器堆叠
-- 显示每堆叠容量
-- 提供扩展存储按钮
+// 清空存档（开发模式）
+clearGameData(): Promise<void>
+```
+
+### 配置数据
+
+#### 存储配置
+```typescript
+// 获取所有存储配置
+getStorageConfigs(): StorageConfig[]
+
+// 获取特定物品的存储配置
+getStorageConfigForItem(itemId: string): StorageConfig | undefined
+
+// 检查物品是否支持存储扩展
+canExpandStorage(itemId: string): boolean
+```
 
 ### 使用示例
 
+#### 扩展物品存储
 ```typescript
-// 获取物品存储信息
-const ironPlateStorage = getInventoryItem('iron-plate');
-console.log(`铁板: ${ironPlateStorage.currentAmount}/${ironPlateStorage.maxCapacity}`);
-console.log(`堆叠: ${ironPlateStorage.totalStacks} (${ironPlateStorage.baseStacks}基础 + ${ironPlateStorage.additionalStacks}箱子)`);
+const { deployChestForStorage } = useGameStore();
 
-// 为铁板部署一个铁箱
+// 为铁板部署铁箱
 const result = deployChestForStorage('iron-chest', 'iron-plate');
 if (result.success) {
-  console.log('铁板存储容量增加了32个堆叠！');
+  console.log('铁箱部署成功，铁板存储容量增加32堆叠');
 }
-
-// 检查存档优化效果
-const comparison = saveOptimizationService.compareSizes(gameState);
-console.log(`原始大小: ${comparison.originalSize}`);
-console.log(`优化后: ${comparison.optimizedSize}`);
-console.log(`压缩后: ${comparison.compressedSize}`);
 ```
 
-## 后续优化建议
+#### 手动存档
+```typescript
+const { saveGame, forceSaveGame } = useGameStore();
 
-### 短期优化
-- 实现配置与数据分离
-- 使用短键名进一步压缩
-- 实现增量保存机制
+// 普通存档（会防抖）
+saveGame();
 
-### 长期优化
-- 考虑使用二进制格式（如MessagePack）
-- 添加更高效的压缩算法（如LZ4）
-- 实现分块存储和按需加载
+// 强制存档（立即执行）
+await forceSaveGame();
+```
 
-## 注意事项
+---
 
-1. **兼容性**：系统设计保持向后兼容，旧版本数据可以自动升级
-2. **性能**：所有操作都经过优化，不会影响游戏流畅度
-3. **扩展性**：架构支持未来添加更多存储类型和优化策略
+## 总结
+
+本存储系统提供了完整的物品存储管理功能，包括：
+
+1. **基础存储**: 基于堆叠的物品存储系统
+2. **容器扩展**: 支持固体和液体的存储容器
+3. **存档优化**: 两阶段优化，减少70-80%存储空间
+4. **防抖机制**: 提升性能和用户体验
+5. **开发友好**: 简化的版本管理，专注于功能开发
+
+系统设计注重性能、可维护性和用户体验，为Factorio类游戏提供了完整的存储解决方案。

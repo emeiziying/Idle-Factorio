@@ -19,7 +19,6 @@ import { DataService } from '../services/DataService';
 import { TechnologyService } from '../services/TechnologyService';
 import { FuelService } from '../services/FuelService';
 import { saveOptimizationService } from '../services/SaveOptimizationService';
-import type { OptimizedSaveData } from '../services/SaveOptimizationService';
 
 // 页面卸载时立即保存
 if (typeof window !== 'undefined') {
@@ -400,7 +399,7 @@ const useGameStore = create<GameState>()(
 
         const newTask: CraftingTask = {
           ...task,
-          id: `craft_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+          id: `craft_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
         };
 
         set((state) => ({
@@ -411,7 +410,7 @@ const useGameStore = create<GameState>()(
       },
 
       addCraftingChain: (chainData) => {
-        const chainId = `chain_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const chainId = `chain_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
         
         // 为链中的每个任务分配ID和链ID
         const tasksWithIds = chainData.tasks.map((task, index) => ({
@@ -680,7 +679,7 @@ const useGameStore = create<GameState>()(
         
         // 创建部署记录
         const deployment: DeployedContainer = {
-          id: `deployed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          id: `deployed_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
           chestType,
           chestItemId: config.itemId,
           targetItemId,
@@ -1237,67 +1236,6 @@ const useGameStore = create<GameState>()(
     {
       name: 'factorio-game-storage',
       storage: createJSONStorage(() => createDebouncedStorage(2000)), // 2秒防抖
-      // 添加迁移函数处理版本兼容性
-      migrate: (persistedState: unknown, version: number) => {
-        console.log('[Migrate] 开始迁移存档数据，版本:', version);
-        
-        // 类型断言，将 persistedState 转换为可操作的对象
-        const state = persistedState as Record<string, unknown>;
-        
-        // 如果没有版本信息，假设是最旧版本
-        if (version === undefined || version === 0) {
-          console.log('[Migrate] 检测到无版本信息，进行基础迁移');
-          return {
-            ...state,
-            // 确保基础字段存在
-            inventory: ensureInventoryMap(state?.inventory),
-            craftingQueue: Array.isArray(state?.craftingQueue) ? state.craftingQueue : [],
-            craftingChains: Array.isArray(state?.craftingChains) ? state.craftingChains : [],
-            facilities: Array.isArray(state?.facilities) ? state.facilities : [],
-            deployedContainers: Array.isArray(state?.deployedContainers) ? state.deployedContainers : [],
-            totalItemsProduced: typeof state?.totalItemsProduced === 'number' ? state.totalItemsProduced : 0,
-            favoriteRecipes: new Set(Array.isArray(state?.favoriteRecipes) ? state.favoriteRecipes : []),
-            recentRecipes: Array.isArray(state?.recentRecipes) ? state.recentRecipes : [],
-            maxRecentRecipes: typeof state?.maxRecentRecipes === 'number' ? state.maxRecentRecipes : 10,
-            lastSaveTime: typeof state?.lastSaveTime === 'number' ? state.lastSaveTime : Date.now(),
-            saveKey: typeof state?.saveKey === 'string' ? state.saveKey : 'migrated',
-            // 科技系统字段
-            technologies: new Map(),
-            researchState: state?.researchState || null,
-            researchQueue: Array.isArray(state?.researchQueue) ? state.researchQueue : [],
-            unlockedTechs: ensureUnlockedTechsSet(state?.unlockedTechs),
-            autoResearch: typeof state?.autoResearch === 'boolean' ? state.autoResearch : true,
-            techCategories: Array.isArray(state?.techCategories) ? state.techCategories : [],
-            // 统计数据字段
-            craftedItemCounts: ensureMap<string, number>(state?.craftedItemCounts, 'craftedItemCounts'),
-            builtEntityCounts: ensureMap<string, number>(state?.builtEntityCounts, 'builtEntityCounts'),
-            minedEntityCounts: ensureMap<string, number>(state?.minedEntityCounts, 'minedEntityCounts'),
-          };
-        }
-        
-        // 版本 1 到 2 的迁移
-        if (version === 1) {
-          console.log('[Migrate] 从版本 1 迁移到版本 2');
-          return {
-            ...state,
-            // 确保所有新字段都有默认值
-            craftingChains: Array.isArray(state?.craftingChains) ? state.craftingChains : [],
-            maxQueueSize: typeof state?.maxQueueSize === 'number' ? state.maxQueueSize : 50,
-            saveKey: typeof state?.saveKey === 'string' ? state.saveKey : 'migrated_v2',
-          };
-        }
-        
-        // 如果版本已经是 2 或更高，直接返回
-        if (version >= 2) {
-          console.log('[Migrate] 存档版本已是最新，无需迁移');
-          return persistedState;
-        }
-        
-        // 默认情况：返回原始数据
-        console.log('[Migrate] 使用默认迁移策略');
-        return persistedState;
-      },
-      version: 2, // 当前存档版本
       partialize: (state) => {
         // 使用优化后的存档格式
         const optimized = saveOptimizationService.optimize(state);
@@ -1337,86 +1275,65 @@ const useGameStore = create<GameState>()(
       },
       onRehydrateStorage: () => (state) => {
         if (state) {
-          // 检查是否是优化后的存档格式（有version字段）
-          if ('version' in state && state.version === 2) {
-            console.log('[Persist] 检测到优化后的存档格式 v2');
-            
-            // 使用优化服务恢复数据
-            const restored = saveOptimizationService.restore(state as unknown as OptimizedSaveData);
-            
-            // 将恢复的数据合并到state
-            Object.assign(state, restored);
-            
-            // 确保Map和Set对象正确恢复
-            state.inventory = ensureInventoryMap(state.inventory);
-            state.craftedItemCounts = ensureMap<string, number>(state.craftedItemCounts, 'craftedItemCounts');
-            state.builtEntityCounts = ensureMap<string, number>(state.builtEntityCounts, 'builtEntityCounts');
-            state.minedEntityCounts = ensureMap<string, number>(state.minedEntityCounts, 'minedEntityCounts');
-            state.favoriteRecipes = new Set(state.favoriteRecipes);
-            state.unlockedTechs = ensureUnlockedTechsSet(state.unlockedTechs);
-          } else {
-            // 兼容旧格式
-            console.log('[Persist] 检测到旧版存档格式，进行转换');
-            
-            // 使用辅助函数确保所有Map对象正确转换
-            state.inventory = ensureInventoryMap(state.inventory);
-            state.craftedItemCounts = ensureMap<string, number>(state.craftedItemCounts, 'craftedItemCounts');
-            state.builtEntityCounts = ensureMap<string, number>(state.builtEntityCounts, 'builtEntityCounts');
-            state.minedEntityCounts = ensureMap<string, number>(state.minedEntityCounts, 'minedEntityCounts');
-            
-            // 类型断言 - 确保正确的类型转换
-            const craftingQueue = state.craftingQueue as CraftingTask[];
-            state.craftingQueue = craftingQueue;
-            
-            // 确保craftingChains数组存在
-            if (!Array.isArray(state.craftingChains)) {
-              state.craftingChains = [];
-            }
-            
-            const facilities = state.facilities as FacilityInstance[];
-            state.facilities = facilities;
-            
-            const deployedContainers = state.deployedContainers as DeployedContainer[];
-            state.deployedContainers = deployedContainers;
-            
-            const totalItemsProduced = state.totalItemsProduced as number;
-            state.totalItemsProduced = totalItemsProduced;
-            
-            state.favoriteRecipes = new Set(state.favoriteRecipes as unknown as string[]);
-            
-            const recentRecipes = state.recentRecipes as string[];
-            state.recentRecipes = recentRecipes;
-            
-            const researchState = state.researchState as TechResearchState | null;
-            state.researchState = researchState;
-            
-            const researchQueue = state.researchQueue as ResearchQueueItem[];
-            state.researchQueue = researchQueue;
-            
-            state.unlockedTechs = ensureUnlockedTechsSet(state.unlockedTechs);
-            
-            const autoResearch = state.autoResearch as boolean;
-            state.autoResearch = autoResearch;
+          // 直接处理 Map 和 Set 对象的序列化问题
+          state.inventory = ensureInventoryMap(state.inventory);
+          state.craftedItemCounts = ensureMap<string, number>(state.craftedItemCounts, 'craftedItemCounts');
+          state.builtEntityCounts = ensureMap<string, number>(state.builtEntityCounts, 'builtEntityCounts');
+          state.minedEntityCounts = ensureMap<string, number>(state.minedEntityCounts, 'minedEntityCounts');
+          state.favoriteRecipes = new Set(state.favoriteRecipes);
+          state.unlockedTechs = ensureUnlockedTechsSet(state.unlockedTechs);
+          
+          // 确保数组字段存在
+          if (!Array.isArray(state.craftingQueue)) {
+            state.craftingQueue = [];
           }
-          
-          // 通用处理
-          console.log('Successfully rehydrated all Map objects from storage');
-          
-          // 只更新lastSaveTime，不进行时间补偿
-          state.lastSaveTime = Date.now();
-          
-          // techCategories 和 technologies 将通过 initializeTechnologyService 重新加载，确保初始状态
-          if (!state.technologies) {
-            state.technologies = new Map();
+          if (!Array.isArray(state.craftingChains)) {
+            state.craftingChains = [];
           }
-          if (!state.techCategories) {
+          if (!Array.isArray(state.facilities)) {
+            state.facilities = [];
+          }
+          if (!Array.isArray(state.deployedContainers)) {
+            state.deployedContainers = [];
+          }
+          if (!Array.isArray(state.recentRecipes)) {
+            state.recentRecipes = [];
+          }
+          if (!Array.isArray(state.researchQueue)) {
+            state.researchQueue = [];
+          }
+          if (!Array.isArray(state.techCategories)) {
             state.techCategories = [];
           }
           
-          // 确保saveKey存在
-          if (!state.saveKey) {
+          // 确保数值字段有默认值
+          if (typeof state.totalItemsProduced !== 'number') {
+            state.totalItemsProduced = 0;
+          }
+          if (typeof state.maxRecentRecipes !== 'number') {
+            state.maxRecentRecipes = 10;
+          }
+          if (typeof state.lastSaveTime !== 'number') {
+            state.lastSaveTime = Date.now();
+          }
+          if (typeof state.autoResearch !== 'boolean') {
+            state.autoResearch = true;
+          }
+          
+          // 确保字符串字段有默认值
+          if (typeof state.saveKey !== 'string') {
             state.saveKey = 'loaded';
           }
+          
+          // 确保对象字段有默认值
+          if (!state.researchState) {
+            state.researchState = null;
+          }
+          if (!state.technologies) {
+            state.technologies = new Map();
+          }
+          
+          console.log('[Persist] 存档数据恢复完成');
         }
       }
     }
