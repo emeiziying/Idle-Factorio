@@ -9,9 +9,9 @@ import { RecipeService } from '../core/RecipeService';
 import { UserProgressService } from '../state/UserProgressService';
 import { TechnologyService } from '../game/TechnologyService';
 import { RefactoredFuelService as FuelService } from '../game/RefactoredFuelService';
-import { PowerService } from '../PowerService';
-import { StorageService } from '../StorageService';
-import { GameStorageService } from '../GameStorageService';
+import { PowerService } from '../game/PowerService';
+import { StorageService } from '../state/StorageService';
+import { GameStorageService } from '../state/GameStorageService';
 import { DependencyService } from '../DependencyService';
 import { GameConfig } from '../GameConfig';
 
