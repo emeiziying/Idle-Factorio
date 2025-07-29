@@ -1,7 +1,7 @@
 import type { Recipe } from '../../types';
 import { CUSTOM_RECIPES } from '../../data/customRecipes';
 import { ServiceLocator, SERVICE_NAMES } from '../utils/ServiceLocator';
-import type { DataService } from './DataService';
+
 import type { IManualCraftingValidator } from '../interfaces/IManualCraftingValidator';
 import { BaseService } from '../base/BaseService';
 import { CacheManager } from '../base/CacheManager';
@@ -157,7 +157,7 @@ export class RecipeService extends BaseService {
    * @returns 手动制作配方，如果不能手动制作则返回 null
    */
   getManualCraftingRecipe(itemId: string): Recipe | null {
-    return this.safeAsync(async () => {
+    try {
       const cached = this.manualCraftingCache.get(itemId);
       if (cached !== undefined) {
         return cached;
@@ -171,10 +171,6 @@ export class RecipeService extends BaseService {
         this.manualCraftingCache.set(itemId, null);
         return null;
       }
-      
-      const dataService = ServiceLocator.has(SERVICE_NAMES.DATA) 
-        ? ServiceLocator.get<DataService>(SERVICE_NAMES.DATA) 
-        : null;
       
       // 1. 先判断物品是否可以手动制作
       const validation = validator.validateManualCrafting(itemId);
@@ -218,7 +214,7 @@ export class RecipeService extends BaseService {
             time: (baseRecipe.time || 1) * 2, // 手动制作时间加倍
             flags: ["manual"],
             producers: ["character"], // 只能由角色制作
-            energy: undefined, // 手动制作不需要能源
+            // energy: undefined, // 手动制作不需要能源（Recipe接口中没有energy字段）
             icon: baseRecipe.icon
           };
         }
@@ -226,7 +222,10 @@ export class RecipeService extends BaseService {
 
       this.manualCraftingCache.set(itemId, bestRecipe);
       return bestRecipe;
-    }, 'getManualCraftingRecipe', null);
+    } catch (error) {
+      this.handleError(error, 'getManualCraftingRecipe');
+      return null;
+    }
   }
 
   /**

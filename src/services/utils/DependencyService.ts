@@ -1,13 +1,13 @@
 // 依赖注入服务
 // 管理服务之间的依赖关系和创建顺序
 
-import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
+import { ServiceLocator } from './ServiceLocator';
 
 export interface DependencyMap {
   [serviceName: string]: string[];
 }
 
-export interface ServiceFactory<T = any> {
+export interface ServiceFactory<T = unknown> {
   create(): T;
   singleton?: boolean;
 }
@@ -81,7 +81,7 @@ export class DependencyService {
         this.created.add(name);
       }
 
-      return instance;
+      return instance as T;
     } finally {
       this.creating.delete(name);
     }
@@ -185,19 +185,17 @@ export class DependencyService {
 
 // 预定义的服务工厂注册
 export function setupDefaultFactories(): void {
-  const dependencyService = DependencyService.getInstance();
-  
   // 这里可以预注册一些基础服务工厂
   // 实际的服务注册应该在各自的模块中进行
 }
 
 // 便捷的依赖注入装饰器（如果需要的话）
 export function injectable(dependencies: string[] = []) {
-  return function<T extends { new(...args: any[]): {} }>(constructor: T) {
+  return function<T extends new(...args: unknown[]) => object>(constructor: T) {
     const serviceName = constructor.name;
-    const dependencyService = DependencyService.getInstance();
+    const depService = DependencyService.getInstance();
     
-    dependencyService.registerFactory(serviceName, {
+    depService.registerFactory(serviceName, {
       create: () => new constructor(),
       singleton: true
     }, dependencies);

@@ -1,12 +1,12 @@
-import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
-import { DataService } from './DataService';
-import { RecipeService } from './RecipeService';
-import { TechnologyService } from './TechnologyService';
+import { ServiceLocator, SERVICE_NAMES } from './utils/ServiceLocator';
+import { DataService } from './core/DataService';
+import { RecipeService } from './core/RecipeService';
+import { TechnologyService } from './core/TechnologyService';
 import { UserProgressService } from './UserProgressService';
 import { FuelService } from './FuelService';
 import { PowerService } from './PowerService';
 import { StorageService } from './StorageService';
-import { GameStateAdapter } from './GameStateAdapter';
+import { GameStateAdapter } from './state/GameStateAdapter';
 import ManualCraftingValidator from '../utils/manualCraftingValidator';
 
 /**
@@ -40,7 +40,7 @@ export class ServiceInitializer {
     ServiceLocator.register(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR, manualCraftingValidator);
 
     // 2. 初始化数据服务（现在不再直接依赖其他服务）
-    const dataService = DataService.getInstance();
+    const dataService = DataService.getInstance() as DataService;
     ServiceLocator.register(SERVICE_NAMES.DATA, dataService);
 
     // 3. 加载游戏数据
@@ -56,7 +56,7 @@ export class ServiceInitializer {
     }
 
     // 5. 初始化其他服务
-    const technologyService = TechnologyService.getInstance();
+    const technologyService = TechnologyService.getInstance() as TechnologyService;
     ServiceLocator.register(SERVICE_NAMES.TECHNOLOGY, technologyService);
     await technologyService.initialize();
 

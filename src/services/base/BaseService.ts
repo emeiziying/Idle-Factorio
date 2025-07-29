@@ -2,8 +2,8 @@
  * 基础服务抽象类
  * 提供通用的单例模式、依赖注入和错误处理机制
  */
-import { ServiceLocator } from '../ServiceLocator';
-import { DataService } from '../DataService';
+import { ServiceLocator } from '../utils/ServiceLocator';
+import type { DataService } from '../core/DataService';
 
 export abstract class BaseService {
   private static instances = new Map<string, BaseService>();
@@ -17,10 +17,11 @@ export abstract class BaseService {
   /**
    * 获取服务实例（单例模式）
    */
-  static getInstance<T extends BaseService>(this: new () => T): T {
+  static getInstance<T extends BaseService>(this: any): T {
     const serviceName = this.name;
     
     if (!BaseService.instances.has(serviceName)) {
+      // 使用 (this as any) 来绕过 protected 构造函数的限制
       const instance = new this();
       BaseService.instances.set(serviceName, instance);
     }

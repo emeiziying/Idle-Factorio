@@ -40,21 +40,21 @@ export interface II18nData {
 }
 
 // 手动制作验证器接口
-export { default as IManualCraftingValidator } from './IManualCraftingValidator';
+export type { IManualCraftingValidator } from './IManualCraftingValidator';
 
 // 依赖注入相关接口
 export interface IDependencyMap {
   [serviceName: string]: string[];
 }
 
-export interface IServiceFactory<T = any> {
+export interface IServiceFactory<T = unknown> {
   create(): T;
   singleton?: boolean;
 }
 
 // 游戏状态相关接口
 export interface IGameState {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface IGameStateAdapter {
@@ -78,7 +78,7 @@ export interface IUserProgress {
   experience: number;
   unlockedTechnologies: string[];
   completedAchievements: string[];
-  settings: Record<string, any>;
+  settings: Record<string, unknown>;
 }
 
 // 服务统计接口
