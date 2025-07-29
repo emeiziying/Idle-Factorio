@@ -6,6 +6,8 @@
 
 ## 📁 文档结构
 
+> 💡 **快速导航**: 查看 [文档索引](index.md) 获取更详细的分类导航和快速查找指南
+
 ### 🎨 设计文档 (`design/`)
 - **[异星工厂v2.md](design/异星工厂v2.md)** - 复杂版本的详细游戏设计文档
 - **[异星工厂v3设计文档.md](design/异星工厂v3设计文档.md)** - 简化版移动端友好的设计理念
@@ -15,6 +17,7 @@
 ### 🛠️ 实现文档 (`implementation/`)
 - **[第一阶段开发指南.md](implementation/第一阶段开发指南.md)** - **主要文档** - 第一阶段开发的完整指南和任务清单
 - **[第二阶段实现指南.md](implementation/第二阶段实现指南.md)** - 第二阶段的物流系统设计
+- **[save-optimization.md](implementation/save-optimization.md)** - 存档系统优化实施指南和技术细节
 
 #### 系统设计文档 (`implementation/systems/`)
 - **[电力系统设计文档.md](systems/电力系统设计文档.md)** - 完整的电力生产和管理系统
@@ -22,6 +25,7 @@
 - **[科技页面设计文档.md](systems/科技页面设计文档.md)** - 科技树和研究系统的UI/UX设计
 - **[物品解锁系统文档.md](systems/物品解锁系统文档.md)** - 物品解锁机制和用户进度管理
 - **[物流系统功能设计.md](systems/物流系统功能设计.md)** - 传送带和物流网络系统设计
+- **[storage-system.md](systems/storage-system.md)** - 基于堆叠的存储系统设计和实现
 
 ### 📦 已归档文档 (`archive/`)
 包含已被整合的原始文档，保留作为历史参考：
