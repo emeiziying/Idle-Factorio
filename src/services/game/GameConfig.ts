@@ -119,14 +119,14 @@ export function validateGameConfig(config: Record<string, unknown>): boolean {
     }
 
     // 检查数值范围
-    const gameSpeed = config.GAME_SPEED as any;
-    if (gameSpeed && gameSpeed.MIN >= gameSpeed.MAX) {
+    const gameSpeed = config.GAME_SPEED as { MIN: number; MAX: number };
+    if (gameSpeed && typeof gameSpeed.MIN === 'number' && typeof gameSpeed.MAX === 'number' && gameSpeed.MIN >= gameSpeed.MAX) {
       console.error('Invalid game speed range');
       return false;
     }
 
-    const autoSave = config.AUTO_SAVE as any;
-    if (autoSave && autoSave.INTERVAL < 1000) {
+    const autoSave = config.AUTO_SAVE as { INTERVAL: number };
+    if (autoSave && typeof autoSave.INTERVAL === 'number' && autoSave.INTERVAL < 1000) {
       console.error('Auto save interval too short');
       return false;
     }

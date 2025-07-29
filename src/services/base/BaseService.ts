@@ -17,7 +17,7 @@ export abstract class BaseService {
   /**
    * 获取服务实例（单例模式）
    */
-  static getInstance<T extends BaseService>(this: any): T {
+  static getInstance<T extends BaseService>(this: typeof BaseService): T {
     const serviceName = this.name;
     
     if (!BaseService.instances.has(serviceName)) {
