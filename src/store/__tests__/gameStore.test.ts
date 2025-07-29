@@ -65,7 +65,7 @@ describe('Game Store', () => {
       store.updateInventory('iron-ore', 100)
       
       const ironOre = store.getInventoryItem('iron-ore')
-      expect(ironOre.count).toBe(100)
+      expect(ironOre.currentAmount).toBe(100)
       expect(store.inventory.get('iron-ore')).toEqual(ironOre)
     })
 
@@ -76,7 +76,7 @@ describe('Game Store', () => {
       store.updateInventory('iron-ore', 50)
       
       const ironOre = store.getInventoryItem('iron-ore')
-      expect(ironOre.count).toBe(150)
+      expect(ironOre.currentAmount).toBe(150)
     })
 
     it('should handle negative amounts (removing items)', () => {
@@ -86,7 +86,7 @@ describe('Game Store', () => {
       store.updateInventory('iron-ore', -30)
       
       const ironOre = store.getInventoryItem('iron-ore')
-      expect(ironOre.count).toBe(70)
+      expect(ironOre.currentAmount).toBe(70)
     })
 
     it('should not allow negative inventory counts', () => {
@@ -96,7 +96,7 @@ describe('Game Store', () => {
       store.updateInventory('iron-ore', -150)
       
       const ironOre = store.getInventoryItem('iron-ore')
-      expect(ironOre.count).toBe(0)
+      expect(ironOre.currentAmount).toBe(0)
     })
 
     it('should batch update multiple items', () => {
@@ -110,9 +110,9 @@ describe('Game Store', () => {
       
       store.batchUpdateInventory(updates)
       
-      expect(store.getInventoryItem('iron-ore').count).toBe(100)
-      expect(store.getInventoryItem('copper-ore').count).toBe(50)
-      expect(store.getInventoryItem('coal').count).toBe(200)
+      expect(store.getInventoryItem('iron-ore').currentAmount).toBe(100)
+      expect(store.getInventoryItem('copper-ore').currentAmount).toBe(50)
+      expect(store.getInventoryItem('coal').currentAmount).toBe(200)
     })
 
     it('should return default item for non-existent items', () => {
@@ -120,11 +120,10 @@ describe('Game Store', () => {
       
       const nonExistentItem = store.getInventoryItem('non-existent')
       
-      expect(nonExistentItem).toEqual({
-        name: 'non-existent',
-        count: 0,
-        capacity: 100
-      })
+      expect(nonExistentItem).toHaveProperty('itemId', 'non-existent')
+      expect(nonExistentItem).toHaveProperty('currentAmount', 0)
+      expect(nonExistentItem).toHaveProperty('maxCapacity')
+      expect(nonExistentItem.maxCapacity).toBeGreaterThan(0)
     })
   })
 

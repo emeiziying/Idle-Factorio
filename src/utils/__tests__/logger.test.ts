@@ -23,10 +23,15 @@ describe('Logger', () => {
     global.console = { ...console, ...mockConsole }
     // Mock window object
     global.window = mockWindow as any
+    
+    // Mock Date to return consistent timestamps
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2023-01-01T12:00:00.000Z'))
   })
 
   afterEach(() => {
     vi.restoreAllMocks()
+    vi.useRealTimers()
   })
 
   describe('LogLevel', () => {
@@ -80,7 +85,10 @@ describe('Logger', () => {
 
     describe('log level filtering', () => {
       beforeEach(() => {
-        testLogger.configure({ level: LogLevel.WARN })
+        testLogger.configure({ 
+          level: LogLevel.WARN,
+          enableInProduction: true // Ensure logging works in test environment
+        })
       })
 
       it('should filter out logs below the configured level', () => {
@@ -117,14 +125,9 @@ describe('Logger', () => {
       beforeEach(() => {
         testLogger.configure({ 
           level: LogLevel.DEBUG,
-          prefix: '[Test]'
+          prefix: '[Test]',
+          enableInProduction: true // Ensure logging works in test environment
         })
-        vi.useFakeTimers()
-        vi.setSystemTime(new Date('2023-01-01T12:00:00.000Z'))
-      })
-
-      afterEach(() => {
-        vi.useRealTimers()
       })
 
       it('should format debug messages correctly', () => {
@@ -158,7 +161,10 @@ describe('Logger', () => {
 
     describe('additional arguments', () => {
       beforeEach(() => {
-        testLogger.configure({ level: LogLevel.DEBUG })
+        testLogger.configure({ 
+          level: LogLevel.DEBUG,
+          enableInProduction: true
+        })
       })
 
       it('should pass additional arguments to console methods', () => {
@@ -178,14 +184,9 @@ describe('Logger', () => {
       beforeEach(() => {
         testLogger.configure({
           level: LogLevel.DEBUG,
-          prefix: '[Parent]'
+          prefix: '[Parent]',
+          enableInProduction: true
         })
-        vi.useFakeTimers()
-        vi.setSystemTime(new Date('2023-01-01T12:00:00.000Z'))
-      })
-
-      afterEach(() => {
-        vi.useRealTimers()
       })
 
       it('should create child loggers with inherited config', () => {
@@ -215,6 +216,7 @@ describe('Logger', () => {
         delete (global as any).window
 
         const serverLogger = new Logger()
+        serverLogger.configure({ enableInProduction: true, level: LogLevel.DEBUG })
         serverLogger.debug('test message')
         
         // Should work without throwing
