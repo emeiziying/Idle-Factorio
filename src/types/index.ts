@@ -43,6 +43,13 @@ export interface Item {
     value: number;
     category?: string;
   };
+  fuel_emissions_multiplier?: number;
+  fuel_acceleration_multiplier?: number;
+  fuel_top_speed_multiplier?: number;
+  energy_source?: {
+    type: string;
+    usage_priority?: number;
+  };
   type?: string;
   unlocked?: boolean;
   container?: {
