@@ -118,6 +118,14 @@ export const useCrafting = () => {
               executeChainCrafting(chain);
               return;
             }
+          } else if (chain === null) {
+            // 链式分析返回null，说明原材料不足
+            setShowMessage({
+              open: true,
+              message: '原材料不足，无法创建制作链。请先获取足够的基础材料。',
+              severity: 'error'
+            });
+            return;
           }
         }
 

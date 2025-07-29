@@ -159,13 +159,17 @@ export class DependencyService {
       // 检查这个材料是否可以进一步制作
       const inputRecipe = this.getBestManualCraftingRecipe(inputItemId);
       
-      if (inputRecipe && inputRecipe.in && Object.keys(inputRecipe.in).length > 0) {
+      // 采矿配方不需要材料，不应计入原材料需求
+      if (inputRecipe && inputRecipe.in && Object.keys(inputRecipe.in).length > 0 && !inputRecipe.flags?.includes('mining')) {
         // 这是一个中间产物，需要递归计算其原材料需求
         this.calculateTotalRawMaterialNeeds(inputRecipe, Math.ceil(totalRequired / Object.values(inputRecipe.out)[0]), totalNeeds);
       } else {
-        // 这是原材料，累加需求
-        const existingNeed = totalNeeds.get(inputItemId) || 0;
-        totalNeeds.set(inputItemId, existingNeed + totalRequired);
+        // 这是原材料或可采矿物品，不计入原材料需求
+        // 采矿物品可以无限制获取，所以不需要验证库存
+        if (!inputRecipe || !inputRecipe.flags?.includes('mining')) {
+          const existingNeed = totalNeeds.get(inputItemId) || 0;
+          totalNeeds.set(inputItemId, existingNeed + totalRequired);
+        }
       }
     }
   }
