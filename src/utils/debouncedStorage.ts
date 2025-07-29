@@ -40,6 +40,8 @@ class DebouncedStorage implements StateStorage {
           const decompressed = LZString.decompressFromUTF16(value);
           if (decompressed) {
             console.log(`[Storage] 解压数据成功: ${name}`);
+            // 调试：打印解压后的数据（仅前500字符避免过长）
+            console.log(`[Storage] 解压后内容预览: ${decompressed.substring(0, 500)}${decompressed.length > 500 ? '...' : ''}`);
             return decompressed;
           }
         }
@@ -84,19 +86,37 @@ class DebouncedStorage implements StateStorage {
               const compressed = LZString.compressToUTF16(pending.value);
               const compressedSize = compressed.length * 2; // UTF-16每字符2字节
               
+              // 格式化大小显示，小于1KB时显示字节数
+              const formatSize = (bytes: number) => {
+                if (bytes < 1024) {
+                  return `${bytes}B`;
+                } else {
+                  return `${(bytes / 1024).toFixed(1)}KB`;
+                }
+              };
+              
               if (compressedSize < originalSize) {
                 dataToSave = compressed;
                 const reduction = Math.round((1 - compressedSize / originalSize) * 100);
-                sizeInfo = ` (压缩: ${Math.round(originalSize / 1024)}KB → ${Math.round(compressedSize / 1024)}KB, -${reduction}%)`;
+                sizeInfo = ` (压缩: ${formatSize(originalSize)} → ${formatSize(compressedSize)}, -${reduction}%)`;
               } else {
-                sizeInfo = ` (未压缩: ${Math.round(originalSize / 1024)}KB)`;
+                sizeInfo = ` (未压缩: ${formatSize(originalSize)})`;
               }
             } else {
-              sizeInfo = ` (${Math.round(pending.value.length / 1024)}KB)`;
+              const formatSize = (bytes: number) => {
+                if (bytes < 1024) {
+                  return `${bytes}B`;
+                } else {
+                  return `${(bytes / 1024).toFixed(1)}KB`;
+                }
+              };
+              sizeInfo = ` (${formatSize(pending.value.length)})`;
             }
             
             await asyncStorage.setItem(pending.name, dataToSave);
             console.log(`[Save] 存档成功: ${pending.name}${sizeInfo}`);
+            // 调试：打印保存的原始数据（仅前500字符避免过长）
+            console.log(`[Save] 原始数据预览: ${pending.value.substring(0, 500)}${pending.value.length > 500 ? '...' : ''}`);
             pending.resolve();
           } catch (error) {
             console.error(`[Save] 存档失败: ${pending.name}`, error);
@@ -130,6 +150,15 @@ class DebouncedStorage implements StateStorage {
       let dataToSave = value;
       let sizeInfo = '';
       
+      // 格式化大小显示，小于1KB时显示字节数
+      const formatSize = (bytes: number) => {
+        if (bytes < 1024) {
+          return `${bytes}B`;
+        } else {
+          return `${(bytes / 1024).toFixed(1)}KB`;
+        }
+      };
+      
       if (this.enableCompression) {
         const originalSize = value.length;
         const compressed = LZString.compressToUTF16(value);
@@ -138,12 +167,12 @@ class DebouncedStorage implements StateStorage {
         if (compressedSize < originalSize) {
           dataToSave = compressed;
           const reduction = Math.round((1 - compressedSize / originalSize) * 100);
-          sizeInfo = ` (压缩: ${Math.round(originalSize / 1024)}KB → ${Math.round(compressedSize / 1024)}KB, -${reduction}%)`;
+          sizeInfo = ` (压缩: ${formatSize(originalSize)} → ${formatSize(compressedSize)}, -${reduction}%)`;
         } else {
-          sizeInfo = ` (未压缩: ${Math.round(originalSize / 1024)}KB)`;
+          sizeInfo = ` (未压缩: ${formatSize(originalSize)})`;
         }
       } else {
-        sizeInfo = ` (${Math.round(value.length / 1024)}KB)`;
+        sizeInfo = ` (${formatSize(value.length)})`;
       }
       
       // 使用.then()链式调用替代async/await

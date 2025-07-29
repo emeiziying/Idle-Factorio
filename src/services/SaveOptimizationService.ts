@@ -33,7 +33,6 @@ interface GameState {
 
 // 优化后的存档格式
 export interface OptimizedSaveData {
-  version: number;
   inventory: Record<string, number>; // 简化为物品ID->数量
   craftingQueue: CraftingTask[]; // 使用具体类型
   craftingChains: CraftingChain[]; // 使用具体类型
@@ -87,7 +86,6 @@ export class SaveOptimizationService {
    */
   optimize(state: Partial<GameState>): OptimizedSaveData {
     const optimized: OptimizedSaveData = {
-      version: 2,
       inventory: {},
       craftingQueue: state.craftingQueue || [],
       craftingChains: state.craftingChains || [],

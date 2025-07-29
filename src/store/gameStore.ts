@@ -18,7 +18,7 @@ import { getStorageConfig } from '../data/storageConfigs';
 import { DataService } from '../services/DataService';
 import { TechnologyService } from '../services/TechnologyService';
 import { FuelService } from '../services/FuelService';
-import { saveOptimizationService } from '../services/SaveOptimizationService';
+import { saveOptimizationService, type OptimizedSaveData } from '../services/SaveOptimizationService';
 
 // 页面卸载时立即保存
 if (typeof window !== 'undefined') {
@@ -247,6 +247,9 @@ const useGameStore = create<GameState>()(
             totalItemsProduced: state.totalItemsProduced + (amount > 0 ? amount : 0)
           };
         });
+        
+        // 触发存档
+        get().saveGame();
       },
 
       // 批量更新库存
@@ -974,6 +977,9 @@ const useGameStore = create<GameState>()(
           return { craftedItemCounts: newCraftedItemCounts };
         });
         
+        // 触发存档
+        get().saveGame();
+        
         // 检查研究触发器
         get().checkResearchTriggers();
       },
@@ -987,6 +993,9 @@ const useGameStore = create<GameState>()(
           return { builtEntityCounts: newBuiltEntityCounts };
         });
         
+        // 触发存档
+        get().saveGame();
+        
         // 检查研究触发器
         get().checkResearchTriggers();
       },
@@ -999,6 +1008,9 @@ const useGameStore = create<GameState>()(
           newMinedEntityCounts.set(entityId, currentCount + count);
           return { minedEntityCounts: newMinedEntityCounts };
         });
+        
+        // 触发存档
+        get().saveGame();
         
         // 检查研究触发器
         get().checkResearchTriggers();
@@ -1275,13 +1287,29 @@ const useGameStore = create<GameState>()(
       },
       onRehydrateStorage: () => (state) => {
         if (state) {
-          // 直接处理 Map 和 Set 对象的序列化问题
-          state.inventory = ensureInventoryMap(state.inventory);
-          state.craftedItemCounts = ensureMap<string, number>(state.craftedItemCounts, 'craftedItemCounts');
-          state.builtEntityCounts = ensureMap<string, number>(state.builtEntityCounts, 'builtEntityCounts');
-          state.minedEntityCounts = ensureMap<string, number>(state.minedEntityCounts, 'minedEntityCounts');
-          state.favoriteRecipes = new Set(state.favoriteRecipes);
-          state.unlockedTechs = ensureUnlockedTechsSet(state.unlockedTechs);
+          // 检查是否是优化后的存档格式（通过inventory格式判断）
+          // 优化后的inventory是普通对象，传统格式是Map的序列化数组
+          const isOptimizedFormat = state.inventory && 
+                                   typeof state.inventory === 'object' && 
+                                   !Array.isArray(state.inventory) &&
+                                   !('entries' in state.inventory);
+          
+          if (isOptimizedFormat) {
+            console.log('[Storage] 检测到优化存档格式，正在恢复...');
+            // 使用SaveOptimizationService恢复数据
+            const restored = saveOptimizationService.restore(state as unknown as OptimizedSaveData);
+            // 合并恢复后的数据到state
+            Object.assign(state, restored);
+            console.log('[Storage] 优化存档恢复完成');
+          } else {
+            // 处理传统格式的 Map 和 Set 对象序列化问题
+            state.inventory = ensureInventoryMap(state.inventory);
+            state.craftedItemCounts = ensureMap<string, number>(state.craftedItemCounts, 'craftedItemCounts');
+            state.builtEntityCounts = ensureMap<string, number>(state.builtEntityCounts, 'builtEntityCounts');
+            state.minedEntityCounts = ensureMap<string, number>(state.minedEntityCounts, 'minedEntityCounts');
+            state.favoriteRecipes = new Set(state.favoriteRecipes);
+            state.unlockedTechs = ensureUnlockedTechsSet(state.unlockedTechs);
+          }
           
           // 确保数组字段存在
           if (!Array.isArray(state.craftingQueue)) {
