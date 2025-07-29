@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is **异星工厂 v2** (Factorio v2) - a React-based idle factory management game inspired by Factorio. The application is built with modern React architecture and implements core game mechanics for production management.
+This is **Idle Factorio** - a React-based idle factory management game inspired by Factorio. The application is built with modern React architecture and implements core game mechanics for production management.
 
 **Current State**: Active development - Core modules implemented  
 **Tech Stack**: React 19.1.0 + TypeScript + Vite + Material-UI v7.2.0 + Zustand  
@@ -220,7 +220,7 @@ const favoriteRecipes = useGameStore(state => state.favoriteRecipes);
 - `设备管理系统文档.md` - Facility management and automation
 
 ### Game Design
-- `异星工厂v2.md` & `异星工厂v3设计文档.md` - Overall game concept and progression
+- `异星工厂v2.md` & `异星工厂v3设计文档.md` - Overall game concept and progression (legacy design docs)
 - `物品分类系统设计.md` - Item categorization strategy
 - `物流系统功能设计.md` - Future logistics system (Phase 2+)
 
