@@ -87,7 +87,7 @@ describe('DataService', () => {
 
   beforeEach(() => {
     // Clear instance
-    ;(DataService as ServiceInstance<DataService>).instance = null
+    ;(DataService as unknown as ServiceInstance<DataService>).instance = null
     ServiceLocator.clear()
 
     // Mock services

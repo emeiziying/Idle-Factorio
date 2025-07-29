@@ -1263,7 +1263,7 @@ const initializeStore = async () => {
 initializeStore();
 
 // 全局变量存储定时器ID，防止热更新时创建多个定时器
-let autoSaveIntervalId: number | null = null;
+let autoSaveIntervalId: ReturnType<typeof setInterval> | null = null;
 let lastAutoSaveTime = Date.now();
 
 // 清理自动存档定时器

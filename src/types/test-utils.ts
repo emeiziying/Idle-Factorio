@@ -33,18 +33,18 @@ export type ConsoleMock = {
 
 // Storage mock type for localStorage/sessionStorage
 export type StorageMock = {
-  getItem: MockFunction<(key: string) => string | null>
-  setItem: MockFunction<(key: string, value: string) => void>
-  removeItem: MockFunction<(key: string) => void>
+  getItem: MockFunction<(...args: unknown[]) => string | null>
+  setItem: MockFunction<(...args: unknown[]) => void>
+  removeItem: MockFunction<(...args: unknown[]) => void>
   clear: MockFunction<() => void>
 }
 
 // Style object type for CSS-in-JS
-export type StyleObject = Record<string, string | number | StyleObject>
+export type StyleObject = Record<string, string | number | Record<string, unknown>>
 
 // Vitest mock type helper
-export type VitestMock<T> = T & {
-  mockReturnValue: (value: ReturnType<T extends (...args: unknown[]) => infer R ? (...args: unknown[]) => R : never>) => void
+export type VitestMock<T extends (...args: unknown[]) => unknown> = T & {
+  mockReturnValue: (value: ReturnType<T>) => void
   mockImplementation: (fn: T) => void
   mockResolvedValue: T extends (...args: unknown[]) => Promise<infer R> ? (value: R) => void : never
   mockRejectedValue: (error: Error) => void
