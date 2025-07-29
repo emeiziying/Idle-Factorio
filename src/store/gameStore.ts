@@ -19,6 +19,7 @@ import { DataService } from '../services/DataService';
 import { TechnologyService } from '../services/TechnologyService';
 import { FuelService } from '../services/FuelService';
 import { saveOptimizationService } from '../services/SaveOptimizationService';
+import type { OptimizedSaveData } from '../services/SaveOptimizationService';
 
 // 页面卸载时立即保存
 if (typeof window !== 'undefined') {
@@ -1256,7 +1257,7 @@ const useGameStore = create<GameState>()(
             console.log('[Persist] 检测到优化后的存档格式 v2');
             
             // 使用优化服务恢复数据
-            const restored = saveOptimizationService.restore(state as any);
+            const restored = saveOptimizationService.restore(state as unknown as OptimizedSaveData);
             
             // 将恢复的数据合并到state
             Object.assign(state, restored);

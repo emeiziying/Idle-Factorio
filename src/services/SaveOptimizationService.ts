@@ -5,15 +5,38 @@
  */
 
 import { DataService } from './DataService';
-import type { FacilityInstance } from '../types/facilities';
+import type { FacilityInstance, FacilityStatus } from '../types/facilities';
+import type { CraftingTask, CraftingChain, DeployedContainer, InventoryItem } from '../types/index';
+import type { TechResearchState, ResearchQueueItem } from '../types/technology';
 import LZString from 'lz-string';
+
+// 定义部分 GameState 类型
+interface GameState {
+  inventory: Map<string, InventoryItem>;
+  craftingQueue: CraftingTask[];
+  craftingChains: CraftingChain[];
+  facilities: FacilityInstance[];
+  deployedContainers: DeployedContainer[];
+  totalItemsProduced: number;
+  favoriteRecipes: Set<string>;
+  recentRecipes: string[];
+  researchState: TechResearchState | null;
+  researchQueue: ResearchQueueItem[];
+  unlockedTechs: Set<string>;
+  autoResearch: boolean;
+  craftedItemCounts: Map<string, number>;
+  builtEntityCounts: Map<string, number>;
+  minedEntityCounts: Map<string, number>;
+  lastSaveTime: number;
+  saveKey: string;
+}
 
 // 优化后的存档格式
 export interface OptimizedSaveData {
   version: number;
   inventory: Record<string, number>; // 简化为物品ID->数量
-  craftingQueue: any[]; // 保持原样
-  craftingChains: any[]; // 保持原样
+  craftingQueue: CraftingTask[]; // 使用具体类型
+  craftingChains: CraftingChain[]; // 使用具体类型
   facilities: OptimizedFacility[];
   stats: {
     total: number;
@@ -22,14 +45,14 @@ export interface OptimizedSaveData {
     mined: [string, number][];
   };
   research: {
-    state: any;
-    queue: any[];
+    state: TechResearchState | null;
+    queue: ResearchQueueItem[];
     unlocked: string[];
     auto: boolean;
   };
   favorites: string[];
-  recent: any[];
-  containers: any[];
+  recent: string[];
+  containers: DeployedContainer[];
   time: number;
 }
 
@@ -40,7 +63,7 @@ export interface OptimizedFacility {
   recipe: string;
   progress: number;
   fuel: Record<string, number>;
-  status: string;
+  status: FacilityStatus;
   efficiency: number;
 }
 
@@ -62,7 +85,7 @@ export class SaveOptimizationService {
   /**
    * 将游戏状态转换为优化后的存档格式
    */
-  optimize(state: any): OptimizedSaveData {
+  optimize(state: Partial<GameState>): OptimizedSaveData {
     const optimized: OptimizedSaveData = {
       version: 2,
       inventory: {},
@@ -101,7 +124,7 @@ export class SaveOptimizationService {
         return {
           id: facility.id,
           type: facility.facilityId,
-          recipe: facility.targetItemId,
+          recipe: facility.targetItemId || '',
           progress: Math.round((facility.production?.progress || 0) * 100) / 100, // 保留2位小数
           fuel: fuel ? { [fuel.itemId]: Math.round(fuel.remainingEnergy * 100) / 100 } : {},
           status: facility.status,
@@ -116,8 +139,8 @@ export class SaveOptimizationService {
   /**
    * 从优化后的存档格式恢复游戏状态
    */
-  restore(optimized: OptimizedSaveData): any {
-    const restored: any = {
+  restore(optimized: OptimizedSaveData): Partial<GameState> {
+    const restored: Partial<GameState> = {
       inventory: new Map(),
       craftingQueue: optimized.craftingQueue,
       craftingChains: optimized.craftingChains,
@@ -138,8 +161,9 @@ export class SaveOptimizationService {
     };
 
     // 恢复库存（需要从游戏配置获取完整信息）
-    for (const [itemId, amount] of Object.entries(optimized.inventory)) {
-      restored.inventory.set(itemId, {
+    if (restored.inventory) {
+      for (const [itemId, amount] of Object.entries(optimized.inventory)) {
+        restored.inventory.set(itemId, {
         itemId,
         currentAmount: amount,
         stackSize: this.getItemStackSize(itemId),
@@ -150,19 +174,21 @@ export class SaveOptimizationService {
         productionRate: 0,
         consumptionRate: 0,
         status: 'normal'
-      });
+        });
+      }
     }
 
     // 恢复设施
-    restored.facilities = optimized.facilities.map(facility => {
+    if (restored.facilities) {
+      restored.facilities = optimized.facilities.map(facility => {
       const fuelItem = Object.keys(facility.fuel)[0];
-      return {
-        id: facility.id,
-        facilityId: facility.type,
-        targetItemId: facility.recipe,
-        count: 1,
-        status: facility.status,
-        efficiency: facility.efficiency,
+              return {
+          id: facility.id,
+          facilityId: facility.type,
+          targetItemId: facility.recipe,
+          count: 1,
+          status: facility.status as FacilityStatus,
+          efficiency: facility.efficiency,
         production: {
           currentRecipeId: facility.recipe,
           progress: facility.progress,
@@ -181,8 +207,9 @@ export class SaveOptimizationService {
           consumptionRate: this.getFacilityConsumptionRate(facility.type),
           lastUpdate: optimized.time
         }
-      };
-    });
+        };
+      });
+    }
 
     return restored;
   }
@@ -190,14 +217,14 @@ export class SaveOptimizationService {
   /**
    * 计算存档大小（用于比较）
    */
-  calculateSize(data: any): number {
+  calculateSize(data: unknown): number {
     return JSON.stringify(data).length;
   }
 
   /**
    * 使用LZ-String压缩数据
    */
-  compress(data: any): string {
+  compress(data: unknown): string {
     const jsonStr = JSON.stringify(data);
     return LZString.compressToUTF16(jsonStr);
   }
@@ -205,7 +232,7 @@ export class SaveOptimizationService {
   /**
    * 解压LZ-String压缩的数据
    */
-  decompress(compressed: string): any {
+  decompress(compressed: string): unknown {
     try {
       const jsonStr = LZString.decompressFromUTF16(compressed);
       if (!jsonStr) {
@@ -221,7 +248,7 @@ export class SaveOptimizationService {
   /**
    * 计算压缩后的大小
    */
-  calculateCompressedSize(data: any): number {
+  calculateCompressedSize(data: unknown): number {
     const compressed = this.compress(data);
     return compressed.length * 2; // UTF-16每个字符占2字节
   }
@@ -229,7 +256,7 @@ export class SaveOptimizationService {
   /**
    * 比较优化前后的存档大小
    */
-  compareSizes(original: any, optimized: OptimizedSaveData): {
+  compareSizes(original: unknown, optimized: OptimizedSaveData): {
     originalSize: number;
     optimizedSize: number;
     compressedSize: number;
