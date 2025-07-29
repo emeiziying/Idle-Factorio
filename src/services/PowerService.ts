@@ -113,6 +113,13 @@ export class PowerService {
   ): FacilityInstance {
     const updatedFacility = { ...facility };
     
+    // 检查是否是burner类型设施
+    const itemData = this.dataService.getItem(facility.facilityId);
+    if (itemData?.machine?.type === 'burner') {
+      // burner类型设施不依赖电力，保持原效率和状态
+      return updatedFacility;
+    }
+    
     // 检查是否是耗电设施
     const powerDemand = this.getFacilityPowerDemand(facility);
     if (powerDemand === 0) {
@@ -149,6 +156,12 @@ export class PowerService {
   getFacilityPowerDemand(facility: FacilityInstance): number {
     if (facility.status === FacilityStatus.STOPPED) {
       return 0;
+    }
+    
+    // 检查是否是burner类型设施
+    const itemData = this.dataService.getItem(facility.facilityId);
+    if (itemData?.machine?.type === 'burner') {
+      return 0; // burner设施不消耗电力
     }
     
     const basePower = this.getFacilityBasePowerConsumption(facility.facilityId);

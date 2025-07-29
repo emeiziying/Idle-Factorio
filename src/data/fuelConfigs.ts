@@ -9,8 +9,6 @@ export interface FuelConfig {
   fuelSlots: number;
   // 单个槽位最大堆叠
   maxStackPerSlot: number;
-  // 基础能耗 (MW)
-  basePowerConsumption: number;
 }
 
 // 燃料优先级（从低到高）
@@ -21,6 +19,25 @@ export const FUEL_PRIORITY = [
   'nuclear-fuel',   // 1.21 GJ - 核燃料
   'wood'            // 2 MJ - 最后使用木材（通常另作他用）
 ];
+
+// 设施燃料配置
+export const FACILITY_FUEL_CONFIGS: Record<string, FuelConfig> = {
+  'stone-furnace': {
+    acceptedCategories: ['chemical'],
+    fuelSlots: 1,
+    maxStackPerSlot: 50
+  },
+  'steel-furnace': {
+    acceptedCategories: ['chemical'],
+    fuelSlots: 1,
+    maxStackPerSlot: 50
+  },
+  'burner-mining-drill': {
+    acceptedCategories: ['chemical'],
+    fuelSlots: 1,
+    maxStackPerSlot: 50
+  }
+};
 
 // 获取物品的燃料类别
 export function getFuelCategory(itemId: string): FuelCategory | null {

@@ -31,6 +31,12 @@ pnpm install
 
 **Note**: Always run `pnpm lint` after making code changes to ensure TypeScript and React code quality.
 
+### Development Server Guidelines
+- **Priority**: Use existing dev server at `http://localhost:5173` if already running
+- **Check existing**: Use `lsof -i :5173` to check for running services before starting new ones
+- **Avoid duplicates**: Don't start multiple dev servers for the same project
+- **Port fallback**: Vite will automatically use `http://localhost:5174` if 5173 is occupied
+
 ## Critical Architecture Patterns
 
 ### Service Locator Pattern
@@ -43,11 +49,11 @@ ServiceInitializer.initialize()
 const dataService = ServiceLocator.get<DataService>(SERVICE_NAMES.DATA);
 ```
 
-### Zustand State Management with Custom Serialization
-The gameStore.ts implements sophisticated Map/Set serialization for localStorage persistence:
+### Zustand State Management with Unified Storage
+The gameStore.ts implements sophisticated Map/Set serialization with unified storage service:
 - **Map types**: inventory, craftedItemCounts, builtEntityCounts, minedEntityCounts
 - **Set types**: favoriteRecipes, unlockedTechs
-- **Custom serialization**: SaveOptimizationService handles compression and v2 format
+- **Unified Storage**: GameStorageService handles optimization, compression, and persistence
 
 ### Service Layer Business Logic Pattern
 **Critical**: Always use services for business logic, never implement it in components:
@@ -102,6 +108,8 @@ The application follows a service-oriented architecture with clear separation of
 - **UserProgressService**: Item unlock status management (implemented)
 - **StorageService**: Storage configuration management with capacity and fluid handling
 - **TechnologyService**: Technology tree management and research progression
+- **GameStorageService**: Unified save/load operations with optimization and compression
+- **GameConfig**: Centralized game constants and configuration management
 - **GameStore (Zustand)**: Reactive state management with localStorage persistence
 
 ### Phase 1 Implementation Status
@@ -248,14 +256,21 @@ interface GameState {
 
 ## Key Development Patterns
 
-### Service Layer Usage
+### Service Initialization Pattern
 ```typescript
+// Services must be initialized before use via ServiceInitializer
+await ServiceInitializer.initialize();
+
+// Service Locator pattern - access through centralized registry
+const dataService = ServiceLocator.get<DataService>(SERVICE_NAMES.DATA);
+const recipeService = ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE);
+
 // Static service methods for business logic
 const recipes = RecipeService.getRecipesThatProduce(itemId);
 const efficiency = RecipeService.calculateRecipeEfficiency(recipe);
 
 // Singleton data access
-const gameData = await DataService.loadGameData();
+const gameData = await dataService.loadGameData();
 ```
 
 ### State Management Pattern
@@ -412,29 +427,33 @@ state.inventory = ensureInventoryMap(state.inventory);
 state.favoriteRecipes = new Set(state.favoriteRecipes);
 ```
 
-### Advanced Save System with Debounced Storage
-The application implements a sophisticated save system with multiple optimization layers:
+### Unified Game Storage System
+The application implements a sophisticated save system with GameStorageService that consolidates all storage operations:
 
-#### DebouncedStorage Class
+#### GameStorageService Features
 ```typescript
-// 2-second debounce to prevent frequent localStorage writes
-const debouncedStorage = new DebouncedStorage(2000);
+// Unified storage with integrated optimization and compression
+const gameStorageService = GameStorageService.getInstance();
 
 // Features:
-// - LZ-String compression (70-80% size reduction)
-// - Automatic compression detection and fallback
-// - Force save on page unload
-// - Pending saves management
+// - Integrated data structure optimization (50-60% reduction)
+// - LZ-String compression (70-80% total reduction)
+// - Automatic debouncing to prevent frequent writes
+// - Map/Set serialization support
+// - Force save and error recovery
 ```
 
-#### Save Optimization Service
+#### Game Configuration Management
 ```typescript
-// Two-phase optimization:
-// Phase 1: Data structure optimization (50-60% reduction)
-// Phase 2: LZ-String compression (70-80% total reduction)
+// Centralized configuration via GameConfig
+const gameConfig = GameConfig.getInstance();
+const constants = gameConfig.getConstants();
 
-const optimized = saveOptimizationService.optimize(state);
-const compressed = LZString.compressToUTF16(JSON.stringify(optimized));
+// Centralized management of:
+// - Crafting system constants (min time, intervals)
+// - Fuel system settings (slots, thresholds)
+// - Power system parameters (surplus, balance ratios)
+// - Storage system defaults (stack sizes, capacity)
 ```
 
 #### State Recovery Mechanism
@@ -450,20 +469,21 @@ onRehydrateStorage: () => (state) => {
 
 #### Save Methods
 ```typescript
-// Regular save (debounced)
+// Regular save (automatic debouncing)
 saveGame: () => {
   set(() => ({ saveKey: `save_${Date.now()}` }));
 }
 
-// Force save (bypass debounce)
+// Force save (bypass debounce via GameStorageService)
 forceSaveGame: async () => {
-  const optimized = saveOptimizationService.optimize(state);
-  await storage.forceSetItem('factorio-game-storage', JSON.stringify(optimized));
+  const gameStorageService = GameStorageService.getInstance();
+  await gameStorageService.forceSave(state);
 }
 
 // Clear save (development only)
 clearGameData: async () => {
-  await storage.removeItem('factorio-game-storage');
+  const gameStorageService = GameStorageService.getInstance();
+  await gameStorageService.clearSave();
   set(() => ({ /* reset all state */ }));
   window.location.reload();
 }
@@ -491,6 +511,17 @@ Specialized debugging support via browser tools (see .cursor/rules/):
 5. Chain cancellation properly refunds all pre-deducted raw materials
 
 **Files modified**: `DependencyService.ts`, `useCrafting.ts`, `gameStore.ts`, `craftingEngine.ts`, `types/index.ts`
+
+### Recent Service Architecture Refactoring (Latest)
+**Change**: Consolidated storage and configuration management into unified services.
+
+**Improvements**:
+1. **GameStorageService**: Unified save/load operations replacing separate SaveOptimizationService and DebouncedStorage
+2. **GameConfig**: Centralized game constants management replacing scattered configuration
+3. **Simplified gameStore**: Reduced complexity by moving storage logic to dedicated service
+4. **Better separation of concerns**: Clear boundaries between state management and persistence
+
+**Files affected**: `GameStorageService.ts`, `GameConfig.ts`, `gameStore.ts`, service layer refactoring
 
 ## Browser Debugging & UI Design Guidelines
 
