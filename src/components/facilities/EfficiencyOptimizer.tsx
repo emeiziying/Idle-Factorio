@@ -27,7 +27,7 @@ import {
   LocalFireDepartment
 } from '@mui/icons-material';
 import useGameStore from '../../store/gameStore';
-import { PowerService } from '../../services/PowerService';
+import { PowerService } from '../../services/game/PowerService';
 import { DataService } from '../../services/DataService';
 import { RecipeService } from '../../services/RecipeService';
 import { FacilityStatus } from '../../types/facilities';

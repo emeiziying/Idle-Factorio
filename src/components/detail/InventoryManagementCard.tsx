@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import type { Item } from "../../types/index";
 import useGameStore from "../../store/gameStore";
-import { getStorageService } from "../../services/StorageService";
+import { getStorageService } from "../../services/game/StorageService";
 import FactorioIcon from "../common/FactorioIcon";
 import { DataService } from "../../services/DataService";
 

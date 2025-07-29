@@ -18,7 +18,7 @@ import type {
 import { ResearchPriority } from '../types/technology';
 import type { InventoryOperations } from '../types/inventory';
 import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
-import { UserProgressService } from './UserProgressService';
+import { UserProgressService } from './state/UserProgressService';
 import { DataService } from './DataService';
 import { RecipeService } from './RecipeService';
 import type { FacilityInstance } from '../types/facilities';

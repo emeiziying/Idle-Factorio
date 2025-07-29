@@ -2,7 +2,7 @@
 
 import { DataService } from './DataService';
 import { RecipeService } from './RecipeService';
-import { GameConfig } from './GameConfig';
+import { GameConfig } from './game/GameConfig';
 import type { FacilityInstance, FuelBuffer } from '../types/facilities';
 import { FacilityStatus } from '../types/facilities';
 import type { InventoryItem } from '../types/index';

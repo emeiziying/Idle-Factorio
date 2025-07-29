@@ -2,10 +2,10 @@ import { ServiceLocator, SERVICE_NAMES } from './utils/ServiceLocator';
 import { DataService } from './core/DataService';
 import { RecipeService } from './core/RecipeService';
 import { TechnologyService } from './core/TechnologyService';
-import { UserProgressService } from './UserProgressService';
-import { FuelService } from './FuelService';
-import { PowerService } from './PowerService';
-import { StorageService } from './StorageService';
+import { UserProgressService } from './state/UserProgressService';
+import { PowerService } from './game/PowerService';
+import { StorageService } from './game/StorageService';
+import { GameStorageService } from './state/GameStorageService';
 import { GameStateAdapter } from './state/GameStateAdapter';
 import ManualCraftingValidator from '../utils/manualCraftingValidator';
 
@@ -60,11 +60,11 @@ export class ServiceInitializer {
     ServiceLocator.register(SERVICE_NAMES.TECHNOLOGY, technologyService);
     await technologyService.initialize();
 
-    const fuelService = FuelService.getInstance();
-    ServiceLocator.register(SERVICE_NAMES.FUEL, fuelService);
-
     const powerService = PowerService.getInstance();
     ServiceLocator.register(SERVICE_NAMES.POWER, powerService);
+
+    const gameStorageService = GameStorageService.getInstance();
+    ServiceLocator.register(SERVICE_NAMES.GAME_STORAGE, gameStorageService);
 
     this.initialized = true;
   }

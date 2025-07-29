@@ -5,7 +5,7 @@
 import { ServiceLocator } from '../utils/ServiceLocator';
 import type { DataService } from '../core/DataService';
 
-export abstract class BaseService {
+export class BaseService {
   private static instances = new Map<string, BaseService>();
   protected dataService?: DataService;
   protected logger?: Console;

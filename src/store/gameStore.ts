@@ -12,12 +12,12 @@ import type {
 } from '../types/technology';
 import type { InventoryOperations } from '../types/inventory';
 import type { FacilityInstance } from '../types/facilities';
-import { RecipeService } from '../services/RecipeService';
+import { RecipeService } from '../services/core/RecipeService';
 import { getStorageConfig } from '../data/storageConfigs';
-import { DataService } from '../services/DataService';
-import { TechnologyService } from '../services/TechnologyService';
+import { DataService } from '../services/core/DataService';
+import { TechnologyService } from '../services/core/TechnologyService';
 import { FuelService } from '../services/FuelService';
-import { gameStorageService } from '../services/GameStorageService';
+import { gameStorageService } from '../services/state/GameStorageService';
 
 // 页面卸载时立即保存
 if (typeof window !== 'undefined') {

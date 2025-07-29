@@ -47,6 +47,7 @@ export const SERVICE_NAMES = {
   FUEL: 'FuelService',
   POWER: 'PowerService',
   STORAGE: 'StorageService',
+  GAME_STORAGE: 'GameStorageService',
   GAME_STATE: 'GameStateProvider',
   MANUAL_CRAFTING_VALIDATOR: 'ManualCraftingValidator',
 } as const;

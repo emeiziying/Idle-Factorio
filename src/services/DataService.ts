@@ -2,7 +2,7 @@
 
 import type { GameData, Item, Recipe, Category } from '../types/index';
 import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
-import type { UserProgressService } from './UserProgressService';
+import type { UserProgressService } from './state/UserProgressService';
 import { RecipeService } from './RecipeService';
 import type { TechnologyService } from './TechnologyService';
 import { error as logError } from '../utils/logger';

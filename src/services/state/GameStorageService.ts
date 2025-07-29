@@ -3,10 +3,13 @@
  * 整合了数据优化、压缩、防抖和localStorage操作
  */
 
-import { DataService } from './DataService';
-import type { FacilityInstance, FacilityStatus } from '../types/facilities';
-import type { CraftingTask, CraftingChain, DeployedContainer, InventoryItem } from '../types/index';
-import type { TechResearchState, ResearchQueueItem } from '../types/technology';
+import { BaseService } from '../base/BaseService';
+import { CacheManager } from '../base/CacheManager';
+import { ServiceLocator, SERVICE_NAMES } from '../utils/ServiceLocator';
+import type { DataService } from '../core/DataService';
+import type { FacilityInstance, FacilityStatus } from '../../types/facilities';
+import type { CraftingTask, CraftingChain, DeployedContainer, InventoryItem } from '../../types/index';
+import type { TechResearchState, ResearchQueueItem } from '../../types/technology';
 import LZString from 'lz-string';
 
 // 游戏状态类型定义
@@ -52,6 +55,7 @@ interface OptimizedSaveData {
   recent: string[];
   containers: DeployedContainer[];
   time: number;
+  version: string;
 }
 
 // 优化后的设施格式
@@ -71,18 +75,37 @@ interface PendingSave {
   reject: (error: unknown) => void;
 }
 
-export class GameStorageService {
-  private static instance: GameStorageService;
-  private dataService: DataService;
+// 存档元数据
+export interface SaveMetadata {
+  timestamp: number;
+  version: string;
+  size: number;
+  compressed: boolean;
+  checksum?: string;
+}
+
+// 存档统计信息
+export interface SaveStats {
+  totalSaves: number;
+  lastSaveTime: number;
+  averageSaveSize: number;
+  compressionRatio: number;
+}
+
+export class GameStorageService extends BaseService {
+  private saveMetadataCache = new CacheManager<string, SaveMetadata>();
   
   // 防抖相关
   private pendingSave: PendingSave | null = null;
   private saveTimeout: ReturnType<typeof setTimeout> | null = null;
   private readonly debounceMs: number = 2000;
   private readonly storageKey = 'factorio-game-storage';
+  private readonly metadataKey = 'factorio-save-metadata';
+  private readonly version = '2.0.0';
 
-  private constructor() {
-    this.dataService = DataService.getInstance();
+  protected constructor() {
+    super();
+    this.initializeDependencies();
     
     // 页面卸载时立即保存
     if (typeof window !== 'undefined') {
@@ -92,52 +115,49 @@ export class GameStorageService {
     }
   }
 
-  static getInstance(): GameStorageService {
-    if (!GameStorageService.instance) {
-      GameStorageService.instance = new GameStorageService();
-    }
-    return GameStorageService.instance;
-  }
-
   /**
    * 保存游戏数据（带防抖）
    */
   async saveGame(state: Partial<GameState>): Promise<void> {
-    return new Promise((resolve, reject) => {
-      // 取消之前的保存任务
-      this.cancelPendingSave();
-      
-      // 设置新的待保存任务
-      this.pendingSave = { resolve, reject };
-      
-      // 设置防抖计时器
-      this.saveTimeout = setTimeout(async () => {
-        try {
-          await this.executeSave(state);
-          this.pendingSave?.resolve();
-        } catch (error) {
-          this.pendingSave?.reject(error);
-        } finally {
-          this.pendingSave = null;
-          this.saveTimeout = null;
-        }
-      }, this.debounceMs);
-    });
+    return this.safeAsync(async () => {
+      return new Promise<void>((resolve, reject) => {
+        // 取消之前的保存任务
+        this.cancelPendingSave();
+        
+        // 设置新的待保存任务
+        this.pendingSave = { resolve, reject };
+        
+        // 设置防抖计时器
+        this.saveTimeout = setTimeout(async () => {
+          try {
+            await this.executeSave(state);
+            this.pendingSave?.resolve();
+          } catch (error) {
+            this.pendingSave?.reject(error);
+          } finally {
+            this.pendingSave = null;
+            this.saveTimeout = null;
+          }
+        }, this.debounceMs);
+      });
+    }, 'saveGame');
   }
 
   /**
    * 强制立即保存（绕过防抖）
    */
   async forceSaveGame(state: Partial<GameState>): Promise<void> {
-    this.cancelPendingSave();
-    await this.executeSave(state);
+    return this.safeAsync(async () => {
+      this.cancelPendingSave();
+      await this.executeSave(state);
+    }, 'forceSaveGame');
   }
 
   /**
    * 加载游戏数据
    */
   async loadGame(): Promise<Partial<GameState> | null> {
-    try {
+    return this.safeAsync(async () => {
       const rawData = localStorage.getItem(this.storageKey);
       if (!rawData) return null;
 
@@ -158,48 +178,207 @@ export class GameStorageService {
       } else {
         return this.restoreFromLegacy(parsed);
       }
-    } catch (error) {
-      console.error('[GameStorage] 加载游戏数据失败:', error);
-      return null;
-    }
+    }, 'loadGame', null);
   }
 
   /**
    * 清除存档数据
    */
   async clearGameData(): Promise<void> {
-    this.cancelPendingSave();
-    localStorage.removeItem(this.storageKey);
-    console.log('[GameStorage] 存档数据已清除');
+    return this.safeAsync(async () => {
+      this.cancelPendingSave();
+      localStorage.removeItem(this.storageKey);
+      localStorage.removeItem(this.metadataKey);
+      this.saveMetadataCache.clear();
+      console.log('[GameStorage] 存档数据已清除');
+    }, 'clearGameData');
+  }
+
+  /**
+   * 获取存档元数据
+   */
+  getSaveMetadata(): SaveMetadata | null {
+    try {
+      const cached = this.saveMetadataCache.get('current');
+      if (cached) {
+        return cached;
+      }
+
+      const metadataStr = localStorage.getItem(this.metadataKey);
+      if (!metadataStr) return null;
+
+      const metadata = JSON.parse(metadataStr) as SaveMetadata;
+      this.saveMetadataCache.set('current', metadata);
+      return metadata;
+    } catch (error) {
+      this.handleError(error, 'getSaveMetadata');
+      return null;
+    }
+  }
+
+  /**
+   * 获取存档统计信息
+   */
+  getSaveStats(): SaveStats {
+    try {
+      const metadata = this.getSaveMetadata();
+      if (!metadata) {
+        return {
+          totalSaves: 0,
+          lastSaveTime: 0,
+          averageSaveSize: 0,
+          compressionRatio: 0
+        };
+      }
+
+      return {
+        totalSaves: 1, // 简化实现
+        lastSaveTime: metadata.timestamp,
+        averageSaveSize: metadata.size,
+        compressionRatio: metadata.compressed ? 0.3 : 1
+      };
+    } catch (error) {
+      this.handleError(error, 'getSaveStats');
+      return {
+        totalSaves: 0,
+        lastSaveTime: 0,
+        averageSaveSize: 0,
+        compressionRatio: 0
+      };
+    }
+  }
+
+  /**
+   * 导出存档数据
+   */
+  async exportSave(): Promise<string | null> {
+    return this.safeAsync(async () => {
+      const rawData = localStorage.getItem(this.storageKey);
+      if (!rawData) return null;
+
+      // 如果是压缩数据，先解压
+      let data = rawData;
+      if (rawData.startsWith('ᯡ')) {
+        const decompressed = LZString.decompressFromUTF16(rawData);
+        if (decompressed) {
+          data = decompressed;
+        }
+      }
+
+      // 创建导出格式
+      const exportData = {
+        version: this.version,
+        timestamp: Date.now(),
+        data: JSON.parse(data),
+        metadata: this.getSaveMetadata()
+      };
+
+      return JSON.stringify(exportData, null, 2);
+    }, 'exportSave', null);
+  }
+
+  /**
+   * 导入存档数据
+   */
+  async importSave(exportedData: string): Promise<boolean> {
+    return this.safeAsync(async () => {
+      const importData = JSON.parse(exportedData);
+      
+      // 验证导入数据格式
+      if (!importData.data || !importData.version) {
+        throw new Error('Invalid save data format');
+      }
+
+      // 保存导入的数据
+      const jsonString = JSON.stringify(importData.data);
+      const compressed = LZString.compressToUTF16(jsonString);
+      const finalData = compressed.length < jsonString.length ? compressed : jsonString;
+      
+      localStorage.setItem(this.storageKey, finalData);
+      
+      // 更新元数据
+      const metadata: SaveMetadata = {
+        timestamp: Date.now(),
+        version: this.version,
+        size: finalData.length,
+        compressed: compressed.length < jsonString.length
+      };
+      
+      localStorage.setItem(this.metadataKey, JSON.stringify(metadata));
+      this.saveMetadataCache.set('current', metadata);
+
+      return true;
+    }, 'importSave', false);
+  }
+
+  /**
+   * 验证存档完整性
+   */
+  async validateSave(): Promise<boolean> {
+    return this.safeAsync(async () => {
+      const gameState = await this.loadGame();
+      
+      // 基本验证
+      if (!gameState) return false;
+      
+      // 检查必要字段
+      const requiredFields = ['inventory', 'facilities', 'craftingQueue'];
+      for (const field of requiredFields) {
+        if (!(field in gameState)) {
+          return false;
+        }
+      }
+
+      return true;
+    }, 'validateSave', false);
   }
 
   /**
    * 执行实际的保存操作
    */
   private async executeSave(state: Partial<GameState>): Promise<void> {
-    // 数据优化
-    const optimized = this.optimizeState(state);
-    const jsonString = JSON.stringify(optimized);
-    
-    // 数据压缩
-    let finalData = jsonString;
-    let sizeInfo = '';
-    
-    const originalSize = jsonString.length;
-    const compressed = LZString.compressToUTF16(jsonString);
-    const compressedSize = compressed.length * 2; // UTF-16每字符2字节
-    
-    if (compressedSize < originalSize) {
-      finalData = compressed;
-      const reduction = Math.round((1 - compressedSize / originalSize) * 100);
-      sizeInfo = ` (优化+压缩: ${this.formatSize(originalSize)} → ${this.formatSize(compressedSize)}, -${reduction}%)`;
-    } else {
-      sizeInfo = ` (未压缩: ${this.formatSize(originalSize)})`;
-    }
+    try {
+      // 数据优化
+      const optimized = this.optimizeState(state);
+      const jsonString = JSON.stringify(optimized);
+      
+      // 数据压缩
+      let finalData = jsonString;
+      let compressed = false;
+      let sizeInfo = '';
+      
+      const originalSize = jsonString.length;
+      const compressedData = LZString.compressToUTF16(jsonString);
+      const compressedSize = compressedData.length * 2; // UTF-16每字符2字节
+      
+      if (compressedSize < originalSize) {
+        finalData = compressedData;
+        compressed = true;
+        const reduction = Math.round((1 - compressedSize / originalSize) * 100);
+        sizeInfo = ` (优化+压缩: ${this.formatSize(originalSize)} → ${this.formatSize(compressedSize)}, -${reduction}%)`;
+      } else {
+        sizeInfo = ` (未压缩: ${this.formatSize(originalSize)})`;
+      }
 
-    // 保存到localStorage
-    localStorage.setItem(this.storageKey, finalData);
-    console.log(`[GameStorage] 存档成功${sizeInfo}`);
+      // 保存到localStorage
+      localStorage.setItem(this.storageKey, finalData);
+      
+      // 保存元数据
+      const metadata: SaveMetadata = {
+        timestamp: Date.now(),
+        version: this.version,
+        size: finalData.length,
+        compressed
+      };
+      
+      localStorage.setItem(this.metadataKey, JSON.stringify(metadata));
+      this.saveMetadataCache.set('current', metadata);
+
+      console.log(`[GameStorage] 存档成功${sizeInfo}`);
+    } catch (error) {
+      this.handleError(error, 'executeSave');
+      throw error;
+    }
   }
 
   /**
@@ -226,7 +405,8 @@ export class GameStorageService {
       favorites: Array.from(state.favoriteRecipes || []),
       recent: state.recentRecipes || [],
       containers: state.deployedContainers || [],
-      time: Date.now()
+      time: Date.now(),
+      version: this.version
     };
 
     // 优化库存：只存储物品ID和数量
@@ -361,7 +541,8 @@ export class GameStorageService {
              obj.inventory && 
              typeof obj.inventory === 'object' && 
              !Array.isArray(obj.inventory) && 
-             !('entries' in obj.inventory));
+             !('entries' in obj.inventory) &&
+             obj.version); // 新格式包含版本号
   }
 
   /**
@@ -401,26 +582,39 @@ export class GameStorageService {
   }
 
   private getItemStackSize(itemId: string): number {
-    const item = this.dataService.getItem(itemId);
-    return item?.stack || 50;
+    try {
+      const dataService = ServiceLocator.get<DataService>(SERVICE_NAMES.DATA);
+      const item = dataService.getItemById(itemId);
+      return (item as { stack?: number })?.stack || 50;
+    } catch {
+      return 50;
+    }
   }
 
   private getFacilityMaxEnergy(facilityType: string): number {
-    const item = this.dataService.getItem(facilityType);
-    if (item?.machine?.usage) {
-      // usage 字段就是最大能量消耗，通常也等于最大能量容量
-      return item.machine.usage;
+    try {
+      const dataService = ServiceLocator.get<DataService>(SERVICE_NAMES.DATA);
+      const item = dataService.getItemById(facilityType);
+      if (item && (item as { machine?: { usage?: number } }).machine?.usage) {
+        return (item as { machine: { usage: number } }).machine.usage;
+      }
+      return 100;
+    } catch {
+      return 100;
     }
-    return 100; // 默认值
   }
 
   private getFacilityConsumptionRate(facilityType: string): number {
-    const item = this.dataService.getItem(facilityType);
-    if (item?.machine?.usage) {
-      // 消耗率 = usage / 1000（转换为每毫秒的消耗）
-      return item.machine.usage / 1000;
+    try {
+      const dataService = ServiceLocator.get<DataService>(SERVICE_NAMES.DATA);
+      const item = dataService.getItemById(facilityType);
+      if (item && (item as { machine?: { usage?: number } }).machine?.usage) {
+        return (item as { machine: { usage: number } }).machine.usage / 1000;
+      }
+      return 0.1;
+    } catch {
+      return 0.1;
     }
-    return 0.1; // 默认值
   }
 
   private ensureInventoryMap(inventory: unknown): Map<string, InventoryItem> {
@@ -433,6 +627,22 @@ export class GameStorageService {
     if (map instanceof Map) return map;
     if (Array.isArray(map)) return new Map(map as [K, V][]);
     return new Map();
+  }
+
+  /**
+   * 清理缓存
+   */
+  clearCache(): void {
+    this.saveMetadataCache.clear();
+  }
+
+  /**
+   * 获取缓存统计
+   */
+  getCacheStats() {
+    return {
+      saveMetadata: this.saveMetadataCache.getStats()
+    };
   }
 }
 

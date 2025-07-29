@@ -5,13 +5,13 @@
 
 import { useMemo } from 'react';
 import { ServiceLocator, SERVICE_NAMES } from '../services/ServiceLocator';
-import { DataService } from '../services/DataService';
-import { RecipeService } from '../services/RecipeService';
-import { TechnologyService } from '../services/TechnologyService';
+import { DataService } from '../services/core/DataService';
+import { RecipeService } from '../services/core/RecipeService';
+import { TechnologyService } from '../services/core/TechnologyService';
 import { FuelService } from '../services/FuelService';
-import { PowerService } from '../services/PowerService';
-import { StorageService } from '../services/StorageService';
-import { UserProgressService } from '../services/UserProgressService';
+import { PowerService } from '../services/game/PowerService';
+import { StorageService } from '../services/game/StorageService';
+import { UserProgressService } from '../services/state/UserProgressService';
 import type { GameStateProvider } from '../services/interfaces';
 
 /**
