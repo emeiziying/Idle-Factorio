@@ -12,7 +12,7 @@ vi.mock('../DataService', () => ({
 
 describe('GameConfig', () => {
   let gameConfig: GameConfig
-  let mockDataService: Partial<DataService>
+  let mockDataService: { getItem: ReturnType<typeof vi.fn> }
 
   beforeEach(() => {
     // Clear any existing instance
@@ -24,7 +24,7 @@ describe('GameConfig', () => {
     }
 
     // Setup DataService mock
-    vi.mocked(DataService.getInstance).mockReturnValue(mockDataService as DataService)
+    vi.mocked(DataService.getInstance).mockReturnValue(mockDataService as unknown as DataService)
 
     gameConfig = GameConfig.getInstance()
   })

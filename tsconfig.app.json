@@ -27,7 +27,7 @@
     "resolveJsonModule": true,
     "esModuleInterop": true
   },
-  "include": ["src"],
+  "include": ["src", "src/vite-env.d.ts"],
   "exclude": [
     "src/**/*.test.ts",
     "src/**/*.test.tsx", 

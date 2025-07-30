@@ -40,7 +40,11 @@ vi.mock('../../data/storageConfigData', () => ({
 
 describe('StorageService', () => {
   let storageService: StorageService
-  let mockDataService: Partial<DataService>
+  let mockDataService: { 
+    getItem: ReturnType<typeof vi.fn>
+    getRecipe: ReturnType<typeof vi.fn>
+    getLocalizedItemName: ReturnType<typeof vi.fn>
+  }
 
   beforeEach(() => {
     // Clear any existing instance
@@ -55,7 +59,7 @@ describe('StorageService', () => {
 
     // Setup ServiceLocator mock
     vi.spyOn(ServiceLocator, 'has').mockReturnValue(true)
-    vi.spyOn(ServiceLocator, 'get').mockReturnValue(mockDataService as DataService)
+    vi.spyOn(ServiceLocator, 'get').mockReturnValue(mockDataService as unknown as DataService)
 
     storageService = StorageService.getInstance()
   })
