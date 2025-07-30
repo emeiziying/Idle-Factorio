@@ -4,26 +4,31 @@ import { DataService } from '../DataService'
 import type { Item } from '../../types'
 
 // Mock DataService
+// 模拟 DataService
 vi.mock('../DataService', () => ({
   DataService: {
     getInstance: vi.fn()
   }
 }))
 
+// GameConfig 测试套件 - 游戏配置管理服务
 describe('GameConfig', () => {
   let gameConfig: GameConfig
   let mockDataService: { getItem: ReturnType<typeof vi.fn> }
 
   beforeEach(() => {
     // Clear any existing instance
+    // 清除已存在的实例
     ;(GameConfig as unknown as { instance: GameConfig | null }).instance = null
 
     // Create mock DataService
+    // 创建模拟的 DataService
     mockDataService = {
       getItem: vi.fn()
     }
 
     // Setup DataService mock
+    // 设置 DataService 模拟
     vi.mocked(DataService.getInstance).mockReturnValue(mockDataService as unknown as DataService)
 
     gameConfig = GameConfig.getInstance()
@@ -33,7 +38,9 @@ describe('GameConfig', () => {
     vi.restoreAllMocks()
   })
 
+  // 单例模式测试
   describe('getInstance', () => {
+    // 测试：应该返回单例实例
     it('should return singleton instance', () => {
       const instance1 = GameConfig.getInstance()
       const instance2 = GameConfig.getInstance()
@@ -42,7 +49,9 @@ describe('GameConfig', () => {
     })
   })
 
+  // 获取常量配置测试
   describe('getConstants', () => {
+    // 测试：应该返回具有正确结构的游戏常量
     it('should return game constants with correct structure', () => {
       const constants = gameConfig.getConstants()
       
@@ -53,6 +62,7 @@ describe('GameConfig', () => {
       expect(constants).toHaveProperty('ui')
     })
 
+    // 测试：应该有正确的制作常量
     it('should have correct crafting constants', () => {
       const constants = gameConfig.getConstants()
       
@@ -63,6 +73,7 @@ describe('GameConfig', () => {
       })
     })
 
+    // 测试：应该有正确的燃料常量
     it('should have correct fuel constants', () => {
       const constants = gameConfig.getConstants()
       
@@ -73,6 +84,7 @@ describe('GameConfig', () => {
       })
     })
 
+    // 测试：应该有正确的电力常量
     it('should have correct power constants', () => {
       const constants = gameConfig.getConstants()
       
@@ -83,6 +95,7 @@ describe('GameConfig', () => {
       })
     })
 
+    // 测试：应该有正确的存储常量
     it('should have correct storage constants', () => {
       const constants = gameConfig.getConstants()
       
@@ -93,6 +106,7 @@ describe('GameConfig', () => {
       })
     })
 
+    // 测试：应该有正确的 UI 常量
     it('should have correct UI constants', () => {
       const constants = gameConfig.getConstants()
       
@@ -104,7 +118,9 @@ describe('GameConfig', () => {
     })
   })
 
+  // 获取燃料优先级测试
   describe('getFuelPriority', () => {
+    // 测试：应该返回默认的燃料优先级列表
     it('should return default fuel priority list', () => {
       const priority = gameConfig.getFuelPriority()
       
@@ -118,7 +134,9 @@ describe('GameConfig', () => {
     })
   })
 
+  // 获取燃料类别测试
   describe('getFuelCategory', () => {
+    // 测试：应该从物品数据返回燃料类别
     it('should return fuel category from item data', () => {
       vi.mocked(mockDataService.getItem).mockReturnValue({
         id: 'coal',
@@ -132,6 +150,7 @@ describe('GameConfig', () => {
       expect(category).toBe('chemical')
     })
 
+    // 测试：核燃料物品应返回 nuclear
     it('should return nuclear for nuclear items', () => {
       vi.mocked(mockDataService.getItem).mockReturnValue({
         id: 'nuclear-fuel',
@@ -144,6 +163,7 @@ describe('GameConfig', () => {
       expect(category).toBe('nuclear')
     })
 
+    // 测试：铀物品应返回 nuclear
     it('should return nuclear for uranium items', () => {
       vi.mocked(mockDataService.getItem).mockReturnValue({
         id: 'uranium-fuel-cell',
@@ -156,6 +176,7 @@ describe('GameConfig', () => {
       expect(category).toBe('nuclear')
     })
 
+    // 测试：有燃料值的物品默认应返回 chemical
     it('should return chemical by default for items with fuel value', () => {
       vi.mocked(mockDataService.getItem).mockReturnValue({
         id: 'wood',
@@ -168,6 +189,7 @@ describe('GameConfig', () => {
       expect(category).toBe('chemical')
     })
 
+    // 测试：非燃料物品应返回 null
     it('should return null for non-fuel items', () => {
       vi.mocked(mockDataService.getItem).mockReturnValue({
         id: 'iron-plate'
@@ -177,6 +199,7 @@ describe('GameConfig', () => {
       expect(category).toBeNull()
     })
 
+    // 测试：物品未找到时应返回 null
     it('should return null when item not found', () => {
       vi.mocked(mockDataService.getItem).mockReturnValue(undefined)
 
@@ -185,7 +208,9 @@ describe('GameConfig', () => {
     })
   })
 
+  // 判断是否为燃烧机器测试
   describe('isBurnerMachine', () => {
+    // 测试：燃烧机器应返回 true
     it('should return true for burner machines', () => {
       vi.mocked(mockDataService.getItem).mockReturnValue({
         id: 'burner-mining-drill',
@@ -197,6 +222,7 @@ describe('GameConfig', () => {
       expect(gameConfig.isBurnerMachine('burner-mining-drill')).toBe(true)
     })
 
+    // 测试：电力机器应返回 false
     it('should return false for electric machines', () => {
       vi.mocked(mockDataService.getItem).mockReturnValue({
         id: 'electric-mining-drill',
@@ -208,6 +234,7 @@ describe('GameConfig', () => {
       expect(gameConfig.isBurnerMachine('electric-mining-drill')).toBe(false)
     })
 
+    // 测试：非机器物品应返回 false
     it('should return false for non-machine items', () => {
       vi.mocked(mockDataService.getItem).mockReturnValue({
         id: 'iron-plate'
@@ -216,6 +243,7 @@ describe('GameConfig', () => {
       expect(gameConfig.isBurnerMachine('iron-plate')).toBe(false)
     })
 
+    // 测试：物品未找到时应返回 false
     it('should return false when item not found', () => {
       vi.mocked(mockDataService.getItem).mockReturnValue(undefined)
 
@@ -223,7 +251,9 @@ describe('GameConfig', () => {
     })
   })
 
+  // 获取机器燃料类别测试
   describe('getMachineFuelCategories', () => {
+    // 测试：应该返回机器的燃料类别
     it('should return fuel categories for machines', () => {
       vi.mocked(mockDataService.getItem).mockReturnValue({
         id: 'boiler',
@@ -236,6 +266,7 @@ describe('GameConfig', () => {
       expect(categories).toEqual(['chemical'])
     })
 
+    // 测试：应该返回多个燃料类别
     it('should return multiple fuel categories', () => {
       vi.mocked(mockDataService.getItem).mockReturnValue({
         id: 'locomotive',
@@ -248,6 +279,7 @@ describe('GameConfig', () => {
       expect(categories).toEqual(['chemical', 'nuclear'])
     })
 
+    // 测试：没有燃料类别的机器应返回空数组
     it('should return empty array for machines without fuel categories', () => {
       vi.mocked(mockDataService.getItem).mockReturnValue({
         id: 'electric-furnace',
@@ -258,6 +290,7 @@ describe('GameConfig', () => {
       expect(categories).toEqual([])
     })
 
+    // 测试：非机器物品应返回空数组
     it('should return empty array for non-machine items', () => {
       vi.mocked(mockDataService.getItem).mockReturnValue({
         id: 'iron-plate'
@@ -268,7 +301,9 @@ describe('GameConfig', () => {
     })
   })
 
+  // 计算最大燃料存储测试
   describe('calculateMaxFuelStorage', () => {
+    // 测试：应该基于能耗计算燃料存储
     it('should calculate fuel storage based on power consumption', () => {
       const powerConsumption = 180000 // 180kW
       const constants = gameConfig.getConstants()
@@ -280,13 +315,16 @@ describe('GameConfig', () => {
       expect(maxStorage).toBe(180000000) // 180MW
     })
 
+    // 测试：应该处理零能耗
     it('should handle zero power consumption', () => {
       const maxStorage = gameConfig.calculateMaxFuelStorage(0)
       expect(maxStorage).toBe(0)
     })
   })
 
+  // 更新常量测试
   describe('updateConstants', () => {
+    // 测试：应该部分更新常量
     it('should update constants partially', () => {
       const originalConstants = gameConfig.getConstants()
       
@@ -307,10 +345,12 @@ describe('GameConfig', () => {
       })
       
       // Other constants should remain unchanged
+      // 其他常量应保持不变
       expect(updatedConstants.fuel).toEqual(originalConstants.fuel)
       expect(updatedConstants.power).toEqual(originalConstants.power)
     })
 
+    // 测试：应该更新嵌套属性
     it('should update nested properties', () => {
       gameConfig.updateConstants({
         ui: {
