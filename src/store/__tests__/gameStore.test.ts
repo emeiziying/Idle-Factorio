@@ -50,7 +50,7 @@ describe('gameStore', () => {
         })
         
         const item = getInventoryItem('iron-plate')
-        expect(item.amount).toBe(10)
+        expect(item.currentAmount).toBe(10)
         expect(item.itemId).toBe('iron-plate')
       })
 
@@ -63,7 +63,7 @@ describe('gameStore', () => {
         })
         
         const item = getInventoryItem('iron-plate')
-        expect(item.amount).toBe(15)
+        expect(item.currentAmount).toBe(15)
       })
 
       it('should handle negative amounts', () => {
@@ -75,7 +75,7 @@ describe('gameStore', () => {
         })
         
         const item = getInventoryItem('iron-plate')
-        expect(item.amount).toBe(15)
+        expect(item.currentAmount).toBe(15)
       })
 
       it('should remove item when amount reaches zero', () => {
@@ -102,9 +102,9 @@ describe('gameStore', () => {
           ])
         })
         
-        expect(getInventoryItem('iron-plate').amount).toBe(10)
-        expect(getInventoryItem('copper-plate').amount).toBe(20)
-        expect(getInventoryItem('steel-plate').amount).toBe(5)
+        expect(getInventoryItem('iron-plate').currentAmount).toBe(10)
+        expect(getInventoryItem('copper-plate').currentAmount).toBe(20)
+        expect(getInventoryItem('steel-plate').currentAmount).toBe(5)
       })
     })
 
@@ -119,9 +119,15 @@ describe('gameStore', () => {
         const item = getInventoryItem('iron-plate')
         expect(item).toEqual({
           itemId: 'iron-plate',
-          amount: 10,
+          currentAmount: 10,
           stackSize: 100,
-          capacity: 100
+          baseStacks: 1,
+          additionalStacks: 0,
+          totalStacks: 1,
+          maxCapacity: 100,
+          productionRate: 0,
+          consumptionRate: 0,
+          status: 'normal'
         })
       })
 
@@ -131,9 +137,15 @@ describe('gameStore', () => {
         const item = getInventoryItem('non-existent')
         expect(item).toEqual({
           itemId: 'non-existent',
-          amount: 0,
+          currentAmount: 0,
           stackSize: 100,
-          capacity: 100
+          baseStacks: 1,
+          additionalStacks: 0,
+          totalStacks: 1,
+          maxCapacity: 100,
+          productionRate: 0,
+          consumptionRate: 0,
+          status: 'normal'
         })
       })
     })
