@@ -25,11 +25,31 @@ pnpm lint
 # Preview production build
 pnpm preview
 
+# Run tests (Vitest)
+pnpm test
+
+# Run tests with UI
+pnpm test:ui
+
+# Run tests with coverage
+pnpm test:coverage
+
 # Install dependencies
 pnpm install
 ```
 
 **Note**: Always run `pnpm lint` after making code changes to ensure TypeScript and React code quality.
+
+### Testing Guidelines
+The project uses **Vitest** with comprehensive test coverage:
+- **Unit Tests**: Services, utilities, hooks, and components have dedicated test files
+- **Integration Tests**: Complex workflows like crafting chains are integration tested
+- **Test Location**: Tests are located in `__tests__` directories alongside source files
+- **Test Configuration**: Uses `tsconfig.test.json` for test-specific TypeScript configuration
+- **Coverage**: Run `pnpm test:coverage` to generate coverage reports
+- **UI Testing**: Use `pnpm test:ui` for interactive test runner
+- **Single Test**: Run `pnpm test RecipeService` to test specific files
+- **Watch Mode**: Tests run in watch mode by default during development
 
 ### Development Server Guidelines
 - **Priority**: Use existing dev server at `http://localhost:5173` if already running

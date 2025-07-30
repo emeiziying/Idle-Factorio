@@ -52,7 +52,10 @@
       "mcp__browser-tools__runPerformanceAudit",
       "mcp__ide__executeCode",
       "Bash(cat:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(tree:*)",
+      "Bash(pnpm test:*)",
+      "Bash(npx eslint:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

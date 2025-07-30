@@ -1383,26 +1383,32 @@ export class TechnologyService {
   }
 
   /**
-   * 获取科技解锁内容信息（业务逻辑迁移自TechGridCard）
-   * @param technology 科技数据
+   * 获取科技解锁的内容信息
+   * @param technology 科技对象
+   * @returns 解锁内容的详细信息
    */
-  public static getUnlockedContentInfo(technology: Technology) {
+  public static getUnlockedContentInfo(technology: Technology): {
+    recipes: Array<{ id: string; icon: string; name: string }>;
+    items: Array<{ id: string; icon: string; name: string }>;
+    buildings: Array<{ id: string; icon: string; name: string }>;
+    all: Array<{ id: string; icon: string; name: string }>;
+  } {
     
-         // 获取解锁的配方信息
-     const getUnlockedRecipes = () => {
-       if (!technology.unlocks.recipes || technology.unlocks.recipes.length === 0) {
-         return [];
-       }
-       
-       return technology.unlocks.recipes.map(recipeId => {
-         const recipe = RecipeService.getRecipeById(recipeId);
-         return {
-           id: recipeId,
-           icon: recipe?.icon || recipeId,
-           name: recipe?.name || recipeId
-         };
-       });
-     };
+    // 获取解锁的配方信息
+    const getUnlockedRecipes = () => {
+      if (!technology.unlocks.recipes || technology.unlocks.recipes.length === 0) {
+        return [];
+      }
+      
+      return technology.unlocks.recipes.map(recipeId => {
+        const recipe = RecipeService.getRecipeById(recipeId);
+        return {
+          id: recipeId,
+          icon: recipe?.icon || recipeId,
+          name: recipe?.name || recipeId
+        };
+      });
+    };
 
     // 获取解锁的物品信息
     const getUnlockedItems = () => {
@@ -1490,10 +1496,16 @@ export class TechnologyService {
   }
 
   /**
-   * 获取研究触发器信息（业务逻辑迁移自TechGridCard）
+   * 获取科技研究触发器信息
    * @param techId 科技ID
+   * @returns 研究触发器信息或null
    */
-  public static getResearchTriggerInfo(techId: string) {
+  public static getResearchTriggerInfo(techId: string): {
+    text: string;
+    item: string;
+    type: string;
+    count: number;
+  } | null {
     try {
       const dataService = DataService.getInstance();
       const techRecipe = dataService.getRecipe(techId);
@@ -1574,13 +1586,58 @@ export class TechnologyService {
    * @param status 科技状态
    * @param progress 研究进度
    * @param inQueue 是否在队列中
+   * @returns 科技卡片显示信息
    */
   public static getTechCardDisplayInfo(
     technology: Technology,
     status: TechStatus,
     progress?: number,
     inQueue: boolean = false
-  ) {
+  ): {
+    // 基本信息
+    name: string;
+    icon: string;
+    
+    // 状态信息
+    status: TechStatus;
+    progress?: number;
+    inQueue: boolean;
+    canResearch: boolean;
+    isCompleted: boolean;
+    
+    // 解锁内容
+    unlockedContent: {
+      recipes: Array<{ id: string; icon: string; name: string }>;
+      items: Array<{ id: string; icon: string; name: string }>;
+      buildings: Array<{ id: string; icon: string; name: string }>;
+      all: Array<{ id: string; icon: string; name: string }>;
+    };
+    unlockCount: number;
+    
+    // 前置科技
+    prerequisiteNames: string[];
+    hasPrerequisites: boolean;
+    
+    // 研究触发器
+    researchTriggerInfo: {
+      text: string;
+      item: string;
+      type: string;
+      count: number;
+    } | null;
+    hasResearchTrigger: boolean;
+    
+    // 研究配方
+    researchRecipeInfo: {
+      time: number;
+      count: number;
+      inputs: Record<string, number>;
+    } | null;
+    researchCost: Record<string, number>;
+    
+    // 解锁条件类型
+    unlockConditionType: 'prerequisites' | 'research-trigger' | 'auto-unlock' | 'none';
+  } {
     const dataService = DataService.getInstance();
     
     // 获取解锁内容
@@ -1613,7 +1670,7 @@ export class TechnologyService {
     return {
       // 基本信息
       name: technology.name,
-      icon: technology.icon,
+      icon: technology.icon || technology.id, // 使用id作为fallback
       
       // 状态信息
       status,

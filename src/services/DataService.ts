@@ -1,6 +1,6 @@
 // 游戏数据管理服务
 
-import type { GameData, Item, Recipe, Category } from '../types/index';
+import type { GameData, Item, Recipe, Category, IconData } from '../types/index';
 import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
 import type { UserProgressService } from './UserProgressService';
 import { RecipeService } from './RecipeService';
@@ -510,7 +510,7 @@ export class DataService {
   }
 
   // 获取物品图标数据
-  getIconData(itemId: string) {
+  getIconData(itemId: string): IconData | null {
     if (!this.gameData) return null;
     
     const iconInfo = this.gameData.icons.find(icon => icon.id === itemId);
@@ -551,13 +551,26 @@ export class DataService {
   }
 
   // 获取所有图标数据
-  getAllIcons() {
+  getAllIcons(): IconData[] {
     if (!this.gameData) return [];
-    return this.gameData.icons;
+    return this.gameData.icons || [];
   }
 
   // 获取物品详情（包含生产和使用信息）
-  getItemDetails(itemId: string) {
+  getItemDetails(itemId: string): {
+    item: Item;
+    recipes: Recipe[];
+    usedInRecipes: Recipe[];
+    recipeStats: {
+      totalRecipes: number;
+      manualRecipes: number;
+      automatedRecipes: number;
+      miningRecipes: number;
+      recyclingRecipes: number;
+      mostEfficientRecipe?: Recipe;
+    } | null;
+    recommendedRecipe?: Recipe;
+  } | null {
     const item = this.getItem(itemId);
     if (!item) return null;
 
@@ -572,31 +585,25 @@ export class DataService {
       // 新增：配方统计信息
       recipeStats: recipeService ? RecipeService.getRecipeStats(itemId) : null,
       // 新增：推荐配方
-      recommendedRecipe: recipeService ? RecipeService.getMostEfficientRecipe(itemId) : null
+      recommendedRecipe: recipeService ? RecipeService.getMostEfficientRecipe(itemId) : undefined
     };
   }
 
   // 获取所有科技数据（原始JSON格式）
-  getRawGameData(): unknown {
+  getRawGameData(): GameData | null {
     return this.gameData;
   }
 
   // 获取科技数据
-  getTechnologies(): unknown[] {
+  getTechnologies(): Recipe[] {
     if (!this.gameData) return [];
-    const rawData = this.gameData as unknown as Record<string, unknown>;
-    const recipes = rawData.recipes as unknown[];
-    return recipes.filter(recipe => {
-      const recipeData = recipe as Record<string, unknown>;
-      return recipeData.category === 'technology';
-    });
+    return this.gameData.recipes.filter(recipe => recipe.category === 'technology');
   }
 
   // 获取科技分类数据
-  getTechCategories(): unknown[] {
+  getTechCategories(): Category[] {
     if (!this.gameData) return [];
-    const rawData = this.gameData as unknown as Record<string, unknown>;
-    return (rawData.categories as unknown[]) || [];
+    return this.gameData.categories || [];
   }
 
   // 添加缺失的方法
