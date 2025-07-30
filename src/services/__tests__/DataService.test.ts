@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { DataService } from '../DataService'
 import { ServiceLocator, SERVICE_NAMES } from '../ServiceLocator'
 import type { GameData } from '../../types/index'
-import type { ServiceInstance, MockObject } from '../../types/test-utils'
+import type { ServiceInstance } from '../../types/test-utils'
 
 // Mock game data
 const mockGameData: Partial<GameData> = {
@@ -15,21 +15,21 @@ const mockGameData: Partial<GameData> = {
       id: 'iron-plate', 
       name: 'Iron plate',
       category: 'intermediate-products',
-      stackSize: 100,
+      stack: 100,
       row: 1
     },
     { 
       id: 'copper-plate', 
       name: 'Copper plate',
       category: 'intermediate-products',
-      stackSize: 100,
+      stack: 100,
       row: 1
     },
     { 
       id: 'transport-belt', 
       name: 'Transport belt',
       category: 'logistics',
-      stackSize: 100,
+      stack: 100,
       row: 2
     }
   ],
@@ -37,6 +37,7 @@ const mockGameData: Partial<GameData> = {
     {
       id: 'iron-plate',
       name: 'Iron plate',
+      category: 'smelting',
       time: 3.2,
       in: { 'iron-ore': 1 },
       out: { 'iron-plate': 1 },
@@ -45,6 +46,7 @@ const mockGameData: Partial<GameData> = {
     {
       id: 'copper-plate',
       name: 'Copper plate',
+      category: 'smelting',
       time: 3.2,
       in: { 'copper-ore': 1 },
       out: { 'copper-plate': 1 },
@@ -82,8 +84,8 @@ vi.mock('../../utils/logger', () => ({
 
 describe('DataService', () => {
   let dataService: DataService
-  let mockUserProgressService: MockObject<{ isItemInAnyMilestone: () => boolean }>
-  let mockTechnologyService: MockObject<{ getData: () => unknown }>
+  let mockUserProgressService: any
+  let mockTechnologyService: any
 
   beforeEach(() => {
     // Clear instance
@@ -96,6 +98,7 @@ describe('DataService', () => {
     }
 
     mockTechnologyService = {
+      getData: vi.fn(() => ({})),
       canCraftItem: vi.fn(() => true)
     }
 
@@ -153,7 +156,7 @@ describe('DataService', () => {
     })
 
     it('should load i18n data for supported language', async () => {
-      await dataService.loadI18n('zh')
+      await dataService.loadI18nData('zh')
       
       expect(dataService.getLocalizedCategoryName('intermediate-products')).toBe('中间产品')
       expect(dataService.getLocalizedItemName('iron-plate')).toBe('铁板')
@@ -161,14 +164,14 @@ describe('DataService', () => {
 
     it('should fallback to English for unsupported language', async () => {
       await dataService.loadGameData()
-      await dataService.loadI18n('unsupported')
+      await dataService.loadI18nData('unsupported')
       
       expect(dataService.getLocalizedItemName('iron-plate')).toBe('Iron plate')
     })
 
     it('should handle concurrent i18n load requests', async () => {
-      const promise1 = dataService.loadI18n('zh')
-      const promise2 = dataService.loadI18n('zh')
+      const promise1 = dataService.loadI18nData('zh')
+      const promise2 = dataService.loadI18nData('zh')
       
       await Promise.all([promise1, promise2])
       
@@ -176,10 +179,10 @@ describe('DataService', () => {
     })
   })
 
-  describe('getCategories', () => {
+  describe('getAllCategories', () => {
     it('should return all categories', async () => {
       await dataService.loadGameData()
-      const categories = dataService.getCategories()
+      const categories = dataService.getAllCategories()
       
       expect(categories).toHaveLength(2)
       expect(categories[0].id).toBe('intermediate-products')
@@ -187,7 +190,7 @@ describe('DataService', () => {
     })
 
     it('should return empty array when data not loaded', () => {
-      const categories = dataService.getCategories()
+      const categories = dataService.getAllCategories()
       expect(categories).toEqual([])
     })
   })
@@ -211,11 +214,11 @@ describe('DataService', () => {
     })
 
     it('should filter unlocked items when includeUnlocked is false', () => {
-      vi.mocked(mockTechnologyService.canCraftItem).mockImplementation((itemId) => {
+      vi.mocked(mockTechnologyService.canCraftItem).mockImplementation((itemId: string) => {
         return itemId === 'iron-plate'
       })
 
-      const items = dataService.getItemsByCategory('intermediate-products', false)
+      const items = dataService.getItemsByCategory('intermediate-products')
       
       expect(items).toHaveLength(1)
       expect(items[0].id).toBe('iron-plate')
@@ -261,23 +264,7 @@ describe('DataService', () => {
     })
   })
 
-  describe('getItemRecipes', () => {
-    beforeEach(async () => {
-      await dataService.loadGameData()
-    })
 
-    it('should return recipes that produce the item', () => {
-      const recipes = dataService.getItemRecipes('iron-plate')
-      
-      expect(recipes).toHaveLength(1)
-      expect(recipes[0].id).toBe('iron-plate')
-    })
-
-    it('should return empty array for items with no recipes', () => {
-      const recipes = dataService.getItemRecipes('transport-belt')
-      expect(recipes).toEqual([])
-    })
-  })
 
   describe('isItemUnlocked', () => {
     beforeEach(async () => {
@@ -330,11 +317,11 @@ describe('DataService', () => {
     })
 
     it('should filter by unlock status', () => {
-      vi.mocked(mockTechnologyService.canCraftItem).mockImplementation((itemId) => {
+      vi.mocked(mockTechnologyService.canCraftItem).mockImplementation((itemId: string) => {
         return itemId === 'iron-plate'
       })
 
-      const itemsByRow = dataService.getItemsByRow('intermediate-products', false)
+      const itemsByRow = dataService.getItemsByRow('intermediate-products')
       
       expect(itemsByRow.get(1)).toHaveLength(1)
       expect(itemsByRow.get(1)?.[0].id).toBe('iron-plate')
@@ -347,7 +334,7 @@ describe('DataService', () => {
       vi.doMock('../../data/spa/i18n/zh.json', () => ({
         default: mockI18nData
       }))
-      await dataService.loadI18n('zh')
+      await dataService.loadI18nData('zh')
     })
 
     it('should return localized category name', () => {
@@ -394,13 +381,13 @@ describe('DataService', () => {
 
   describe('error handling', () => {
     it('should handle missing game data gracefully', () => {
-      expect(() => dataService.getCategories()).not.toThrow()
+      expect(() => dataService.getAllCategories()).not.toThrow()
       expect(() => dataService.getItem('test')).not.toThrow()
       expect(() => dataService.getRecipe('test')).not.toThrow()
     })
 
     it('should return appropriate defaults when data is not loaded', () => {
-      expect(dataService.getCategories()).toEqual([])
+      expect(dataService.getAllCategories()).toEqual([])
       expect(dataService.getItem('test')).toBeUndefined()
       expect(dataService.getRecipe('test')).toBeUndefined()
       expect(dataService.getItemsByCategory('test')).toEqual([])

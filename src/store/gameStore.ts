@@ -1305,7 +1305,9 @@ const createAutoSaveInterval = () => {
 createAutoSaveInterval();
 
 // 在开发环境中，监听热更新事件（如果可用）
-if (import.meta.hot) {
+// @ts-ignore - import.meta types not available in tsc
+if (typeof import.meta !== 'undefined' && import.meta.env?.DEV && import.meta.hot) {
+  // @ts-ignore
   import.meta.hot.dispose(() => {
     console.log('[AutoSave] 热更新时清理定时器');
     clearAutoSaveInterval();

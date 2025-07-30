@@ -147,7 +147,7 @@ describe('gameStore', () => {
         const task: Omit<CraftingTask, 'id'> = {
           itemId: 'iron-gear-wheel',
           quantity: 10,
-          remainingQuantity: 10,
+
           progress: 0,
           startTime: Date.now()
         }
@@ -174,7 +174,6 @@ describe('gameStore', () => {
         const task: Omit<CraftingTask, 'id'> = {
           itemId: 'item',
           quantity: 1,
-          remainingQuantity: 1,
           progress: 0,
           startTime: Date.now()
         }
@@ -198,7 +197,6 @@ describe('gameStore', () => {
           addCraftingTask({
             itemId: 'item',
             quantity: 1,
-            remainingQuantity: 1,
             progress: 0,
             startTime: Date.now()
           })
@@ -222,7 +220,6 @@ describe('gameStore', () => {
           addCraftingTask({
             itemId: 'item',
             quantity: 1,
-            remainingQuantity: 1,
             progress: 0,
             startTime: Date.now()
           })
