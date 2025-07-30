@@ -7,7 +7,7 @@ import ItemDetailPanel from './ItemDetailPanel';
 import CraftingQueue from './CraftingQueue';
 
 import { DataService } from '../../services/DataService';
-import { usePersistentState } from '../../hooks/usePersistentState';
+import { useLocalStorageState } from 'ahooks';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { useProductionLoop } from '../../hooks/useProductionLoop';
 import useGameStore from '../../store/gameStore';
@@ -23,7 +23,7 @@ const ProductionModule: React.FC = React.memo(() => {
     }
     return [];
   });
-  const [selectedCategory, setSelectedCategory] = usePersistentState<string>('production-selected-category', '');
+  const [selectedCategory, setSelectedCategory] = useLocalStorageState<string>('production-selected-category', { defaultValue: '' });
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   // 智能初始loading状态：如果数据已加载则不显示loading
   const [loading, setLoading] = useState(() => {

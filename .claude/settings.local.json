@@ -55,7 +55,9 @@
       "Bash(sed:*)",
       "Bash(tree:*)",
       "Bash(pnpm test:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs"
     ]
   },
   "enableAllProjectMcpServers": true,

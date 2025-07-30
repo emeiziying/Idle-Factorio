@@ -33,7 +33,7 @@ import ManualCraftingValidator from '../../utils/manualCraftingValidator';
 import type { ManualCraftingValidation } from '../../utils/manualCraftingValidator';
 import ItemCard from './ItemCard';
 import type { Item, Recipe } from '../../types/index';
-import { usePersistentState } from '../../hooks/usePersistentState';
+import { useLocalStorageState } from 'ahooks';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -78,10 +78,10 @@ interface ItemsData {
 }
 
 const ManualCraftingTestPage: React.FC = () => {
-  const [tabValue, setTabValue] = usePersistentState('test-tab-value', 0);
+  const [tabValue, setTabValue] = useLocalStorageState('test-tab-value', { defaultValue: 0 });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = usePersistentState('test-selected-category', 'all');
+  const [selectedCategory, setSelectedCategory] = useLocalStorageState('test-selected-category', { defaultValue: 'all' });
   const [itemsData, setItemsData] = useState<ItemsData>({
     craftable: {},
     notCraftable: {},

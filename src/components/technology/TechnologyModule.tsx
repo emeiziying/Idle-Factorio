@@ -15,7 +15,7 @@ import useGameStore from '../../store/gameStore';
 import { TechnologyService } from '../../services/TechnologyService';
 import type { TechStatus } from '../../types/technology';
 import { ResearchPriority } from '../../types/technology';
-import { usePersistentState } from '../../hooks/usePersistentState';
+import { useLocalStorageState } from 'ahooks';
 import { useUnlockedTechsRepair } from '../../hooks/useUnlockedTechsRepair';
 
 const TechnologyModule: React.FC = React.memo(() => {
@@ -43,7 +43,7 @@ const TechnologyModule: React.FC = React.memo(() => {
   // 本地状态 - 智能初始化loading状态
   const [loading, setLoading] = useState(() => technologies.size === 0);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTechId, setSelectedTechId] = usePersistentState<string | null>('technology-selected-tech', null);
+  const [selectedTechId, setSelectedTechId] = useLocalStorageState<string | null>('technology-selected-tech', { defaultValue: null });
 
   // 初始化科技服务 - 优化版本，避免不必要的loading
   useEffect(() => {

@@ -34,7 +34,7 @@ import { ServiceInitializer } from './services/ServiceInitializer';
 import CraftingEngine from './utils/craftingEngine';
 import useGameStore from './store/gameStore';
 import { useIsMobile } from './hooks/useIsMobile';
-import { usePersistentState } from './hooks/usePersistentState';
+import { useLocalStorageState } from 'ahooks';
 import { useInventoryRepair } from './hooks/useInventoryRepair';
 import { useUnlockedTechsRepair } from './hooks/useUnlockedTechsRepair';
 import { useFacilityRepair } from './hooks/useFacilityRepair';
@@ -42,7 +42,7 @@ import theme from './theme';
 import { error as logError } from './utils/logger';
 
 const App: React.FC = () => {
-  const [currentModule, setCurrentModule] = usePersistentState('app-current-module', 0);
+  const [currentModule, setCurrentModule] = useLocalStorageState('app-current-module', { defaultValue: 0 });
   const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const isMobile = useIsMobile();

@@ -184,68 +184,7 @@ describe('DataService', () => {
     ServiceLocator.register(SERVICE_NAMES.USER_PROGRESS, mockUserProgressService)
     ServiceLocator.register(SERVICE_NAMES.TECHNOLOGY, mockTechnologyService)
     
-    // 使用适当的配方模拟 RecipeService
-    const mockRecipeService = {
-      getRecipeById: vi.fn((id: string) => {
-        if (id === 'iron-plate') {
-          return {
-            id: 'iron-plate',
-            name: 'Iron plate',
-            category: 'smelting',
-            time: 3.2,
-            in: { 'iron-ore': 1 },
-            out: { 'iron-plate': 1 },
-            producers: ['stone-furnace', 'steel-furnace', 'electric-furnace']
-          }
-        }
-        return undefined
-      }),
-      getRecipesThatProduce: vi.fn((itemId: string) => {
-        // 为有配方的物品返回配方，原材料返回空数组
-        if (itemId === 'iron-plate') {
-          return [{
-            id: 'iron-plate',
-            name: 'Iron plate',
-            category: 'smelting',
-            time: 3.2,
-            in: { 'iron-ore': 1 },
-            out: { 'iron-plate': 1 },
-            producers: ['stone-furnace', 'steel-furnace', 'electric-furnace'],
-            flags: ['locked'] // 设置为需要科技解锁以便测试控制
-          }]
-        }
-        if (itemId === 'copper-plate') {
-          return [{
-            id: 'copper-plate',
-            name: 'Copper plate',
-            category: 'smelting',
-            time: 3.2,
-            in: { 'copper-ore': 1 },
-            out: { 'copper-plate': 1 },
-            producers: ['stone-furnace', 'steel-furnace', 'electric-furnace'],
-            flags: ['locked']
-          }]
-        }
-        return []
-      }),
-      canCraftManually: vi.fn(() => true),
-      getRecipe: vi.fn((id: string) => {
-        if (id === 'iron-plate') {
-          return {
-            id: 'iron-plate',
-            name: 'Iron plate',
-            category: 'smelting',
-            time: 3.2,
-            in: { 'iron-ore': 1 },
-            out: { 'iron-plate': 1 },
-            producers: ['stone-furnace', 'steel-furnace', 'electric-furnace']
-          }
-        }
-        return undefined
-      })
-    }
-
-    ServiceLocator.register(SERVICE_NAMES.RECIPE, mockRecipeService)
+    // 不注册 RecipeService，让 DataService 使用回退逻辑（直接从游戏数据查找）
 
     dataService = DataService.getInstance()
   })
@@ -376,11 +315,11 @@ describe('DataService', () => {
 
     // 测试：当 includeUnlocked 为 false 时应过滤未解锁物品
     it('should filter unlocked items when includeUnlocked is false', () => {
-      vi.mocked(mockTechnologyService.canCraftItem).mockImplementation((itemId: string) => {
+      vi.mocked(mockTechnologyService.isItemUnlocked).mockImplementation((itemId: string) => {
         return itemId === 'iron-plate'
       })
 
-      const items = dataService.getItemsByCategory('intermediate-products')
+      const items = dataService.getItemsByCategory('intermediate-products', false)
       
       expect(items).toHaveLength(1)
       expect(items[0].id).toBe('iron-plate')
@@ -442,21 +381,21 @@ describe('DataService', () => {
 
     // 测试：当技术服务说物品可以制作时返回 true
     it('should return true when technology service says item can be crafted', () => {
-      vi.mocked(mockTechnologyService.canCraftItem).mockReturnValue(true)
+      vi.mocked(mockTechnologyService.isItemUnlocked).mockReturnValue(true)
       
       expect(dataService.isItemUnlocked('iron-plate')).toBe(true)
     })
 
     // 测试：当技术服务说物品不能制作时返回 false
     it('should return false when technology service says item cannot be crafted', () => {
-      vi.mocked(mockTechnologyService.canCraftItem).mockReturnValue(false)
+      vi.mocked(mockTechnologyService.isItemUnlocked).mockReturnValue(false)
       
       expect(dataService.isItemUnlocked('iron-plate')).toBe(false)
     })
 
     // 测试：解锁状态应该被缓存
     it('should cache unlock status', () => {
-      vi.mocked(mockTechnologyService.canCraftItem).mockReturnValue(true)
+      vi.mocked(mockTechnologyService.isItemUnlocked).mockReturnValue(true)
       
       // First call
       dataService.isItemUnlocked('iron-plate')
@@ -464,7 +403,7 @@ describe('DataService', () => {
       // Second call should use cache
       dataService.isItemUnlocked('iron-plate')
       
-      expect(mockTechnologyService.canCraftItem).toHaveBeenCalledTimes(1)
+      expect(mockTechnologyService.isItemUnlocked).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -472,6 +411,8 @@ describe('DataService', () => {
   describe('getItemsByRow', () => {
     beforeEach(async () => {
       await dataService.loadGameData()
+      // 默认所有物品都解锁，个别测试可以覆盖这个设置
+      vi.mocked(mockTechnologyService.isItemUnlocked).mockReturnValue(true)
     })
 
     // 测试：应该根据分类返回分组的物品
@@ -493,7 +434,7 @@ describe('DataService', () => {
 
     // 测试：应该过滤未解锁物品
     it('should filter by unlock status', () => {
-      vi.mocked(mockTechnologyService.canCraftItem).mockImplementation((itemId: string) => {
+      vi.mocked(mockTechnologyService.isItemUnlocked).mockImplementation((itemId: string) => {
         return itemId === 'iron-plate'
       })
 
@@ -543,22 +484,22 @@ describe('DataService', () => {
 
     // 测试：应该清除解锁缓存
     it('should clear unlock cache when requested', () => {
-      vi.mocked(mockTechnologyService.canCraftItem).mockReturnValue(true)
+      vi.mocked(mockTechnologyService.isItemUnlocked).mockReturnValue(true)
       
       // First call - should hit service
       dataService.isItemUnlocked('iron-plate')
-      expect(mockTechnologyService.canCraftItem).toHaveBeenCalledTimes(1)
+      expect(mockTechnologyService.isItemUnlocked).toHaveBeenCalledTimes(1)
       
       // Second call - should use cache
       dataService.isItemUnlocked('iron-plate')
-      expect(mockTechnologyService.canCraftItem).toHaveBeenCalledTimes(1)
+      expect(mockTechnologyService.isItemUnlocked).toHaveBeenCalledTimes(1)
       
       // Clear cache
       dataService.clearUnlockCache()
       
       // Third call - should hit service again
       dataService.isItemUnlocked('iron-plate')
-      expect(mockTechnologyService.canCraftItem).toHaveBeenCalledTimes(2)
+      expect(mockTechnologyService.isItemUnlocked).toHaveBeenCalledTimes(2)
     })
   })
 
@@ -627,7 +568,7 @@ describe('DataService', () => {
     // 测试：应返回所有已解锁的物品
     it('应返回所有已解锁的物品', () => {
       // 设置部分物品已解锁
-      vi.mocked(mockTechnologyService.canCraftItem).mockImplementation((itemId: string) => {
+      vi.mocked(mockTechnologyService.isItemUnlocked).mockImplementation((itemId: string) => {
         return ['iron-plate', 'copper-plate'].includes(itemId)
       })
 
@@ -642,7 +583,7 @@ describe('DataService', () => {
 
     // 测试：无物品解锁时应返回空数组
     it('无物品解锁时应返回空数组', () => {
-      vi.mocked(mockTechnologyService.canCraftItem).mockReturnValue(false)
+      vi.mocked(mockTechnologyService.isItemUnlocked).mockReturnValue(false)
 
       const unlockedItems = dataService.getUnlockedItems()
       expect(unlockedItems).toEqual([])
@@ -1153,22 +1094,22 @@ describe('DataService', () => {
     // 测试：缓存版本应该在清理时递增
     it('缓存版本应该在清理时递增', () => {
       // Test cache clearing by checking that subsequent calls are made to the service
-      vi.mocked(mockTechnologyService.canCraftItem).mockReturnValue(true)
+      vi.mocked(mockTechnologyService.isItemUnlocked).mockReturnValue(true)
       
       // First call
       dataService.isItemUnlocked('iron-plate')
-      expect(mockTechnologyService.canCraftItem).toHaveBeenCalledTimes(1)
+      expect(mockTechnologyService.isItemUnlocked).toHaveBeenCalledTimes(1)
       
       // Second call should use cache
       dataService.isItemUnlocked('iron-plate') 
-      expect(mockTechnologyService.canCraftItem).toHaveBeenCalledTimes(1)
+      expect(mockTechnologyService.isItemUnlocked).toHaveBeenCalledTimes(1)
       
       // Clear cache
       dataService.clearUnlockCache()
       
       // Third call should hit service again
       dataService.isItemUnlocked('iron-plate')
-      expect(mockTechnologyService.canCraftItem).toHaveBeenCalledTimes(2)
+      expect(mockTechnologyService.isItemUnlocked).toHaveBeenCalledTimes(2)
     })
   })
 })

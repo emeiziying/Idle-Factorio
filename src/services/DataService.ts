@@ -266,7 +266,7 @@ export class DataService {
     if (!this.gameData) return [];
     
     return this.gameData.items.filter(item => 
-      item.category === categoryId && (includeUnlocked ? this.isItemUnlocked(item.id) : false)
+      item.category === categoryId && (includeUnlocked || this.isItemUnlocked(item.id))
     );
   }
 
