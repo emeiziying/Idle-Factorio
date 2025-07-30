@@ -193,7 +193,6 @@ describe('UserProgressService', () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData))
       
       // Create new instance
-      // @ts-ignore - clearing singleton instance
       ;(UserProgressService as any).instance = null
       const newService = UserProgressService.getInstance()
       
@@ -208,7 +207,6 @@ describe('UserProgressService', () => {
       localStorage.setItem(STORAGE_KEY, 'invalid json')
       
       // Should not throw when creating instance
-      // @ts-ignore - clearing singleton instance
       ;(UserProgressService as any).instance = null
       expect(() => UserProgressService.getInstance()).not.toThrow()
       

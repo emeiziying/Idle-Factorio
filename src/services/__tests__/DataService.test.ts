@@ -84,7 +84,9 @@ vi.mock('../../utils/logger', () => ({
 
 describe('DataService', () => {
   let dataService: DataService
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockUserProgressService: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockTechnologyService: any
 
   beforeEach(() => {

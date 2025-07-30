@@ -1305,9 +1305,11 @@ const createAutoSaveInterval = () => {
 createAutoSaveInterval();
 
 // 在开发环境中，监听热更新事件（如果可用）
-// @ts-ignore - import.meta types not available in tsc
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore - import.meta types may not be available in some environments
 if (typeof import.meta !== 'undefined' && import.meta.env?.DEV && import.meta.hot) {
-  // @ts-ignore
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore - import.meta.hot types may not be available
   import.meta.hot.dispose(() => {
     console.log('[AutoSave] 热更新时清理定时器');
     clearAutoSaveInterval();
