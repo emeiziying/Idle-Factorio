@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { usePersistentState } from '../usePersistentState'
 
-// Mock logger
 // 模拟日志记录器
 vi.mock('../../utils/logger', () => ({
   warn: vi.fn()
@@ -11,7 +10,6 @@ vi.mock('../../utils/logger', () => ({
 // usePersistentState hook 测试套件 - 用于测试持久化状态管理
 describe('usePersistentState', () => {
   beforeEach(() => {
-    // Clear localStorage
     // 清空 localStorage
     localStorage.clear()
     vi.clearAllMocks()
@@ -134,7 +132,6 @@ describe('usePersistentState', () => {
     
     expect(localStorage.getItem('key1')).toBe('"updated1"')
     
-    // Change key
     // 改变键
     rerender({ key: 'key2', value: 'value2' })
     
@@ -145,7 +142,7 @@ describe('usePersistentState', () => {
     })
     
     expect(localStorage.getItem('key2')).toBe('"updated2"')
-    expect(localStorage.getItem('key1')).toBe('"updated1"') // Old key should still exist // 旧键应该仍然存在
+    expect(localStorage.getItem('key1')).toBe('"updated1"') // 旧键应该仍然存在
   })
 
   // 测试：应该能处理 null 和 undefined 值
@@ -187,22 +184,18 @@ describe('usePersistentState', () => {
     const { result: hook1 } = renderHook(() => usePersistentState('shared-key', 'initial'))
     const { result: hook2 } = renderHook(() => usePersistentState('shared-key', 'initial'))
     
-    // Both should start with the same value
     // 两者应该以相同的值开始
     expect(hook1.current[0]).toBe('initial')
     expect(hook2.current[0]).toBe('initial')
     
-    // Update from hook1
     // 从 hook1 更新
     act(() => {
       hook1.current[1]('updated-from-hook1')
     })
     
-    // Hook1 updates immediately
     // Hook1 立即更新
     expect(hook1.current[0]).toBe('updated-from-hook1')
     
-    // Hook2 won't see the update until remount, but localStorage is updated
     // Hook2 在重新挂载之前不会看到更新，但 localStorage 已更新
     expect(localStorage.getItem('shared-key')).toBe('"updated-from-hook1"')
   })

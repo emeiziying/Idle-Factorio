@@ -235,12 +235,17 @@ const useGameStore = create<GameState>()(
           const currentItem = newInventory.get(itemId) || get().getInventoryItem(itemId);
 
           const newAmount = Math.max(0, currentItem.currentAmount + amount);
-          const updatedItem = {
-            ...currentItem,
-            currentAmount: Math.min(newAmount, currentItem.maxCapacity)
-          };
-
-          newInventory.set(itemId, updatedItem);
+          
+          if (newAmount === 0) {
+            // 如果数量为零，从库存中移除物品
+            newInventory.delete(itemId);
+          } else {
+            const updatedItem = {
+              ...currentItem,
+              currentAmount: Math.min(newAmount, currentItem.maxCapacity)
+            };
+            newInventory.set(itemId, updatedItem);
+          }
           
           return {
             inventory: newInventory,
@@ -265,11 +270,17 @@ const useGameStore = create<GameState>()(
           updates.forEach(({ itemId, amount }) => {
             const currentItem = newInventory.get(itemId) || get().getInventoryItem(itemId);
             const newAmount = Math.max(0, currentItem.currentAmount + amount);
-            const updatedItem = {
-              ...currentItem,
-              currentAmount: Math.min(newAmount, currentItem.maxCapacity)
-            };
-            newInventory.set(itemId, updatedItem);
+            
+            if (newAmount === 0) {
+              // 如果数量为零，从库存中移除物品
+              newInventory.delete(itemId);
+            } else {
+              const updatedItem = {
+                ...currentItem,
+                currentAmount: Math.min(newAmount, currentItem.maxCapacity)
+              };
+              newInventory.set(itemId, updatedItem);
+            }
             
             if (amount > 0) {
               totalItemsAdded += amount;

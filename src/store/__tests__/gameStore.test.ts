@@ -5,7 +5,6 @@ import { act } from '@testing-library/react'
 import useGameStore from '../gameStore'
 import type { CraftingTask } from '../../types/index'
 
-// Mock services
 // 模拟服务
 vi.mock('../../services/RecipeService')
 vi.mock('../../services/DataService')
@@ -13,10 +12,41 @@ vi.mock('../../services/TechnologyService')
 vi.mock('../../services/FuelService')
 vi.mock('../../services/GameStorageService')
 
+// 模拟 DataService
+const mockDataService = {
+  getInstance: vi.fn(() => mockDataService),
+  getItem: vi.fn((itemId: string) => ({
+    id: itemId,
+    name: itemId,
+    stack: 100,
+    category: 'intermediate-products'
+  }))
+}
+
+// 模拟 FuelService
+const mockFuelService = {
+  getInstance: vi.fn(() => mockFuelService),
+  initializeFuelBuffer: vi.fn(() => null)
+}
+
+// 模拟 RecipeService
+const mockRecipeService = {
+  getInstance: vi.fn(() => mockRecipeService),
+  getRecipeById: vi.fn(() => null)
+}
+
+// 设置模拟实现
+const { DataService } = await import('../../services/DataService')
+const { FuelService } = await import('../../services/FuelService')
+const { RecipeService } = await import('../../services/RecipeService')
+
+vi.mocked(DataService.getInstance).mockReturnValue(mockDataService)
+vi.mocked(FuelService.getInstance).mockReturnValue(mockFuelService)
+vi.mocked(RecipeService.getRecipeById).mockReturnValue(null)
+
 // gameStore 测试套件 - 游戏状态管理
 describe('gameStore', () => {
   beforeEach(() => {
-    // Reset store to initial state
     // 重置 store 到初始状态
     act(() => {
       useGameStore.setState({
@@ -56,7 +86,7 @@ describe('gameStore', () => {
         })
         
         const item = getInventoryItem('iron-plate')
-        expect(item.amount).toBe(10)
+        expect(item.currentAmount).toBe(10)
         expect(item.itemId).toBe('iron-plate')
       })
 
@@ -70,7 +100,7 @@ describe('gameStore', () => {
         })
         
         const item = getInventoryItem('iron-plate')
-        expect(item.amount).toBe(15)
+        expect(item.currentAmount).toBe(15)
       })
 
       // 测试：应该处理负数数量
@@ -83,7 +113,7 @@ describe('gameStore', () => {
         })
         
         const item = getInventoryItem('iron-plate')
-        expect(item.amount).toBe(15)
+        expect(item.currentAmount).toBe(15)
       })
 
       // 测试：数量为零时应移除物品
@@ -113,9 +143,9 @@ describe('gameStore', () => {
           ])
         })
         
-        expect(getInventoryItem('iron-plate').amount).toBe(10)
-        expect(getInventoryItem('copper-plate').amount).toBe(20)
-        expect(getInventoryItem('steel-plate').amount).toBe(5)
+        expect(getInventoryItem('iron-plate').currentAmount).toBe(10)
+        expect(getInventoryItem('copper-plate').currentAmount).toBe(20)
+        expect(getInventoryItem('steel-plate').currentAmount).toBe(5)
       })
     })
 
@@ -132,9 +162,15 @@ describe('gameStore', () => {
         const item = getInventoryItem('iron-plate')
         expect(item).toEqual({
           itemId: 'iron-plate',
-          amount: 10,
+          currentAmount: 10,
           stackSize: 100,
-          capacity: 100
+          baseStacks: 1,
+          additionalStacks: 0,
+          totalStacks: 1,
+          maxCapacity: 100,
+          productionRate: 0,
+          consumptionRate: 0,
+          status: 'normal'
         })
       })
 
@@ -145,9 +181,15 @@ describe('gameStore', () => {
         const item = getInventoryItem('non-existent')
         expect(item).toEqual({
           itemId: 'non-existent',
-          amount: 0,
+          currentAmount: 0,
           stackSize: 100,
-          capacity: 100
+          baseStacks: 1,
+          additionalStacks: 0,
+          totalStacks: 1,
+          maxCapacity: 100,
+          productionRate: 0,
+          consumptionRate: 0,
+          status: 'normal'
         })
       })
     })
@@ -215,7 +257,8 @@ describe('gameStore', () => {
         let taskId: string = ''
         act(() => {
           addCraftingTask({
-            itemId: 'item',
+            recipeId: 'iron-plate',
+            itemId: 'iron-plate',
             quantity: 1,
             progress: 0,
             startTime: Date.now()
@@ -240,7 +283,8 @@ describe('gameStore', () => {
         let taskId: string = ''
         act(() => {
           addCraftingTask({
-            itemId: 'item',
+            recipeId: 'iron-plate',
+            itemId: 'iron-plate',
             quantity: 1,
             progress: 0,
             startTime: Date.now()

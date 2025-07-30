@@ -3,7 +3,6 @@ import { GameConfig } from '../GameConfig'
 import { DataService } from '../DataService'
 import type { Item } from '../../types'
 
-// Mock DataService
 // 模拟 DataService
 vi.mock('../DataService', () => ({
   DataService: {
@@ -17,17 +16,14 @@ describe('GameConfig', () => {
   let mockDataService: { getItem: ReturnType<typeof vi.fn> }
 
   beforeEach(() => {
-    // Clear any existing instance
     // 清除已存在的实例
     ;(GameConfig as unknown as { instance: GameConfig | null }).instance = null
 
-    // Create mock DataService
     // 创建模拟的 DataService
     mockDataService = {
       getItem: vi.fn()
     }
 
-    // Setup DataService mock
     // 设置 DataService 模拟
     vi.mocked(DataService.getInstance).mockReturnValue(mockDataService as unknown as DataService)
 
@@ -344,7 +340,7 @@ describe('GameConfig', () => {
         maxProductivityBonus: 0.75
       })
       
-      // Other constants should remain unchanged
+      // 其他常量应保持不变
       // 其他常量应保持不变
       expect(updatedConstants.fuel).toEqual(originalConstants.fuel)
       expect(updatedConstants.power).toEqual(originalConstants.power)

@@ -16,11 +16,10 @@ export class ServiceLocator {
    * 获取服务
    */
   static get<T>(name: string): T {
-    const service = this.services.get(name);
-    if (!service) {
+    if (!this.services.has(name)) {
       throw new Error(`Service ${name} not found. Make sure it's registered.`);
     }
-    return service as T;
+    return this.services.get(name) as T;
   }
 
   /**

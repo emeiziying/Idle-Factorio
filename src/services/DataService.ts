@@ -19,7 +19,7 @@ interface I18nData {
 }
 
 export class DataService {
-  private static instance: DataService;
+  private static instance: DataService | null = null;
   private gameData: GameData | null = null;
   private i18nData: I18nData | null = null;
   private i18nLoadingPromise: Promise<I18nData> | null = null;
@@ -55,7 +55,7 @@ export class DataService {
       return this.itemUnlockedCache.get(cacheKey)!;
     }
     
-    const result = this.isItemUnlocked(itemId);
+    const result = this.isItemUnlockedInternal(itemId, new Set());
     this.itemUnlockedCache.set(cacheKey, result);
     
     return result;
@@ -66,6 +66,11 @@ export class DataService {
       DataService.instance = new DataService();
     }
     return DataService.instance;
+  }
+
+  // 重置实例（用于测试）
+  static resetInstance(): void {
+    DataService.instance = null;
   }
 
   // 加载游戏数据 - 改为异步import
@@ -200,7 +205,7 @@ export class DataService {
     }
     
     // 规范化输入（转为小写并去除空格）
-    const normalizedId = technologyId.toLowerCase().replace(/\s+/g, '-');
+    const normalizedId = technologyId.toLowerCase().replace(/\s+/g, '');
     
     // 优先从 technologies 字段查找
     if (this.i18nData.technologies) {
@@ -257,11 +262,11 @@ export class DataService {
   }
 
   // 按分类获取物品（仅返回已解锁）
-  getItemsByCategory(categoryId: string): Item[] {
+  getItemsByCategory(categoryId: string, includeUnlocked: boolean = true): Item[] {
     if (!this.gameData) return [];
     
     return this.gameData.items.filter(item => 
-      item.category === categoryId && this.isItemUnlocked(item.id)
+      item.category === categoryId && (includeUnlocked ? this.isItemUnlocked(item.id) : false)
     );
   }
 
@@ -285,6 +290,10 @@ export class DataService {
     if (ServiceLocator.has(SERVICE_NAMES.RECIPE)) {
       return RecipeService.getRecipeById(recipeId);
     }
+    // 如果 RecipeService 不可用，直接从游戏数据中查找
+    if (this.gameData) {
+      return this.gameData.recipes.find(recipe => recipe.id === recipeId);
+    }
     return undefined;
   }
 
@@ -304,7 +313,8 @@ export class DataService {
 
   // 检查物品是否解锁 - 基于游戏逻辑判断
   isItemUnlocked(itemId: string): boolean {
-    return this.isItemUnlockedInternal(itemId, new Set());
+    // 使用缓存机制
+    return this.isItemUnlockedCached(itemId);
   }
 
   // 内部递归检查方法，带循环检测
@@ -316,11 +326,13 @@ export class DataService {
     visiting.add(itemId);
 
     try {
-      // 1. 检查是否为科技直接解锁的物品（设备、工具等）
+      // 1. 优先检查 TechnologyService（决定性因素）
       if (ServiceLocator.has(SERVICE_NAMES.TECHNOLOGY)) {
         const techService = ServiceLocator.get<TechnologyService>(SERVICE_NAMES.TECHNOLOGY);
-        if (techService.isItemUnlocked(itemId)) {
-          return true;
+        
+        // 使用 isItemUnlocked 方法作为决定性因素
+        if (techService.isItemUnlocked) {
+          return techService.isItemUnlocked(itemId);
         }
       }
 

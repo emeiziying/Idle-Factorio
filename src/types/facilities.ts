@@ -1,4 +1,5 @@
 // 设施相关类型定义
+import type { GenericFuelBuffer } from '../services/FuelService';
 
 export interface Facility {
   id: string;
@@ -49,7 +50,9 @@ export interface FacilityInstance {
   powerConsumption?: number;
   powerGeneration?: number;
   production?: ProductionData;
-  fuelBuffer?: FuelBuffer;  // 新增：燃料缓存区
+  fuelBuffer?: GenericFuelBuffer;  // 燃料缓存区
+  isActive?: boolean;  // 向后兼容：设施是否激活
+  itemId?: string;  // 向后兼容：物品ID
 }
 
 export const FacilityStatus = {

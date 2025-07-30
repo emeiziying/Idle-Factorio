@@ -3,12 +3,12 @@
 import React from 'react';
 import { Box, Typography, LinearProgress, Tooltip, Chip } from '@mui/material';
 import { LocalFireDepartment, Timer } from '@mui/icons-material';
-import type { FuelBuffer } from '../../types/facilities';
+import type { GenericFuelBuffer } from '../../services/FuelService';
 import { FuelService } from '../../services/FuelService';
 import FactorioIcon from '../common/FactorioIcon';
 
 interface FuelStatusDisplayProps {
-  fuelBuffer: FuelBuffer;
+  fuelBuffer: GenericFuelBuffer;
   compact?: boolean;
 }
 
@@ -88,7 +88,7 @@ export const FuelStatusDisplay: React.FC<FuelStatusDisplayProps> = ({
       />
       
       <Box display="flex" gap={1} flexWrap="wrap" mb={1}>
-        {fuelBuffer.slots.map((slot, index) => (
+        {fuelBuffer.slots?.map((slot, index) => (
           <Tooltip
             key={index}
             title={
@@ -129,7 +129,7 @@ export const FuelStatusDisplay: React.FC<FuelStatusDisplayProps> = ({
         ))}
         
         {/* 空槽位 */}
-        {Array.from({ length: fuelBuffer.maxSlots - fuelBuffer.slots.length }).map((_, i) => (
+        {Array.from({ length: (fuelBuffer.maxSlots || 0) - (fuelBuffer.slots?.length || 0) }).map((_, i) => (
           <Box
             key={`empty-${i}`}
             sx={{
@@ -151,8 +151,8 @@ export const FuelStatusDisplay: React.FC<FuelStatusDisplayProps> = ({
       
       <Typography variant="caption" color="text.secondary">
         能量: {status.totalEnergy.toFixed(1)} / {status.maxEnergy.toFixed(0)} MJ
-        {fuelBuffer.consumptionRate > 0 && (
-          <span> • 消耗: {(fuelBuffer.consumptionRate * 1000).toFixed(0)} kW</span>
+        {(fuelBuffer.consumptionRate || 0) > 0 && (
+          <span> • 消耗: {((fuelBuffer.consumptionRate || 0) * 1000).toFixed(0)} kW</span>
         )}
       </Typography>
     </Box>

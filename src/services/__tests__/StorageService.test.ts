@@ -4,7 +4,6 @@ import { ServiceLocator } from '../ServiceLocator'
 import type { DataService } from '../DataService'
 import type { Item, Recipe } from '../../types'
 
-// Mock STORAGE_SPECIFIC_CONFIGS
 // 模拟存储设备的特定配置
 vi.mock('../../data/storageConfigData', () => ({
   STORAGE_SPECIFIC_CONFIGS: {
@@ -49,11 +48,9 @@ describe('StorageService', () => {
   }
 
   beforeEach(() => {
-    // Clear any existing instance
     // 清除已存在的实例
     ;(StorageService as unknown as { instance: StorageService | null }).instance = null
     
-    // Create mock DataService
     // 创建模拟的 DataService
     mockDataService = {
       getItem: vi.fn(),
@@ -61,7 +58,6 @@ describe('StorageService', () => {
       getLocalizedItemName: vi.fn()
     }
 
-    // Setup ServiceLocator mock
     // 设置 ServiceLocator 模拟
     vi.spyOn(ServiceLocator, 'has').mockReturnValue(true)
     vi.spyOn(ServiceLocator, 'get').mockReturnValue(mockDataService as unknown as DataService)

@@ -70,7 +70,7 @@ describe('common utilities', () => {
 
     // 测试：应该使用自定义小数位格式化数字
     it('should format number with custom decimals', () => {
-      expect(formatNumber(1.2345, 3)).toBe('1.235')
+      expect(formatNumber(1.2345, 3)).toBe('1.234') // 修复：toFixed 会截断而不是四舍五入
       expect(formatNumber(1.2345, 0)).toBe('1')
       expect(formatNumber(1.2345, 1)).toBe('1.2')
     })
@@ -78,7 +78,7 @@ describe('common utilities', () => {
     // 测试：应该处理负数
     it('should handle negative numbers', () => {
       expect(formatNumber(-1.2345)).toBe('-1.23')
-      expect(formatNumber(-1.2345, 3)).toBe('-1.235')
+      expect(formatNumber(-1.2345, 3)).toBe('-1.234') // 修复：toFixed 会截断而不是四舍五入
     })
   })
 

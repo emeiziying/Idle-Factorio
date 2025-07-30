@@ -302,7 +302,13 @@ export class GameStorageService {
     // 恢复设施
     if (restored.facilities) {
       restored.facilities = optimized.facilities.map(facility => {
-        const fuelItem = Object.keys(facility.fuel)[0];
+        const fuelItems = Object.entries(facility.fuel);
+        const slots = fuelItems.map(([itemId, energy]) => ({
+          itemId,
+          quantity: Math.ceil(energy / (this.dataService.getItem(itemId)?.fuel?.value || 1)),
+          remainingEnergy: energy
+        }));
+        
         return {
           id: facility.id,
           facilityId: facility.type,
@@ -317,13 +323,9 @@ export class GameStorageService {
             outputBuffer: []
           },
           fuelBuffer: {
-            slots: fuelItem ? [{
-              itemId: fuelItem,
-              quantity: 1,
-              remainingEnergy: facility.fuel[fuelItem]
-            }] : [],
-            maxSlots: 1,
-            totalEnergy: facility.fuel[fuelItem] || 0,
+            slots,
+            maxSlots: Math.max(1, slots.length),
+            totalEnergy: Object.values(facility.fuel).reduce((sum, energy) => sum + energy, 0),
             maxEnergy: this.getFacilityMaxEnergy(facility.type),
             consumptionRate: this.getFacilityConsumptionRate(facility.type),
             lastUpdate: optimized.time

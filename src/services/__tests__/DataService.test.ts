@@ -4,7 +4,6 @@ import { ServiceLocator, SERVICE_NAMES } from '../ServiceLocator'
 import type { GameData } from '../../types/index'
 import type { ServiceInstance } from '../../types/test-utils'
 
-// Mock game data
 // 模拟游戏数据
 const mockGameData: Partial<GameData> = {
   categories: [
@@ -56,7 +55,6 @@ const mockGameData: Partial<GameData> = {
   ]
 }
 
-// Mock i18n data
 // 模拟国际化数据
 const mockI18nData = {
   categories: {
@@ -95,7 +93,8 @@ vi.mock('../../data/spa/data.json', () => ({
         name: 'Copper plate',
         category: 'intermediate-products',
         stack: 100,
-        row: 1
+        row: 1,
+        iconText: 'Cu'
       },
       { 
         id: 'transport-belt', 
@@ -123,9 +122,30 @@ vi.mock('../../data/spa/data.json', () => ({
         in: { 'copper-ore': 1 },
         out: { 'copper-plate': 1 },
         producers: ['stone-furnace', 'steel-furnace', 'electric-furnace']
+      },
+      {
+        id: 'automation',
+        name: 'Automation',
+        category: 'technology',
+        time: 15,
+        in: { 'science-pack-1': 1 },
+        out: {},
+        producers: ['lab']
       }
     ],
-    icons: []
+    icons: [
+      {
+        id: 'iron-plate',
+        position: { x: 0, y: 0 },
+        color: '#8B4513'
+      },
+      {
+        id: 'copper-plate',
+        position: { x: 1, y: 0 },
+        color: '#CD853F',
+        text: 'Cu'
+      }
+    ]
   }
 }))
 
@@ -145,12 +165,10 @@ describe('DataService', () => {
   }
 
   beforeEach(() => {
-    // Clear instance
     // 清除实例
     ;(DataService as unknown as ServiceInstance<DataService>).instance = null
     ServiceLocator.clear()
 
-    // Mock services
     // 模拟服务
     mockUserProgressService = {
       isItemInAnyMilestone: vi.fn(() => false)
@@ -166,7 +184,6 @@ describe('DataService', () => {
     ServiceLocator.register(SERVICE_NAMES.USER_PROGRESS, mockUserProgressService)
     ServiceLocator.register(SERVICE_NAMES.TECHNOLOGY, mockTechnologyService)
     
-    // Mock RecipeService with proper recipes
     // 使用适当的配方模拟 RecipeService
     const mockRecipeService = {
       getRecipeById: vi.fn((id: string) => {
@@ -184,7 +201,6 @@ describe('DataService', () => {
         return undefined
       }),
       getRecipesThatProduce: vi.fn((itemId: string) => {
-        // Return recipes for items that have them, empty for raw materials
         // 为有配方的物品返回配方，原材料返回空数组
         if (itemId === 'iron-plate') {
           return [{
@@ -195,7 +211,7 @@ describe('DataService', () => {
             in: { 'iron-ore': 1 },
             out: { 'iron-plate': 1 },
             producers: ['stone-furnace', 'steel-furnace', 'electric-furnace'],
-            flags: ['locked'] // Make it require technology unlock for test control // 设置为需要科技解锁以便测试控制
+            flags: ['locked'] // 设置为需要科技解锁以便测试控制
           }]
         }
         if (itemId === 'copper-plate') {
@@ -207,27 +223,28 @@ describe('DataService', () => {
             in: { 'copper-ore': 1 },
             out: { 'copper-plate': 1 },
             producers: ['stone-furnace', 'steel-furnace', 'electric-furnace'],
-            flags: ['locked'] // Make it require technology unlock for test control // 设置为需要科技解锁以便测试控制
+            flags: ['locked']
           }]
         }
-        if (itemId === 'transport-belt') {
-          return [{
-            id: 'transport-belt',
-            name: 'Transport belt',
-            category: 'crafting',
-            time: 0.5,
-            in: { 'iron-plate': 1, 'iron-gear-wheel': 1 },
-            out: { 'transport-belt': 2 },
-            producers: ['assembling-machine-1', 'assembling-machine-2', 'assembling-machine-3'],
-            flags: ['locked'] // Requires research // 需要研究
-          }]
-        }
-        return [] // Raw materials like iron-ore, copper-ore have no recipes // 原材料如铁矿石、铜矿石没有配方
+        return []
       }),
-      getRecipesThatUse: vi.fn(() => []),
-      getRecipeStats: vi.fn(() => null),
-      getMostEfficientRecipe: vi.fn(() => undefined)
+      canCraftManually: vi.fn(() => true),
+      getRecipe: vi.fn((id: string) => {
+        if (id === 'iron-plate') {
+          return {
+            id: 'iron-plate',
+            name: 'Iron plate',
+            category: 'smelting',
+            time: 3.2,
+            in: { 'iron-ore': 1 },
+            out: { 'iron-plate': 1 },
+            producers: ['stone-furnace', 'steel-furnace', 'electric-furnace']
+          }
+        }
+        return undefined
+      })
     }
+
     ServiceLocator.register(SERVICE_NAMES.RECIPE, mockRecipeService)
 
     dataService = DataService.getInstance()
@@ -256,7 +273,7 @@ describe('DataService', () => {
       expect(data).toBeDefined()
       expect(data.categories).toHaveLength(2)
       expect(data.items).toHaveLength(3)
-      expect(data.recipes).toHaveLength(2)
+      expect(data.recipes).toHaveLength(3)
     })
 
     // 测试：应该缓存已加载的数据
@@ -806,6 +823,7 @@ describe('DataService', () => {
 
     // 测试：i18n数据未加载时应返回原始ID
     it('i18n数据未加载时应返回原始ID', () => {
+      DataService.resetInstance()
       const freshService = DataService.getInstance()
       expect(freshService.getLocalizedTechnologyName('automation')).toBe('automation')
     })
@@ -851,8 +869,19 @@ describe('DataService', () => {
       const gameDataWithIcons = {
         ...mockGameData,
         icons: [
-          { id: 'iron-plate', icon: 'iron-plate.png' },
-          { id: 'copper-plate', icon: 'copper-plate.png', iconText: 'Cu' }
+          { 
+            id: 'iron-plate', 
+            icon: 'iron-plate.png',
+            position: { x: 0, y: 0 },
+            color: '#ffffff'
+          },
+          { 
+            id: 'copper-plate', 
+            icon: 'copper-plate.png', 
+            iconText: 'Cu',
+            position: { x: 0, y: 0 },
+            color: '#ffffff'
+          }
         ]
       }
       
@@ -861,8 +890,17 @@ describe('DataService', () => {
       }))
       
       // 重新加载数据以包含图标
-      ;(DataService as unknown as ServiceInstance<DataService>).instance = null
+      DataService.resetInstance()
       dataService = DataService.getInstance()
+      
+      // 重新设置模拟数据并强制重新加载
+      vi.doMock('../../data/spa/data.json', () => ({
+        default: gameDataWithIcons
+      }))
+      
+      // 清除模块缓存以确保重新加载
+      vi.resetModules()
+      
       await dataService.loadGameData()
     })
 
@@ -887,6 +925,8 @@ describe('DataService', () => {
       // 测试：数据未加载时应返回 null
       it('数据未加载时应返回null', () => {
         const freshService = DataService.getInstance()
+        // 清除已加载的数据
+        ;(freshService as unknown as { gameData: GameData | null }).gameData = null
         const iconData = freshService.getIconData('iron-plate')
         expect(iconData).toBeNull()
       })
@@ -927,6 +967,8 @@ describe('DataService', () => {
       // 测试：数据未加载时应返回空数组
       it('数据未加载时应返回空数组', () => {
         const freshService = DataService.getInstance()
+        // 清除已加载的数据
+        ;(freshService as unknown as { gameData: GameData | null }).gameData = null
         const allIcons = freshService.getAllIcons()
         expect(allIcons).toEqual([])
       })
@@ -994,6 +1036,7 @@ describe('DataService', () => {
 
       // 测试：数据未加载时应返回 null
       it('数据未加载时应返回null', () => {
+        DataService.resetInstance()
         const freshService = DataService.getInstance()
         const rawData = freshService.getRawGameData()
         expect(rawData).toBeNull()
@@ -1013,6 +1056,7 @@ describe('DataService', () => {
 
       // 测试：数据未加载时应返回空数组
       it('数据未加载时应返回空数组', () => {
+        DataService.resetInstance()
         const freshService = DataService.getInstance()
         const technologies = freshService.getTechnologies()
         expect(technologies).toEqual([])
@@ -1109,22 +1153,22 @@ describe('DataService', () => {
     // 测试：缓存版本应该在清理时递增
     it('缓存版本应该在清理时递增', () => {
       // Test cache clearing by checking that subsequent calls are made to the service
-      vi.mocked(mockTechnologyService.isItemUnlocked).mockReturnValue(true)
+      vi.mocked(mockTechnologyService.canCraftItem).mockReturnValue(true)
       
       // First call
       dataService.isItemUnlocked('iron-plate')
-      expect(mockTechnologyService.isItemUnlocked).toHaveBeenCalledTimes(1)
+      expect(mockTechnologyService.canCraftItem).toHaveBeenCalledTimes(1)
       
       // Second call should use cache
       dataService.isItemUnlocked('iron-plate') 
-      expect(mockTechnologyService.isItemUnlocked).toHaveBeenCalledTimes(1)
+      expect(mockTechnologyService.canCraftItem).toHaveBeenCalledTimes(1)
       
       // Clear cache
       dataService.clearUnlockCache()
       
       // Third call should hit service again
       dataService.isItemUnlocked('iron-plate')
-      expect(mockTechnologyService.isItemUnlocked).toHaveBeenCalledTimes(2)
+      expect(mockTechnologyService.canCraftItem).toHaveBeenCalledTimes(2)
     })
   })
 })

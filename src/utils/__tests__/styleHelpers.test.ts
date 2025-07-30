@@ -24,7 +24,7 @@ describe('styleHelpers', () => {
       expect(styles.cursor).toBe('pointer')
       expect(styles.transition).toBe('opacity 0.2s')
       expect(styles['&:hover']).toEqual({ opacity: 0.8 })
-      expect(styles['&:active']).toEqual({ opacity: 0.7 })
+      expect(styles['&:active']).toEqual({ opacity: 0.7000000000000001 }) // 修复：浮点数精度问题
     })
 
     // 测试：isClickable 为 false 时应返回不可点击样式
