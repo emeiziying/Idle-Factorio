@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { StorageService } from '../StorageService'
 import { ServiceLocator } from '../ServiceLocator'
 import type { DataService } from '../DataService'
+import type { Item, Recipe } from '../../types'
 
 // Mock STORAGE_SPECIFIC_CONFIGS
 vi.mock('../../data/storageConfigData', () => ({
@@ -48,7 +48,7 @@ describe('StorageService', () => {
 
   beforeEach(() => {
     // Clear any existing instance
-    (StorageService as any).instance = null
+    ;(StorageService as unknown as { instance: StorageService | null }).instance = null
     
     // Create mock DataService
     mockDataService = {
@@ -82,12 +82,15 @@ describe('StorageService', () => {
       const mockItem = { id: 'wooden-chest', name: 'Wooden Chest' }
       const mockRecipe = {
         id: 'wooden-chest',
+        name: 'Wooden Chest',
+        category: 'crafting',
         time: 0.5,
-        in: { 'wood': 4 }
+        in: { 'wood': 4 },
+        out: { 'wooden-chest': 1 }
       }
 
-      vi.mocked(mockDataService.getItem).mockReturnValue(mockItem as any)
-      vi.mocked(mockDataService.getRecipe).mockReturnValue(mockRecipe as any)
+      vi.mocked(mockDataService.getItem).mockReturnValue(mockItem as Item)
+      vi.mocked(mockDataService.getRecipe).mockReturnValue(mockRecipe as Recipe)
       vi.mocked(mockDataService.getLocalizedItemName).mockReturnValue('木制箱子')
 
       const config = storageService.getStorageConfig('wooden-chest')
@@ -129,12 +132,15 @@ describe('StorageService', () => {
       const mockItem = { id: 'storage-tank', name: 'Storage Tank' }
       const mockRecipe = {
         id: 'storage-tank',
+        name: 'Storage Tank',
+        category: 'crafting',
         time: 3,
-        in: { 'iron-plate': 20, 'steel-plate': 5 }
+        in: { 'iron-plate': 20, 'steel-plate': 5 },
+        out: { 'storage-tank': 1 }
       }
 
-      vi.mocked(mockDataService.getItem).mockReturnValue(mockItem as any)
-      vi.mocked(mockDataService.getRecipe).mockReturnValue(mockRecipe as any)
+      vi.mocked(mockDataService.getItem).mockReturnValue(mockItem as Item)
+      vi.mocked(mockDataService.getRecipe).mockReturnValue(mockRecipe as Recipe)
       vi.mocked(mockDataService.getLocalizedItemName).mockReturnValue('储液罐')
 
       const config = storageService.getStorageConfig('storage-tank')

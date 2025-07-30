@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { UserProgressService } from '../UserProgressService'
 
 // Mock logger
@@ -13,7 +12,7 @@ describe('UserProgressService', () => {
 
   beforeEach(() => {
     // Clear instance
-    (UserProgressService as any).instance = null
+    ;(UserProgressService as unknown as { instance: UserProgressService | null }).instance = null
     
     // Clear localStorage
     localStorage.clear()
@@ -56,7 +55,7 @@ describe('UserProgressService', () => {
       })
 
       it('should save progress after unlocking', () => {
-        const saveSpy = vi.spyOn(service as any, 'saveProgress')
+        const saveSpy = vi.spyOn(service as unknown as { saveProgress: () => void }, 'saveProgress')
         
         service.unlockItem('steel-plate')
         
@@ -84,7 +83,7 @@ describe('UserProgressService', () => {
       })
 
       it('should save progress once after batch unlock', () => {
-        const saveSpy = vi.spyOn(service as any, 'saveProgress')
+        const saveSpy = vi.spyOn(service as unknown as { saveProgress: () => void }, 'saveProgress')
         
         service.unlockItems(['item1', 'item2', 'item3'])
         
@@ -130,7 +129,7 @@ describe('UserProgressService', () => {
       })
 
       it('should save progress after unlocking', () => {
-        const saveSpy = vi.spyOn(service as any, 'saveProgress')
+        const saveSpy = vi.spyOn(service as unknown as { saveProgress: () => void }, 'saveProgress')
         
         service.unlockTech('steel-processing')
         
@@ -193,8 +192,7 @@ describe('UserProgressService', () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData))
       
       // Create new instance
-      // @ts-ignore - clearing singleton instance
-      ;(UserProgressService as any).instance = null
+      ;(UserProgressService as unknown as { instance: UserProgressService | null }).instance = null
       const newService = UserProgressService.getInstance()
       
       // Check loaded data
@@ -208,8 +206,7 @@ describe('UserProgressService', () => {
       localStorage.setItem(STORAGE_KEY, 'invalid json')
       
       // Should not throw when creating instance
-      // @ts-ignore - clearing singleton instance
-      ;(UserProgressService as any).instance = null
+      ;(UserProgressService as unknown as { instance: UserProgressService | null }).instance = null
       expect(() => UserProgressService.getInstance()).not.toThrow()
       
       const newService = UserProgressService.getInstance()

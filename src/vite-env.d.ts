@@ -22,14 +22,14 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
   readonly hot?: {
-    readonly data: any
+    readonly data: unknown
     accept(): void
-    accept(cb: (mod: any) => void): void
-    accept(dep: string, cb: (mod: any) => void): void
-    accept(deps: readonly string[], cb: (mods: any[]) => void): void
-    dispose(cb: (data: any) => void): void
+    accept(cb: (mod: unknown) => void): void
+    accept(dep: string, cb: (mod: unknown) => void): void
+    accept(deps: readonly string[], cb: (mods: unknown[]) => void): void
+    dispose(cb: (data: unknown) => void): void
     decline(): void
     invalidate(): void
-    on(event: string, cb: (...args: any[]) => void): void
+    on(event: string, cb: (...args: unknown[]) => void): void
   }
 }

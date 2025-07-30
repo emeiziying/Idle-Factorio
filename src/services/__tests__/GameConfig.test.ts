@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { GameConfig } from '../GameConfig'
 import { DataService } from '../DataService'
+import type { Item } from '../../types'
 
 // Mock DataService
 vi.mock('../DataService', () => ({
@@ -16,7 +16,7 @@ describe('GameConfig', () => {
 
   beforeEach(() => {
     // Clear any existing instance
-    (GameConfig as any).instance = null
+    ;(GameConfig as unknown as { instance: GameConfig | null }).instance = null
 
     // Create mock DataService
     mockDataService = {
@@ -126,7 +126,7 @@ describe('GameConfig', () => {
           value: 4000000,
           category: 'chemical'
         }
-      } as any)
+      } as Item)
 
       const category = gameConfig.getFuelCategory('coal')
       expect(category).toBe('chemical')
@@ -138,7 +138,7 @@ describe('GameConfig', () => {
         fuel: {
           value: 1210000000
         }
-      } as any)
+      } as Item)
 
       const category = gameConfig.getFuelCategory('nuclear-fuel')
       expect(category).toBe('nuclear')
@@ -150,7 +150,7 @@ describe('GameConfig', () => {
         fuel: {
           value: 8000000000
         }
-      } as any)
+      } as Item)
 
       const category = gameConfig.getFuelCategory('uranium-fuel-cell')
       expect(category).toBe('nuclear')
@@ -162,7 +162,7 @@ describe('GameConfig', () => {
         fuel: {
           value: 2000000
         }
-      } as any)
+      } as Item)
 
       const category = gameConfig.getFuelCategory('wood')
       expect(category).toBe('chemical')
@@ -171,7 +171,7 @@ describe('GameConfig', () => {
     it('should return null for non-fuel items', () => {
       vi.mocked(mockDataService.getItem).mockReturnValue({
         id: 'iron-plate'
-      } as any)
+      } as Item)
 
       const category = gameConfig.getFuelCategory('iron-plate')
       expect(category).toBeNull()
@@ -192,7 +192,7 @@ describe('GameConfig', () => {
         machine: {
           type: 'burner'
         }
-      } as any)
+      } as Item)
 
       expect(gameConfig.isBurnerMachine('burner-mining-drill')).toBe(true)
     })
@@ -203,7 +203,7 @@ describe('GameConfig', () => {
         machine: {
           type: 'electric'
         }
-      } as any)
+      } as Item)
 
       expect(gameConfig.isBurnerMachine('electric-mining-drill')).toBe(false)
     })
@@ -211,7 +211,7 @@ describe('GameConfig', () => {
     it('should return false for non-machine items', () => {
       vi.mocked(mockDataService.getItem).mockReturnValue({
         id: 'iron-plate'
-      } as any)
+      } as Item)
 
       expect(gameConfig.isBurnerMachine('iron-plate')).toBe(false)
     })
@@ -230,7 +230,7 @@ describe('GameConfig', () => {
         machine: {
           fuelCategories: ['chemical']
         }
-      } as any)
+      } as Item)
 
       const categories = gameConfig.getMachineFuelCategories('boiler')
       expect(categories).toEqual(['chemical'])
@@ -242,7 +242,7 @@ describe('GameConfig', () => {
         machine: {
           fuelCategories: ['chemical', 'nuclear']
         }
-      } as any)
+      } as Item)
 
       const categories = gameConfig.getMachineFuelCategories('locomotive')
       expect(categories).toEqual(['chemical', 'nuclear'])
@@ -252,7 +252,7 @@ describe('GameConfig', () => {
       vi.mocked(mockDataService.getItem).mockReturnValue({
         id: 'electric-furnace',
         machine: {}
-      } as any)
+      } as Item)
 
       const categories = gameConfig.getMachineFuelCategories('electric-furnace')
       expect(categories).toEqual([])
@@ -261,7 +261,7 @@ describe('GameConfig', () => {
     it('should return empty array for non-machine items', () => {
       vi.mocked(mockDataService.getItem).mockReturnValue({
         id: 'iron-plate'
-      } as any)
+      } as Item)
 
       const categories = gameConfig.getMachineFuelCategories('iron-plate')
       expect(categories).toEqual([])

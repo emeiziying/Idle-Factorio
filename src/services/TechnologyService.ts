@@ -1706,7 +1706,12 @@ export class TechnologyService {
   private static getUnlockConditionType(
     technology: Technology, 
     status: TechStatus, 
-    researchTriggerInfo: unknown
+    researchTriggerInfo: {
+      text: string;
+      item: string;
+      type: string;
+      count: number;
+    } | null
   ): 'prerequisites' | 'research-trigger' | 'auto-unlock' | 'none' {
     if (technology.prerequisites && technology.prerequisites.length > 0) {
       return 'prerequisites';
