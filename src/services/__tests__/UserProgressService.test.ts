@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { UserProgressService } from '../UserProgressService'
 
@@ -192,7 +193,7 @@ describe('UserProgressService', () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData))
       
       // Create new instance
-      (UserProgressService as any).instance = null
+      ;(UserProgressService as unknown as ServiceInstance<any>).instance = null
       const newService = UserProgressService.getInstance()
       
       // Check loaded data
@@ -206,7 +207,7 @@ describe('UserProgressService', () => {
       localStorage.setItem(STORAGE_KEY, 'invalid json')
       
       // Should not throw when creating instance
-      (UserProgressService as any).instance = null
+      ;(UserProgressService as unknown as ServiceInstance<any>).instance = null
       expect(() => UserProgressService.getInstance()).not.toThrow()
       
       const newService = UserProgressService.getInstance()

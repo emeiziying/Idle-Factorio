@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { StorageService } from '../StorageService'
-import { ServiceLocator, SERVICE_NAMES } from '../ServiceLocator'
+import { ServiceLocator } from '../ServiceLocator'
 import type { DataService } from '../DataService'
 
 // Mock STORAGE_SPECIFIC_CONFIGS

@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { ClickableWrapper } from '../ClickableWrapper'
 import React from 'react'
+import * as styleHelpers from '../../../utils/styleHelpers'
 
 // Mock style helpers
 vi.mock('../../../utils/styleHelpers', () => ({
@@ -104,8 +105,7 @@ describe('ClickableWrapper', () => {
     )
     
     // Check that getClickableStyles was called with custom opacity
-    const { getClickableStyles } = require('../../../utils/styleHelpers')
-    expect(getClickableStyles).toHaveBeenCalledWith(true, customOpacity)
+    expect(styleHelpers.getClickableStyles).toHaveBeenCalledWith(true, customOpacity)
   })
 
   it('should merge custom styles', () => {
