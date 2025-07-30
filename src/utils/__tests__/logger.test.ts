@@ -3,6 +3,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import Logger, { logger, LogLevel, debug, info, warn, error } from '../logger'
 
+// Logger 测试套件 - 日志记录器
 describe('Logger', () => {
   let consoleSpy: {
     log: ReturnType<typeof vi.spyOn>
@@ -20,6 +21,7 @@ describe('Logger', () => {
     }
     
     // Reset logger config to default
+    // 重置日志配置为默认值
     logger.configure({
       level: LogLevel.DEBUG,
       enableInProduction: false,
@@ -31,7 +33,9 @@ describe('Logger', () => {
     vi.restoreAllMocks()
   })
 
+  // 日志级别测试
   describe('log levels', () => {
+    // 测试：级别为 DEBUG 时应记录所有级别
     it('should log all levels when level is DEBUG', () => {
       logger.configure({ level: LogLevel.DEBUG })
       
@@ -46,6 +50,7 @@ describe('Logger', () => {
       expect(consoleSpy.error).toHaveBeenCalledTimes(1)
     })
 
+    // 测试：级别为 INFO 时不应记录 debug
     it('should not log debug when level is INFO', () => {
       logger.configure({ level: LogLevel.INFO })
       
@@ -60,6 +65,7 @@ describe('Logger', () => {
       expect(consoleSpy.error).toHaveBeenCalledTimes(1)
     })
 
+    // 测试：级别为 ERROR 时只记录 error
     it('should only log error when level is ERROR', () => {
       logger.configure({ level: LogLevel.ERROR })
       
@@ -74,6 +80,7 @@ describe('Logger', () => {
       expect(consoleSpy.error).toHaveBeenCalledTimes(1)
     })
 
+    // 测试：级别为 NONE 时不应记录任何内容
     it('should not log anything when level is NONE', () => {
       logger.configure({ level: LogLevel.NONE })
       
@@ -89,7 +96,9 @@ describe('Logger', () => {
     })
   })
 
+  // 消息格式化测试
   describe('message formatting', () => {
+    // 测试：应该使用前缀和级别格式化消息
     it('should format messages with prefix and level', () => {
       logger.configure({ prefix: '[Test]' })
       
@@ -102,6 +111,7 @@ describe('Logger', () => {
       expect(call[0]).toMatch(/test message/)
     })
 
+    // 测试：消息中应包含时间戳
     it('should include timestamp in messages', () => {
       logger.info('test message')
 
@@ -109,6 +119,7 @@ describe('Logger', () => {
       expect(call[0]).toMatch(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)
     })
 
+    // 测试：应该传递额外的参数
     it('should pass additional arguments', () => {
       const obj = { foo: 'bar' }
       const arr = [1, 2, 3]
@@ -123,6 +134,7 @@ describe('Logger', () => {
     })
   })
 
+  // 生产模式测试
   describe('production mode', () => {
     const originalLocation = window.location
 
@@ -135,6 +147,7 @@ describe('Logger', () => {
       window.location = originalLocation
     })
 
+    // 测试：默认在生产环境中不应记录
     it('should not log in production by default', () => {
       const prodLogger = new Logger()
       prodLogger.debug('debug message')
@@ -144,6 +157,7 @@ describe('Logger', () => {
       expect(consoleSpy.info).not.toHaveBeenCalled()
     })
 
+    // 测试：enableInProduction 为 true 时应在生产环境中记录
     it('should log in production when enableInProduction is true', () => {
       const prodLogger = new Logger()
       prodLogger.configure({ enableInProduction: true, level: LogLevel.DEBUG })
@@ -156,7 +170,9 @@ describe('Logger', () => {
     })
   })
 
+  // 子日志记录器测试
   describe('child loggers', () => {
+    // 测试：应该创建带组合前缀的子日志记录器
     it('should create child logger with combined prefix', () => {
       const child = logger.createChild('Child')
       
@@ -167,6 +183,7 @@ describe('Logger', () => {
       expect(call[0]).toMatch(/child message/)
     })
 
+    // 测试：应该继承父配置
     it('should inherit parent configuration', () => {
       logger.configure({ level: LogLevel.WARN })
       const child = logger.createChild('Child')
@@ -180,6 +197,7 @@ describe('Logger', () => {
       expect(consoleSpy.warn).toHaveBeenCalledTimes(1)
     })
 
+    // 测试：应该允许嵌套子日志记录器
     it('should allow nested children', () => {
       const child1 = logger.createChild('Module1')
       const child2 = child1.createChild('SubModule')
@@ -191,7 +209,9 @@ describe('Logger', () => {
     })
   })
 
+  // 导出的便捷函数测试
   describe('exported convenience functions', () => {
+    // 测试：debug 函数应该正常工作
     it('should work with debug function', () => {
       debug('debug message', 123)
 
@@ -201,6 +221,7 @@ describe('Logger', () => {
       expect(call[1]).toBe(123)
     })
 
+    // 测试：info 函数应该正常工作
     it('should work with info function', () => {
       info('info message', { data: 'test' })
 
@@ -210,6 +231,7 @@ describe('Logger', () => {
       expect(call[1]).toEqual({ data: 'test' })
     })
 
+    // 测试：warn 函数应该正常工作
     it('should work with warn function', () => {
       warn('warning message')
 
@@ -217,6 +239,7 @@ describe('Logger', () => {
       expect(consoleSpy.warn.mock.calls[0][0]).toMatch(/warning message/)
     })
 
+    // 测试：error 函数应该正常工作
     it('should work with error function', () => {
       error('error message', new Error('test error'))
 
@@ -227,7 +250,9 @@ describe('Logger', () => {
     })
   })
 
+  // 配置测试
   describe('configuration', () => {
+    // 测试：应该更新配置
     it('should update configuration', () => {
       logger.configure({
         level: LogLevel.ERROR,
@@ -243,6 +268,7 @@ describe('Logger', () => {
       expect(consoleSpy.error.mock.calls[0][0]).toMatch(/\[Custom\]/)
     })
 
+    // 测试：应该合并部分配置
     it('should merge partial configuration', () => {
       logger.configure({ prefix: '[Original]' })
       logger.configure({ level: LogLevel.WARN })

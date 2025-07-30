@@ -6,15 +6,18 @@ import useGameStore from '../gameStore'
 import type { CraftingTask } from '../../types/index'
 
 // Mock services
+// 模拟服务
 vi.mock('../../services/RecipeService')
 vi.mock('../../services/DataService')
 vi.mock('../../services/TechnologyService')
 vi.mock('../../services/FuelService')
 vi.mock('../../services/GameStorageService')
 
+// gameStore 测试套件 - 游戏状态管理
 describe('gameStore', () => {
   beforeEach(() => {
     // Reset store to initial state
+    // 重置 store 到初始状态
     act(() => {
       useGameStore.setState({
         inventory: new Map(),
@@ -40,8 +43,11 @@ describe('gameStore', () => {
     })
   })
 
+  // 库存管理测试
   describe('inventory management', () => {
+    // 更新库存测试
     describe('updateInventory', () => {
+      // 测试：应该添加新物品到库存
       it('should add new item to inventory', () => {
         const { updateInventory, getInventoryItem } = useGameStore.getState()
         
@@ -54,6 +60,7 @@ describe('gameStore', () => {
         expect(item.itemId).toBe('iron-plate')
       })
 
+      // 测试：应该更新现有物品数量
       it('should update existing item amount', () => {
         const { updateInventory, getInventoryItem } = useGameStore.getState()
         
@@ -66,6 +73,7 @@ describe('gameStore', () => {
         expect(item.amount).toBe(15)
       })
 
+      // 测试：应该处理负数数量
       it('should handle negative amounts', () => {
         const { updateInventory, getInventoryItem } = useGameStore.getState()
         
@@ -78,6 +86,7 @@ describe('gameStore', () => {
         expect(item.amount).toBe(15)
       })
 
+      // 测试：数量为零时应移除物品
       it('should remove item when amount reaches zero', () => {
         const { updateInventory } = useGameStore.getState()
         
@@ -90,7 +99,9 @@ describe('gameStore', () => {
       })
     })
 
+    // 批量更新库存测试
     describe('batchUpdateInventory', () => {
+      // 测试：应该一次更新多个物品
       it('should update multiple items at once', () => {
         const { batchUpdateInventory, getInventoryItem } = useGameStore.getState()
         
@@ -108,7 +119,9 @@ describe('gameStore', () => {
       })
     })
 
+    // 获取库存物品测试
     describe('getInventoryItem', () => {
+      // 测试：应该返回现有物品
       it('should return existing item', () => {
         const { updateInventory, getInventoryItem } = useGameStore.getState()
         
@@ -125,6 +138,7 @@ describe('gameStore', () => {
         })
       })
 
+      // 测试：不存在的物品应返回空物品
       it('should return empty item for non-existent items', () => {
         const { getInventoryItem } = useGameStore.getState()
         
@@ -139,15 +153,17 @@ describe('gameStore', () => {
     })
   })
 
+  // 制作队列测试
   describe('crafting queue', () => {
+    // 添加制作任务测试
     describe('addCraftingTask', () => {
+      // 测试：应该添加制作任务到队列
       it('should add crafting task to queue', () => {
         const { addCraftingTask } = useGameStore.getState()
         
         const task: Omit<CraftingTask, 'id'> = {
           itemId: 'iron-gear-wheel',
           quantity: 10,
-
           progress: 0,
           startTime: Date.now()
         }
@@ -163,10 +179,12 @@ describe('gameStore', () => {
         expect(queue[0].id).toBeDefined()
       })
 
+      // 测试：应该遵守最大队列大小
       it('should respect max queue size', () => {
         const { addCraftingTask } = useGameStore.getState()
         
         // Set max queue size to 2
+        // 设置最大队列大小为 2
         act(() => {
           useGameStore.setState({ maxQueueSize: 2 })
         })
@@ -181,14 +199,16 @@ describe('gameStore', () => {
         act(() => {
           expect(addCraftingTask(task)).toBe(true)
           expect(addCraftingTask(task)).toBe(true)
-          expect(addCraftingTask(task)).toBe(false) // Should fail
+          expect(addCraftingTask(task)).toBe(false) // Should fail // 应该失败
         })
         
         expect(useGameStore.getState().craftingQueue).toHaveLength(2)
       })
     })
 
+    // 移除制作任务测试
     describe('removeCraftingTask', () => {
+      // 测试：应该从队列中移除任务
       it('should remove task from queue', () => {
         const { addCraftingTask, removeCraftingTask } = useGameStore.getState()
         
@@ -211,7 +231,9 @@ describe('gameStore', () => {
       })
     })
 
+    // 更新制作进度测试
     describe('updateCraftingProgress', () => {
+      // 测试：应该更新任务进度
       it('should update task progress', () => {
         const { addCraftingTask, updateCraftingProgress } = useGameStore.getState()
         
@@ -236,8 +258,11 @@ describe('gameStore', () => {
     })
   })
 
+  // 收藏配方测试
   describe('favorite recipes', () => {
+    // 添加收藏配方测试
     describe('addFavoriteRecipe', () => {
+      // 测试：应该添加配方到收藏
       it('should add recipe to favorites', () => {
         const { addFavoriteRecipe, isFavoriteRecipe } = useGameStore.getState()
         
@@ -249,7 +274,9 @@ describe('gameStore', () => {
       })
     })
 
+    // 移除收藏配方测试
     describe('removeFavoriteRecipe', () => {
+      // 测试：应该从收藏中移除配方
       it('should remove recipe from favorites', () => {
         const { addFavoriteRecipe, removeFavoriteRecipe, isFavoriteRecipe } = useGameStore.getState()
         
@@ -268,8 +295,11 @@ describe('gameStore', () => {
     })
   })
 
+  // 最近配方测试
   describe('recent recipes', () => {
+    // 添加最近配方测试
     describe('addRecentRecipe', () => {
+      // 测试：应该添加配方到最近列表
       it('should add recipe to recent list', () => {
         const { addRecentRecipe } = useGameStore.getState()
         
@@ -281,6 +311,7 @@ describe('gameStore', () => {
         expect(recentRecipes).toContain('iron-plate')
       })
 
+      // 测试：应该将现有配方移到前面
       it('should move existing recipe to front', () => {
         const { addRecentRecipe } = useGameStore.getState()
         
@@ -296,6 +327,7 @@ describe('gameStore', () => {
         expect(recentRecipes).toHaveLength(2)
       })
 
+      // 测试：应该遵守最大最近配方限制
       it('should respect max recent recipes limit', () => {
         const { addRecentRecipe } = useGameStore.getState()
         
@@ -317,8 +349,11 @@ describe('gameStore', () => {
     })
   })
 
+  // 设施管理测试
   describe('facilities', () => {
+    // 添加设施测试
     describe('addFacility', () => {
+      // 测试：应该添加设施到列表
       it('should add facility to list', () => {
         const { addFacility } = useGameStore.getState()
         
@@ -348,7 +383,9 @@ describe('gameStore', () => {
       })
     })
 
+    // 更新设施测试
     describe('updateFacility', () => {
+      // 测试：应该更新设施属性
       it('should update facility properties', () => {
         const { addFacility, updateFacility } = useGameStore.getState()
         
@@ -376,7 +413,9 @@ describe('gameStore', () => {
       })
     })
 
+    // 移除设施测试
     describe('removeFacility', () => {
+      // 测试：应该从列表中移除设施
       it('should remove facility from list', () => {
         const { addFacility, removeFacility } = useGameStore.getState()
         
@@ -405,18 +444,23 @@ describe('gameStore', () => {
     })
   })
 
+  // 游戏数据持久化测试
   describe('game data persistence', () => {
+    // 清除游戏数据测试
     describe('clearGameData', () => {
+      // 测试：应该重置所有游戏状态
       it('should reset all game state', async () => {
         const { updateInventory, addFavoriteRecipe, clearGameData } = useGameStore.getState()
         
         // Add some data
+        // 添加一些数据
         act(() => {
           updateInventory('iron-plate', 100)
           addFavoriteRecipe('iron-gear-wheel')
         })
         
         // Clear data
+        // 清除数据
         await act(async () => {
           await clearGameData()
         })

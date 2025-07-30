@@ -5,6 +5,7 @@ import type { GameData } from '../../types/index'
 import type { ServiceInstance } from '../../types/test-utils'
 
 // Mock game data
+// 模拟游戏数据
 const mockGameData: Partial<GameData> = {
   categories: [
     { id: 'intermediate-products', name: 'Intermediate products' },
@@ -56,6 +57,7 @@ const mockGameData: Partial<GameData> = {
 }
 
 // Mock i18n data
+// 模拟国际化数据
 const mockI18nData = {
   categories: {
     'intermediate-products': '中间产品',
@@ -131,6 +133,7 @@ vi.mock('../../utils/logger', () => ({
   error: vi.fn()
 }))
 
+// DataService 测试套件 - 游戏数据管理服务
 describe('DataService', () => {
   let dataService: DataService
   let mockUserProgressService: { isItemInAnyMilestone: ReturnType<typeof vi.fn> }
@@ -143,10 +146,12 @@ describe('DataService', () => {
 
   beforeEach(() => {
     // Clear instance
+    // 清除实例
     ;(DataService as unknown as ServiceInstance<DataService>).instance = null
     ServiceLocator.clear()
 
     // Mock services
+    // 模拟服务
     mockUserProgressService = {
       isItemInAnyMilestone: vi.fn(() => false)
     }
@@ -162,6 +167,7 @@ describe('DataService', () => {
     ServiceLocator.register(SERVICE_NAMES.TECHNOLOGY, mockTechnologyService)
     
     // Mock RecipeService with proper recipes
+    // 使用适当的配方模拟 RecipeService
     const mockRecipeService = {
       getRecipeById: vi.fn((id: string) => {
         if (id === 'iron-plate') {
@@ -179,6 +185,7 @@ describe('DataService', () => {
       }),
       getRecipesThatProduce: vi.fn((itemId: string) => {
         // Return recipes for items that have them, empty for raw materials
+        // 为有配方的物品返回配方，原材料返回空数组
         if (itemId === 'iron-plate') {
           return [{
             id: 'iron-plate',
@@ -188,7 +195,7 @@ describe('DataService', () => {
             in: { 'iron-ore': 1 },
             out: { 'iron-plate': 1 },
             producers: ['stone-furnace', 'steel-furnace', 'electric-furnace'],
-            flags: ['locked'] // Make it require technology unlock for test control
+            flags: ['locked'] // Make it require technology unlock for test control // 设置为需要科技解锁以便测试控制
           }]
         }
         if (itemId === 'copper-plate') {
@@ -200,7 +207,7 @@ describe('DataService', () => {
             in: { 'copper-ore': 1 },
             out: { 'copper-plate': 1 },
             producers: ['stone-furnace', 'steel-furnace', 'electric-furnace'],
-            flags: ['locked'] // Make it require technology unlock for test control
+            flags: ['locked'] // Make it require technology unlock for test control // 设置为需要科技解锁以便测试控制
           }]
         }
         if (itemId === 'transport-belt') {
@@ -212,10 +219,10 @@ describe('DataService', () => {
             in: { 'iron-plate': 1, 'iron-gear-wheel': 1 },
             out: { 'transport-belt': 2 },
             producers: ['assembling-machine-1', 'assembling-machine-2', 'assembling-machine-3'],
-            flags: ['locked'] // Requires research
+            flags: ['locked'] // Requires research // 需要研究
           }]
         }
-        return [] // Raw materials like iron-ore, copper-ore have no recipes
+        return [] // Raw materials like iron-ore, copper-ore have no recipes // 原材料如铁矿石、铜矿石没有配方
       }),
       getRecipesThatUse: vi.fn(() => []),
       getRecipeStats: vi.fn(() => null),
@@ -230,7 +237,9 @@ describe('DataService', () => {
     vi.clearAllMocks()
   })
 
+  // 单例模式测试
   describe('getInstance', () => {
+    // 测试：应该返回单例实例
     it('should return singleton instance', () => {
       const instance1 = DataService.getInstance()
       const instance2 = DataService.getInstance()
@@ -238,7 +247,9 @@ describe('DataService', () => {
     })
   })
 
+  // 游戏数据加载测试
   describe('loadGameData', () => {
+    // 测试：应该成功加载游戏数据
     it('should load game data successfully', async () => {
       const data = await dataService.loadGameData()
       
@@ -248,6 +259,7 @@ describe('DataService', () => {
       expect(data.recipes).toHaveLength(2)
     })
 
+    // 测试：应该缓存已加载的数据
     it('should cache loaded data', async () => {
       const data1 = await dataService.loadGameData()
       const data2 = await dataService.loadGameData()
@@ -255,6 +267,7 @@ describe('DataService', () => {
       expect(data1).toBe(data2)
     })
 
+    // 测试：应该处理并发加载请求
     it('should handle concurrent load requests', async () => {
       const promise1 = dataService.loadGameData()
       const promise2 = dataService.loadGameData()
@@ -265,14 +278,17 @@ describe('DataService', () => {
     })
   })
 
+  // 国际化数据加载测试
   describe('loadI18n', () => {
     beforeEach(() => {
       // Mock dynamic import
+      // 模拟动态导入
       vi.doMock('../../data/spa/i18n/zh.json', () => ({
         default: mockI18nData
       }))
     })
 
+    // 测试：应该为支持的语言加载 i18n 数据
     it('should load i18n data for supported language', async () => {
       await dataService.loadI18nData('zh')
       
@@ -280,14 +296,17 @@ describe('DataService', () => {
       expect(dataService.getLocalizedItemName('iron-plate')).toBe('铁板')
     })
 
+    // 测试：不支持的语言应该回退到英语
     it('should fallback to English for unsupported language', async () => {
       await dataService.loadGameData()
       await dataService.loadI18nData('unsupported')
       
       // Should fallback to original ID when i18n fails
+      // i18n 失败时应该回退到原始 ID
       expect(dataService.getLocalizedItemName('iron-plate')).toBe('iron-plate')
     })
 
+    // 测试：应该处理并发的 i18n 加载请求
     it('should handle concurrent i18n load requests', async () => {
       const promise1 = dataService.loadI18nData('zh')
       const promise2 = dataService.loadI18nData('zh')
@@ -298,7 +317,9 @@ describe('DataService', () => {
     })
   })
 
+  // 分类相关方法测试
   describe('getAllCategories', () => {
+    // 测试：应该返回所有分类
     it('should return all categories', async () => {
       await dataService.loadGameData()
       const categories = dataService.getAllCategories()
@@ -308,17 +329,20 @@ describe('DataService', () => {
       expect(categories[1].id).toBe('logistics')
     })
 
+    // 测试：数据未加载时应返回空数组
     it('should return empty array when data not loaded', () => {
       const categories = dataService.getAllCategories()
       expect(categories).toEqual([])
     })
   })
 
+  // 按分类获取物品测试
   describe('getItemsByCategory', () => {
     beforeEach(async () => {
       await dataService.loadGameData()
     })
 
+    // 测试：应该返回特定分类的物品
     it('should return items for specific category', () => {
       const items = dataService.getItemsByCategory('intermediate-products')
       
@@ -327,11 +351,13 @@ describe('DataService', () => {
       expect(items.map(i => i.id)).toContain('copper-plate')
     })
 
+    // 测试：不存在的分类应返回空数组
     it('should return empty array for non-existent category', () => {
       const items = dataService.getItemsByCategory('non-existent')
       expect(items).toEqual([])
     })
 
+    // 测试：当 includeUnlocked 为 false 时应过滤未解锁物品
     it('should filter unlocked items when includeUnlocked is false', () => {
       vi.mocked(mockTechnologyService.canCraftItem).mockImplementation((itemId: string) => {
         return itemId === 'iron-plate'
@@ -344,11 +370,13 @@ describe('DataService', () => {
     })
   })
 
+  // 获取物品详情测试
   describe('getItem', () => {
     beforeEach(async () => {
       await dataService.loadGameData()
     })
 
+    // 测试：应该根据 ID 返回物品
     it('should return item by id', () => {
       const item = dataService.getItem('iron-plate')
       
@@ -357,17 +385,20 @@ describe('DataService', () => {
       expect(item?.category).toBe('intermediate-products')
     })
 
+    // 测试：不存在的物品应返回 undefined
     it('should return undefined for non-existent item', () => {
       const item = dataService.getItem('non-existent')
       expect(item).toBeUndefined()
     })
   })
 
+  // 获取配方详情测试
   describe('getRecipe', () => {
     beforeEach(async () => {
       await dataService.loadGameData()
     })
 
+    // 测试：应该根据 ID 返回配方
     it('should return recipe by id', () => {
       const recipe = dataService.getRecipe('iron-plate')
       
@@ -377,6 +408,7 @@ describe('DataService', () => {
       expect(recipe?.out).toEqual({ 'iron-plate': 1 })
     })
 
+    // 测试：不存在的配方应返回 undefined
     it('should return undefined for non-existent recipe', () => {
       const recipe = dataService.getRecipe('non-existent')
       expect(recipe).toBeUndefined()
@@ -385,23 +417,27 @@ describe('DataService', () => {
 
 
 
+  // 物品解锁状态检查
   describe('isItemUnlocked', () => {
     beforeEach(async () => {
       await dataService.loadGameData()
     })
 
+    // 测试：当技术服务说物品可以制作时返回 true
     it('should return true when technology service says item can be crafted', () => {
       vi.mocked(mockTechnologyService.canCraftItem).mockReturnValue(true)
       
       expect(dataService.isItemUnlocked('iron-plate')).toBe(true)
     })
 
+    // 测试：当技术服务说物品不能制作时返回 false
     it('should return false when technology service says item cannot be crafted', () => {
       vi.mocked(mockTechnologyService.canCraftItem).mockReturnValue(false)
       
       expect(dataService.isItemUnlocked('iron-plate')).toBe(false)
     })
 
+    // 测试：解锁状态应该被缓存
     it('should cache unlock status', () => {
       vi.mocked(mockTechnologyService.canCraftItem).mockReturnValue(true)
       
@@ -415,11 +451,13 @@ describe('DataService', () => {
     })
   })
 
+  // 按行获取物品测试
   describe('getItemsByRow', () => {
     beforeEach(async () => {
       await dataService.loadGameData()
     })
 
+    // 测试：应该根据分类返回分组的物品
     it('should return items grouped by row for category', () => {
       const itemsByRow = dataService.getItemsByRow('intermediate-products')
       
@@ -428,6 +466,7 @@ describe('DataService', () => {
       expect(itemsByRow.get(1)).toHaveLength(2)
     })
 
+    // 测试：结果应该被缓存
     it('should cache results', () => {
       const result1 = dataService.getItemsByRow('intermediate-products')
       const result2 = dataService.getItemsByRow('intermediate-products')
@@ -435,6 +474,7 @@ describe('DataService', () => {
       expect(result1).toBe(result2)
     })
 
+    // 测试：应该过滤未解锁物品
     it('should filter by unlock status', () => {
       vi.mocked(mockTechnologyService.canCraftItem).mockImplementation((itemId: string) => {
         return itemId === 'iron-plate'
@@ -447,6 +487,7 @@ describe('DataService', () => {
     })
   })
 
+  // 本地化测试
   describe('localization', () => {
     beforeEach(async () => {
       await dataService.loadGameData()
@@ -456,28 +497,34 @@ describe('DataService', () => {
       await dataService.loadI18nData('zh')
     })
 
+    // 测试：应该返回本地化的分类名称
     it('should return localized category name', () => {
       expect(dataService.getLocalizedCategoryName('intermediate-products')).toBe('中间产品')
     })
 
+    // 测试：缺失的翻译应该回退到英语
     it('should fallback to English for missing translations', () => {
       expect(dataService.getLocalizedCategoryName('unknown-category')).toBe('unknown-category')
     })
 
+    // 测试：应该返回本地化的物品名称
     it('should return localized item name', () => {
       expect(dataService.getLocalizedItemName('iron-plate')).toBe('铁板')
     })
 
+    // 测试：应该返回本地化的配方名称
     it('should return localized recipe name', () => {
       expect(dataService.getLocalizedRecipeName('iron-plate')).toBe('铁板')
     })
   })
 
+  // 缓存管理测试
   describe('cache management', () => {
     beforeEach(async () => {
       await dataService.loadGameData()
     })
 
+    // 测试：应该清除解锁缓存
     it('should clear unlock cache when requested', () => {
       vi.mocked(mockTechnologyService.canCraftItem).mockReturnValue(true)
       
@@ -498,6 +545,7 @@ describe('DataService', () => {
     })
   })
 
+  // 错误处理测试
   describe('error handling', () => {
     it('should handle missing game data gracefully', () => {
       expect(() => dataService.getAllCategories()).not.toThrow()
@@ -514,13 +562,17 @@ describe('DataService', () => {
   })
 
   // ========== 补充缺失的测试用例 ==========
+  // ========== 补充的测试用例 ==========
 
+  // 数据加载状态检查
   describe('isDataLoaded 数据加载状态检查', () => {
+    // 测试：数据未加载时应返回 false
     it('数据未加载时应返回false', () => {
       // 数据服务刚创建时，数据未加载
       expect(dataService.isDataLoaded()).toBe(false)
     })
 
+    // 测试：数据加载后应返回 true
     it('数据加载后应返回true', async () => {
       // 加载数据后检查状态
       await dataService.loadGameData()
@@ -528,7 +580,9 @@ describe('DataService', () => {
     })
   })
 
+  // 获取所有物品测试
   describe('getAllItems 获取所有物品测试', () => {
+    // 测试：应返回所有物品列表
     it('应返回所有物品列表', async () => {
       await dataService.loadGameData()
       const allItems = dataService.getAllItems()
@@ -540,17 +594,20 @@ describe('DataService', () => {
       expect(allItems.map(item => item.id)).toContain('transport-belt')
     })
 
+    // 测试：数据未加载时应返回空数组
     it('数据未加载时应返回空数组', () => {
       const allItems = dataService.getAllItems()
       expect(allItems).toEqual([])
     })
   })
 
+  // 获取已解锁物品测试
   describe('getUnlockedItems 获取已解锁物品测试', () => {
     beforeEach(async () => {
       await dataService.loadGameData()
     })
 
+    // 测试：应返回所有已解锁的物品
     it('应返回所有已解锁的物品', () => {
       // 设置部分物品已解锁
       vi.mocked(mockTechnologyService.canCraftItem).mockImplementation((itemId: string) => {
@@ -566,6 +623,7 @@ describe('DataService', () => {
       expect(unlockedItems.map(item => item.id)).not.toContain('transport-belt')
     })
 
+    // 测试：无物品解锁时应返回空数组
     it('无物品解锁时应返回空数组', () => {
       vi.mocked(mockTechnologyService.canCraftItem).mockReturnValue(false)
 
@@ -574,11 +632,13 @@ describe('DataService', () => {
     })
   })
 
+  // 获取分类下所有物品测试
   describe('getAllItemsByCategory 获取分类下所有物品测试', () => {
     beforeEach(async () => {
       await dataService.loadGameData()
     })
 
+    // 测试：应返回分类下的所有物品（包括未解锁）
     it('应返回分类下的所有物品（包括未解锁）', () => {
       // 设置部分物品未解锁
       vi.mocked(mockTechnologyService.canCraftItem).mockImplementation((itemId: string) => {
@@ -593,17 +653,20 @@ describe('DataService', () => {
       expect(allCategoryItems.map(item => item.id)).toContain('copper-plate')
     })
 
+    // 测试：不存在的分类应返回空数组
     it('不存在的分类应返回空数组', () => {
       const items = dataService.getAllItemsByCategory('non-existent')
       expect(items).toEqual([])
     })
   })
 
+  // 获取分类信息测试
   describe('getCategory 获取分类信息测试', () => {
     beforeEach(async () => {
       await dataService.loadGameData()
     })
 
+    // 测试：应根据 ID 返回分类信息
     it('应根据ID返回分类信息', () => {
       const category = dataService.getCategory('intermediate-products')
       
@@ -612,11 +675,13 @@ describe('DataService', () => {
       expect(category?.name).toBe('Intermediate products')
     })
 
+    // 测试：不存在的分类应返回 undefined
     it('不存在的分类应返回undefined', () => {
       const category = dataService.getCategory('non-existent')
       expect(category).toBeUndefined()
     })
 
+    // 测试：数据未加载时应返回 undefined
     it('数据未加载时应返回undefined', () => {
       const freshService = DataService.getInstance()
       const category = freshService.getCategory('test')
@@ -624,11 +689,13 @@ describe('DataService', () => {
     })
   })
 
+  // 物品解锁测试
   describe('unlockItem 物品解锁测试', () => {
     beforeEach(async () => {
       await dataService.loadGameData()
     })
 
+    // 测试：应调用用户进度服务解锁物品
     it('应调用用户进度服务解锁物品', () => {
       // 模拟用户进度服务
       const mockUnlockItem = vi.fn()
@@ -646,6 +713,7 @@ describe('DataService', () => {
       expect(mockUnlockItem).toHaveBeenCalledWith('iron-plate')
     })
 
+    // 测试：用户进度服务不存在时应正常处理
     it('用户进度服务不存在时应正常处理', () => {
       ServiceLocator.clear()
       
@@ -654,6 +722,7 @@ describe('DataService', () => {
     })
   })
 
+  // 获取行显示名称测试
   describe('getRowDisplayName 获取行显示名称测试', () => {
     it('应返回中间产品分类的行名称', () => {
       expect(dataService.getRowDisplayName('intermediate-products', 0)).toBe('原材料')
@@ -685,6 +754,7 @@ describe('DataService', () => {
     })
   })
 
+  // 科技本地化名称测试
   describe('getLocalizedTechnologyName 科技本地化名称测试', () => {
     beforeEach(async () => {
       await dataService.loadGameData()
@@ -704,37 +774,44 @@ describe('DataService', () => {
       await dataService.loadI18nData('zh')
     })
 
+    // 测试：应返回科技的本地化名称
     it('应返回科技的本地化名称', () => {
       expect(dataService.getLocalizedTechnologyName('automation')).toBe('自动化')
       expect(dataService.getLocalizedTechnologyName('logistics')).toBe('物流学')
     })
 
+    // 测试：应处理规范化的科技ID
     it('应处理规范化的科技ID', () => {
       // 测试空格和大小写处理
       expect(dataService.getLocalizedTechnologyName('Auto mation')).toBe('自动化')
       expect(dataService.getLocalizedTechnologyName('LOGISTICS')).toBe('物流学')
     })
 
+    // 测试：应从items字段回退查找
     it('应从items字段回退查找', () => {
       // 测试在technologies字段找不到时从items字段查找
       expect(dataService.getLocalizedTechnologyName('iron-plate')).toBe('铁板')
     })
 
+    // 测试：应从recipes字段回退查找
     it('应从recipes字段回退查找', () => {
       // 测试最终从recipes字段查找
       expect(dataService.getLocalizedTechnologyName('copper-plate')).toBe('铜板')
     })
 
+    // 测试：找不到翻译时应返回原始ID
     it('找不到翻译时应返回原始ID', () => {
       expect(dataService.getLocalizedTechnologyName('unknown-tech')).toBe('unknown-tech')
     })
 
+    // 测试：i18n数据未加载时应返回原始ID
     it('i18n数据未加载时应返回原始ID', () => {
       const freshService = DataService.getInstance()
       expect(freshService.getLocalizedTechnologyName('automation')).toBe('automation')
     })
   })
 
+  // 位置本地化名称测试
   describe('getLocalizedLocationName 位置本地化名称测试', () => {
     beforeEach(async () => {
       await dataService.loadGameData()
@@ -753,16 +830,19 @@ describe('DataService', () => {
       await dataService.loadI18nData('zh')
     })
 
+    // 测试：应返回位置的本地化名称
     it('应返回位置的本地化名称', () => {
       expect(dataService.getLocalizedLocationName('nauvis')).toBe('诺维斯')
       expect(dataService.getLocalizedLocationName('vulcanus')).toBe('火山星')
     })
 
+    // 测试：找不到翻译时应返回原始ID
     it('找不到翻译时应返回原始ID', () => {
       expect(dataService.getLocalizedLocationName('unknown-location')).toBe('unknown-location')
     })
   })
 
+  // 图标和详情相关方法测试
   describe('图标和详情相关方法测试', () => {
     beforeEach(async () => {
       await dataService.loadGameData()
@@ -786,7 +866,9 @@ describe('DataService', () => {
       await dataService.loadGameData()
     })
 
+    // 获取图标数据测试
     describe('getIconData 获取图标数据测试', () => {
+      // 测试：应返回物品的图标信息
       it('应返回物品的图标信息', () => {
         const iconData = dataService.getIconData('iron-plate')
         
@@ -796,11 +878,13 @@ describe('DataService', () => {
         expect(iconData?.color).toBeDefined()
       })
 
+      // 测试：不存在的物品应返回 null
       it('不存在的物品应返回null', () => {
         const iconData = dataService.getIconData('non-existent')
         expect(iconData).toBeNull()
       })
 
+      // 测试：数据未加载时应返回 null
       it('数据未加载时应返回null', () => {
         const freshService = DataService.getInstance()
         const iconData = freshService.getIconData('iron-plate')
@@ -808,7 +892,9 @@ describe('DataService', () => {
       })
     })
 
+    // 获取图标信息测试
     describe('getIconInfo 获取图标信息测试', () => {
+      // 测试：应返回物品的图标信息
       it('应返回物品的图标信息', () => {
         const iconInfo = dataService.getIconInfo('copper-plate')
         
@@ -817,6 +903,7 @@ describe('DataService', () => {
         expect(iconInfo.iconText).toBe('Cu')
       })
 
+      // 测试：无iconText的物品应只返回iconId
       it('无iconText的物品应只返回iconId', () => {
         const iconInfo = dataService.getIconInfo('iron-plate')
         
@@ -826,7 +913,9 @@ describe('DataService', () => {
       })
     })
 
+    // 获取所有图标测试
     describe('getAllIcons 获取所有图标测试', () => {
+      // 测试：应返回所有图标数据
       it('应返回所有图标数据', () => {
         const allIcons = dataService.getAllIcons()
         
@@ -835,6 +924,7 @@ describe('DataService', () => {
         expect(allIcons[1].id).toBe('copper-plate')
       })
 
+      // 测试：数据未加载时应返回空数组
       it('数据未加载时应返回空数组', () => {
         const freshService = DataService.getInstance()
         const allIcons = freshService.getAllIcons()
@@ -842,7 +932,9 @@ describe('DataService', () => {
       })
     })
 
+    // 获取物品详情测试
     describe('getItemDetails 获取物品详情测试', () => {
+      // 测试：应返回物品的详细信息
       it('应返回物品的详细信息', () => {
         const itemDetails = dataService.getItemDetails('iron-plate')
         
@@ -852,6 +944,7 @@ describe('DataService', () => {
         expect(itemDetails?.usedInRecipes).toBeDefined()
       })
 
+      // 测试：不存在的物品应返回 null
       it('不存在的物品应返回null', () => {
         const itemDetails = dataService.getItemDetails('non-existent')
         expect(itemDetails).toBeNull()
@@ -859,6 +952,7 @@ describe('DataService', () => {
     })
   })
 
+  // 科技数据相关方法测试
   describe('科技数据相关方法测试', () => {
     beforeEach(async () => {
       // 添加科技数据到mock
@@ -886,7 +980,9 @@ describe('DataService', () => {
       await dataService.loadGameData()
     })
 
+    // 获取原始游戏数据测试
     describe('getRawGameData 获取原始游戏数据测试', () => {
+      // 测试：应返回完整的游戏数据
       it('应返回完整的游戏数据', () => {
         const rawData = dataService.getRawGameData()
         
@@ -896,6 +992,7 @@ describe('DataService', () => {
         expect(rawData?.recipes).toBeDefined()
       })
 
+      // 测试：数据未加载时应返回 null
       it('数据未加载时应返回null', () => {
         const freshService = DataService.getInstance()
         const rawData = freshService.getRawGameData()
@@ -903,7 +1000,9 @@ describe('DataService', () => {
       })
     })
 
+    // 获取科技数据测试
     describe('getTechnologies 获取科技数据测试', () => {
+      // 测试：应返回所有科技配方
       it('应返回所有科技配方', () => {
         const technologies = dataService.getTechnologies()
         
@@ -912,6 +1011,7 @@ describe('DataService', () => {
         expect(technologies[0].category).toBe('technology')
       })
 
+      // 测试：数据未加载时应返回空数组
       it('数据未加载时应返回空数组', () => {
         const freshService = DataService.getInstance()
         const technologies = freshService.getTechnologies()
@@ -919,7 +1019,9 @@ describe('DataService', () => {
       })
     })
 
+    // 获取科技分类测试
     describe('getTechCategories 获取科技分类测试', () => {
+      // 测试：应返回科技分类数据
       it('应返回科技分类数据', () => {
         const techCategories = dataService.getTechCategories()
         
@@ -930,22 +1032,27 @@ describe('DataService', () => {
     })
   })
 
+  // 辅助方法测试
   describe('辅助方法测试', () => {
     beforeEach(async () => {
       await dataService.loadGameData()
     })
 
+    // 获取物品名称测试
     describe('getItemName 获取物品名称', () => {
+      // 测试：应返回物品的名称
       it('应返回物品的名称', () => {
         expect(dataService.getItemName('iron-plate')).toBe('Iron plate')
         expect(dataService.getItemName('copper-plate')).toBe('Copper plate')
       })
 
+      // 测试：不存在的物品应返回 ID
       it('不存在的物品应返回ID', () => {
         expect(dataService.getItemName('non-existent')).toBe('non-existent')
       })
     })
 
+    // 获取国际化名称测试
     describe('getI18nName 获取国际化名称', () => {
       beforeEach(async () => {
         vi.doMock('../../data/spa/i18n/zh.json', () => ({
@@ -954,12 +1061,14 @@ describe('DataService', () => {
         await dataService.loadI18nData('zh')
       })
 
+      // 测试：应返回物品的国际化名称
       it('应返回物品的国际化名称', () => {
         const ironPlateItem = dataService.getItem('iron-plate')!
         expect(dataService.getI18nName(ironPlateItem)).toBe('铁板')
       })
     })
 
+    // 获取分类国际化名称测试
     describe('getCategoryI18nName 获取分类国际化名称', () => {
       beforeEach(async () => {
         vi.doMock('../../data/spa/i18n/zh.json', () => ({
@@ -968,6 +1077,7 @@ describe('DataService', () => {
         await dataService.loadI18nData('zh')
       })
 
+      // 测试：应返回分类的国际化名称
       it('应返回分类的国际化名称', () => {
         expect(dataService.getCategoryI18nName('intermediate-products')).toBe('中间产品')
         expect(dataService.getCategoryI18nName('logistics')).toBe('物流')
@@ -975,11 +1085,13 @@ describe('DataService', () => {
     })
   })
 
+  // 高级缓存测试
   describe('高级缓存测试', () => {
     beforeEach(async () => {
       await dataService.loadGameData()
     })
 
+    // 测试：应在数据重新加载时清理缓存
     it('应在数据重新加载时清理缓存', async () => {
       // Mock technology service to allow items to be unlocked
       vi.mocked(mockTechnologyService.isItemUnlocked).mockReturnValue(true)
@@ -994,6 +1106,7 @@ describe('DataService', () => {
       expect(result2.size).toBeGreaterThan(0)
     })
 
+    // 测试：缓存版本应该在清理时递增
     it('缓存版本应该在清理时递增', () => {
       // Test cache clearing by checking that subsequent calls are made to the service
       vi.mocked(mockTechnologyService.isItemUnlocked).mockReturnValue(true)

@@ -5,6 +5,7 @@ import { useIsMobile, useIsTablet, useDeviceType } from '../useIsMobile'
 import React from 'react'
 
 // Mock useMediaQuery
+// 模拟 useMediaQuery hook
 vi.mock('@mui/material', async () => {
   const actual = await vi.importActual('@mui/material')
   return {
@@ -15,6 +16,7 @@ vi.mock('@mui/material', async () => {
 
 import { useMediaQuery } from '@mui/material'
 
+// 移动设备检测 hooks 测试套件
 describe('useIsMobile hooks', () => {
   const theme = createTheme()
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -25,7 +27,9 @@ describe('useIsMobile hooks', () => {
     vi.clearAllMocks()
   })
 
+  // useIsMobile hook 测试
   describe('useIsMobile', () => {
+    // 测试：移动设备应该返回 true
     it('should return true for mobile devices', () => {
       vi.mocked(useMediaQuery).mockReturnValue(true)
       
@@ -35,6 +39,7 @@ describe('useIsMobile hooks', () => {
       expect(useMediaQuery).toHaveBeenCalledWith(theme.breakpoints.down('sm'))
     })
 
+    // 测试：非移动设备应该返回 false
     it('should return false for non-mobile devices', () => {
       vi.mocked(useMediaQuery).mockReturnValue(false)
       
@@ -44,7 +49,9 @@ describe('useIsMobile hooks', () => {
     })
   })
 
+  // useIsTablet hook 测试
   describe('useIsTablet', () => {
+    // 测试：平板设备应该返回 true
     it('should return true for tablet devices', () => {
       vi.mocked(useMediaQuery).mockReturnValue(true)
       
@@ -54,6 +61,7 @@ describe('useIsMobile hooks', () => {
       expect(useMediaQuery).toHaveBeenCalledWith(theme.breakpoints.between('sm', 'md'))
     })
 
+    // 测试：非平板设备应该返回 false
     it('should return false for non-tablet devices', () => {
       vi.mocked(useMediaQuery).mockReturnValue(false)
       
@@ -63,7 +71,9 @@ describe('useIsMobile hooks', () => {
     })
   })
 
+  // useDeviceType hook 测试
   describe('useDeviceType', () => {
+    // 测试：应该检测到移动设备
     it('should detect mobile device', () => {
       vi.mocked(useMediaQuery).mockImplementation((query) => {
         if (query === theme.breakpoints.down('sm')) return true
@@ -81,6 +91,7 @@ describe('useIsMobile hooks', () => {
       })
     })
 
+    // 测试：应该检测到平板设备
     it('should detect tablet device', () => {
       vi.mocked(useMediaQuery).mockImplementation((query) => {
         if (query === theme.breakpoints.down('sm')) return false
@@ -98,6 +109,7 @@ describe('useIsMobile hooks', () => {
       })
     })
 
+    // 测试：应该检测到桌面设备
     it('should detect desktop device', () => {
       vi.mocked(useMediaQuery).mockImplementation((query) => {
         if (query === theme.breakpoints.down('sm')) return false
@@ -116,7 +128,9 @@ describe('useIsMobile hooks', () => {
     })
   })
 
+  // 响应式行为测试
   describe('responsive behavior', () => {
+    // 测试：当媒体查询改变时应该更新
     it('should update when media query changes', () => {
       const mockMediaQuery = vi.mocked(useMediaQuery)
       mockMediaQuery.mockReturnValue(false)
@@ -126,6 +140,7 @@ describe('useIsMobile hooks', () => {
       expect(result.current).toBe(false)
       
       // Simulate media query change
+      // 模拟媒体查询变化
       mockMediaQuery.mockReturnValue(true)
       rerender()
       
