@@ -430,6 +430,20 @@ export class TechnologyService {
     await this.initialize();
   }
 
+  /**
+   * 获取技术状态（仅用于测试）
+   */
+  public getTechStateForTesting(): TechTreeState {
+    return this.techState;
+  }
+
+  /**
+   * 设置技术状态（仅用于测试）
+   */
+  public setTechStateForTesting(partialState: Partial<TechTreeState>): void {
+    Object.assign(this.techState, partialState);
+  }
+
   // ========== 状态查询方法 ==========
 
   /**
@@ -450,7 +464,84 @@ export class TechnologyService {
    * 检查物品是否已解锁
    */
   public isItemUnlocked(itemId: string): boolean {
-    return this.techState.unlockedItems.has(itemId);
+    // 首先检查是否通过科技解锁
+    if (this.techState.unlockedItems.has(itemId)) {
+      return true;
+    }
+    
+    // 如果不在科技解锁列表中，委托给DataService的fallback逻辑
+    // 这样可以处理基础物品（原材料、基础配方等）
+    const dataService = ServiceLocator.has(SERVICE_NAMES.DATA) 
+      ? ServiceLocator.get<DataService>(SERVICE_NAMES.DATA) 
+      : null;
+    
+    if (dataService) {
+      // 调用DataService的内部逻辑，但跳过TechnologyService检查以避免无限递归
+      return this.checkItemUnlockedViaDataService(dataService, itemId);
+    }
+    
+    return false;
+  }
+
+  /**
+   * 通过DataService检查物品解锁状态（避免循环调用）
+   */
+  private checkItemUnlockedViaDataService(dataService: DataService, itemId: string, visiting: Set<string> = new Set()): boolean {
+    // 复制DataService.isItemUnlockedInternal的逻辑，但跳过TechnologyService检查
+    
+    // 防止循环依赖
+    if (visiting.has(itemId)) {
+      return false;
+    }
+    visiting.add(itemId);
+
+    try {
+      // 2. 检查是否为原材料（无配方的物品，可直接采集）
+      const recipeService = ServiceLocator.has(SERVICE_NAMES.RECIPE) 
+        ? ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE) 
+        : null;
+      const recipes = recipeService ? RecipeService.getRecipesThatProduce(itemId) : [];
+      if (recipes.length === 0) {
+        return true; // 原材料始终可用
+      }
+
+      // 全局过滤：只允许Nauvis星球的配方（暂时限制）
+      const nauvisRecipes = recipes.filter((recipe) => 
+        !recipe.locations || 
+        recipe.locations.length === 0 || 
+        recipe.locations.includes('nauvis')
+      );
+
+      // 3. 优先检查mining配方（采矿配方始终可用）
+      for (const recipe of nauvisRecipes) {
+        if (recipe.flags && recipe.flags.includes('mining')) {
+          return true; // Nauvis星球的采矿配方
+        }
+      }
+
+      // 4. 检查是否有可以手动制作的基础配方（无locked标记且材料简单）
+      for (const recipe of nauvisRecipes) {
+        // 跳过有locked标记的配方（如科技包等需要科技解锁的配方）
+        if (recipe.flags && recipe.flags.includes('locked')) {
+          continue;
+        }
+
+        // 检查是否所有原材料都可用
+        if (recipe.in) {
+          const allIngredientsAvailable = Object.keys(recipe.in).every(ingredientId => 
+            this.checkItemUnlockedViaDataService(dataService, ingredientId, visiting)
+          );
+
+          if (allIngredientsAvailable) {
+            return true; // 可以手动制作
+          }
+        }
+      }
+
+      return false;
+    } finally {
+      visiting.delete(itemId);
+    }
   }
 
   /**
