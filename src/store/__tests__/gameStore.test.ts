@@ -32,7 +32,8 @@ const mockFuelService = {
 // 模拟 RecipeService
 const mockRecipeService = {
   getInstance: vi.fn(() => mockRecipeService),
-  getRecipeById: vi.fn(() => null)
+  getRecipeById: vi.fn(() => null),
+  getAllRecipes: vi.fn(() => [])
 }
 
 // 设置模拟实现
@@ -43,6 +44,16 @@ const { RecipeService } = await import('../../services/RecipeService')
 vi.mocked(DataService.getInstance).mockReturnValue(mockDataService)
 vi.mocked(FuelService.getInstance).mockReturnValue(mockFuelService)
 vi.mocked(RecipeService.getRecipeById).mockReturnValue(null)
+vi.mocked(RecipeService.getAllRecipes).mockReturnValue([])
+
+// 模拟 window.location.reload
+Object.defineProperty(window, 'location', {
+  value: {
+    ...window.location,
+    reload: vi.fn()
+  },
+  writable: true
+})
 
 // gameStore 测试套件 - 游戏状态管理
 describe('gameStore', () => {

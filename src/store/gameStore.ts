@@ -1048,6 +1048,12 @@ const useGameStore = create<GameState>()(
           // 获取所有配方数据
           const allRecipes = RecipeService.getAllRecipes();
           
+          // 安全检查：确保 allRecipes 是一个数组
+          if (!Array.isArray(allRecipes)) {
+            console.warn('[Game] RecipeService.getAllRecipes() did not return an array:', allRecipes);
+            return;
+          }
+          
           // 查找科技类配方
           const techRecipes = allRecipes.filter(recipe => 
             recipe.category === 'technology' && 
