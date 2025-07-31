@@ -25,7 +25,13 @@
 
     /* JSON module support */
     "resolveJsonModule": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+
+    /* Path mapping */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
   "include": ["src", "src/vite-env.d.ts"],
   "exclude": [
