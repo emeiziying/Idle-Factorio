@@ -440,6 +440,252 @@ describe('RecipeService 配方服务测试', () => {
     });
   });
 
+  describe('手动采集石矿测试', () => {
+    beforeEach(() => {
+      // 添加石矿采集相关的配方用于测试
+      const stoneRecipes = [
+        ...testRecipes,
+        {
+          id: 'stone-manual-mining',
+          name: 'Stone (Manual Mining)',
+          category: 'mining',
+          time: 2,
+          in: {},
+          out: { stone: 1 },
+          flags: ['mining', 'manual'],
+          producers: [], // 只能手动采集
+          locations: ['nauvis'],
+        },
+        {
+          id: 'stone-burner-drill',
+          name: 'Stone (Burner Mining Drill)',
+          category: 'mining',
+          time: 4,
+          in: { coal: 0.1 }, // 燃烧采矿机需要煤炭
+          out: { stone: 1 },
+          flags: ['mining'],
+          producers: ['burner-mining-drill'],
+        },
+        {
+          id: 'stone-electric-drill',
+          name: 'Stone (Electric Mining Drill)',
+          category: 'mining',
+          time: 2,
+          in: {},
+          out: { stone: 1 },
+          flags: ['mining'],
+          producers: ['electric-mining-drill'],
+        },
+      ];
+      RecipeService.initializeRecipes(stoneRecipes);
+    });
+
+    it('应正确识别手动石矿采集配方', () => {
+      // 获取所有手动采集配方
+      const manualRecipes = RecipeService.getManualRecipes();
+      
+      // 找到石矿手动采集配方
+      const stoneManualRecipe = manualRecipes.find(r => r.id === 'stone-manual-mining');
+      
+      expect(stoneManualRecipe).toBeDefined();
+      expect(stoneManualRecipe?.flags).toContain('manual');
+      expect(stoneManualRecipe?.flags).toContain('mining');
+      expect(stoneManualRecipe?.out.stone).toBe(1);
+      expect(stoneManualRecipe?.producers).toEqual([]);
+    });
+
+    it('应正确获取生产石矿的所有配方', () => {
+      // 获取所有生产石矿的配方
+      const stoneRecipes = RecipeService.getRecipesThatProduce('stone');
+      
+      // 应该包含我们添加的3个配方加上游戏中已有的石矿配方
+      expect(stoneRecipes.length).toBeGreaterThanOrEqual(3);
+      expect(stoneRecipes.map(r => r.id)).toContain('stone-manual-mining');
+      expect(stoneRecipes.map(r => r.id)).toContain('stone-burner-drill');
+      expect(stoneRecipes.map(r => r.id)).toContain('stone-electric-drill');
+    });
+
+    it('应区分手动和自动化石矿采集配方', () => {
+      // 获取手动采集石矿的配方
+      const manualStoneRecipes = RecipeService.getManualRecipes('stone');
+      expect(manualStoneRecipes.length).toBeGreaterThanOrEqual(1);
+      expect(manualStoneRecipes.some(r => r.id === 'stone-manual-mining')).toBe(true);
+      
+      // 获取自动化采集石矿的配方
+      const automatedStoneRecipes = RecipeService.getAutomatedRecipes('stone');
+      expect(automatedStoneRecipes.length).toBeGreaterThanOrEqual(2);
+      expect(automatedStoneRecipes.map(r => r.id)).toContain('stone-burner-drill');
+      expect(automatedStoneRecipes.map(r => r.id)).toContain('stone-electric-drill');
+    });
+
+    it('应正确获取所有石矿采矿配方', () => {
+      // 获取所有石矿采矿配方
+      const stoneMiningRecipes = RecipeService.getMiningRecipes('stone');
+      
+      expect(stoneMiningRecipes.length).toBeGreaterThanOrEqual(3);
+      expect(stoneMiningRecipes.every(r => r.flags?.includes('mining'))).toBe(true);
+      expect(stoneMiningRecipes.every(r => r.out.stone !== undefined)).toBe(true);
+    });
+
+    it('手动采集配方不应有生产设备', () => {
+      const manualStoneRecipe = RecipeService.getRecipeById('stone-manual-mining');
+      
+      expect(manualStoneRecipe).toBeDefined();
+      expect(manualStoneRecipe?.producers).toEqual([]);
+      expect(manualStoneRecipe?.in).toEqual({}); // 手动采集不需要输入
+    });
+
+    it('自动化采集配方应有对应的生产设备', () => {
+      const burnerDrillRecipe = RecipeService.getRecipeById('stone-burner-drill');
+      const electricDrillRecipe = RecipeService.getRecipeById('stone-electric-drill');
+      
+      expect(burnerDrillRecipe?.producers).toContain('burner-mining-drill');
+      expect(electricDrillRecipe?.producers).toContain('electric-mining-drill');
+    });
+
+    it('应正确计算手动采集的时间', () => {
+      const manualRecipe = RecipeService.getRecipeById('stone-manual-mining');
+      
+      expect(manualRecipe?.time).toBe(2); // 手动采集2秒
+    });
+
+    it('应正确处理多种矿石的手动采集', () => {
+      // 添加更多矿石的手动采集配方
+      const multiOreRecipes = [
+        ...RecipeService.getAllRecipes(),
+        {
+          id: 'coal-manual-mining',
+          name: 'Coal (Manual Mining)',
+          category: 'mining',
+          time: 2,
+          in: {},
+          out: { coal: 1 },
+          flags: ['mining', 'manual'],
+          producers: [],
+        },
+        {
+          id: 'copper-ore-manual-mining',
+          name: 'Copper Ore (Manual Mining)',
+          category: 'mining',
+          time: 2,
+          in: {},
+          out: { 'copper-ore': 1 },
+          flags: ['mining', 'manual'],
+          producers: [],
+        },
+      ];
+      RecipeService.initializeRecipes(multiOreRecipes);
+      
+      // 获取所有手动采矿配方
+      const allManualMining = RecipeService.getManualRecipes().filter(r => r.flags?.includes('mining'));
+      
+      expect(allManualMining.length).toBeGreaterThanOrEqual(3);
+      expect(allManualMining.some(r => r.out.stone)).toBe(true);
+      expect(allManualMining.some(r => r.out.coal)).toBe(true);
+      expect(allManualMining.some(r => r.out['copper-ore'])).toBe(true);
+    });
+
+    it('getRecipeStats应正确统计手动采矿配方', () => {
+      const stats = RecipeService.getRecipeStats();
+      
+      // 验证统计数据中包含手动配方和采矿配方
+      expect(stats.manualRecipes).toBeGreaterThan(0);
+      expect(stats.miningRecipes).toBeGreaterThan(0);
+      
+      // 获取实际数量进行验证
+      const manualCount = RecipeService.getManualRecipes().length;
+      const miningCount = RecipeService.getMiningRecipes().length;
+      
+      expect(stats.manualRecipes).toBe(manualCount);
+      expect(stats.miningRecipes).toBe(miningCount);
+    });
+
+    it('应正确处理边界情况', () => {
+      // 测试不存在的矿石
+      const noResult = RecipeService.getMiningRecipes('non-existent-ore');
+      expect(noResult).toEqual([]);
+      
+      // 测试undefined - 应返回所有采矿配方
+      const allMining = RecipeService.getMiningRecipes();
+      expect(allMining.length).toBeGreaterThan(0);
+      
+      // 验证所有返回的配方都有mining标志
+      expect(allMining.every(r => r.flags?.includes('mining'))).toBe(true);
+    });
+  });
+
+  describe('石矿自定义配方集成测试', () => {
+    it('应支持通过customRecipes.ts添加石矿手动采集配方', () => {
+      // 模拟添加石矿手动采集到自定义配方
+      const mockCustomRecipes = [
+        {
+          id: 'stone-mining-manual',
+          name: 'Stone (Manual)',
+          category: 'intermediate-products',
+          time: 2,
+          in: {},
+          out: { stone: 1 },
+          cost: 0,
+          flags: ['mining', 'manual'],
+          producers: [],
+          locations: ['nauvis'],
+        },
+      ];
+      
+      // 合并测试配方和自定义配方
+      RecipeService.initializeRecipes([...testRecipes, ...mockCustomRecipes]);
+      
+      // 验证自定义配方被正确加载
+      const stoneManualRecipe = RecipeService.getRecipeById('stone-mining-manual');
+      expect(stoneManualRecipe).toBeDefined();
+      expect(stoneManualRecipe?.flags).toContain('mining');
+      expect(stoneManualRecipe?.flags).toContain('manual');
+      
+      // 验证可以通过各种方法查询到
+      const manualMiningRecipes = RecipeService.getManualRecipes().filter(r => r.flags?.includes('mining'));
+      expect(manualMiningRecipes.some(r => r.id === 'stone-mining-manual')).toBe(true);
+      
+      const stoneRecipes = RecipeService.getRecipesThatProduce('stone');
+      expect(stoneRecipes.some(r => r.id === 'stone-mining-manual')).toBe(true);
+    });
+
+    it('应正确处理石矿配方的成本计算', () => {
+      const recipes = [
+        ...testRecipes,
+        {
+          id: 'stone-manual',
+          name: 'Stone Manual',
+          category: 'mining',
+          time: 2,
+          in: {},
+          out: { stone: 1 },
+          cost: 0, // 手动采集无成本
+          flags: ['mining', 'manual'],
+          producers: [],
+        },
+        {
+          id: 'stone-automated',
+          name: 'Stone Automated',
+          category: 'mining', 
+          time: 1,
+          in: { electricity: 0.1 }, // 自动化采集需要电力
+          out: { stone: 1 },
+          cost: 10, // 自动化有成本
+          flags: ['mining'],
+          producers: ['electric-mining-drill'],
+        },
+      ];
+      
+      RecipeService.initializeRecipes(recipes);
+      
+      const manualRecipe = RecipeService.getRecipeById('stone-manual');
+      const automatedRecipe = RecipeService.getRecipeById('stone-automated');
+      
+      expect(manualRecipe?.cost).toBe(0);
+      expect(automatedRecipe?.cost).toBe(10);
+    });
+  });
+
   describe('getRecyclingRecipes 获取回收配方测试', () => {
     beforeEach(() => {
       // 添加回收配方用于测试

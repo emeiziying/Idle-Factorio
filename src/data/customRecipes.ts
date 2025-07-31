@@ -6,6 +6,7 @@ import type { Recipe } from '@/types';
  *
  * 基于 Factorio Wiki 官方数据：
  * - 木材：https://wiki.factorio.com/Wood
+ * - 石矿：https://wiki.factorio.com/Stone
  */
 
 /**
@@ -30,12 +31,34 @@ const WOOD_RECIPES: Recipe[] = [
 ];
 
 /**
+ * 石矿获取配方
+ * 石矿可以手动采集或使用采矿机自动化采集
+ * - 手动采集时间 2 秒，产出 1 个石矿
+ */
+const STONE_RECIPES: Recipe[] = [
+  // 手动采集石矿
+  {
+    id: 'stone-mining-manual',
+    name: 'Stone (Manual)',
+    category: 'intermediate-products',
+    time: 2,
+    in: {},
+    out: { stone: 1 },
+    cost: 0, // 手动采集，无成本
+    flags: ['mining', 'manual'],
+    producers: [], // 只能手动采集
+    locations: ['nauvis', 'gleba'],
+  },
+];
+
+/**
  * 所有自定义配方
  * 按物品类型分组，便于管理和扩展
  * 注意：只包含data.json中不存在的特殊配方，如手动采集等
  */
 export const CUSTOM_RECIPES: Recipe[] = [
   ...WOOD_RECIPES,
+  ...STONE_RECIPES,
   // 在这里添加其他真正需要的自定义配方
   // 例如：其他原材料的手动采集配方
   // 例如：游戏机制特殊需求的配方
@@ -47,9 +70,9 @@ export const CUSTOM_RECIPES: Recipe[] = [
  */
 export const CUSTOM_RECIPES_BY_ITEM: Record<string, Recipe[]> = {
   wood: WOOD_RECIPES,
+  stone: STONE_RECIPES,
   // 在这里添加其他物品的配方
   // 例如：
-  // stone: STONE_RECIPES,
   // iron_ore: IRON_ORE_RECIPES,
   // copper_ore: COPPER_ORE_RECIPES,
 };
@@ -64,11 +87,14 @@ export const RecipeType = {
     MANUAL_BIG_TREE: 'wood-mining-big-tree',
     MANUAL_AVERAGE: 'wood-mining-average',
   },
+  // 石矿配方
+  STONE: {
+    MANUAL_MINING: 'stone-mining-manual',
+  },
   // 在这里添加其他物品的配方类型
   // 例如：
-  // STONE: {
-  //   MANUAL_MINING: "stone-mining-manual",
-  //   AUTOMATED_MINING: "stone-mining-automated"
+  // IRON_ORE: {
+  //   MANUAL_MINING: "iron-ore-mining-manual",
   // },
 } as const;
 
@@ -117,4 +143,4 @@ export const getItemsWithCustomRecipes = (): string[] => {
 };
 
 // 向后兼容的导出（保持现有代码不变）
-export { WOOD_RECIPES, RecipeType as WoodRecipeType };
+export { WOOD_RECIPES, STONE_RECIPES, RecipeType as WoodRecipeType };
