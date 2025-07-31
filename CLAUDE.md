@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is **Idle Factorio** - a React-based idle factory management game inspired by Factorio. The application is built with modern React architecture and implements core game mechanics for production management.
 
 **Current State**: Active development - Core modules implemented  
-**Tech Stack**: React 19.1.0 + TypeScript + Vite + Material-UI v7.2.0 + Zustand  
+**Tech Stack**: React 19.1.0 + TypeScript + Vite + Material-UI v7.2.0 + Zustand + ahooks  
 **Package Manager**: pnpm (configured with pnpm@9.15.0)
 
 ## Development Commands
@@ -34,6 +34,13 @@ pnpm test:ui
 # Run tests with coverage
 pnpm test:coverage
 
+# Run specific test files
+pnpm test RecipeService
+pnpm test DependencyService
+
+# Check development server status
+lsof -i :5173
+
 # Install dependencies
 pnpm install
 ```
@@ -43,13 +50,14 @@ pnpm install
 ### Testing Guidelines
 The project uses **Vitest** with comprehensive test coverage:
 - **Unit Tests**: Services, utilities, hooks, and components have dedicated test files
-- **Integration Tests**: Complex workflows like crafting chains are integration tested
+- **Integration Tests**: Complex workflows like crafting chains are integration tested in `__tests__/integration/`
 - **Test Location**: Tests are located in `__tests__` directories alongside source files
-- **Test Configuration**: Uses `tsconfig.test.json` for test-specific TypeScript configuration
-- **Coverage**: Run `pnpm test:coverage` to generate coverage reports
+- **Test Configuration**: Uses `tsconfig.test.json` with path aliases (`@/` for `src/`)
+- **Coverage**: Run `pnpm test:coverage` to generate coverage reports with custom exclusions
 - **UI Testing**: Use `pnpm test:ui` for interactive test runner
 - **Single Test**: Run `pnpm test RecipeService` to test specific files
 - **Watch Mode**: Tests run in watch mode by default during development
+- **Environment**: jsdom environment with global test utilities
 
 ### Development Server Guidelines
 - **Priority**: Use existing dev server at `http://localhost:5173` if already running
@@ -130,6 +138,10 @@ The application follows a service-oriented architecture with clear separation of
 - **TechnologyService**: Technology tree management and research progression
 - **GameStorageService**: Unified save/load operations with optimization and compression
 - **GameConfig**: Centralized game constants and configuration management
+- **GameStateAdapter**: Game state provider interface (registered as `GAME_STATE`)
+- **ManualCraftingValidator**: Manual crafting validation logic (registered as `MANUAL_CRAFTING_VALIDATOR`)
+- **FuelService**: Fuel consumption and management
+- **PowerService**: Power generation and consumption balance
 - **GameStore (Zustand)**: Reactive state management with localStorage persistence
 
 ### Phase 1 Implementation Status
@@ -293,6 +305,29 @@ const efficiency = RecipeService.calculateRecipeEfficiency(recipe);
 const gameData = await dataService.loadGameData();
 ```
 
+### Service Hooks Pattern
+The application provides dedicated React hooks for clean service integration:
+```typescript
+// Use dedicated service hooks for clean component integration
+const dataService = useDataService();
+const recipeService = useRecipeService();
+const technologyService = useTechnologyService();
+const fuelService = useFuelService();
+const powerService = usePowerService();
+const storageService = useStorageService();
+const userProgressService = useUserProgressService();
+
+// Get multiple services at once
+const { dataService, recipeService, technologyService } = useCommonServices();
+
+// Generic service access
+const gameStateProvider = useGameStateProvider();
+const customService = useService<CustomService>('CustomService');
+
+// Service hooks provide memoized instances with fallback to singletons
+// They check ServiceLocator first, then fall back to getInstance() for compatibility
+```
+
 ### State Management Pattern
 ```typescript
 // Zustand store access
@@ -401,9 +436,13 @@ The project uses ESLint 9 with modern flat config:
 - **Always run `pnpm lint` before committing changes**
 
 ### TypeScript Configuration
-- Main config: `tsconfig.json` with references to `tsconfig.app.json` and `tsconfig.node.json`
-- Strict TypeScript checking enabled for type safety
-- Import paths and module resolution configured for the project structure
+The project uses a sophisticated multi-config TypeScript setup:
+- **Main config**: `tsconfig.json` with project references for better build performance
+- **Application config**: `tsconfig.app.json` for source code compilation
+- **Node config**: `tsconfig.node.json` for build tools and configuration files
+- **Test config**: `tsconfig.test.json` with path aliases (`@/` for `src/`) and test globals
+- **Strict checking**: Enabled for type safety across all configurations
+- **Path mapping**: Configured for clean imports and module resolution
 
 ### State Persistence Strategy
 Zustand store implements custom serialization for complex types:
@@ -424,13 +463,46 @@ const item = DataService.getInstance().getItem(itemId);
 const recipes = gameData.recipes.filter(r => r.out[itemId]);
 ```
 
-### State Repair Hooks Pattern
-The application includes automatic state repair for Map/Set types:
+### Application Reliability Patterns
+The application implements sophisticated reliability mechanisms for data integrity:
+
+#### State Repair Hooks Pattern
 ```typescript
 // These hooks automatically repair corrupted state on startup
 useInventoryRepair();    // Repairs inventory Map structure
 useUnlockedTechsRepair(); // Repairs unlockedTechs Set structure  
 useFacilityRepair();     // Repairs facility targetItemId issues
+```
+
+#### Initialization Reliability
+```typescript
+// App.tsx implements promise caching to prevent duplicate initialization
+const initializationRef = useRef<Promise<void> | null>(null);
+
+// Safe startup with error boundaries
+if (!initializationRef.current) {
+  initializationRef.current = ServiceInitializer.initialize();
+}
+
+// Force save on page unload to prevent data loss
+useEffect(() => {
+  const handleUnload = () => {
+    forceSaveGame(); // GameStorageService bypass debounce
+  };
+  window.addEventListener('beforeunload', handleUnload);
+}, []);
+```
+
+#### ahooks Integration
+The project extensively uses the `ahooks` library for React utilities:
+```typescript
+// Enhanced localStorage state management with ahooks
+import { useLocalStorageState } from 'ahooks';
+
+// Replaces manual localStorage handling with robust state management
+const [gameSettings, setGameSettings] = useLocalStorageState('game-settings', {
+  defaultValue: defaultSettings
+});
 ```
 
 #### Critical Fix Pattern for localStorage Map/Set Issues
@@ -508,6 +580,36 @@ clearGameData: async () => {
   window.location.reload();
 }
 ```
+
+### Advanced Build Configuration
+The project uses sophisticated Vite build optimization:
+
+#### Manual Chunk Splitting Strategy
+```typescript
+// vite.config.ts implements strategic code splitting
+manualChunks: (id) => {
+  // Vendor chunks for optimal caching
+  if (id.includes('react')) return 'react-vendor';
+  if (id.includes('@mui')) return 'mui-vendor';
+  if (id.includes('@tanstack')) return 'virtualization-vendor';
+  if (id.includes('zustand')) return 'utils-vendor';
+  
+  // Game data chunks for lazy loading
+  if (id.includes('data/spa/data.json')) return 'game-data';
+  if (id.includes('data/spa/i18n/')) return 'i18n-data';
+  if (id.includes('data/spa/icons.webp')) return 'game-assets';
+  
+  // Feature chunks
+  if (id.includes('services/')) return 'services';
+  if (id.includes('components/')) return 'components';
+}
+```
+
+#### Asset Optimization
+- **Image handling**: Optimized WebP asset chunking for game sprites
+- **Dependency pre-building**: All major dependencies pre-configured for faster dev startup
+- **Chunk size limits**: 1000kb warning threshold with strategic splitting
+- **Source maps**: Disabled in production for smaller bundle size
 
 ### Browser Tools Integration
 Specialized debugging support via browser tools (see .cursor/rules/):

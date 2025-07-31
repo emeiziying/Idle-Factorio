@@ -164,6 +164,11 @@ export class PowerService {
       return 0; // burner设施不消耗电力
     }
     
+    // 检查是否是发电设备
+    if (this.POWER_GENERATORS.includes(facility.facilityId)) {
+      return 0; // 发电设备不消耗电力
+    }
+    
     const basePower = this.getFacilityBasePowerConsumption(facility.facilityId);
     return basePower * facility.count;
   }
@@ -225,10 +230,13 @@ export class PowerService {
     const byType: Record<string, number> = {};
     let totalCapacity = 0;
     
+    // 获取蒸汽供应
+    const steamSupply = this.getSteamSupply();
+    
     facilities
       .filter(f => this.POWER_GENERATORS.includes(f.facilityId))
       .forEach(facility => {
-        const power = this.getFacilityPowerGeneration(facility);
+        const power = this.getFacilityPowerGeneration(facility, steamSupply.normal);
         byType[facility.facilityId] = (byType[facility.facilityId] || 0) + power;
         totalCapacity += power;
       });
