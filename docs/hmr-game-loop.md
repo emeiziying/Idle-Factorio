@@ -142,3 +142,112 @@ A: 需要在适当的地方保存和恢复状态。参考 MainGameLoop 的累积
 
 ### Q: 控制台报错 "Cannot read property of null"？
 A: 可能是单例实例被错误清理。确保 HMR 正确处理单例模式。
+
+## 使用通用 HMR 工具
+
+为了让 HMR 代码更容易复用，项目提供了通用的 HMR 工具类 `src/utils/hmr.ts`：
+
+### 1. 基础 HMR 设置
+
+```typescript
+import { setupHMR } from '@/utils/hmr';
+
+setupHMR({
+  moduleName: 'MyModule',
+}, {
+  getState: () => {
+    // 返回需要保存的状态
+    return { someData: myData };
+  },
+  restoreState: (state) => {
+    // 恢复保存的状态
+    myData = state.someData;
+  },
+  onDispose: () => {
+    // 清理逻辑（可选）
+    cleanup();
+  },
+  onAccept: () => {
+    // accept 后的额外处理（可选）
+    reinitialize();
+  }
+});
+```
+
+### 2. 单例模式 HMR
+
+```typescript
+import { setupSingletonHMR } from '@/utils/hmr';
+
+setupSingletonHMR({
+  moduleName: 'MySingleton',
+  getInstance: () => MySingleton.getInstance(),
+  preserveProperties: ['property1', 'property2'] // 需要保存的属性
+});
+```
+
+### 3. 游戏循环 HMR
+
+```typescript
+import { setupGameLoopHMR } from '@/utils/hmr';
+
+setupGameLoopHMR({
+  moduleName: 'MyGameLoop',
+  isRunning: () => loop.isRunning(),
+  start: () => loop.start(),
+  stop: () => loop.stop(),
+  getExtraState: () => ({ 
+    // 额外需要保存的状态
+    timers: loop.timers 
+  }),
+  restoreExtraState: (state) => {
+    // 恢复额外状态
+    loop.timers = state.timers;
+  }
+});
+```
+
+### 4. React 组件中的 HMR 清理
+
+```typescript
+import { useHMRCleanup } from '@/utils/hmr';
+
+function MyComponent() {
+  const [timer, setTimer] = useState<number>();
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      // 定时任务
+    }, 1000);
+    setTimer(id);
+    
+    return () => clearInterval(id);
+  }, []);
+
+  // HMR 时自动清理定时器
+  useHMRCleanup(() => {
+    if (timer) clearInterval(timer);
+  }, [timer]);
+
+  return <div>...</div>;
+}
+```
+
+### 优势
+
+1. **代码复用**：避免重复编写 HMR 逻辑
+2. **类型安全**：提供 TypeScript 类型支持
+3. **错误处理**：自动捕获和记录错误
+4. **调试友好**：统一的日志格式
+5. **场景优化**：针对不同场景提供专门的工具函数
+
+### 迁移指南
+
+如果你有现有的 HMR 代码，可以按以下步骤迁移：
+
+1. 识别模式（基础/单例/游戏循环）
+2. 选择对应的工具函数
+3. 提取状态保存/恢复逻辑
+4. 替换原有的 `import.meta.hot` 代码
+
+这样可以让代码更简洁、更易维护。

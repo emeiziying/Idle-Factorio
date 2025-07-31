@@ -90,24 +90,11 @@ export class ServiceInitializer {
   }
 }
 
-// HMR 支持 - 防止热重载时重复初始化
-if (import.meta.hot) {
-  import.meta.hot.dispose(() => {
-    // 保存初始化状态
-    import.meta.hot!.data.serviceInitializerState = {
-      initialized: ServiceInitializer.isInitialized(),
-    };
-    
-    console.log('[HMR] ServiceInitializer: Saved initialization state');
-  });
-  
-  import.meta.hot.accept(() => {
-    console.log('[HMR] ServiceInitializer: Module accepted');
-    
-    // 恢复初始化状态，避免重复初始化
-    if (import.meta.hot!.data.serviceInitializerState?.initialized) {
-      (ServiceInitializer as any).initialized = true;
-      console.log('[HMR] ServiceInitializer: Restored initialized state, skipping re-initialization');
-    }
-  });
-}
+// HMR 支持 - 使用通用的单例 HMR 工具
+import { setupSingletonHMR } from '@/utils/hmr';
+
+setupSingletonHMR({
+  moduleName: 'ServiceInitializer',
+  getInstance: () => ServiceInitializer,
+  preserveProperties: ['initialized']
+});

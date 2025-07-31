@@ -610,41 +610,17 @@ export class MainGameLoop {
 
 export default MainGameLoop;
 
-// HMR 支持 - 在热重载时正确处理主游戏循环
-if (import.meta.hot) {
-  import.meta.hot.dispose(() => {
-    const instance = MainGameLoop.getInstance();
-    
-    // 保存当前状态
-    import.meta.hot!.data.mainGameLoopState = {
-      isRunning: instance.isRunning(),
-      accumulators: instance.getDebugInfo().accumulators,
-    };
-    
-    // 停止游戏循环
-    if (instance.isRunning()) {
-      instance.stop();
-      console.log('[HMR] MainGameLoop: Stopped game loop');
-    }
-  });
-  
-  import.meta.hot.accept(() => {
-    console.log('[HMR] MainGameLoop: Module accepted');
-    
-    // 获取新的实例
-    const instance = MainGameLoop.getInstance();
-    
-    // 恢复累积器状态（避免时间跳跃）
-    if (import.meta.hot!.data.mainGameLoopState?.accumulators) {
-      // 使用私有属性访问（仅在 HMR 时）
-      (instance as any).accumulators = { ...import.meta.hot!.data.mainGameLoopState.accumulators };
-      console.log('[HMR] MainGameLoop: Restored accumulators', import.meta.hot!.data.mainGameLoopState.accumulators);
-    }
-    
-    // 如果之前在运行，重新启动
-    if (import.meta.hot!.data.mainGameLoopState?.isRunning) {
-      instance.start();
-      console.log('[HMR] MainGameLoop: Restarted game loop');
-    }
-  });
-}
+// HMR 支持 - 使用通用的游戏循环 HMR 工具
+import { setupGameLoopHMR } from '@/utils/hmr';
+
+setupGameLoopHMR({
+  moduleName: 'MainGameLoop',
+  isRunning: () => MainGameLoop.getInstance().isRunning(),
+  start: () => MainGameLoop.getInstance().start(),
+  stop: () => MainGameLoop.getInstance().stop(),
+  getExtraState: () => MainGameLoop.getInstance().getDebugInfo().accumulators,
+  restoreExtraState: (accumulators) => {
+    // 使用私有属性访问（仅在 HMR 时）
+    (MainGameLoop.getInstance() as any).accumulators = { ...accumulators };
+  }
+});

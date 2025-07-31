@@ -135,38 +135,29 @@ class GameLoopManager {
 
 export default GameLoopManager;
 
-// HMR 支持 - 在热重载时正确清理和恢复游戏循环
-if (import.meta.hot) {
-  // 保存当前的任务状态
-  import.meta.hot.dispose(() => {
+// HMR 支持 - 使用通用的 HMR 工具
+import { setupHMR } from './hmr';
+
+setupHMR({
+  moduleName: 'GameLoopManager',
+}, {
+  getState: () => {
     const instance = GameLoopManager.getInstance();
-    const tasks = instance.getAllTasks();
-    
-    // 保存任务信息到 HMR 数据中
-    import.meta.hot!.data.tasks = tasks.map(task => ({
-      id: task.id,
-      interval: task.interval,
-      enabled: task.enabled,
-      // 注意：callback 函数无法序列化，需要在 accept 中重新注册
-    }));
-    
-    // 停止当前循环
+    return {
+      tasks: instance.getAllTasks().map(task => ({
+        id: task.id,
+        interval: task.interval,
+        enabled: task.enabled,
+        // 注意：callback 函数无法序列化，需要在 accept 中重新注册
+      }))
+    };
+  },
+  onDispose: () => {
+    const instance = GameLoopManager.getInstance();
     instance.stop();
     instance.clear();
-    
-    console.log('[HMR] GameLoopManager: Saved tasks and stopped loop', import.meta.hot!.data.tasks);
-  });
-  
-  // 恢复任务状态
-  import.meta.hot.accept(() => {
-    console.log('[HMR] GameLoopManager: Module accepted, restoring state');
-    
-    // 注意：由于单例模式，新模块的实例会自动创建
-    // 但我们需要通知依赖此模块的其他模块重新注册它们的任务
-    
+  },
+  onAccept: () => {
     // 保存的任务信息仅用于调试，实际的任务需要由各个系统重新注册
-    if (import.meta.hot!.data.tasks) {
-      console.log('[HMR] GameLoopManager: Previous tasks:', import.meta.hot!.data.tasks);
-    }
-  });
-}
+  }
+});
