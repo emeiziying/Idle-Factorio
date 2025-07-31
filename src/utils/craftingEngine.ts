@@ -2,9 +2,7 @@
 
 import type { CraftingTask, Recipe } from '@/types/index';
 import useGameStore from '@/store/gameStore';
-import { DataService } from '@/services/DataService';
-import { RecipeService } from '@/services/RecipeService';
-import { GameConfig } from '@/services/GameConfig';
+import { DataService, RecipeService, GameConfig } from '@/services';
 import { secondsToMs } from '@/utils/common';
 
 // 设备效率配置 - 基于Factorio的采矿机设计

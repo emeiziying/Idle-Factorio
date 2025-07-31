@@ -1,12 +1,12 @@
 import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
-import { DataService } from './DataService';
-import { RecipeService } from './RecipeService';
-import { TechnologyService } from './TechnologyService';
-import { UserProgressService } from './UserProgressService';
-import { FuelService } from './FuelService';
-import { PowerService } from './PowerService';
-import { StorageService } from './StorageService';
-import { GameStateAdapter } from './GameStateAdapter';
+import { DataService } from '../data/DataService';
+import { RecipeService } from '../data/RecipeService';
+import { TechnologyService } from '../game-logic/TechnologyService';
+import { UserProgressService } from '../game-logic/UserProgressService';
+import { FuelService } from '../systems/FuelService';
+import { PowerService } from '../systems/PowerService';
+import { StorageService } from '../systems/StorageService';
+import { GameStateAdapter } from '../game-logic/GameStateAdapter';
 import ManualCraftingValidator from '@/utils/manualCraftingValidator';
 
 /**

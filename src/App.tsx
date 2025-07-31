@@ -30,7 +30,7 @@ import TechnologyModule from '@/components/technology/TechnologyModule';
 import ManualCraftingTestPage from '@/components/test/ManualCraftingTestPage';
 import { useGameLoop } from '@/hooks/useGameLoop';
 
-import { ServiceInitializer } from '@/services/ServiceInitializer';
+import { ServiceInitializer } from '@/services';
 import CraftingEngine from '@/utils/craftingEngine';
 import useGameStore from '@/store/gameStore';
 import { useIsMobile } from '@/hooks/useIsMobile';

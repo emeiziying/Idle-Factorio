@@ -5,7 +5,7 @@ import {
   Alert
 } from '@mui/material';
 import type { Item, Recipe } from '@/types/index';
-import { RecipeService } from '@/services/RecipeService';
+import { RecipeService } from '@/services/data/RecipeService';
 import ManualCraftingValidator from '@/utils/manualCraftingValidator';
 import UnifiedRecipeCard from './UnifiedRecipeCard';
 

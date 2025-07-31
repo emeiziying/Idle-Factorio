@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { PowerService, type PowerBalance } from '@/services/PowerService';
-import { DataService } from '@/services/DataService';
-import { GameConfig } from '@/services/GameConfig';
+import { PowerService, type PowerBalance } from '@/services/systems/PowerService';
+import { DataService } from '@/services/data/DataService';
+import { GameConfig } from '@/services/core/GameConfig';
 import type { FacilityInstance } from '@/types/facilities';
 import { FacilityStatus } from '@/types/facilities';
 import type { ServiceInstance } from '@/types/test-utils';

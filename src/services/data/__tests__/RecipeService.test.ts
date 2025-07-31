@@ -8,9 +8,9 @@
  * - 性能和边界情况
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { RecipeService } from '@/services/RecipeService'
-import { DataService } from '@/services/DataService'
-import { ServiceLocator, SERVICE_NAMES } from '@/services/ServiceLocator'
+import { RecipeService } from '@/services/data/RecipeService'
+import { DataService } from '@/services/data/DataService'
+import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator'
 import type { Recipe } from '@/types'
 import type { IManualCraftingValidator } from '@/services/interfaces/IManualCraftingValidator'
 import type { ServiceInstance } from '@/types/test-utils'

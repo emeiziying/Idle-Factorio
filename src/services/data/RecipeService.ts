@@ -1,8 +1,8 @@
 import type { Recipe } from '@/types';
 import { CUSTOM_RECIPES } from '@/data/customRecipes';
-import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
+import { ServiceLocator, SERVICE_NAMES } from '../core/ServiceLocator';
 import type { DataService } from './DataService';
-import type { IManualCraftingValidator } from './interfaces/IManualCraftingValidator';
+import type { IManualCraftingValidator } from '../interfaces/IManualCraftingValidator';
 
 /**
  * 配方服务
@@ -293,7 +293,7 @@ export class RecipeService {
     canCraft: boolean;
     recipe: Recipe | null;
     allRecipes: Recipe[];
-    validation: import('./interfaces/IManualCraftingValidator').ManualCraftingValidation;
+    validation: import('../interfaces/IManualCraftingValidator').ManualCraftingValidation;
   } {
     const validator = ServiceLocator.has(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
       ? ServiceLocator.get<IManualCraftingValidator>(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)

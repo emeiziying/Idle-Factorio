@@ -29,8 +29,8 @@ import {
 import FactorioIcon from '@/components/common/FactorioIcon';
 import type { TechResearchState } from '@/types/technology';
 import type { ResearchTrigger } from '@/types/index';
-import { TechnologyService } from '@/services/TechnologyService';
-import { DataService } from '@/services/DataService';
+import { TechnologyService } from '@/services/game-logic/TechnologyService';
+import { DataService } from '@/services/data/DataService';
 
 // Factorio Design System (与TechGridCard保持一致)
 const FACTORIO_COLORS = {

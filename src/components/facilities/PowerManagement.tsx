@@ -19,7 +19,7 @@ import {
   Add,
   Remove
 } from '@mui/icons-material';
-import { PowerService } from '@/services/PowerService';
+import { PowerService } from '@/services/systems/PowerService';
 import useGameStore from '@/store/gameStore';
 import FactorioIcon from '@/components/common/FactorioIcon';
 

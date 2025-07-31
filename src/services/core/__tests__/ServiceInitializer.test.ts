@@ -1,27 +1,27 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { ServiceInitializer } from '@/services/ServiceInitializer';
-import { ServiceLocator, SERVICE_NAMES } from '@/services/ServiceLocator';
-import { DataService } from '@/services/DataService';
-import { RecipeService } from '@/services/RecipeService';
-import { TechnologyService } from '@/services/TechnologyService';
-import { UserProgressService } from '@/services/UserProgressService';
-import { FuelService } from '@/services/FuelService';
-import { PowerService } from '@/services/PowerService';
-import { StorageService } from '@/services/StorageService';
-import { GameStateAdapter } from '@/services/GameStateAdapter';
+import { ServiceInitializer } from '@/services/core/ServiceInitializer';
+import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
+import { DataService } from '@/services/data/DataService';
+import { RecipeService } from '@/services/data/RecipeService';
+import { TechnologyService } from '@/services/game-logic/TechnologyService';
+import { UserProgressService } from '@/services/game-logic/UserProgressService';
+import { FuelService } from '@/services/systems/FuelService';
+import { PowerService } from '@/services/systems/PowerService';
+import { StorageService } from '@/services/systems/StorageService';
+import { GameStateAdapter } from '@/services/game-logic/GameStateAdapter';
 import ManualCraftingValidator from '@/utils/manualCraftingValidator';
 
 // Mock all dependencies
-vi.mock('../ServiceLocator');
-vi.mock('../DataService');
-vi.mock('../RecipeService');
-vi.mock('../TechnologyService');
-vi.mock('../UserProgressService');
-vi.mock('../FuelService');
-vi.mock('../PowerService');
-vi.mock('../StorageService');
-vi.mock('../GameStateAdapter');
-vi.mock('../../utils/manualCraftingValidator');
+vi.mock('./ServiceLocator');
+vi.mock('../data/DataService');
+vi.mock('../data/RecipeService');
+vi.mock('../game-logic/TechnologyService');
+vi.mock('../game-logic/UserProgressService');
+vi.mock('../systems/FuelService');
+vi.mock('../systems/PowerService');
+vi.mock('../systems/StorageService');
+vi.mock('../game-logic/GameStateAdapter');
+vi.mock('@/utils/manualCraftingValidator');
 
 describe('ServiceInitializer', () => {
   let mockServiceLocator: { register: ReturnType<typeof vi.fn>; clear: ReturnType<typeof vi.fn> };

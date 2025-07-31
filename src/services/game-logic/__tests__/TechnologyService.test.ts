@@ -1,10 +1,10 @@
 // TechnologyService 测试
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { TechnologyService } from '@/services/TechnologyService';
-import { DataService } from '@/services/DataService';
-import { RecipeService } from '@/services/RecipeService';
-import { ServiceLocator, SERVICE_NAMES } from '@/services/ServiceLocator';
+import { TechnologyService } from '@/services/game-logic/TechnologyService';
+import { DataService } from '@/services/data/DataService';
+import { RecipeService } from '@/services/data/RecipeService';
+import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
 import { ResearchPriority } from '@/types/technology';
 import type { Recipe } from '@/types';
 import type { TechResearchState } from '@/types/technology';

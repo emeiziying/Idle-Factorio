@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { GameStorageService } from '@/services/GameStorageService';
-import { DataService } from '@/services/DataService';
+import { GameStorageService } from '@/services/storage/GameStorageService';
+import { DataService } from '@/services/data/DataService';
 import type { FacilityInstance } from '@/types/facilities';
 import { FacilityStatus } from '@/types/facilities';
 import type { CraftingTask, CraftingChain, DeployedContainer, InventoryItem } from '@/types/index';
@@ -8,7 +8,7 @@ import type { TechResearchState, ResearchQueueItem } from '@/types/technology';
 import type { ServiceInstance } from '@/types/test-utils';
 
 // Mock dependencies
-vi.mock('../DataService');
+vi.mock('../../data/DataService');
 vi.mock('lz-string', () => ({
   default: {
     compressToUTF16: vi.fn((data: string) => `compressed_${data}`),

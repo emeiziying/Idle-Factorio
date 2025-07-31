@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { DataService } from '@/services/DataService'
-import { ServiceLocator, SERVICE_NAMES } from '@/services/ServiceLocator'
+import { DataService } from '@/services/data/DataService'
+import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator'
 import type { GameData } from '@/types/index'
 import type { ServiceInstance } from '@/types/test-utils'
 
@@ -239,7 +239,7 @@ describe('DataService', () => {
     beforeEach(() => {
       // Mock dynamic import
       // 模拟动态导入
-      vi.doMock('../../data/spa/i18n/zh.json', () => ({
+      vi.doMock('@/data/spa/i18n/zh.json', () => ({
         default: mockI18nData
       }))
     })

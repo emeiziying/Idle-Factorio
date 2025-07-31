@@ -1,10 +1,10 @@
 // 游戏数据管理服务
 
 import type { GameData, Item, Recipe, Category, IconData } from '@/types/index';
-import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
-import type { UserProgressService } from './UserProgressService';
+import { ServiceLocator, SERVICE_NAMES } from '../core/ServiceLocator';
+import type { UserProgressService } from '../game-logic/UserProgressService';
 import { RecipeService } from './RecipeService';
-import type { TechnologyService } from './TechnologyService';
+import type { TechnologyService } from '../game-logic/TechnologyService';
 import { error as logError } from '@/utils/logger';
 
 // 异步导入游戏数据

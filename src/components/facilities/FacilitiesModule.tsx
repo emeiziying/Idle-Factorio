@@ -4,7 +4,7 @@ import PowerManagement from './PowerManagement';
 import FuelPrioritySettings from './FuelPrioritySettings';
 import ProductionMonitor from './ProductionMonitor';
 import EfficiencyOptimizer from './EfficiencyOptimizer';
-import { FuelService } from '@/services/FuelService';
+import { FuelService } from '@/services/systems/FuelService';
 
 const FacilitiesModule: React.FC = React.memo(() => {
   const [currentTab, setCurrentTab] = React.useState(0);

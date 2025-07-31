@@ -1,8 +1,8 @@
 // 燃料服务 - 管理所有燃料相关逻辑
 
-import { DataService } from './DataService';
-import { RecipeService } from './RecipeService';
-import { GameConfig } from './GameConfig';
+import { DataService } from '../data/DataService';
+import { RecipeService } from '../data/RecipeService';
+import { GameConfig } from '../core/GameConfig';
 import type { FacilityInstance } from '@/types/facilities';
 import { FacilityStatus } from '@/types/facilities';
 import type { InventoryItem } from '@/types/index';

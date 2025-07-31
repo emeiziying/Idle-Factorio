@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { Recipe } from '@/types/index';
 import useGameStore from '@/store/gameStore';
-import DependencyService, { type CraftingChainAnalysis, type CraftingDependency } from '@/services/DependencyService';
+import { DependencyService } from '@/services';
+import type { CraftingChainAnalysis, CraftingDependency } from '@/services/data/DependencyService';
 
 export const useCrafting = () => {
   const [showMessage, setShowMessage] = useState({

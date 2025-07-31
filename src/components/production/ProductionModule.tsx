@@ -6,7 +6,7 @@ import ItemList from './ItemList';
 import ItemDetailPanel from './ItemDetailPanel';
 import CraftingQueue from './CraftingQueue';
 
-import { DataService } from '@/services/DataService';
+import { DataService } from '@/services';
 import { useLocalStorageState } from 'ahooks';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useProductionLoop } from '@/hooks/useProductionLoop';

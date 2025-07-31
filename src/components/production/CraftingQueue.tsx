@@ -13,7 +13,7 @@ import {
 import { Clear as ClearIcon, Delete as DeleteIcon, Close as CloseIcon } from '@mui/icons-material';
 import type { TransitionProps } from '@mui/material/transitions';
 import FactorioIcon from '@/components/common/FactorioIcon';
-import { DataService } from '@/services/DataService';
+import { DataService } from '@/services';
 import useGameStore from '@/store/gameStore';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import type { CraftingTask } from '@/types/index';

@@ -57,7 +57,14 @@
       "Bash(pnpm test:*)",
       "Bash(npx eslint:*)",
       "mcp__context7__resolve-library-id",
-      "mcp__context7__get-library-docs"
+      "mcp__context7__get-library-docs",
+      "Bash(# 移动核心服务\nmv src/services/ServiceLocator.ts src/services/core/\nmv src/services/ServiceInitializer.ts src/services/core/\nmv src/services/GameConfig.ts src/services/core/\n\n# 移动数据管理服务\nmv src/services/DataService.ts src/services/data/\nmv src/services/RecipeService.ts src/services/data/\nmv src/services/DependencyService.ts src/services/data/\n\n# 移动游戏逻辑服务\nmv src/services/TechnologyService.ts src/services/game-logic/\nmv src/services/UserProgressService.ts src/services/game-logic/\nmv src/services/GameStateAdapter.ts src/services/game-logic/\n\n# 移动系统服务\nmv src/services/FuelService.ts src/services/systems/\nmv src/services/PowerService.ts src/services/systems/\nmv src/services/StorageService.ts src/services/systems/\n\n# 移动存储服务\nmv src/services/GameStorageService.ts src/services/storage/\n\n# 移动interfaces.ts到interfaces目录\nmv src/services/interfaces.ts src/services/interfaces/)",
+      "Bash(chmod:*)",
+      "Bash(./update-imports.sh)",
+      "Bash(./update-external-imports.sh)",
+      "Bash(# 创建新的测试目录结构\nmkdir -p src/services/core/__tests__ src/services/data/__tests__ src/services/game-logic/__tests__ src/services/systems/__tests__ src/services/storage/__tests__\n\n# 移动测试文件到对应目录\nmv src/services/__tests__/ServiceLocator.test.ts src/services/core/__tests__/\nmv src/services/__tests__/ServiceInitializer.test.ts src/services/core/__tests__/\nmv src/services/__tests__/GameConfig.test.ts src/services/core/__tests__/\n\nmv src/services/__tests__/DataService.test.ts src/services/data/__tests__/\nmv src/services/__tests__/RecipeService.test.ts src/services/data/__tests__/\nmv src/services/__tests__/DependencyService.test.ts src/services/data/__tests__/\n\nmv src/services/__tests__/TechnologyService.test.ts src/services/game-logic/__tests__/\nmv src/services/__tests__/UserProgressService.test.ts src/services/game-logic/__tests__/\n\nmv src/services/__tests__/FuelService.test.ts src/services/systems/__tests__/\nmv src/services/__tests__/PowerService.test.ts src/services/systems/__tests__/\nmv src/services/__tests__/StorageService.test.ts src/services/systems/__tests__/\n\nmv src/services/__tests__/GameStorageService.test.ts src/services/storage/__tests__/\n\n# 删除空的原测试目录\nrmdir src/services/__tests__)",
+      "Bash(./update-test-imports.sh)",
+      "Bash(./fix-test-alias-imports.sh:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

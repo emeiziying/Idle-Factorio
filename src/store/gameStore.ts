@@ -14,12 +14,10 @@ import type {
 } from '@/types/technology';
 import type { InventoryOperations } from '@/types/inventory';
 import type { FacilityInstance } from '@/types/facilities';
-import { RecipeService } from '@/services/RecipeService';
+import { RecipeService, DataService, TechnologyService, FuelService, GameStorageService } from '@/services';
 import { getStorageConfig } from '@/data/storageConfigs';
-import { DataService } from '@/services/DataService';
-import { TechnologyService } from '@/services/TechnologyService';
-import { FuelService } from '@/services/FuelService';
-import { gameStorageService } from '@/services/GameStorageService';
+
+const gameStorageService = GameStorageService.getInstance();
 
 // 页面卸载时立即保存
 if (typeof window !== 'undefined') {

@@ -20,7 +20,7 @@ import {
 } from '@mui/icons-material';
 import FactorioIcon from '@/components/common/FactorioIcon';
 import { FUEL_PRIORITY } from '@/data/fuelConfigs';
-import { DataService } from '@/services/DataService';
+import { DataService } from '@/services/data/DataService';
 
 interface FuelPrioritySettingsProps {
   onPriorityChange?: (newPriority: string[]) => void;

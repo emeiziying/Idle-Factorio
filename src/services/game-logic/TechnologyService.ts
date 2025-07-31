@@ -17,12 +17,12 @@ import type {
 } from '@/types/technology';
 import { ResearchPriority } from '@/types/technology';
 import type { InventoryOperations } from '@/types/inventory';
-import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
+import { ServiceLocator, SERVICE_NAMES } from '../core/ServiceLocator';
 import { UserProgressService } from './UserProgressService';
-import { DataService } from './DataService';
-import { RecipeService } from './RecipeService';
+import { DataService } from '../data/DataService';
+import { RecipeService } from '../data/RecipeService';
 import type { FacilityInstance } from '@/types/facilities';
-import type { GameStateProvider } from './interfaces';
+import type { GameStateProvider } from '../interfaces/interfaces';
 import Logger from '@/utils/logger';
 
 // 从data.json加载的科技配方接口

@@ -6,8 +6,8 @@ import {
   Chip
 } from '@mui/material';
 import type { Item, Recipe } from '@/types/index';
-import { RecipeService } from '@/services/RecipeService';
-import { DataService } from '@/services/DataService';
+import { RecipeService } from '@/services/data/RecipeService';
+import { DataService } from '@/services/data/DataService';
 import useGameStore from '@/store/gameStore';
 import { getValidationReasonText, type ValidationReasonType } from '@/utils/manualCraftingValidator';
 import CraftingButtons from './CraftingButtons';

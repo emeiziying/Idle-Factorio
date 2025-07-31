@@ -1,9 +1,8 @@
 // 手动采集验证工具类
 // 基于 Factorio Wiki 官方规则实现
 
-import { ServiceLocator, SERVICE_NAMES } from '@/services/ServiceLocator';
-import type { DataService } from '@/services/DataService';
-import { RecipeService } from '@/services/RecipeService';
+import { ServiceLocator, SERVICE_NAMES, RecipeService } from '@/services';
+import type { DataService } from '@/services/data/DataService';
 import type { Recipe } from '@/types/index';
 import type { IManualCraftingValidator } from '@/services/interfaces/IManualCraftingValidator';
 
