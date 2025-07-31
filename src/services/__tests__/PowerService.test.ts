@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { PowerService, type PowerBalance } from '../PowerService';
-import { DataService } from '../DataService';
-import { GameConfig } from '../GameConfig';
-import type { FacilityInstance } from '../../types/facilities';
-import { FacilityStatus } from '../../types/facilities';
-import type { ServiceInstance } from '../../types/test-utils';
+import { PowerService, type PowerBalance } from '@/services/PowerService';
+import { DataService } from '@/services/DataService';
+import { GameConfig } from '@/services/GameConfig';
+import type { FacilityInstance } from '@/types/facilities';
+import { FacilityStatus } from '@/types/facilities';
+import type { ServiceInstance } from '@/types/test-utils';
 
 // Mock dependencies
 vi.mock('../DataService');

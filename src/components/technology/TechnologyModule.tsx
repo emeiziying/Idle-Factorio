@@ -11,12 +11,12 @@ import TechSimpleGrid from './TechSimpleGrid';
 import TechDetailPanel from './TechDetailPanel';
 import ResearchQueue from './ResearchQueue';
 
-import useGameStore from '../../store/gameStore';
-import { TechnologyService } from '../../services/TechnologyService';
-import type { TechStatus } from '../../types/technology';
-import { ResearchPriority } from '../../types/technology';
+import useGameStore from '@/store/gameStore';
+import { TechnologyService } from '@/services/TechnologyService';
+import type { TechStatus } from '@/types/technology';
+import { ResearchPriority } from '@/types/technology';
 import { useLocalStorageState } from 'ahooks';
-import { useUnlockedTechsRepair } from '../../hooks/useUnlockedTechsRepair';
+import { useUnlockedTechsRepair } from '@/hooks/useUnlockedTechsRepair';
 
 const TechnologyModule: React.FC = React.memo(() => {
   const theme = useTheme();

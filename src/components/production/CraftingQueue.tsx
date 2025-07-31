@@ -12,11 +12,11 @@ import {
 } from '@mui/material';
 import { Clear as ClearIcon, Delete as DeleteIcon, Close as CloseIcon } from '@mui/icons-material';
 import type { TransitionProps } from '@mui/material/transitions';
-import FactorioIcon from '../common/FactorioIcon';
-import { DataService } from '../../services/DataService';
-import useGameStore from '../../store/gameStore';
-import { useIsMobile } from '../../hooks/useIsMobile';
-import type { CraftingTask } from '../../types/index';
+import FactorioIcon from '@/components/common/FactorioIcon';
+import { DataService } from '@/services/DataService';
+import useGameStore from '@/store/gameStore';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import type { CraftingTask } from '@/types/index';
 
 // Constants
 const QUEUE_CAPACITY = 50;

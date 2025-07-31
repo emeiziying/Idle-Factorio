@@ -4,7 +4,7 @@
  */
 
 import { useMemo } from 'react';
-import type { Item, Recipe } from '../types/index';
+import type { Item, Recipe } from '@/types/index';
 import { useDataService } from './useServices';
 
 /**

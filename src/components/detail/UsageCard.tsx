@@ -3,9 +3,9 @@ import {
   Typography,
   Box
 } from '@mui/material';
-import type { Recipe } from '../../types/index';
-import FactorioIcon from '../common/FactorioIcon';
-import { DataService } from '../../services/DataService';
+import type { Recipe } from '@/types/index';
+import FactorioIcon from '@/components/common/FactorioIcon';
+import { DataService } from '@/services/DataService';
 
 interface UsageCardProps {
   usedInRecipes: Recipe[];

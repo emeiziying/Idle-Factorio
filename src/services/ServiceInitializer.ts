@@ -7,7 +7,7 @@ import { FuelService } from './FuelService';
 import { PowerService } from './PowerService';
 import { StorageService } from './StorageService';
 import { GameStateAdapter } from './GameStateAdapter';
-import ManualCraftingValidator from '../utils/manualCraftingValidator';
+import ManualCraftingValidator from '@/utils/manualCraftingValidator';
 
 /**
  * 服务初始化器

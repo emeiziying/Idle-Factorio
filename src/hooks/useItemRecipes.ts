@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import type { Item, Recipe } from '../types/index';
-import { DataService } from '../services/DataService';
-import { RecipeService } from '../services/RecipeService';
-import ManualCraftingValidator from '../utils/manualCraftingValidator';
+import type { Item, Recipe } from '@/types/index';
+import { DataService } from '@/services/DataService';
+import { RecipeService } from '@/services/RecipeService';
+import ManualCraftingValidator from '@/utils/manualCraftingValidator';
 
 export const useItemRecipes = (item: Item) => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);

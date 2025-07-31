@@ -4,7 +4,7 @@ import {
   Box
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
-import { useIsMobile } from '../../hooks/useIsMobile';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface CraftingButtonsProps {
   onCraft: (quantity: number) => void;

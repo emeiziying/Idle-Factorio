@@ -10,7 +10,7 @@ import {
   deepClone,
   arraysEqual,
   createSingleton
-} from '../common'
+} from '@/utils/common'
 
 // 通用工具函数测试套件
 describe('common utilities', () => {

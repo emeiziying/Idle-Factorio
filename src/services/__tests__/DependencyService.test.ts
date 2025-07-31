@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import DependencyService from '../DependencyService';
-import { RecipeService } from '../RecipeService';
-import ManualCraftingValidator from '../../utils/manualCraftingValidator';
-import type { Recipe } from '../../types/index';
-import type { ManualCraftingValidation } from '../../utils/manualCraftingValidator';
+import DependencyService from '@/services/DependencyService';
+import { RecipeService } from '@/services/RecipeService';
+import ManualCraftingValidator from '@/utils/manualCraftingValidator';
+import type { Recipe } from '@/types/index';
+import type { ManualCraftingValidation } from '@/utils/manualCraftingValidator';
 
 // Mock dependencies
 vi.mock('../RecipeService');

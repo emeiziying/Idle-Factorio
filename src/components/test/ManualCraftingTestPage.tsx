@@ -27,12 +27,12 @@ import {
   Block as BlockIcon,
   Info as InfoIcon
 } from '@mui/icons-material';
-import { DataService } from '../../services/DataService';
-import { RecipeService } from '../../services/RecipeService';
-import ManualCraftingValidator from '../../utils/manualCraftingValidator';
-import type { ManualCraftingValidation } from '../../utils/manualCraftingValidator';
+import { DataService } from '@/services/DataService';
+import { RecipeService } from '@/services/RecipeService';
+import ManualCraftingValidator from '@/utils/manualCraftingValidator';
+import type { ManualCraftingValidation } from '@/utils/manualCraftingValidator';
 import ItemCard from './ItemCard';
-import type { Item, Recipe } from '../../types/index';
+import type { Item, Recipe } from '@/types/index';
 import { useLocalStorageState } from 'ahooks';
 
 interface TabPanelProps {

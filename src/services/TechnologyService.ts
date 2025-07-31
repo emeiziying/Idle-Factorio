@@ -14,16 +14,16 @@ import type {
   TechSearchFilter,
   TechStatistics,
   TechCategory
-} from '../types/technology';
-import { ResearchPriority } from '../types/technology';
-import type { InventoryOperations } from '../types/inventory';
+} from '@/types/technology';
+import { ResearchPriority } from '@/types/technology';
+import type { InventoryOperations } from '@/types/inventory';
 import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
 import { UserProgressService } from './UserProgressService';
 import { DataService } from './DataService';
 import { RecipeService } from './RecipeService';
-import type { FacilityInstance } from '../types/facilities';
+import type { FacilityInstance } from '@/types/facilities';
 import type { GameStateProvider } from './interfaces';
-import Logger from '../utils/logger';
+import Logger from '@/utils/logger';
 
 // 从data.json加载的科技配方接口
 interface TechRecipe {

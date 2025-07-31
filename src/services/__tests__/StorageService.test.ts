@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { StorageService } from '../StorageService'
-import { ServiceLocator } from '../ServiceLocator'
-import type { DataService } from '../DataService'
-import type { Item, Recipe } from '../../types'
+import { StorageService } from '@/services/StorageService'
+import { ServiceLocator } from '@/services/ServiceLocator'
+import type { DataService } from '@/services/DataService'
+import type { Item, Recipe } from '@/types'
 
 // 模拟存储设备的特定配置
 vi.mock('../../data/storageConfigData', () => ({

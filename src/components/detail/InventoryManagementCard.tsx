@@ -6,11 +6,11 @@ import {
   Button,
   useTheme,
 } from "@mui/material";
-import type { Item } from "../../types/index";
-import useGameStore from "../../store/gameStore";
-import { getStorageService } from "../../services/StorageService";
-import FactorioIcon from "../common/FactorioIcon";
-import { DataService } from "../../services/DataService";
+import type { Item } from "@/types/index";
+import useGameStore from "@/store/gameStore";
+import { getStorageService } from "@/services/StorageService";
+import FactorioIcon from "@/components/common/FactorioIcon";
+import { DataService } from "@/services/DataService";
 
 interface InventoryManagementCardProps {
   item: Item;

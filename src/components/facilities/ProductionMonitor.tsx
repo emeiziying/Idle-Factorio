@@ -30,11 +30,11 @@ import {
   ViewList,
   ViewModule
 } from '@mui/icons-material';
-import { FacilityStatus } from '../../types/facilities';
-import type { FacilityInstance } from '../../types/facilities';
-import useGameStore from '../../store/gameStore';
-import FactorioIcon from '../common/FactorioIcon';
-import { DataService } from '../../services/DataService';
+import { FacilityStatus } from '@/types/facilities';
+import type { FacilityInstance } from '@/types/facilities';
+import useGameStore from '@/store/gameStore';
+import FactorioIcon from '@/components/common/FactorioIcon';
+import { DataService } from '@/services/DataService';
 import { FuelStatusDisplay } from './FuelStatusDisplay';
 
 const ProductionMonitor: React.FC = () => {

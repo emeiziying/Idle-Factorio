@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { DataService } from '../DataService'
-import { ServiceLocator, SERVICE_NAMES } from '../ServiceLocator'
-import type { GameData } from '../../types/index'
-import type { ServiceInstance } from '../../types/test-utils'
+import { DataService } from '@/services/DataService'
+import { ServiceLocator, SERVICE_NAMES } from '@/services/ServiceLocator'
+import type { GameData } from '@/types/index'
+import type { ServiceInstance } from '@/types/test-utils'
 
 // 模拟游戏数据
 const mockGameData: Partial<GameData> = {

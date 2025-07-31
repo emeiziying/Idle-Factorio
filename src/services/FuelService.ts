@@ -3,11 +3,11 @@
 import { DataService } from './DataService';
 import { RecipeService } from './RecipeService';
 import { GameConfig } from './GameConfig';
-import type { FacilityInstance } from '../types/facilities';
-import { FacilityStatus } from '../types/facilities';
-import type { InventoryItem } from '../types/index';
-import { warn as logWarn, error as logError } from '../utils/logger';
-import { msToSeconds } from '../utils/common';
+import type { FacilityInstance } from '@/types/facilities';
+import { FacilityStatus } from '@/types/facilities';
+import type { InventoryItem } from '@/types/index';
+import { warn as logWarn, error as logError } from '@/utils/logger';
+import { msToSeconds } from '@/utils/common';
 
 // 燃料更新结果
 export interface FuelUpdateResult {

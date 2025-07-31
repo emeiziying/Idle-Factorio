@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Tabs, Tab } from '@mui/material';
 import FactorioIcon from './FactorioIcon';
-import type { Category } from '../../types/index';
-import { useIsMobile } from '../../hooks/useIsMobile';
+import type { Category } from '@/types/index';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface CategoryTabsProps {
   categories: Category[];

@@ -4,22 +4,22 @@
 
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import type { InventoryItem, CraftingTask, CraftingChain, Recipe, DeployedContainer, OperationResult } from '../types/index';
+import type { InventoryItem, CraftingTask, CraftingChain, Recipe, DeployedContainer, OperationResult } from '@/types/index';
 import type { 
   Technology, 
   TechResearchState, 
   ResearchQueueItem, 
   TechCategory,
   ResearchPriority
-} from '../types/technology';
-import type { InventoryOperations } from '../types/inventory';
-import type { FacilityInstance } from '../types/facilities';
-import { RecipeService } from '../services/RecipeService';
-import { getStorageConfig } from '../data/storageConfigs';
-import { DataService } from '../services/DataService';
-import { TechnologyService } from '../services/TechnologyService';
-import { FuelService } from '../services/FuelService';
-import { gameStorageService } from '../services/GameStorageService';
+} from '@/types/technology';
+import type { InventoryOperations } from '@/types/inventory';
+import type { FacilityInstance } from '@/types/facilities';
+import { RecipeService } from '@/services/RecipeService';
+import { getStorageConfig } from '@/data/storageConfigs';
+import { DataService } from '@/services/DataService';
+import { TechnologyService } from '@/services/TechnologyService';
+import { FuelService } from '@/services/FuelService';
+import { gameStorageService } from '@/services/GameStorageService';
 
 // 页面卸载时立即保存
 if (typeof window !== 'undefined') {
@@ -27,7 +27,7 @@ if (typeof window !== 'undefined') {
     // 页面卸载时会自动触发persist保存
   });
 }
-import { error as logError } from '../utils/logger';
+import { error as logError } from '@/utils/logger';
 
 interface GameState {
   // 库存系统

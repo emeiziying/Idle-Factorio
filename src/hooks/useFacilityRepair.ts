@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import useGameStore from '../store/gameStore';
+import useGameStore from '@/store/gameStore';
 
 /**
  * 安全修复设施状态的hook

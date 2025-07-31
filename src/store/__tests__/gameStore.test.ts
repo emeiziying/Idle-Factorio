@@ -2,8 +2,8 @@
 // @ts-nocheck
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { act } from '@testing-library/react'
-import useGameStore from '../gameStore'
-import type { CraftingTask } from '../../types/index'
+import useGameStore from '@/store/gameStore'
+import type { CraftingTask } from '@/types/index'
 
 // 模拟服务
 vi.mock('../../services/RecipeService')

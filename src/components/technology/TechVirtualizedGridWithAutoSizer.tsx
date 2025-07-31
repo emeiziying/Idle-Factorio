@@ -1,7 +1,7 @@
 import React from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import TechVirtualizedGrid from './TechVirtualizedGrid';
-import type { Technology, TechStatus } from '../../types/technology';
+import type { Technology, TechStatus } from '@/types/technology';
 
 interface TechVirtualizedGridWithAutoSizerProps {
   /** 要显示的科技列表 */

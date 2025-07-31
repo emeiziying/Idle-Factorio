@@ -4,9 +4,9 @@
  */
 
 import { DataService } from './DataService';
-import type { FacilityInstance, FacilityStatus } from '../types/facilities';
-import type { CraftingTask, CraftingChain, DeployedContainer, InventoryItem } from '../types/index';
-import type { TechResearchState, ResearchQueueItem } from '../types/technology';
+import type { FacilityInstance, FacilityStatus } from '@/types/facilities';
+import type { CraftingTask, CraftingChain, DeployedContainer, InventoryItem } from '@/types/index';
+import type { TechResearchState, ResearchQueueItem } from '@/types/technology';
 import LZString from 'lz-string';
 
 // 游戏状态类型定义

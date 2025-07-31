@@ -3,9 +3,9 @@
 import React from 'react';
 import { Box, Typography, LinearProgress, Tooltip, Chip } from '@mui/material';
 import { LocalFireDepartment, Timer } from '@mui/icons-material';
-import type { GenericFuelBuffer } from '../../services/FuelService';
-import { FuelService } from '../../services/FuelService';
-import FactorioIcon from '../common/FactorioIcon';
+import type { GenericFuelBuffer } from '@/services/FuelService';
+import { FuelService } from '@/services/FuelService';
+import FactorioIcon from '@/components/common/FactorioIcon';
 
 interface FuelStatusDisplayProps {
   fuelBuffer: GenericFuelBuffer;

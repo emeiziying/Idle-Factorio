@@ -6,15 +6,15 @@ import {
   Alert
 } from '@mui/material';
 import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
-import type { Item } from '../../types/index';
-import type { FacilityInstance } from '../../types/facilities';
-import { useItemRecipes } from '../../hooks/useItemRecipes';
-import { DataService } from '../../services/DataService';
-import useGameStore from '../../store/gameStore';
-import FactorioIcon from '../common/FactorioIcon';
-import ManualCraftingValidator from '../../utils/manualCraftingValidator';
-import { FuelStatusDisplay } from '../facilities/FuelStatusDisplay';
-import { FuelService } from '../../services/FuelService';
+import type { Item } from '@/types/index';
+import type { FacilityInstance } from '@/types/facilities';
+import { useItemRecipes } from '@/hooks/useItemRecipes';
+import { DataService } from '@/services/DataService';
+import useGameStore from '@/store/gameStore';
+import FactorioIcon from '@/components/common/FactorioIcon';
+import ManualCraftingValidator from '@/utils/manualCraftingValidator';
+import { FuelStatusDisplay } from '@/components/facilities/FuelStatusDisplay';
+import { FuelService } from '@/services/FuelService';
 
 interface RecipeFacilitiesCardProps {
   item: Item;

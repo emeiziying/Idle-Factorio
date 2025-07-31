@@ -11,7 +11,7 @@ import {
   getCardStyles,
   getCenterStyles,
   mergeStyles
-} from '../styleHelpers'
+} from '@/utils/styleHelpers'
 
 // 样式辅助函数测试套件
 describe('styleHelpers', () => {

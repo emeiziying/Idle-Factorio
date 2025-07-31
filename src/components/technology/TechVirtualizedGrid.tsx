@@ -2,7 +2,7 @@ import React, { useMemo, useCallback, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Box, useTheme } from '@mui/material';
 import TechGridCard from './TechGridCard';
-import type { Technology, TechStatus } from '../../types/technology';
+import type { Technology, TechStatus } from '@/types/technology';
 
 interface TechVirtualizedGridProps {
   /** 要显示的科技列表 */

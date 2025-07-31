@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { act } from '@testing-library/react'
-import useGameStore from '../../store/gameStore'
-import { RecipeService } from '../../services/RecipeService'
-import { DataService } from '../../services/DataService'
-import { ServiceLocator, SERVICE_NAMES } from '../../services/ServiceLocator'
+import useGameStore from '@/store/gameStore'
+import { RecipeService } from '@/services/RecipeService'
+import { DataService } from '@/services/DataService'
+import { ServiceLocator, SERVICE_NAMES } from '@/services/ServiceLocator'
 
 // 模拟服务
 vi.mock('../../services/GameStorageService')

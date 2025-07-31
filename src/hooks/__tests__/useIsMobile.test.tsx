@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import { ThemeProvider, createTheme } from '@mui/material'
-import { useIsMobile, useIsTablet, useDeviceType } from '../useIsMobile'
+import { useIsMobile, useIsTablet, useDeviceType } from '@/hooks/useIsMobile'
 import React from 'react'
 
 // Mock useMediaQuery

@@ -4,10 +4,10 @@ import {
   Box,
   Tooltip
 } from '@mui/material';
-import type { Item } from '../../types/index';
-import useGameStore from '../../store/gameStore';
-import FactorioIcon from '../common/FactorioIcon';
-import { useIsMobile } from '../../hooks/useIsMobile';
+import type { Item } from '@/types/index';
+import useGameStore from '@/store/gameStore';
+import FactorioIcon from '@/components/common/FactorioIcon';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface ItemCardProps {
   item: Item;

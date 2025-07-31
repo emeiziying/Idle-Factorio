@@ -3,8 +3,8 @@
  * 用于解耦服务之间的依赖关系
  */
 
-import type { FacilityInstance } from '../types/facilities';
-import type { InventoryItem } from '../types/index';
+import type { FacilityInstance } from '@/types/facilities';
+import type { InventoryItem } from '@/types/index';
 
 /**
  * 游戏状态提供者接口

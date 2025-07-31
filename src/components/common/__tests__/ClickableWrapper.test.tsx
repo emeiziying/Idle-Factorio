@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import { ClickableWrapper } from '../ClickableWrapper'
+import { ClickableWrapper } from '@/components/common/ClickableWrapper'
 
-import * as styleHelpers from '../../../utils/styleHelpers'
+import * as styleHelpers from '@/utils/styleHelpers'
 
 // Mock style helpers
 // 模拟样式辅助函数

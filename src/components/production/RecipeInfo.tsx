@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import type { Recipe } from '../../types';
-import useGameStore from '../../store/gameStore';
-import { DataService } from '../../services/DataService';
+import type { Recipe } from '@/types';
+import useGameStore from '@/store/gameStore';
+import { DataService } from '@/services/DataService';
 
 interface RecipeInfoProps {
   itemId: string;

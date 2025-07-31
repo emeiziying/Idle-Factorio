@@ -24,22 +24,22 @@ import {
   Compress as CompressIcon
 } from '@mui/icons-material';
 
-import ProductionModule from './components/production/ProductionModule';
-import FacilitiesModule from './components/facilities/FacilitiesModule';
-import TechnologyModule from './components/technology/TechnologyModule';
-import ManualCraftingTestPage from './components/test/ManualCraftingTestPage';
-import { useGameLoop } from './hooks/useGameLoop';
+import ProductionModule from '@/components/production/ProductionModule';
+import FacilitiesModule from '@/components/facilities/FacilitiesModule';
+import TechnologyModule from '@/components/technology/TechnologyModule';
+import ManualCraftingTestPage from '@/components/test/ManualCraftingTestPage';
+import { useGameLoop } from '@/hooks/useGameLoop';
 
-import { ServiceInitializer } from './services/ServiceInitializer';
-import CraftingEngine from './utils/craftingEngine';
-import useGameStore from './store/gameStore';
-import { useIsMobile } from './hooks/useIsMobile';
+import { ServiceInitializer } from '@/services/ServiceInitializer';
+import CraftingEngine from '@/utils/craftingEngine';
+import useGameStore from '@/store/gameStore';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { useLocalStorageState } from 'ahooks';
-import { useInventoryRepair } from './hooks/useInventoryRepair';
-import { useUnlockedTechsRepair } from './hooks/useUnlockedTechsRepair';
-import { useFacilityRepair } from './hooks/useFacilityRepair';
-import theme from './theme';
-import { error as logError } from './utils/logger';
+import { useInventoryRepair } from '@/hooks/useInventoryRepair';
+import { useUnlockedTechsRepair } from '@/hooks/useUnlockedTechsRepair';
+import { useFacilityRepair } from '@/hooks/useFacilityRepair';
+import theme from '@/theme';
+import { error as logError } from '@/utils/logger';
 
 const App: React.FC = () => {
   const [currentModule, setCurrentModule] = useLocalStorageState('app-current-module', { defaultValue: 0 });

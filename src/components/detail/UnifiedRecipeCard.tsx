@@ -4,10 +4,10 @@ import {
   Typography,
   Chip
 } from '@mui/material';
-import type { Recipe } from '../../types/index';
-import FactorioIcon from '../common/FactorioIcon';
-import { DataService } from '../../services/DataService';
-import useGameStore from '../../store/gameStore';
+import type { Recipe } from '@/types/index';
+import FactorioIcon from '@/components/common/FactorioIcon';
+import { DataService } from '@/services/DataService';
+import useGameStore from '@/store/gameStore';
 import CraftingButtons from './CraftingButtons';
 import RecipeFlowDisplay from './RecipeFlowDisplay';
 

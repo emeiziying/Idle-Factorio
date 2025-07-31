@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import Logger, { logger, LogLevel, debug, info, warn, error } from '../logger'
+import Logger, { logger, LogLevel, debug, info, warn, error } from '@/utils/logger'
 
 // Logger 测试套件 - 日志记录器
 describe('Logger', () => {

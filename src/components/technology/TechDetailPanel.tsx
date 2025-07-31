@@ -26,11 +26,11 @@ import {
   Build as RequirementIcon,
   NewReleases as UnlockIcon
 } from '@mui/icons-material';
-import FactorioIcon from '../common/FactorioIcon';
-import type { TechResearchState } from '../../types/technology';
-import type { ResearchTrigger } from '../../types/index';
-import { TechnologyService } from '../../services/TechnologyService';
-import { DataService } from '../../services/DataService';
+import FactorioIcon from '@/components/common/FactorioIcon';
+import type { TechResearchState } from '@/types/technology';
+import type { ResearchTrigger } from '@/types/index';
+import { TechnologyService } from '@/services/TechnologyService';
+import { DataService } from '@/services/DataService';
 
 // Factorio Design System (与TechGridCard保持一致)
 const FACTORIO_COLORS = {

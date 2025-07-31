@@ -1,4 +1,4 @@
-import type { Recipe } from '../types';
+import type { Recipe } from '@/types';
 
 /**
  * 自定义配方数据

@@ -15,10 +15,10 @@ import {
   Add as QueueIcon,
   NewReleases as TriggerIcon
 } from '@mui/icons-material';
-import FactorioIcon from '../common/FactorioIcon';
-import { TechnologyService } from '../../services/TechnologyService';
-import { DataService } from '../../services/DataService';
-import type { Technology, TechStatus } from '../../types/technology';
+import FactorioIcon from '@/components/common/FactorioIcon';
+import { TechnologyService } from '@/services/TechnologyService';
+import { DataService } from '@/services/DataService';
+import type { Technology, TechStatus } from '@/types/technology';
 
 // Factorio Design System
 const FACTORIO_COLORS = {

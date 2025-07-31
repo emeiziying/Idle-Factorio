@@ -9,8 +9,8 @@ import {
   useTheme
 } from '@mui/material';
 import { AddBox as AddBoxIcon } from '@mui/icons-material';
-import type { Item } from '../../types/index';
-import useGameStore from '../../store/gameStore';
+import type { Item } from '@/types/index';
+import useGameStore from '@/store/gameStore';
 import StorageExpansionDialog from './StorageExpansionDialog';
 
 interface InventoryCardProps {

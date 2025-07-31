@@ -18,9 +18,9 @@ import {
   LocalFireDepartment,
   Info
 } from '@mui/icons-material';
-import FactorioIcon from '../common/FactorioIcon';
-import { FUEL_PRIORITY } from '../../data/fuelConfigs';
-import { DataService } from '../../services/DataService';
+import FactorioIcon from '@/components/common/FactorioIcon';
+import { FUEL_PRIORITY } from '@/data/fuelConfigs';
+import { DataService } from '@/services/DataService';
 
 interface FuelPrioritySettingsProps {
   onPriorityChange?: (newPriority: string[]) => void;

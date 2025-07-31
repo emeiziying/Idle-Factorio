@@ -5,14 +5,14 @@ import {
   Alert,
   Chip
 } from '@mui/material';
-import type { Item, Recipe } from '../../types/index';
-import { RecipeService } from '../../services/RecipeService';
-import { DataService } from '../../services/DataService';
-import useGameStore from '../../store/gameStore';
-import { getValidationReasonText, type ValidationReasonType } from '../../utils/manualCraftingValidator';
+import type { Item, Recipe } from '@/types/index';
+import { RecipeService } from '@/services/RecipeService';
+import { DataService } from '@/services/DataService';
+import useGameStore from '@/store/gameStore';
+import { getValidationReasonText, type ValidationReasonType } from '@/utils/manualCraftingValidator';
 import CraftingButtons from './CraftingButtons';
 import RecipeFlowDisplay from './RecipeFlowDisplay';
-import FactorioIcon from '../common/FactorioIcon';
+import FactorioIcon from '@/components/common/FactorioIcon';
 // import ChainCraftingDialog from '../common/ChainCraftingDialog';
 
 interface ManualCraftingCardProps {

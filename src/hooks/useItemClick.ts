@@ -4,9 +4,9 @@
  */
 
 import { useCallback } from 'react';
-import type { Item } from '../types/index';
+import type { Item } from '@/types/index';
 import { useDataService } from './useServices';
-import Logger from '../utils/logger';
+import Logger from '@/utils/logger';
 
 const logger = new Logger();
 logger.configure({ prefix: '[Game] [UI]' });

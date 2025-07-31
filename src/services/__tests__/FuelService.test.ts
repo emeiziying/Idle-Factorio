@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { FuelService } from '../FuelService'
-import { DataService } from '../DataService'
-import { GameConfig } from '../GameConfig'
-import type { FacilityInstance } from '../../types/facilities'
-import { FacilityStatus } from '../../types/facilities'
-import type { ServiceInstance, MockObject } from '../../types/test-utils'
+import { FuelService } from '@/services/FuelService'
+import { DataService } from '@/services/DataService'
+import { GameConfig } from '@/services/GameConfig'
+import type { FacilityInstance } from '@/types/facilities'
+import { FacilityStatus } from '@/types/facilities'
+import type { ServiceInstance, MockObject } from '@/types/test-utils'
 
 // 模拟依赖项
 vi.mock('../DataService')

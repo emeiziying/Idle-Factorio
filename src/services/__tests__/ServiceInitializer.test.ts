@@ -1,15 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { ServiceInitializer } from '../ServiceInitializer';
-import { ServiceLocator, SERVICE_NAMES } from '../ServiceLocator';
-import { DataService } from '../DataService';
-import { RecipeService } from '../RecipeService';
-import { TechnologyService } from '../TechnologyService';
-import { UserProgressService } from '../UserProgressService';
-import { FuelService } from '../FuelService';
-import { PowerService } from '../PowerService';
-import { StorageService } from '../StorageService';
-import { GameStateAdapter } from '../GameStateAdapter';
-import ManualCraftingValidator from '../../utils/manualCraftingValidator';
+import { ServiceInitializer } from '@/services/ServiceInitializer';
+import { ServiceLocator, SERVICE_NAMES } from '@/services/ServiceLocator';
+import { DataService } from '@/services/DataService';
+import { RecipeService } from '@/services/RecipeService';
+import { TechnologyService } from '@/services/TechnologyService';
+import { UserProgressService } from '@/services/UserProgressService';
+import { FuelService } from '@/services/FuelService';
+import { PowerService } from '@/services/PowerService';
+import { StorageService } from '@/services/StorageService';
+import { GameStateAdapter } from '@/services/GameStateAdapter';
+import ManualCraftingValidator from '@/utils/manualCraftingValidator';
 
 // Mock all dependencies
 vi.mock('../ServiceLocator');

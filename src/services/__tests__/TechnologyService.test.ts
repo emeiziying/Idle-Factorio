@@ -1,13 +1,13 @@
 // TechnologyService 测试
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { TechnologyService } from '../TechnologyService';
-import { DataService } from '../DataService';
-import { RecipeService } from '../RecipeService';
-import { ServiceLocator, SERVICE_NAMES } from '../ServiceLocator';
-import { ResearchPriority } from '../../types/technology';
-import type { Recipe } from '../../types';
-import type { TechResearchState } from '../../types/technology';
+import { TechnologyService } from '@/services/TechnologyService';
+import { DataService } from '@/services/DataService';
+import { RecipeService } from '@/services/RecipeService';
+import { ServiceLocator, SERVICE_NAMES } from '@/services/ServiceLocator';
+import { ResearchPriority } from '@/types/technology';
+import type { Recipe } from '@/types';
+import type { TechResearchState } from '@/types/technology';
 
 // 为测试定义类型
 interface ServiceInstance<T> {

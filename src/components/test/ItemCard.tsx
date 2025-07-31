@@ -1,14 +1,14 @@
 import React from "react";
 import { Box, Tooltip } from "@mui/material";
-import type { Item, Recipe } from "../../types/index";
-import type { ManualCraftingValidation } from "../../utils/manualCraftingValidator";
+import type { Item, Recipe } from "@/types/index";
+import type { ManualCraftingValidation } from "@/utils/manualCraftingValidator";
 import {
   getValidationReasonText,
   getValidationCategoryText,
-} from "../../utils/manualCraftingValidator";
-import FactorioIcon from "../common/FactorioIcon";
-import { DataService } from "../../services/DataService";
-import { useIsMobile } from "../../hooks/useIsMobile";
+} from "@/utils/manualCraftingValidator";
+import FactorioIcon from "@/components/common/FactorioIcon";
+import { DataService } from "@/services/DataService";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface ItemCardProps {
   item: Item;
