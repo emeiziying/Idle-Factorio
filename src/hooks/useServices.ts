@@ -15,7 +15,7 @@ import {
   StorageService,
   UserProgressService
 } from '@/services';
-import type { GameStateProvider } from '@/services/interfaces';
+import type { GameStateProvider } from '@/services/interfaces/interfaces';
 
 /**
  * 获取 DataService 实例

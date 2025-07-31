@@ -2,6 +2,7 @@
 export {
   ServiceInitializer,
   ServiceLocator,
+  GameConfig,
   SERVICE_NAMES
 } from './core';
 
@@ -12,11 +13,13 @@ export {
   DependencyService
 } from './data';
 
+// Data service types
+export type { CraftingChainAnalysis, CraftingDependency } from './data/DependencyService';
+
 // Game logic services - Technology and user progress
 export {
   TechnologyService,
-  UserProgressService,
-  GameStateAdapter
+  UserProgressService
 } from './game-logic';
 
 // System services - Fuel, power, and storage
@@ -30,5 +33,4 @@ export {
 // Storage services - Game state persistence and configuration
 export {
   GameStorageService,
-  GameConfig
 } from './storage';

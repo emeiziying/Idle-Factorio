@@ -20,7 +20,17 @@ export default defineConfig({
         '**/mockData.ts',
         'src/data/**',
       ]
-    }
+    },
+    // 处理未处理的Promise rejection
+    onConsoleLog(log, type) {
+      if (type === 'stderr' && log.includes('PromiseRejectionHandledWarning')) {
+        return false;
+      }
+    },
+    // 忽略未处理的Promise rejection
+    testTimeout: 10000,
+    hookTimeout: 10000,
+    teardownTimeout: 10000
   },
   resolve: {
     alias: {

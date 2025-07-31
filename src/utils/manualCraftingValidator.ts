@@ -4,7 +4,7 @@
 import { ServiceLocator, SERVICE_NAMES, RecipeService } from '@/services';
 import type { DataService } from '@/services';
 import type { Recipe } from '@/types/index';
-import type { IManualCraftingValidator } from '@/services/interfaces';
+import type { IManualCraftingValidator } from '@/services/interfaces/IManualCraftingValidator';
 
 // 验证结果类别常量
 export const ValidationCategory = {

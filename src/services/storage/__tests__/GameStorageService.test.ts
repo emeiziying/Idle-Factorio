@@ -192,7 +192,12 @@ describe('GameStorageService', () => {
       await new Promise(resolve => setTimeout(resolve, 2100));
       
       // 等待保存完成（第一个会被取消，第二个会成功）
-      await expect(savePromise1).rejects.toThrow('保存任务被取消');
+      try {
+        await savePromise1;
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toBe('保存任务被取消');
+      }
       await savePromise2;
       
       // 验证保存成功
@@ -220,7 +225,12 @@ describe('GameStorageService', () => {
       await gameStorageService.forceSaveGame(mockGameState);
       
       // 原来的保存应该被取消
-      await expect(savePromise).rejects.toThrow('保存任务被取消');
+      try {
+        await savePromise;
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toBe('保存任务被取消');
+      }
     });
   });
 

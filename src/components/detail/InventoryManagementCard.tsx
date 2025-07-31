@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import type { Item } from "@/types/index";
 import useGameStore from "@/store/gameStore";
-import { getStorageService, DataService } from "@/services";
+import { StorageService, DataService } from "@/services";
 import FactorioIcon from "@/components/common/FactorioIcon";
 
 interface InventoryManagementCardProps {
@@ -36,7 +36,7 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({
   const isLiquidItem = item.category === "fluids";
 
   // 获取可用的存储类型
-  const storageService = getStorageService();
+  const storageService = StorageService.getInstance();
   const availableStorageTypes = isLiquidItem
     ? storageService.getLiquidStorageTypes()
     : storageService.getSolidStorageTypes();

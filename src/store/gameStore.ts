@@ -14,10 +14,14 @@ import type {
 } from '@/types/technology';
 import type { InventoryOperations } from '@/types/inventory';
 import type { FacilityInstance } from '@/types/facilities';
-import { RecipeService, DataService, TechnologyService, FuelService, GameStorageService } from '@/services';
+import { RecipeService, DataService, TechnologyService, FuelService } from '@/services';
 import { getStorageConfig } from '@/data/storageConfigs';
 
-const gameStorageService = GameStorageService.getInstance();
+// 延迟加载 GameStorageService 避免循环依赖
+const getGameStorageService = async () => {
+  const { GameStorageService } = await import('@/services/storage/GameStorageService');
+  return GameStorageService.getInstance();
+};
 
 // 页面卸载时立即保存
 if (typeof window !== 'undefined') {
@@ -1201,6 +1205,7 @@ const useGameStore = create<GameState>()(
 
       clearGameData: async () => {
         // 清除游戏存档
+        const gameStorageService = await getGameStorageService();
         await gameStorageService.clearGameData();
         
         // 重置状态
@@ -1235,7 +1240,9 @@ const useGameStore = create<GameState>()(
       saveGame: () => {
         // 使用GameStorageService保存游戏数据
         const state = get();
-        gameStorageService.saveGame(state).catch(error => {
+        getGameStorageService().then(gameStorageService => {
+          return gameStorageService.saveGame(state);
+        }).catch((error: unknown) => {
           console.error('[SaveGame] 保存失败:', error);
         });
       },
@@ -1243,6 +1250,7 @@ const useGameStore = create<GameState>()(
       // 加载存档方法
       loadGameData: async () => {
         try {
+          const gameStorageService = await getGameStorageService();
           const loadedState = await gameStorageService.loadGame();
           if (loadedState) {
             set(() => loadedState);
@@ -1257,6 +1265,7 @@ const useGameStore = create<GameState>()(
       forceSaveGame: async () => {
         const state = get();
         try {
+          const gameStorageService = await getGameStorageService();
           await gameStorageService.forceSaveGame(state);
           console.log('[ForceSave] 强制存档完成');
         } catch (error) {

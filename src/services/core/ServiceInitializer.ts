@@ -6,7 +6,7 @@ import { UserProgressService } from '../game-logic/UserProgressService';
 import { FuelService } from '../systems/FuelService';
 import { PowerService } from '../systems/PowerService';
 import { StorageService } from '../systems/StorageService';
-import { GameStateAdapter } from '../game-logic/GameStateAdapter';
+import { GameStateAdapter } from '@/adapters/GameStateAdapter';
 import ManualCraftingValidator from '@/utils/manualCraftingValidator';
 
 /**

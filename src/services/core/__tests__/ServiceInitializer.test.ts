@@ -8,7 +8,7 @@ import { UserProgressService } from '@/services/game-logic/UserProgressService';
 import { FuelService } from '@/services/systems/FuelService';
 import { PowerService } from '@/services/systems/PowerService';
 import { StorageService } from '@/services/systems/StorageService';
-import { GameStateAdapter } from '@/services/game-logic/GameStateAdapter';
+import { GameStateAdapter } from '@/adapters/GameStateAdapter';
 import ManualCraftingValidator from '@/utils/manualCraftingValidator';
 
 // Mock all dependencies
@@ -20,7 +20,7 @@ vi.mock('@/services/game-logic/UserProgressService');
 vi.mock('@/services/systems/FuelService');
 vi.mock('@/services/systems/PowerService');
 vi.mock('@/services/systems/StorageService');
-vi.mock('@/services/game-logic/GameStateAdapter');
+vi.mock('@/adapters/GameStateAdapter');
 vi.mock('@/utils/manualCraftingValidator');
 
 describe('ServiceInitializer', () => {

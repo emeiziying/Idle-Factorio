@@ -38,6 +38,9 @@ jobs:
     - name: TypeScript type check
       run: pnpm exec tsc --noEmit
       
+    - name: Run tests
+      run: pnpm run test
+      
     - name: Build project
       run: pnpm run build
       
