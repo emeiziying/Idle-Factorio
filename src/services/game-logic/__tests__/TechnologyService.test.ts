@@ -77,19 +77,19 @@ describe('TechnologyService', () => {
       expect(result).toBe(true);
     });
 
-    it('应该返回 true 当物品是原材料时（无配方）', () => {
+    it('应该返回 false 当物品没有配方时', () => {
       // 模拟物品不在科技解锁列表中
       technologyService.setTechStateForTesting({
         unlockedItems: new Set(),
       });
 
-      // 模拟RecipeService返回空数组（表示原材料）
+      // 模拟RecipeService返回空数组（表示没有配方）
       vi.mocked(RecipeService.getRecipesThatProduce).mockReturnValue([]);
 
-      const result = technologyService.isItemUnlocked('iron-ore');
+      const result = technologyService.isItemUnlocked('non-existent-item');
 
-      expect(result).toBe(true);
-      expect(RecipeService.getRecipesThatProduce).toHaveBeenCalledWith('iron-ore');
+      expect(result).toBe(false);
+      expect(RecipeService.getRecipesThatProduce).toHaveBeenCalledWith('non-existent-item');
     });
 
     it('应该返回 true 当物品有mining配方时', () => {
@@ -184,13 +184,13 @@ describe('TechnologyService', () => {
         unlockedItems: new Set(),
       });
 
-      // 模拟原材料（无配方）
+      // 模拟没有配方的物品
       vi.mocked(RecipeService.getRecipesThatProduce).mockReturnValue([]);
 
-      const result = technologyService.isItemUnlocked('iron-ore');
+      const result = technologyService.isItemUnlocked('non-existent-item');
 
-      // 应该返回true，因为原材料总是可用的
-      expect(result).toBe(true);
+      // 应该返回false，因为没有配方的物品不可用
+      expect(result).toBe(false);
     });
 
     it('应该返回 false 当DataService不可用时', () => {

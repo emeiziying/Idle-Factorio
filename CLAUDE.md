@@ -140,13 +140,13 @@ The application implements sophisticated chain crafting with proper inventory ma
 #### DependencyService Chain Analysis
 
 ```typescript
-// Recursive calculation of total raw material needs
-calculateTotalRawMaterialNeeds(recipe, quantity, totalNeeds);
+// Recursive calculation of total material needs
+calculateTotalMaterialNeeds(recipe, quantity, totalNeeds);
 
 // Pre-validation of total materials before creating chain
 analyzeCraftingChain(itemId, quantity, inventory): CraftingChainAnalysis | null;
 
-// Returns null if insufficient total raw materials
+// Returns null if insufficient total materials
 // Example: Crafting 1 burner-mining-drill needs 3 gears + 3 iron-plates
 // 3 gears need 6 iron-plates, so total: 9 iron-plates required
 ```
