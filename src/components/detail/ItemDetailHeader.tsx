@@ -2,7 +2,7 @@ import React from 'react';
 import { Typography, Box, useTheme } from '@mui/material';
 import type { Item } from '@/types/index';
 import { DataService } from '@/services';
-import useGameStore from '@/store/gameStore';
+import useInventoryItem from '@/hooks/useInventoryItem';
 
 interface ItemDetailHeaderProps {
   item: Item;
@@ -11,13 +11,13 @@ interface ItemDetailHeaderProps {
 const ItemDetailHeader: React.FC<ItemDetailHeaderProps> = ({ item }) => {
   const theme = useTheme();
   const dataService = DataService.getInstance();
-  const { getInventoryItem } = useGameStore();
+
+  // 使用响应式hook获取库存信息
+  const inventoryItem = useInventoryItem(item.id);
 
   const getLocalizedItemName = (itemId: string): string => {
     return dataService.getLocalizedItemName(itemId);
   };
-
-  const inventoryItem = getInventoryItem(item.id);
 
   return (
     <Box

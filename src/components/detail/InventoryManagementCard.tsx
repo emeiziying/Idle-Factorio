@@ -4,6 +4,7 @@ import type { Item } from '@/types/index';
 import useGameStore from '@/store/gameStore';
 import { StorageService, DataService } from '@/services';
 import FactorioIcon from '@/components/common/FactorioIcon';
+import useInventoryItem from '@/hooks/useInventoryItem';
 
 interface InventoryManagementCardProps {
   item: Item;
@@ -13,9 +14,11 @@ interface InventoryManagementCardProps {
 const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({ item, onItemSelect }) => {
   const theme = useTheme();
   const dataService = DataService.getInstance();
-  const { getInventoryItem, getDeployedContainersForItem, removeDeployedContainer, updateInventory } = useGameStore();
 
-  const inventoryItem = getInventoryItem(item.id);
+  // 使用响应式hook获取库存信息
+  const inventoryItem = useInventoryItem(item.id);
+
+  const { getDeployedContainersForItem, removeDeployedContainer, updateInventory } = useGameStore();
   const deployedContainers = getDeployedContainersForItem(item.id);
 
   // 判断是否为液体物品
@@ -32,8 +35,8 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({ item,
     if (!storageConfig) return;
 
     // 检查是否有该存储设备
-    const storageInventory = getInventoryItem(storageConfig.itemId);
-    if (storageInventory.currentAmount > 0) {
+    const storageInventory = useGameStore.getState().inventory.get(storageConfig.itemId);
+    if (storageInventory && storageInventory.currentAmount > 0) {
       // 直接部署存储设备
       const result = useGameStore.getState().deployChestForStorage(storageType, item.id);
       if (result.success) {
@@ -98,7 +101,7 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({ item,
             const storageConfig = storageService.getStorageConfig(storageType);
             if (!storageConfig) return null;
 
-            const storageInventory = getInventoryItem(storageConfig.itemId);
+            const storageInventory = useGameStore.getState().inventory.get(storageConfig.itemId);
             const deployedCount = deployedContainers.filter((c) => c.chestType === storageType).length;
 
             return (
@@ -149,7 +152,7 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({ item,
                 <Box display="flex" gap={0.5}>
                   <Button
                     onClick={() => handleAddStorage(storageType)}
-                    disabled={storageInventory.currentAmount <= 0}
+                    disabled={!storageInventory || storageInventory.currentAmount <= 0}
                     variant="contained"
                     color="primary"
                     size="small"

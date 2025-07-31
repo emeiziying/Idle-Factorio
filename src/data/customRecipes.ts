@@ -12,7 +12,6 @@ import type { Recipe } from '@/types';
  * 木材获取配方
  * 木材是唯一无法通过自动化设备采集的原材料
  * - 死树给 2 个木材，采集时间 0.5 秒
- * - 大树给 4 个木材，采集时间 0.55 秒
  */
 const WOOD_RECIPES: Recipe[] = [
   // 手动砍树 - 死树
@@ -26,34 +25,6 @@ const WOOD_RECIPES: Recipe[] = [
     cost: 0, // 手动采集，无成本
     flags: ['mining', 'manual'],
     producers: [], // 只能手动采集，不能自动化
-    locations: ['nauvis'],
-  },
-
-  // 手动砍树 - 大树
-  {
-    id: 'wood-mining-big-tree',
-    name: 'Wood (Big Tree)',
-    category: 'intermediate-products',
-    time: 0.55,
-    in: {},
-    out: { wood: 4 },
-    cost: 0, // 手动采集，无成本
-    flags: ['mining', 'manual'],
-    producers: [], // 只能手动采集，不能自动化
-    locations: ['nauvis'],
-  },
-
-  // 手动砍树 - 平均产出（用于计算）
-  {
-    id: 'wood-mining-average',
-    name: 'Wood (Average)',
-    category: 'intermediate-products',
-    time: 0.525, // 平均时间
-    in: {},
-    out: { wood: 3 }, // 平均产出
-    cost: 0,
-    flags: ['mining', 'manual'],
-    producers: [],
     locations: ['nauvis'],
   },
 ];

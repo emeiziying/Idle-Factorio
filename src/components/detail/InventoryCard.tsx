@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, Typography, Chip, Box, Button, useTheme } from '@mui/material';
 import { AddBox as AddBoxIcon } from '@mui/icons-material';
 import type { Item } from '@/types/index';
-import useGameStore from '@/store/gameStore';
+import useInventoryItem from '@/hooks/useInventoryItem';
 import StorageExpansionDialog from './StorageExpansionDialog';
 
 interface InventoryCardProps {
@@ -12,9 +12,9 @@ interface InventoryCardProps {
 const InventoryCard: React.FC<InventoryCardProps> = ({ item }) => {
   const [expansionDialogOpen, setExpansionDialogOpen] = useState(false);
   const theme = useTheme();
-  const { getInventoryItem } = useGameStore();
 
-  const inventoryItem = getInventoryItem(item.id);
+  // 使用响应式hook获取库存信息
+  const inventoryItem = useInventoryItem(item.id);
 
   return (
     <>
