@@ -1,0 +1,136 @@
+// 统一游戏循环管理器 - 使用 requestAnimationFrame 替代多个 setInterval
+
+type LoopCallback = (deltaTime: number, currentTime: number) => void;
+
+interface LoopTask {
+  id: string;
+  callback: LoopCallback;
+  interval: number; // 更新间隔（毫秒）
+  lastUpdate: number; // 上次更新时间
+  enabled: boolean;
+}
+
+class GameLoopManager {
+  private static instance: GameLoopManager;
+  private tasks: Map<string, LoopTask> = new Map();
+  private animationFrameId: number | null = null;
+  private isRunning: boolean = false;
+
+  private constructor() {}
+
+  static getInstance(): GameLoopManager {
+    if (!GameLoopManager.instance) {
+      GameLoopManager.instance = new GameLoopManager();
+    }
+    return GameLoopManager.instance;
+  }
+
+  // 注册一个循环任务
+  register(id: string, callback: LoopCallback, interval: number = 16): void {
+    const currentTime = performance.now();
+    this.tasks.set(id, {
+      id,
+      callback,
+      interval,
+      lastUpdate: currentTime,
+      enabled: true,
+    });
+
+    // 如果循环未运行，启动它
+    if (!this.isRunning) {
+      this.start();
+    }
+  }
+
+  // 取消注册任务
+  unregister(id: string): void {
+    this.tasks.delete(id);
+
+    // 如果没有任务了，停止循环
+    if (this.tasks.size === 0) {
+      this.stop();
+    }
+  }
+
+  // 启用/禁用任务
+  setEnabled(id: string, enabled: boolean): void {
+    const task = this.tasks.get(id);
+    if (task) {
+      task.enabled = enabled;
+    }
+  }
+
+  // 更新任务间隔
+  setInterval(id: string, interval: number): void {
+    const task = this.tasks.get(id);
+    if (task) {
+      task.interval = interval;
+    }
+  }
+
+  // 启动游戏循环
+  start(): void {
+    if (this.isRunning) return;
+
+    this.isRunning = true;
+    this.loop();
+  }
+
+  // 停止游戏循环
+  stop(): void {
+    if (!this.isRunning) return;
+
+    this.isRunning = false;
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
+  }
+
+  // 主循环
+  private loop = (): void => {
+    if (!this.isRunning) return;
+
+    const currentTime = performance.now();
+
+    // 执行所有启用的任务
+    for (const task of this.tasks.values()) {
+      if (!task.enabled) continue;
+
+      const timeSinceLastUpdate = currentTime - task.lastUpdate;
+      
+      // 检查是否到了更新时间
+      if (timeSinceLastUpdate >= task.interval) {
+        try {
+          // 计算实际的 deltaTime（秒）
+          const deltaTime = timeSinceLastUpdate / 1000;
+          task.callback(deltaTime, currentTime);
+          task.lastUpdate = currentTime;
+        } catch (error) {
+          console.error(`Game loop task ${task.id} error:`, error);
+        }
+      }
+    }
+
+    // 请求下一帧
+    this.animationFrameId = requestAnimationFrame(this.loop);
+  };
+
+  // 获取任务信息
+  getTaskInfo(id: string): LoopTask | undefined {
+    return this.tasks.get(id);
+  }
+
+  // 获取所有任务
+  getAllTasks(): LoopTask[] {
+    return Array.from(this.tasks.values());
+  }
+
+  // 清理所有任务
+  clear(): void {
+    this.tasks.clear();
+    this.stop();
+  }
+}
+
+export default GameLoopManager;

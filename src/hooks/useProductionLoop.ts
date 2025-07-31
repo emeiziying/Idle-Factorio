@@ -4,7 +4,7 @@ import { useEffect, useCallback, useRef } from 'react';
 import useGameStore from '@/store/gameStore';
 import { FuelService, RecipeService, PowerService } from '@/services';
 import type { FacilityInstance } from '@/types/facilities';
-import { msToSeconds } from '@/utils/common';
+import GameLoopManager from '@/utils/GameLoopManager';
 
 interface UseProductionLoopOptions {
   updateInterval?: number; // 更新间隔（毫秒）
@@ -28,9 +28,10 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
     trackMinedEntity,
   } = useGameStore();
 
-  const lastUpdateRef = useRef<number>(Date.now());
+  const gameLoopManager = GameLoopManager.getInstance();
   const fuelService = FuelService.getInstance();
   const powerService = PowerService.getInstance();
+  const loopIdRef = useRef<string>(`production-loop-${Date.now()}-${Math.random().toString(36).substring(2)}`);
 
   // 更新单个设施的生产
   const updateFacilityProduction = useCallback(
@@ -128,10 +129,7 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
   );
 
   // 主更新循环
-  const updateProduction = useCallback(() => {
-    const currentTime = Date.now();
-    const deltaTime = msToSeconds(currentTime - lastUpdateRef.current);
-    lastUpdateRef.current = currentTime;
+  const updateProduction = useCallback((deltaTime: number) => {
 
     // 1. 计算电力平衡
     const powerBalance = powerService.calculatePowerBalance(facilities);
@@ -187,16 +185,20 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
     powerService,
   ]);
 
-  // 设置定时器
+  // 设置游戏循环
   useEffect(() => {
-    if (!enabled) return;
-
-    const interval = setInterval(updateProduction, updateInterval);
+    const loopId = loopIdRef.current;
+    
+    if (enabled) {
+      gameLoopManager.register(loopId, updateProduction, updateInterval);
+    } else {
+      gameLoopManager.unregister(loopId);
+    }
 
     return () => {
-      clearInterval(interval);
+      gameLoopManager.unregister(loopId);
     };
-  }, [enabled, updateInterval, updateProduction]);
+  }, [enabled, updateInterval, updateProduction, gameLoopManager]);
 
   return {
     updateProduction,

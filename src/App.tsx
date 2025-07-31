@@ -19,9 +19,7 @@ import {
   Build as BuildIcon,
   Factory as FactoryIcon,
   Science as ScienceIcon,
-  BugReport as TestIcon,
   Delete as DeleteIcon,
-  Compress as CompressIcon,
 } from '@mui/icons-material';
 
 import ProductionModule from '@/components/production/ProductionModule';
@@ -106,6 +104,10 @@ const App: React.FC = () => {
         try {
           // 初始化所有服务
           await ServiceInitializer.initialize();
+
+          // 初始化数据加载检查
+          const { initializeDataLoading } = useGameStore.getState();
+          initializeDataLoading();
 
           // 同步科技数据到gameStore（确保科技数据可用）
           const { initializeTechnologyService } = useGameStore.getState();

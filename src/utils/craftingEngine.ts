@@ -4,6 +4,7 @@ import type { CraftingTask, Recipe } from '@/types/index';
 import useGameStore from '@/store/gameStore';
 import { DataService, RecipeService, GameConfig } from '@/services';
 import { secondsToMs } from '@/utils/common';
+import GameLoopManager from '@/utils/GameLoopManager';
 
 // 设备效率配置 - 基于Factorio的采矿机设计
 interface DeviceEfficiency {
@@ -22,9 +23,10 @@ interface ResourceProperties {
 
 class CraftingEngine {
   private static instance: CraftingEngine;
-  private intervalId: number | null = null;
+  private gameLoopManager: GameLoopManager;
   private gameConfig: GameConfig;
   private isStarting: boolean = false; // 防止重复启动
+  private readonly LOOP_ID = 'crafting-engine';
 
   // 设备效率缓存 - 从data.json的机器数据动态获取
   private deviceEfficiencyCache = new Map<string, DeviceEfficiency>();
@@ -34,6 +36,7 @@ class CraftingEngine {
 
   private constructor() {
     this.gameConfig = GameConfig.getInstance();
+    this.gameLoopManager = GameLoopManager.getInstance();
   }
 
   static getInstance(): CraftingEngine {
@@ -46,7 +49,7 @@ class CraftingEngine {
   // 启动制作引擎
   start(): void {
     // 如果已经在运行或正在启动中，直接返回
-    if (this.intervalId !== null || this.isStarting) {
+    if (this.gameLoopManager.getTaskInfo(this.LOOP_ID) || this.isStarting) {
       return;
     }
 
@@ -54,9 +57,11 @@ class CraftingEngine {
 
     try {
       const constants = this.gameConfig.getConstants();
-      this.intervalId = window.setInterval(() => {
-        this.updateCraftingQueue();
-      }, constants.crafting.updateInterval);
+      this.gameLoopManager.register(
+        this.LOOP_ID,
+        () => this.updateCraftingQueue(),
+        constants.crafting.updateInterval
+      );
 
       // Crafting engine started
     } finally {
@@ -66,9 +71,8 @@ class CraftingEngine {
 
   // 停止制作引擎
   stop(): void {
-    if (this.intervalId !== null) {
-      clearInterval(this.intervalId);
-      this.intervalId = null;
+    if (this.gameLoopManager.getTaskInfo(this.LOOP_ID)) {
+      this.gameLoopManager.unregister(this.LOOP_ID);
       // Crafting engine stopped
     }
   }

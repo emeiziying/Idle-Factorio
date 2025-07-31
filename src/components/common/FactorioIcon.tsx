@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
 import { DataService } from '@/services';
+import useGameStore from '@/store/gameStore';
 import type { IconData } from '@/types/index';
 
 // 导入图标精灵图
@@ -39,34 +40,12 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
   const [iconData, setIconData] = useState<IconData | null>(null);
   const [spriteSize, setSpriteSize] = useState<{ width: number; height: number } | null>(null);
   const [effectiveIconId, setEffectiveIconId] = useState<string | undefined>(itemId);
-  const [dataLoaded, setDataLoaded] = useState(false);
 
   // 状态：从服务层获取的iconText
   const [recipeIconText, setRecipeIconText] = useState<string | undefined>(undefined);
-
-  // 监听数据加载状态
-  useEffect(() => {
-    const dataService = DataService.getInstance();
-    const checkData = () => {
-      const loaded = dataService.isDataLoaded();
-      setDataLoaded(loaded);
-      return loaded;
-    };
-
-    // 立即检查
-    if (checkData()) {
-      return;
-    }
-
-    // 如果数据未加载，定期检查
-    const interval = setInterval(() => {
-      if (checkData()) {
-        clearInterval(interval);
-      }
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, []);
+  
+  // 从 store 获取全局数据加载状态
+  const dataLoaded = useGameStore((state) => state.dataLoaded);
 
   // 获取图标信息
   useEffect(() => {

@@ -23,6 +23,7 @@ import type { InventoryOperations } from '@/types/inventory';
 import type { FacilityInstance } from '@/types/facilities';
 import { RecipeService, DataService, TechnologyService, FuelService } from '@/services';
 import { getStorageConfig } from '@/data/storageConfigs';
+import GameLoopManager from '@/utils/GameLoopManager';
 
 // 延迟加载 GameStorageService 避免循环依赖
 const getGameStorageService = async () => {
@@ -39,6 +40,9 @@ if (typeof window !== 'undefined') {
 import { error as logError } from '@/utils/logger';
 
 interface GameState {
+  // 数据加载状态
+  dataLoaded: boolean;
+
   // 库存系统
   inventory: Map<string, InventoryItem>;
 
@@ -76,6 +80,8 @@ interface GameState {
   minedEntityCounts: Map<string, number>; // 追踪挖掘实体数量
 
   // Actions
+  setDataLoaded: (loaded: boolean) => void;
+  initializeDataLoading: () => void;
   updateInventory: (itemId: string, amount: number) => void;
   getInventoryItem: (itemId: string) => InventoryItem;
   recalculateItemCapacity: (itemId: string) => void;
@@ -197,6 +203,7 @@ const ensureUnlockedTechsSet = (unlockedTechs: unknown): Set<string> => {
 const useGameStore = create<GameState>()(
   subscribeWithSelector((set, get) => ({
     // 初始状态
+    dataLoaded: false,
     inventory: (() => {
       // 确保初始状态是有效的Map
       try {
@@ -230,6 +237,34 @@ const useGameStore = create<GameState>()(
     craftedItemCounts: new Map(),
     builtEntityCounts: new Map(),
     minedEntityCounts: new Map(),
+
+    // 数据加载管理
+    setDataLoaded: (loaded: boolean) => {
+      set({ dataLoaded: loaded });
+    },
+
+    initializeDataLoading: () => {
+      const gameLoopManager = GameLoopManager.getInstance();
+      const loopId = 'global-data-check';
+      
+      const checkData = () => {
+        const dataService = DataService.getInstance();
+        const loaded = dataService.isDataLoaded();
+        if (loaded) {
+          get().setDataLoaded(true);
+          gameLoopManager.unregister(loopId);
+        }
+        return loaded;
+      };
+
+      // 立即检查
+      if (checkData()) {
+        return;
+      }
+
+      // 如果数据未加载，注册到游戏循环中定期检查
+      gameLoopManager.register(loopId, checkData, 100);
+    },
 
     // 库存管理
     updateInventory: (itemId: string, amount: number) => {
@@ -1283,53 +1318,49 @@ const initializeStore = async () => {
 // 立即执行初始化
 initializeStore();
 
-// 全局变量存储定时器ID，防止热更新时创建多个定时器
-let autoSaveIntervalId: ReturnType<typeof setInterval> | null = null;
+// 使用 GameLoopManager 管理自动存档
+const gameLoopManager = GameLoopManager.getInstance();
+const AUTO_SAVE_LOOP_ID = 'auto-save';
 let lastAutoSaveTime = Date.now();
 
-// 清理自动存档定时器
-const clearAutoSaveInterval = () => {
-  if (autoSaveIntervalId) {
-    clearInterval(autoSaveIntervalId);
-    autoSaveIntervalId = null;
-    console.log('[AutoSave] 清理自动存档定时器');
-  }
-};
+// 创建自动存档循环
+const createAutoSaveLoop = () => {
+  // 先清理旧的循环，防止热更新时重复创建
+  gameLoopManager.unregister(AUTO_SAVE_LOOP_ID);
 
-// 创建自动存档定时器
-const createAutoSaveInterval = () => {
-  // 先清理旧的定时器，防止热更新时重复创建
-  clearAutoSaveInterval();
+  // 创建新的循环
+  gameLoopManager.register(
+    AUTO_SAVE_LOOP_ID,
+    async () => {
+      const state = useGameStore.getState();
+      const now = Date.now();
 
-  // 创建新的定时器
-  autoSaveIntervalId = setInterval(async () => {
-    const state = useGameStore.getState();
-    const now = Date.now();
-
-    // 只有当游戏时间有变化时才存档（说明游戏在运行）
-    if (now - lastAutoSaveTime > 10000) {
-      console.log('[AutoSave] 定期强制存档触发');
-      try {
-        await state.forceSaveGame(); // 使用强制存档确保可靠性
-        lastAutoSaveTime = now;
-      } catch (error) {
-        console.error('[AutoSave] 自动存档失败:', error);
-        // 强制存档失败，但会在下次定时器触发时重试
+      // 只有当游戏时间有变化时才存档（说明游戏在运行）
+      if (now - lastAutoSaveTime > 10000) {
+        console.log('[AutoSave] 定期强制存档触发');
+        try {
+          await state.forceSaveGame(); // 使用强制存档确保可靠性
+          lastAutoSaveTime = now;
+        } catch (error) {
+          console.error('[AutoSave] 自动存档失败:', error);
+          // 强制存档失败，但会在下次循环触发时重试
+        }
       }
-    }
-  }, 10000);
+    },
+    10000 // 10秒间隔
+  );
 
-  console.log('[AutoSave] 创建自动存档定时器');
+  console.log('[AutoSave] 创建自动存档循环');
 };
 
-// 初始化自动存档定时器
-createAutoSaveInterval();
+// 初始化自动存档循环
+createAutoSaveLoop();
 
 // 在开发环境中，监听热更新事件（如果可用）
 if (typeof import.meta !== 'undefined' && import.meta.env?.DEV && import.meta.hot) {
   import.meta.hot.dispose(() => {
-    console.log('[AutoSave] 热更新时清理定时器');
-    clearAutoSaveInterval();
+    console.log('[AutoSave] 热更新时清理循环');
+    gameLoopManager.unregister(AUTO_SAVE_LOOP_ID);
   });
 }
 

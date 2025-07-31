@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
-import { Box, Typography, LinearProgress, IconButton, Button } from '@mui/material';
-import { Clear as ClearIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Box, LinearProgress, IconButton } from '@mui/material';
+import { Clear as ClearIcon } from '@mui/icons-material';
 import FactorioIcon from '@/components/common/FactorioIcon';
 import { DataService } from '@/services';
 import useGameStore from '@/store/gameStore';
@@ -161,6 +161,7 @@ CraftingQueueItem.displayName = 'CraftingQueueItem';
 
 interface CraftingQueueProps {
   // No props needed for direct display
+  placeholder?: never;
 }
 
 const CraftingQueue: React.FC<CraftingQueueProps> = () => {
@@ -175,13 +176,6 @@ const CraftingQueue: React.FC<CraftingQueueProps> = () => {
     },
     [removeCraftingTask]
   );
-
-  const handleClearAll = useCallback(() => {
-    if (window.confirm('确定要清空所有制作任务吗？')) {
-      // Clear all tasks by removing them one by one
-      craftingQueue.forEach((task) => removeCraftingTask(task.id));
-    }
-  }, [craftingQueue, removeCraftingTask]);
 
   // Memoize grid styles for horizontal layout
   const gridStyles = useMemo(
@@ -223,38 +217,6 @@ const CraftingQueue: React.FC<CraftingQueueProps> = () => {
 
   return (
     <Box sx={containerStyles}>
-      {/* Header with queue count and clear button */}
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 1,
-          minHeight: '32px',
-        }}
-      >
-        <Typography variant="caption" color="text.secondary">
-          制作中 ({craftingQueue.length})
-        </Typography>
-        {craftingQueue.length > 1 && (
-          <Button
-            size="small"
-            variant="text"
-            color="error"
-            startIcon={<DeleteIcon />}
-            onClick={handleClearAll}
-            sx={{
-              minWidth: 'auto',
-              px: 1,
-              fontSize: '0.75rem',
-              height: '24px',
-            }}
-          >
-            清空
-          </Button>
-        )}
-      </Box>
-
       {/* Task list */}
       <Box sx={gridStyles} role="grid" aria-label="制作队列">
         {craftingQueue.map((task) => (
