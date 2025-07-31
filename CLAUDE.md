@@ -70,6 +70,36 @@ The project uses **Vitest** with comprehensive test coverage:
 
 ## Critical Architecture Patterns
 
+### Unified Game Loop Architecture
+
+The application implements a sophisticated dual-layer game loop system:
+
+**Layer 1: GameLoopManager (Technical Framework)**
+- Single `requestAnimationFrame` loop for all timing
+- Task registration system with independent intervals
+- Automatic lifecycle management (start/stop based on task count)
+- Delta time calculation and error handling
+
+**Layer 2: MainGameLoop (Business Coordinator)** 
+- Registers as single task with GameLoopManager at 60fps
+- Uses time accumulator pattern for different system frequencies
+- Integrates all game systems: crafting, production, research, autosave
+- Direct integration of CraftingEngine business logic methods
+
+**Critical Pattern**: Never create independent timers (`setInterval`, `setTimeout` for recurring tasks). All timing goes through this unified system.
+
+```typescript
+// ✅ Correct - extend MainGameLoop or use GameLoopManager
+class MainGameLoop {
+  private updateNewSystem(): void {
+    // Add new game system logic here
+  }
+}
+
+// ❌ Incorrect - independent timers
+setInterval(() => { /* game logic */ }, 1000);
+```
+
 ### Service Locator Pattern
 
 The application uses a service locator pattern for dependency injection:
@@ -169,18 +199,56 @@ Currently implemented core systems:
 - 📋 Technology Module: Planned
 - 📋 Power Module: Planned
 
-### Core Game Loop (Phase 1)
+### Unified Game Loop System (Current Architecture)
 
+The application uses a sophisticated unified game loop system that replaces all `setInterval` usage with a single `requestAnimationFrame`:
+
+#### GameLoopManager (Technical Framework)
 ```typescript
-// Simplified production loop - no logistics constraints
-setInterval(() => {
-  facilities.forEach((facility) => {
-    if (hasRequiredInputs(facility) && hasPower(facility)) {
-      consumeInputs(facility);
-      addOutputsToInventory(facility);
-    }
-  });
-}, 1000); // Update every second
+// Low-level requestAnimationFrame manager - can register multiple tasks
+class GameLoopManager {
+  register(id: string, callback: LoopCallback, interval: number): void;
+  // Automatically starts/stops based on task count
+  // Provides unified timing for all game systems
+}
+```
+
+#### MainGameLoop (Business Logic Coordinator)
+```typescript
+// High-level game systems coordinator - uses time accumulators
+class MainGameLoop {
+  private accumulators = {
+    crafting: 0,    // 制作系统 - 100ms updates
+    production: 0,  // 生产系统 - 1000ms updates  
+    research: 0,    // 研究系统 - 1000ms updates
+    autosave: 0,    // 自动存档 - 10000ms updates
+    dataCheck: 0,   // 数据检查 - 100ms updates
+  };
+  
+  // Runs at 60fps, but systems update at different frequencies
+  private update(deltaTime: number): void {
+    this.updateGameTime(deltaTime);           // Every frame
+    this.updateAccumulators(deltaTime * 1000); // Accumulate milliseconds
+    this.updateSystems();                     // Check thresholds and update
+  }
+}
+```
+
+#### Architecture Flow
+```
+ServiceInitializer.initialize()
+    ↓
+MainGameLoop.getInstance().start()
+    ↓
+gameLoopManager.register('main-game-loop', this.update, 16) // 60fps
+    ↓
+requestAnimationFrame loop:
+    ├─ updateGameTime() [every frame]
+    ├─ updateCraftingSystem() [100ms threshold]
+    ├─ updateProductionSystem() [1000ms threshold]
+    ├─ updateResearchSystem() [1000ms threshold]
+    ├─ updateAutosave() [10000ms threshold]
+    └─ updateDataCheck() [100ms threshold]
 ```
 
 ### Current Component Structure
@@ -205,11 +273,13 @@ src/
 
 **Key Implementation Files**:
 
+- `src/core/MainGameLoop.ts` - Unified game systems coordinator (600+ lines)
+- `src/utils/GameLoopManager.ts` - RequestAnimationFrame framework
+- `src/utils/craftingEngine.ts` - Pure business logic class for crafting calculations
 - `src/services/DataService.ts` - Singleton game data manager with i18n support
 - `src/services/RecipeService.ts` - Advanced recipe analysis and optimization
 - `src/store/gameStore.ts` - Zustand store with Map/Set serialization
 - `src/components/common/FactorioIcon.tsx` - Sprite sheet icon system
-- `src/utils/craftingEngine.ts` - Core crafting logic and validation
 
 ### Implemented Module Architecture
 
@@ -710,6 +780,34 @@ Specialized debugging support via browser tools (see .cursor/rules/):
 4. **Better separation of concerns**: Clear boundaries between state management and persistence
 
 **Files affected**: `GameStorageService.ts`, `GameConfig.ts`, `gameStore.ts`, service layer refactoring
+
+### Unified Game Loop System Implementation (Latest Major Refactoring)
+
+**Change**: Complete replacement of all `setInterval` usage with a unified `requestAnimationFrame` system.
+
+**Architecture**: 
+1. **GameLoopManager**: Low-level `requestAnimationFrame` framework for task scheduling
+2. **MainGameLoop**: High-level business logic coordinator with time accumulators
+3. **CraftingEngine**: Refactored from loop manager to pure business logic class
+
+**Key Improvements**:
+- ✅ **Performance**: Single RAF loop vs multiple `setInterval` timers
+- ✅ **Consistency**: All systems use same time base and update cycles  
+- ✅ **Maintainability**: Centralized timing logic in clear architectural layers
+- ✅ **Mobile Optimization**: `requestAnimationFrame` is more mobile-friendly than `setInterval`
+
+**Implementation Details**:
+```typescript
+// All game systems now coordinate through MainGameLoop
+MainGameLoop.getInstance().start() // Started in ServiceInitializer
+├─ Crafting System (100ms updates)
+├─ Production System (1000ms updates)  
+├─ Research System (1000ms updates)
+├─ Auto-save (10000ms updates)
+└─ Data Loading Checks (100ms updates)
+```
+
+**Files affected**: `MainGameLoop.ts` (new), `GameLoopManager.ts` (new), `craftingEngine.ts` (refactored), `App.tsx`, `TechnologyModule.tsx`, `ProductionModule.tsx`, removed `useProductionLoop.ts`
 
 ## Browser Debugging & UI Design Guidelines
 
