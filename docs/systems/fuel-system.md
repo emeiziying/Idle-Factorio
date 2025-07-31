@@ -31,12 +31,14 @@
 ### 关键计算
 
 #### 石炉燃料消耗
+
 - 功率：90 kW (0.09 MW) - 基于data.json中的usage字段
 - 煤炭能量：4 MJ/块
 - 单块煤炭运行时间：4 ÷ 0.09 = 44.4秒
 - 满载50块煤炭：运行37.0分钟
 
 #### 生产效率
+
 ```typescript
 // 每个铁板消耗的能量
 const energyPerPlate = 0.09 MW × 3.2秒 = 0.288 MJ
@@ -61,7 +63,7 @@ export interface FacilityInstance {
   powerConsumption?: number;
   powerGeneration?: number;
   production?: ProductionData;
-  
+
   // 新增：燃料缓存区
   fuelBuffer?: FuelBuffer;
 }
@@ -107,20 +109,20 @@ export const FACILITY_FUEL_CONFIGS: Record<string, FuelConfig> = {
     acceptedCategories: ['chemical'],
     fuelSlots: 1,
     maxStackPerSlot: 50,
-    basePowerConsumption: 0.09  // 90kW
+    basePowerConsumption: 0.09, // 90kW
   },
   'steel-furnace': {
     acceptedCategories: ['chemical'],
     fuelSlots: 1,
     maxStackPerSlot: 50,
-    basePowerConsumption: 0.09  // 90kW
+    basePowerConsumption: 0.09, // 90kW
   },
   'burner-mining-drill': {
     acceptedCategories: ['chemical'],
     fuelSlots: 1,
     maxStackPerSlot: 50,
-    basePowerConsumption: 0.15  // 150kW
-  }
+    basePowerConsumption: 0.15, // 150kW
+  },
 };
 ```
 
@@ -129,23 +131,23 @@ export const FACILITY_FUEL_CONFIGS: Record<string, FuelConfig> = {
 ```typescript
 // 燃料优先级（从低到高）
 export const FUEL_PRIORITY = [
-  'wood',           // 2 MJ
-  'coal',           // 4 MJ
-  'solid-fuel',     // 12 MJ
-  'rocket-fuel',    // 100 MJ
-  'nuclear-fuel'    // 1.21 GJ
+  'wood', // 2 MJ
+  'coal', // 4 MJ
+  'solid-fuel', // 12 MJ
+  'rocket-fuel', // 100 MJ
+  'nuclear-fuel', // 1.21 GJ
 ];
 ```
 
 ### 缓存区容量分析
 
-| 燃料类型 | 单位能量 | 最大数量 | 总能量 | 满载运行时间 |
-|---------|----------|----------|--------|--------------|
-| 木材 | 2 MJ | 50 | 100 MJ | 18.5 分钟 |
-| 煤炭 | 4 MJ | 50 | 200 MJ | 37.0 分钟 |
-| 固体燃料 | 12 MJ | 50 | 600 MJ | 111.1 分钟 |
-| 火箭燃料 | 100 MJ | 50 | 5000 MJ | 15.4 小时 |
-| 核燃料 | 1210 MJ | 50 | 60500 MJ | 7.8 天 |
+| 燃料类型 | 单位能量 | 最大数量 | 总能量   | 满载运行时间 |
+| -------- | -------- | -------- | -------- | ------------ |
+| 木材     | 2 MJ     | 50       | 100 MJ   | 18.5 分钟    |
+| 煤炭     | 4 MJ     | 50       | 200 MJ   | 37.0 分钟    |
+| 固体燃料 | 12 MJ    | 50       | 600 MJ   | 111.1 分钟   |
+| 火箭燃料 | 100 MJ   | 50       | 5000 MJ  | 15.4 小时    |
+| 核燃料   | 1210 MJ  | 50       | 60500 MJ | 7.8 天       |
 
 ---
 
@@ -156,7 +158,7 @@ export const FUEL_PRIORITY = [
 ```typescript
 export class FuelService {
   private static instance: FuelService;
-  
+
   // 单例模式
   static getInstance(): FuelService {
     if (!FuelService.instance) {
@@ -164,38 +166,24 @@ export class FuelService {
     }
     return FuelService.instance;
   }
-  
+
   // 初始化设施的燃料缓存区
-  initializeFuelBuffer(facilityId: string): FuelBuffer
-  
+  initializeFuelBuffer(facilityId: string): FuelBuffer;
+
   // 更新燃料消耗
-  updateFuelConsumption(
-    facility: FacilityInstance, 
-    deltaTime: number,
-    isProducing: boolean = true
-  ): FuelUpdateResult
-  
+  updateFuelConsumption(facility: FacilityInstance, deltaTime: number, isProducing: boolean = true): FuelUpdateResult;
+
   // 添加燃料到缓存区
-  addFuel(
-    buffer: FuelBuffer, 
-    itemId: string, 
-    quantity: number
-  ): AddFuelResult
-  
+  addFuel(buffer: FuelBuffer, itemId: string, quantity: number): AddFuelResult;
+
   // 自动补充燃料
-  autoRefuel(
-    facility: FacilityInstance,
-    getInventoryItem: (itemId: string) => InventoryItem
-  ): AutoRefuelResult
-  
+  autoRefuel(facility: FacilityInstance, getInventoryItem: (itemId: string) => InventoryItem): AutoRefuelResult;
+
   // 获取燃料状态信息
-  getFuelStatus(buffer: FuelBuffer): FuelStatus
-  
+  getFuelStatus(buffer: FuelBuffer): FuelStatus;
+
   // 智能燃料分配（可选功能）
-  smartFuelDistribution(
-    facilities: FacilityInstance[], 
-    availableFuel: number
-  ): void
+  smartFuelDistribution(facilities: FacilityInstance[], availableFuel: number): void;
 }
 ```
 
@@ -205,20 +193,16 @@ export class FuelService {
 // GameStore 中的燃料相关方法
 interface GameStore {
   // 添加设施时自动初始化燃料缓存
-  addFacility: (facility: FacilityInstance) => void
-  
+  addFacility: (facility: FacilityInstance) => void;
+
   // 手动添加燃料
-  refuelFacility: (
-    facilityId: string, 
-    fuelItemId: string, 
-    quantity: number
-  ) => boolean
-  
+  refuelFacility: (facilityId: string, fuelItemId: string, quantity: number) => boolean;
+
   // 自动补充所有设施的燃料
-  autoRefuelFacilities: () => void
-  
+  autoRefuelFacilities: () => void;
+
   // 更新燃料消耗（生产循环中调用）
-  updateFuelConsumption: (deltaTime: number) => void
+  updateFuelConsumption: (deltaTime: number) => void;
 }
 ```
 
@@ -231,11 +215,13 @@ interface GameStore {
 显示设施的燃料状态，支持两种模式：
 
 #### 紧凑模式
+
 - 燃料图标
 - 进度条
 - 剩余时间
 
 #### 完整模式
+
 - 燃料槽位可视化
 - 详细能量信息
 - 空槽位指示
@@ -272,34 +258,33 @@ interface FuelStatusDisplayProps {
 
 ```typescript
 export const useProductionLoop = () => {
-  const updateProduction = useCallback((deltaTime: number) => {
-    facilities.forEach(facility => {
-      // 检查是否需要燃料
-      if (facility.fuelBuffer) {
-        // 更新燃料消耗
-        const fuelResult = fuelService.updateFuelConsumption(
-          facility, 
-          deltaTime,
-          facility.status === 'running'
-        );
-        
-        // 燃料不足时停止生产
-        if (!fuelResult.success && facility.status === 'running') {
-          updateFacility(facility.id, { status: 'no_fuel' });
-          
-          // 尝试自动补充燃料
-          const refuelResult = fuelService.autoRefuel(facility, getInventoryItem);
-          if (refuelResult.success) {
-            // 扣除库存并恢复运行
-            Object.entries(refuelResult.itemsConsumed).forEach(([itemId, amount]) => {
-              updateInventory(itemId, -amount);
-            });
-            updateFacility(facility.id, { status: 'running' });
+  const updateProduction = useCallback(
+    (deltaTime: number) => {
+      facilities.forEach((facility) => {
+        // 检查是否需要燃料
+        if (facility.fuelBuffer) {
+          // 更新燃料消耗
+          const fuelResult = fuelService.updateFuelConsumption(facility, deltaTime, facility.status === 'running');
+
+          // 燃料不足时停止生产
+          if (!fuelResult.success && facility.status === 'running') {
+            updateFacility(facility.id, { status: 'no_fuel' });
+
+            // 尝试自动补充燃料
+            const refuelResult = fuelService.autoRefuel(facility, getInventoryItem);
+            if (refuelResult.success) {
+              // 扣除库存并恢复运行
+              Object.entries(refuelResult.itemsConsumed).forEach(([itemId, amount]) => {
+                updateInventory(itemId, -amount);
+              });
+              updateFacility(facility.id, { status: 'running' });
+            }
           }
         }
-      }
-    });
-  }, [facilities, updateFacility]);
+      });
+    },
+    [facilities, updateFacility]
+  );
 };
 ```
 
@@ -318,11 +303,13 @@ export const useProductionLoop = () => {
 ### 场景2：燃料分配策略
 
 #### 当前设计（独立缓存）
+
 - 每个设施独立管理燃料
 - "先到先得"的分配方式
 - 简单可靠，适合大多数情况
 
 #### 智能分配（可选功能）
+
 - 根据需求动态分配燃料
 - 优先满足燃料不足的设施
 - 提高整体生产效率

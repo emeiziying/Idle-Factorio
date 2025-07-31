@@ -50,9 +50,9 @@ export interface FacilityInstance {
   powerConsumption?: number;
   powerGeneration?: number;
   production?: ProductionData;
-  fuelBuffer?: GenericFuelBuffer;  // 燃料缓存区
-  isActive?: boolean;  // 向后兼容：设施是否激活
-  itemId?: string;  // 向后兼容：物品ID
+  fuelBuffer?: GenericFuelBuffer; // 燃料缓存区
+  isActive?: boolean; // 向后兼容：设施是否激活
+  itemId?: string; // 向后兼容：物品ID
 }
 
 export const FacilityStatus = {
@@ -61,10 +61,10 @@ export const FacilityStatus = {
   NO_POWER: 'no_power',
   NO_RESOURCE: 'no_resource',
   OUTPUT_FULL: 'output_full',
-  NO_FUEL: 'no_fuel'  // 新增：无燃料状态
+  NO_FUEL: 'no_fuel', // 新增：无燃料状态
 } as const;
 
-export type FacilityStatus = typeof FacilityStatus[keyof typeof FacilityStatus];
+export type FacilityStatus = (typeof FacilityStatus)[keyof typeof FacilityStatus];
 
 export interface ProductionData {
   currentRecipeId?: string;
@@ -103,9 +103,9 @@ export interface PowerFacilityState {
 export interface FacilityGroup {
   id: string;
   name: string;
-  facilityIds: string[];  // 组内设施ID列表
-  enabled: boolean;       // 是否启用
-  priority: number;       // 优先级（电力不足时的关闭顺序）
+  facilityIds: string[]; // 组内设施ID列表
+  enabled: boolean; // 是否启用
+  priority: number; // 优先级（电力不足时的关闭顺序）
   createdAt: number;
   updatedAt: number;
 }
@@ -113,15 +113,15 @@ export interface FacilityGroup {
 // 设施分组管理
 export interface FacilityGroupSettings {
   groups: FacilityGroup[];
-  defaultGroupId?: string;  // 新设施默认分组
+  defaultGroupId?: string; // 新设施默认分组
 }
 
 // 设施运行统计
 export interface FacilityStats {
   facilityId: string;
-  totalRunTime: number;      // 总运行时间（秒）
-  totalProduction: number;   // 总产量
-  totalConsumption: number;  // 总消耗（电力/燃料）
-  efficiency: number;        // 平均效率
+  totalRunTime: number; // 总运行时间（秒）
+  totalProduction: number; // 总产量
+  totalConsumption: number; // 总消耗（电力/燃料）
+  efficiency: number; // 平均效率
   lastUpdate: number;
 }

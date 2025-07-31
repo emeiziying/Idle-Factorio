@@ -24,7 +24,7 @@ export class DataService {
   private i18nData: I18nData | null = null;
   private i18nLoadingPromise: Promise<I18nData> | null = null;
   private gameDataLoadingPromise: Promise<GameData> | null = null;
-  
+
   // 性能优化：添加缓存
   private itemsByRowCache = new Map<string, Map<number, Item[]>>();
   private itemUnlockedCache = new Map<string, boolean>();
@@ -33,31 +33,31 @@ export class DataService {
   private constructor() {
     // 不再在构造函数中获取其他服务，避免循环依赖
   }
-  
+
   // 性能优化：清理缓存
   private clearCache(): void {
     this.itemsByRowCache.clear();
     this.itemUnlockedCache.clear();
     this.cacheVersion++;
   }
-  
+
   // 清理解锁缓存（当科技状态改变时调用）
   public clearUnlockCache(): void {
     this.itemUnlockedCache.clear();
     this.cacheVersion++;
   }
-  
+
   // 性能优化：带缓存的物品解锁检查
   private isItemUnlockedCached(itemId: string): boolean {
     const cacheKey = `${itemId}_v${this.cacheVersion}`;
-    
+
     if (this.itemUnlockedCache.has(cacheKey)) {
       return this.itemUnlockedCache.get(cacheKey)!;
     }
-    
+
     const result = this.isItemUnlockedInternal(itemId, new Set());
     this.itemUnlockedCache.set(cacheKey, result);
-    
+
     return result;
   }
 
@@ -87,7 +87,7 @@ export class DataService {
 
     // 开始新的加载过程
     this.gameDataLoadingPromise = this.doLoadGameData();
-    
+
     try {
       const result = await this.gameDataLoadingPromise;
       return result;
@@ -101,13 +101,13 @@ export class DataService {
     try {
       // 直接使用导入的数据，无需fetch
       this.gameData = gameData as unknown as GameData;
-      
+
       // 性能优化：数据加载后清理缓存
       this.clearCache();
-      
+
       // 配方初始化将在 ServiceInitializer 中进行
       // 这里只负责加载数据
-      
+
       // Game data loaded successfully
       return this.gameData;
     } catch (error) {
@@ -130,7 +130,7 @@ export class DataService {
 
     // 开始新的加载过程
     this.i18nLoadingPromise = this.doLoadI18nData(locale);
-    
+
     try {
       const result = await this.i18nLoadingPromise;
       return result;
@@ -148,13 +148,13 @@ export class DataService {
       // I18n data loaded successfully
       return this.i18nData;
     } catch (error) {
-              logError('Error loading i18n data:', error);
+      logError('Error loading i18n data:', error);
       // 返回空数据作为fallback
       const fallbackData = {
         categories: {},
         items: {},
         recipes: {},
-        locations: {}
+        locations: {},
       };
       this.i18nData = fallbackData;
       return fallbackData;
@@ -203,10 +203,10 @@ export class DataService {
     if (!this.i18nData) {
       return technologyId;
     }
-    
+
     // 规范化输入（转为小写并去除空格）
     const normalizedId = technologyId.toLowerCase().replace(/\s+/g, '');
-    
+
     // 优先从 technologies 字段查找
     if (this.i18nData.technologies) {
       // 先查找原始 ID
@@ -218,7 +218,7 @@ export class DataService {
         return this.i18nData.technologies[normalizedId];
       }
     }
-    
+
     // 从 items 字段查找（科技相关的汉化内容存储在这里）
     if (this.i18nData.items) {
       // 先查找原始 ID
@@ -230,7 +230,7 @@ export class DataService {
         return this.i18nData.items[normalizedId];
       }
     }
-    
+
     // 回退到 recipes 字段（目前科技名称可能在这里）
     if (this.i18nData.recipes) {
       // 先查找原始 ID
@@ -242,7 +242,7 @@ export class DataService {
         return this.i18nData.recipes[normalizedId];
       }
     }
-    
+
     return technologyId;
   }
 
@@ -255,34 +255,30 @@ export class DataService {
   // 获取已解锁的物品
   getUnlockedItems(): Item[] {
     if (!this.gameData) return [];
-    
-    return this.gameData.items.filter(item => 
-      this.isItemUnlocked(item.id)
-    );
+
+    return this.gameData.items.filter((item) => this.isItemUnlocked(item.id));
   }
 
   // 按分类获取物品（仅返回已解锁）
   getItemsByCategory(categoryId: string, includeUnlocked: boolean = true): Item[] {
     if (!this.gameData) return [];
-    
-    return this.gameData.items.filter(item => 
-      item.category === categoryId && (includeUnlocked || this.isItemUnlocked(item.id))
+
+    return this.gameData.items.filter(
+      (item) => item.category === categoryId && (includeUnlocked || this.isItemUnlocked(item.id))
     );
   }
 
   // 获取分类下的所有物品（包括未解锁）
   getAllItemsByCategory(categoryId: string): Item[] {
     if (!this.gameData) return [];
-    
-    return this.gameData.items.filter(item => 
-      item.category === categoryId
-    );
+
+    return this.gameData.items.filter((item) => item.category === categoryId);
   }
 
   // 获取单个物品
   getItem(itemId: string): Item | undefined {
     if (!this.gameData) return undefined;
-    return this.gameData.items.find(item => item.id === itemId);
+    return this.gameData.items.find((item) => item.id === itemId);
   }
 
   // 获取配方（保留常用方法，其他通过RecipeService直接调用）
@@ -292,7 +288,7 @@ export class DataService {
     }
     // 如果 RecipeService 不可用，直接从游戏数据中查找
     if (this.gameData) {
-      return this.gameData.recipes.find(recipe => recipe.id === recipeId);
+      return this.gameData.recipes.find((recipe) => recipe.id === recipeId);
     }
     return undefined;
   }
@@ -300,7 +296,7 @@ export class DataService {
   // 获取所有分类（按原始数据顺序）
   getAllCategories(): Category[] {
     if (!this.gameData) return [];
-    
+
     // 直接返回原始数据中的分类顺序
     return this.gameData.categories || [];
   }
@@ -308,7 +304,7 @@ export class DataService {
   // 获取分类
   getCategory(categoryId: string): Category | undefined {
     if (!this.gameData) return undefined;
-    return this.gameData.categories.find(cat => cat.id === categoryId);
+    return this.gameData.categories.find((cat) => cat.id === categoryId);
   }
 
   // 检查物品是否解锁 - 基于游戏逻辑判断
@@ -329,7 +325,7 @@ export class DataService {
       // 1. 优先检查 TechnologyService（决定性因素）
       if (ServiceLocator.has(SERVICE_NAMES.TECHNOLOGY)) {
         const techService = ServiceLocator.get<TechnologyService>(SERVICE_NAMES.TECHNOLOGY);
-        
+
         // 使用 isItemUnlocked 方法作为决定性因素
         if (techService.isItemUnlocked) {
           return techService.isItemUnlocked(itemId);
@@ -337,8 +333,8 @@ export class DataService {
       }
 
       // 2. 检查是否为原材料（无配方的物品，可直接采集）
-      const recipeService = ServiceLocator.has(SERVICE_NAMES.RECIPE) 
-        ? ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE) 
+      const recipeService = ServiceLocator.has(SERVICE_NAMES.RECIPE)
+        ? ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE)
         : null;
       const recipes = recipeService ? RecipeService.getRecipesThatProduce(itemId) : [];
       if (recipes.length === 0) {
@@ -346,10 +342,8 @@ export class DataService {
       }
 
       // 全局过滤：只允许Nauvis星球的配方（暂时限制）
-      const nauvisRecipes = recipes.filter((recipe: Recipe) => 
-        !recipe.locations || 
-        recipe.locations.length === 0 || 
-        recipe.locations.includes('nauvis')
+      const nauvisRecipes = recipes.filter(
+        (recipe: Recipe) => !recipe.locations || recipe.locations.length === 0 || recipe.locations.includes('nauvis')
       );
 
       // 3. 优先检查mining配方（采矿配方始终可用）
@@ -368,7 +362,7 @@ export class DataService {
 
         // 检查是否所有原材料都可用
         if (recipe.in) {
-          const allIngredientsAvailable = Object.keys(recipe.in).every(ingredientId => 
+          const allIngredientsAvailable = Object.keys(recipe.in).every((ingredientId) =>
             this.isItemUnlockedInternal(ingredientId, visiting)
           );
 
@@ -395,7 +389,7 @@ export class DataService {
             continue;
           }
         }
-        
+
         // 检查配方的生产设备是否可用
         if (!recipe.producers || recipe.producers.length === 0) {
           return true; // 手动制作或无需设备
@@ -426,40 +420,40 @@ export class DataService {
   // 按行号获取分类内的物品子分组 - 性能优化版本
   getItemsByRow(categoryId: string): Map<number, Item[]> {
     if (!this.gameData) return new Map();
-    
+
     // 性能优化：检查缓存
     const cacheKey = `${categoryId}_v${this.cacheVersion}`;
     if (this.itemsByRowCache.has(cacheKey)) {
       return this.itemsByRowCache.get(cacheKey)!;
     }
-    
+
     // 恢复解锁过滤，但使用缓存优化性能
-    const items = Object.values(this.gameData.items).filter(item => 
-      item.category === categoryId && this.isItemUnlockedCached(item.id)
+    const items = Object.values(this.gameData.items).filter(
+      (item) => item.category === categoryId && this.isItemUnlockedCached(item.id)
     );
-    
+
     const itemsByRow = new Map<number, Item[]>();
-    
-    items.forEach(item => {
+
+    items.forEach((item) => {
       const row = item.row || 0;
       if (!itemsByRow.has(row)) {
         itemsByRow.set(row, []);
       }
       itemsByRow.get(row)!.push(item);
     });
-    
+
     // 每行内按原始顺序排序
-    itemsByRow.forEach(rowItems => {
+    itemsByRow.forEach((rowItems) => {
       rowItems.sort((a, b) => {
         const aIndex = Object.keys(this.gameData!.items).indexOf(a.id);
         const bIndex = Object.keys(this.gameData!.items).indexOf(b.id);
         return aIndex - bIndex;
       });
     });
-    
+
     // 缓存结果
     this.itemsByRowCache.set(cacheKey, itemsByRow);
-    
+
     return itemsByRow;
   }
 
@@ -468,7 +462,7 @@ export class DataService {
     const rowNames: Record<string, Record<number, string>> = {
       'intermediate-products': {
         0: '原材料',
-        1: '基础材料', 
+        1: '基础材料',
         2: '组件',
         3: '科技包',
         4: '高级组件',
@@ -482,18 +476,18 @@ export class DataService {
         12: '高级科技包',
         13: '特殊科技包',
         14: '终极材料',
-        15: '扩展材料'
+        15: '扩展材料',
       },
-      'production': {
+      production: {
         0: '工具',
         1: '电力生产',
         2: '资源开采',
         3: '冶炼',
         4: '制造',
         5: '模块和插件',
-        6: '火箭部件'
+        6: '火箭部件',
       },
-      'logistics': {
+      logistics: {
         0: '存储',
         1: '传送带',
         2: '机械臂',
@@ -502,30 +496,30 @@ export class DataService {
         5: '载具',
         6: '机器人物流',
         7: '电路网络',
-        8: '建设'
+        8: '建设',
       },
-      'combat': {
+      combat: {
         0: '武器',
         1: '弹药',
         2: '防御',
         3: '载具装备',
         4: '军用设施',
         5: '炮弹',
-        6: '核武器'
+        6: '核武器',
       },
-      'fluids': {
-        0: '流体'
-      }
+      fluids: {
+        0: '流体',
+      },
     };
-    
+
     return rowNames[categoryId]?.[row] || `第${row + 1}组`;
   }
 
   // 获取物品图标数据
   getIconData(itemId: string): IconData | null {
     if (!this.gameData) return null;
-    
-    const iconInfo = this.gameData.icons.find(icon => icon.id === itemId);
+
+    const iconInfo = this.gameData.icons.find((icon) => icon.id === itemId);
     return iconInfo || null;
   }
 
@@ -539,26 +533,26 @@ export class DataService {
     if (ServiceLocator.has(SERVICE_NAMES.RECIPE)) {
       recipe = RecipeService.getRecipeById(itemId);
     }
-    
+
     if (recipe?.iconText) {
       return {
         iconId: recipe.icon || itemId,
-        iconText: recipe.iconText
+        iconText: recipe.iconText,
       };
     }
-    
+
     // 如果配方没有iconText，尝试从物品数据获取
     const item = this.getItem(itemId);
     if (item?.iconText) {
       return {
         iconId: item.icon || itemId,
-        iconText: item.iconText
+        iconText: item.iconText,
       };
     }
-    
+
     // 都没有iconText，使用默认logic
     return {
-      iconId: recipe?.icon || item?.icon || itemId
+      iconId: recipe?.icon || item?.icon || itemId,
     };
   }
 
@@ -586,8 +580,8 @@ export class DataService {
     const item = this.getItem(itemId);
     if (!item) return null;
 
-    const recipeService = ServiceLocator.has(SERVICE_NAMES.RECIPE) 
-      ? ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE) 
+    const recipeService = ServiceLocator.has(SERVICE_NAMES.RECIPE)
+      ? ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE)
       : null;
 
     return {
@@ -597,7 +591,7 @@ export class DataService {
       // 新增：配方统计信息
       recipeStats: recipeService ? RecipeService.getRecipeStats(itemId) : null,
       // 新增：推荐配方
-      recommendedRecipe: recipeService ? RecipeService.getMostEfficientRecipe(itemId) : undefined
+      recommendedRecipe: recipeService ? RecipeService.getMostEfficientRecipe(itemId) : undefined,
     };
   }
 
@@ -609,7 +603,7 @@ export class DataService {
   // 获取科技数据
   getTechnologies(): Recipe[] {
     if (!this.gameData) return [];
-    return this.gameData.recipes.filter(recipe => recipe.category === 'technology');
+    return this.gameData.recipes.filter((recipe) => recipe.category === 'technology');
   }
 
   // 获取科技分类数据

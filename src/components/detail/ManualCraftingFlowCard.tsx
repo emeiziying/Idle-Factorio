@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-  Box,
-  Typography,
-  Alert
-} from '@mui/material';
+import { Box, Typography, Alert } from '@mui/material';
 import type { Item, Recipe } from '@/types/index';
 import { RecipeService } from '@/services';
 import ManualCraftingValidator from '@/utils/manualCraftingValidator';
@@ -18,13 +14,13 @@ const ManualCraftingFlowCard: React.FC<ManualCraftingFlowCardProps> = ({ item, o
   const validator = ManualCraftingValidator.getInstance();
 
   const itemRecipes = RecipeService.getRecipesThatProduce(item.id);
-  
+
   // 使用验证器检查哪些配方可以手动制作
-  const recipeValidations = itemRecipes.map(recipe => ({
+  const recipeValidations = itemRecipes.map((recipe) => ({
     recipe,
-    validation: validator.validateRecipe(recipe)
+    validation: validator.validateRecipe(recipe),
   }));
-  
+
   const manualCraftableRecipes = recipeValidations
     .filter(({ validation }) => validation.canCraftManually)
     .map(({ recipe }) => recipe);
@@ -36,7 +32,7 @@ const ManualCraftingFlowCard: React.FC<ManualCraftingFlowCardProps> = ({ item, o
   // 如果有可手动制作的配方，显示第一个
   if (manualCraftableRecipes.length > 0) {
     const recipe = manualCraftableRecipes[0];
-    
+
     return (
       <UnifiedRecipeCard
         recipe={recipe}
@@ -51,7 +47,7 @@ const ManualCraftingFlowCard: React.FC<ManualCraftingFlowCardProps> = ({ item, o
   if (restrictedRecipes.length > 0) {
     const recipe = restrictedRecipes[0];
     const validation = validator.validateRecipe(recipe);
-    
+
     return (
       <Box sx={{ mb: 2 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
@@ -64,9 +60,7 @@ const ManualCraftingFlowCard: React.FC<ManualCraftingFlowCardProps> = ({ item, o
         </Box>
 
         <Alert severity="info" sx={{ mb: 2 }}>
-          <Typography variant="body2">
-            {validation.reason}
-          </Typography>
+          <Typography variant="body2">{validation.reason}</Typography>
           {recipe.producers && recipe.producers.length > 0 && (
             <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
               需要设备: {recipe.producers.join(', ')}
@@ -103,4 +97,4 @@ const ManualCraftingFlowCard: React.FC<ManualCraftingFlowCardProps> = ({ item, o
   );
 };
 
-export default ManualCraftingFlowCard; 
+export default ManualCraftingFlowCard;

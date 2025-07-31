@@ -1,8 +1,5 @@
 import React from 'react';
-import {
-  Box,
-  Typography
-} from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import type { Recipe } from '@/types/index';
 import FactorioIcon from '@/components/common/FactorioIcon';
 import { DataService } from '@/services';
@@ -16,12 +13,7 @@ interface RecipeCardProps {
   variant?: 'contained' | 'outlined';
 }
 
-const RecipeCard: React.FC<RecipeCardProps> = ({ 
-  recipe, 
-  title, 
-  onCraft, 
-  variant = 'contained' 
-}) => {
+const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, title, onCraft, variant = 'contained' }) => {
   const { getInventoryItem } = useGameStore();
   const dataService = DataService.getInstance();
 
@@ -41,7 +33,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   return (
     <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-        <Typography variant="body2" fontWeight="bold" color={title ? "primary.main" : "text.primary"}>
+        <Typography variant="body2" fontWeight="bold" color={title ? 'primary.main' : 'text.primary'}>
           {title || dataService.getLocalizedRecipeName(recipe.id)}
         </Typography>
         <Typography variant="body2" color="text.secondary">
@@ -60,10 +52,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
           return (
             <Box key={itemId} display="flex" alignItems="center" gap={0.5}>
               <FactorioIcon itemId={itemId} size={32} />
-              <Typography 
-                variant="body2" 
-                color={hasEnough ? "text.primary" : "error.main"}
-              >
+              <Typography variant="body2" color={hasEnough ? 'text.primary' : 'error.main'}>
                 {getLocalizedItemName(itemId)} x{required}
               </Typography>
               <Typography variant="caption" color="text.secondary">
@@ -95,13 +84,9 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
       </Typography>
 
       {/* 制作按钮 */}
-      <CraftingButtons 
-        onCraft={handleCraft}
-        disabled={!canCraft}
-        variant={variant}
-      />
+      <CraftingButtons onCraft={handleCraft} disabled={!canCraft} variant={variant} />
     </Box>
   );
 };
 
-export default RecipeCard; 
+export default RecipeCard;

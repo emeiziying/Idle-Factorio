@@ -11,18 +11,19 @@ import type { SxProps, Theme } from '@mui/material';
  * @param hoverOpacity 悬停时的透明度
  * @returns MUI sx 样式对象
  */
-export const getClickableStyles = (
-  isClickable: boolean,
-  hoverOpacity: number = 0.8
-): SxProps<Theme> => ({
+export const getClickableStyles = (isClickable: boolean, hoverOpacity: number = 0.8): SxProps<Theme> => ({
   cursor: isClickable ? 'pointer' : 'default',
   transition: 'opacity 0.2s',
-  '&:hover': isClickable ? { 
-    opacity: hoverOpacity 
-  } : {},
-  '&:active': isClickable ? {
-    opacity: hoverOpacity - 0.1
-  } : {},
+  '&:hover': isClickable
+    ? {
+        opacity: hoverOpacity,
+      }
+    : {},
+  '&:active': isClickable
+    ? {
+        opacity: hoverOpacity - 0.1,
+      }
+    : {},
 });
 
 /**
@@ -43,18 +44,20 @@ export const getDisabledStyles = (isDisabled: boolean): SxProps<Theme> => ({
  */
 export const getLoadingStyles = (isLoading: boolean): SxProps<Theme> => ({
   position: 'relative',
-  '&::after': isLoading ? {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  } : {},
+  '&::after': isLoading
+    ? {
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }
+    : {},
 });
 
 /**
@@ -63,10 +66,7 @@ export const getLoadingStyles = (isLoading: boolean): SxProps<Theme> => ({
  * @param selectedColor 选中时的颜色
  * @returns MUI sx 样式对象
  */
-export const getSelectedStyles = (
-  isSelected: boolean,
-  selectedColor: string = 'primary.main'
-): SxProps<Theme> => ({
+export const getSelectedStyles = (isSelected: boolean, selectedColor: string = 'primary.main'): SxProps<Theme> => ({
   borderColor: isSelected ? selectedColor : 'transparent',
   borderWidth: 2,
   borderStyle: 'solid',
@@ -79,10 +79,7 @@ export const getSelectedStyles = (
  * @param mobileItemsPerRow 每行显示的项目数（移动端）
  * @returns MUI sx 样式对象
  */
-export const getResponsiveGridStyles = (
-  itemsPerRow: number = 4,
-  mobileItemsPerRow: number = 2
-): SxProps<Theme> => ({
+export const getResponsiveGridStyles = (itemsPerRow: number = 4, mobileItemsPerRow: number = 2): SxProps<Theme> => ({
   display: 'grid',
   gridTemplateColumns: {
     xs: `repeat(${mobileItemsPerRow}, 1fr)`,
@@ -113,11 +110,7 @@ export const getTruncateStyles = (lines: number = 1): SxProps<Theme> => ({
  * @param angle 渐变角度
  * @returns MUI sx 样式对象
  */
-export const getGradientStyles = (
-  startColor: string,
-  endColor: string,
-  angle: number = 135
-): SxProps<Theme> => ({
+export const getGradientStyles = (startColor: string, endColor: string, angle: number = 135): SxProps<Theme> => ({
   background: `linear-gradient(${angle}deg, ${startColor}, ${endColor})`,
 });
 
@@ -127,19 +120,18 @@ export const getGradientStyles = (
  * @param elevation 阴影等级
  * @returns MUI sx 样式对象
  */
-export const getCardStyles = (
-  isHoverable: boolean = false,
-  elevation: number = 1
-): SxProps<Theme> => ({
+export const getCardStyles = (isHoverable: boolean = false, elevation: number = 1): SxProps<Theme> => ({
   boxShadow: elevation,
   borderRadius: 1,
   transition: 'all 0.3s ease',
-  ...(isHoverable ? {
-    '&:hover': {
-      boxShadow: elevation + 2,
-      transform: 'translateY(-2px)',
-    }
-  } : {}),
+  ...(isHoverable
+    ? {
+        '&:hover': {
+          boxShadow: elevation + 2,
+          transform: 'translateY(-2px)',
+        },
+      }
+    : {}),
 });
 
 /**
@@ -148,10 +140,7 @@ export const getCardStyles = (
  * @param vertical 垂直居中
  * @returns MUI sx 样式对象
  */
-export const getCenterStyles = (
-  horizontal: boolean = true,
-  vertical: boolean = true
-): SxProps<Theme> => ({
+export const getCenterStyles = (horizontal: boolean = true, vertical: boolean = true): SxProps<Theme> => ({
   display: 'flex',
   ...(horizontal ? { justifyContent: 'center' } : {}),
   ...(vertical ? { alignItems: 'center' } : {}),
@@ -164,8 +153,11 @@ export const getCenterStyles = (
  */
 export const mergeStyles = (...styles: (SxProps<Theme> | undefined)[]): SxProps<Theme> => {
   const filteredStyles = styles.filter(Boolean) as SxProps<Theme>[];
-  return filteredStyles.reduce((acc, style) => ({
-    ...acc,
-    ...style
-  }), {} as SxProps<Theme>);
+  return filteredStyles.reduce(
+    (acc, style) => ({
+      ...acc,
+      ...style,
+    }),
+    {} as SxProps<Theme>
+  );
 };

@@ -9,10 +9,10 @@ export const LogLevel = {
   INFO: 1,
   WARN: 2,
   ERROR: 3,
-  NONE: 4
+  NONE: 4,
 } as const;
 
-type LogLevelType = typeof LogLevel[keyof typeof LogLevel];
+type LogLevelType = (typeof LogLevel)[keyof typeof LogLevel];
 
 // 日志配置
 interface LogConfig {
@@ -23,9 +23,9 @@ interface LogConfig {
 
 class Logger {
   private config: LogConfig = {
-    level: (typeof window !== 'undefined' && window.location.hostname === 'localhost') ? LogLevel.DEBUG : LogLevel.ERROR,
+    level: typeof window !== 'undefined' && window.location.hostname === 'localhost' ? LogLevel.DEBUG : LogLevel.ERROR,
     enableInProduction: false,
-    prefix: '[Game]'
+    prefix: '[Game]',
   };
 
   /**
@@ -96,7 +96,7 @@ class Logger {
     const child = new Logger();
     child.configure({
       ...this.config,
-      prefix: `${this.config.prefix} [${prefix}]`
+      prefix: `${this.config.prefix} [${prefix}]`,
     });
     return child;
   }

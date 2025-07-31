@@ -38,67 +38,65 @@ describe('ServiceInitializer', () => {
   beforeEach(() => {
     // Reset static state
     ServiceInitializer.reset();
-    
+
     // Clear localStorage
     localStorage.clear();
 
     // Setup mock instances
     mockUserProgressService = {
-      getInstance: vi.fn().mockReturnValue({})
+      getInstance: vi.fn().mockReturnValue({}),
     };
 
     mockStorageService = {
-      getInstance: vi.fn().mockReturnValue({})
+      getInstance: vi.fn().mockReturnValue({}),
     };
 
     mockGameStateAdapter = {
-      getInstance: vi.fn().mockReturnValue({})
+      getInstance: vi.fn().mockReturnValue({}),
     };
 
     mockManualCraftingValidator = {
-      getInstance: vi.fn().mockReturnValue({})
+      getInstance: vi.fn().mockReturnValue({}),
     };
 
     mockDataService = {
       getInstance: vi.fn().mockReturnValue({
         loadGameData: vi.fn().mockResolvedValue({
-          recipes: [
-            { id: 'test-recipe', ingredients: [], products: [] }
-          ],
+          recipes: [{ id: 'test-recipe', ingredients: [], products: [] }],
           items: [],
-          technologies: []
-        })
-      })
+          technologies: [],
+        }),
+      }),
     };
 
     mockRecipeService = {
       getInstance: vi.fn().mockReturnValue({}),
-      initializeRecipes: vi.fn()
+      initializeRecipes: vi.fn(),
     };
 
     mockTechnologyService = {
       getInstance: vi.fn().mockReturnValue({
-        initialize: vi.fn().mockResolvedValue(undefined)
-      })
+        initialize: vi.fn().mockResolvedValue(undefined),
+      }),
     };
 
     mockFuelService = {
-      getInstance: vi.fn().mockReturnValue({})
+      getInstance: vi.fn().mockReturnValue({}),
     };
 
     mockPowerService = {
-      getInstance: vi.fn().mockReturnValue({})
+      getInstance: vi.fn().mockReturnValue({}),
     };
 
     mockServiceLocator = {
       register: vi.fn(),
-      clear: vi.fn()
+      clear: vi.fn(),
     };
 
     // Setup mocks
     vi.mocked(ServiceLocator.register).mockImplementation(mockServiceLocator.register);
     vi.mocked(ServiceLocator.clear).mockImplementation(mockServiceLocator.clear);
-    
+
     vi.mocked(UserProgressService.getInstance).mockReturnValue(mockUserProgressService.getInstance());
     vi.mocked(StorageService.getInstance).mockReturnValue(mockStorageService.getInstance());
     vi.mocked(GameStateAdapter.getInstance).mockReturnValue(mockGameStateAdapter.getInstance());
@@ -126,10 +124,7 @@ describe('ServiceInitializer', () => {
         mockUserProgressService.getInstance()
       );
 
-      expect(ServiceLocator.register).toHaveBeenCalledWith(
-        SERVICE_NAMES.STORAGE,
-        mockStorageService.getInstance()
-      );
+      expect(ServiceLocator.register).toHaveBeenCalledWith(SERVICE_NAMES.STORAGE, mockStorageService.getInstance());
 
       expect(ServiceLocator.register).toHaveBeenCalledWith(
         SERVICE_NAMES.GAME_STATE,
@@ -141,35 +136,23 @@ describe('ServiceInitializer', () => {
         mockManualCraftingValidator.getInstance()
       );
 
-      expect(ServiceLocator.register).toHaveBeenCalledWith(
-        SERVICE_NAMES.DATA,
-        mockDataService.getInstance()
-      );
+      expect(ServiceLocator.register).toHaveBeenCalledWith(SERVICE_NAMES.DATA, mockDataService.getInstance());
 
-      expect(ServiceLocator.register).toHaveBeenCalledWith(
-        SERVICE_NAMES.RECIPE,
-        mockRecipeService.getInstance()
-      );
+      expect(ServiceLocator.register).toHaveBeenCalledWith(SERVICE_NAMES.RECIPE, mockRecipeService.getInstance());
 
       expect(ServiceLocator.register).toHaveBeenCalledWith(
         SERVICE_NAMES.TECHNOLOGY,
         mockTechnologyService.getInstance()
       );
 
-      expect(ServiceLocator.register).toHaveBeenCalledWith(
-        SERVICE_NAMES.FUEL,
-        mockFuelService.getInstance()
-      );
+      expect(ServiceLocator.register).toHaveBeenCalledWith(SERVICE_NAMES.FUEL, mockFuelService.getInstance());
 
-      expect(ServiceLocator.register).toHaveBeenCalledWith(
-        SERVICE_NAMES.POWER,
-        mockPowerService.getInstance()
-      );
+      expect(ServiceLocator.register).toHaveBeenCalledWith(SERVICE_NAMES.POWER, mockPowerService.getInstance());
 
       // 验证数据加载和配方初始化
       expect(mockDataService.getInstance().loadGameData).toHaveBeenCalled();
       expect(RecipeService.initializeRecipes).toHaveBeenCalledWith([
-        { id: 'test-recipe', ingredients: [], products: [] }
+        { id: 'test-recipe', ingredients: [], products: [] },
       ]);
 
       // 验证技术服务初始化
@@ -199,7 +182,7 @@ describe('ServiceInitializer', () => {
       mockDataService.getInstance().loadGameData.mockResolvedValueOnce({
         recipes: undefined,
         items: [],
-        technologies: []
+        technologies: [],
       });
 
       await ServiceInitializer.initialize();
@@ -282,7 +265,7 @@ describe('ServiceInitializer', () => {
       await ServiceInitializer.initialize();
 
       const calls = vi.mocked(ServiceLocator.register).mock.calls;
-      
+
       // 验证注册顺序
       expect(calls[0][0]).toBe(SERVICE_NAMES.USER_PROGRESS);
       expect(calls[1][0]).toBe(SERVICE_NAMES.STORAGE);
@@ -338,7 +321,7 @@ describe('ServiceInitializer', () => {
       mockDataService.getInstance().loadGameData.mockResolvedValueOnce({
         recipes: [],
         items: undefined,
-        technologies: null
+        technologies: null,
       });
 
       await ServiceInitializer.initialize();
@@ -352,7 +335,7 @@ describe('ServiceInitializer', () => {
       const promises = [
         ServiceInitializer.initialize(),
         ServiceInitializer.initialize(),
-        ServiceInitializer.initialize()
+        ServiceInitializer.initialize(),
       ];
 
       await Promise.all(promises);
@@ -367,7 +350,7 @@ describe('ServiceInitializer', () => {
   describe('performance', () => {
     it('重复初始化应该快速返回', async () => {
       await ServiceInitializer.initialize();
-      
+
       const startTime = Date.now();
       await ServiceInitializer.initialize();
       const endTime = Date.now();
@@ -389,4 +372,4 @@ describe('ServiceInitializer', () => {
       expect(endTime - startTime).toBeGreaterThanOrEqual(0); // 应该需要一些时间
     });
   });
-}); 
+});

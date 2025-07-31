@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -67,8 +67,8 @@ export default defineConfig({
             return `images/[name]-[hash][extname]`;
           }
           return `assets/[name]-[hash][extname]`;
-        }
-      }
+        },
+      },
     },
     // 设置chunk大小警告限制
     chunkSizeWarningLimit: 1000,
@@ -87,7 +87,7 @@ export default defineConfig({
       '@tanstack/react-virtual',
       'react-virtualized-auto-sizer',
       'zustand',
-      'lz-string'
-    ]
-  }
-})
+      'lz-string',
+    ],
+  },
+});

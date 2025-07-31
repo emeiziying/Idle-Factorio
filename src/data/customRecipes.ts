@@ -3,7 +3,7 @@ import type { Recipe } from '@/types';
 /**
  * 自定义配方数据
  * 包含游戏中缺失或需要特殊处理的配方
- * 
+ *
  * 基于 Factorio Wiki 官方数据：
  * - 木材：https://wiki.factorio.com/Wood
  */
@@ -17,45 +17,45 @@ import type { Recipe } from '@/types';
 const WOOD_RECIPES: Recipe[] = [
   // 手动砍树 - 死树
   {
-    id: "wood-mining-dead-tree",
-    name: "Wood (Dead Tree)",
-    category: "intermediate-products",
+    id: 'wood-mining-dead-tree',
+    name: 'Wood (Dead Tree)',
+    category: 'intermediate-products',
     time: 0.5,
     in: {},
-    out: { "wood": 2 },
+    out: { wood: 2 },
     cost: 0, // 手动采集，无成本
-    flags: ["mining", "manual"],
+    flags: ['mining', 'manual'],
     producers: [], // 只能手动采集，不能自动化
-    locations: ["nauvis"]
+    locations: ['nauvis'],
   },
 
   // 手动砍树 - 大树
   {
-    id: "wood-mining-big-tree", 
-    name: "Wood (Big Tree)",
-    category: "intermediate-products",
+    id: 'wood-mining-big-tree',
+    name: 'Wood (Big Tree)',
+    category: 'intermediate-products',
     time: 0.55,
     in: {},
-    out: { "wood": 4 },
+    out: { wood: 4 },
     cost: 0, // 手动采集，无成本
-    flags: ["mining", "manual"],
+    flags: ['mining', 'manual'],
     producers: [], // 只能手动采集，不能自动化
-    locations: ["nauvis"]
+    locations: ['nauvis'],
   },
 
   // 手动砍树 - 平均产出（用于计算）
   {
-    id: "wood-mining-average",
-    name: "Wood (Average)",
-    category: "intermediate-products", 
+    id: 'wood-mining-average',
+    name: 'Wood (Average)',
+    category: 'intermediate-products',
     time: 0.525, // 平均时间
     in: {},
-    out: { "wood": 3 }, // 平均产出
+    out: { wood: 3 }, // 平均产出
     cost: 0,
-    flags: ["mining", "manual"],
+    flags: ['mining', 'manual'],
     producers: [],
-    locations: ["nauvis"]
-  }
+    locations: ['nauvis'],
+  },
 ];
 
 /**
@@ -89,9 +89,9 @@ export const CUSTOM_RECIPES_BY_ITEM: Record<string, Recipe[]> = {
 export const RecipeType = {
   // 木材配方
   WOOD: {
-    MANUAL_DEAD_TREE: "wood-mining-dead-tree",
-    MANUAL_BIG_TREE: "wood-mining-big-tree", 
-    MANUAL_AVERAGE: "wood-mining-average"
+    MANUAL_DEAD_TREE: 'wood-mining-dead-tree',
+    MANUAL_BIG_TREE: 'wood-mining-big-tree',
+    MANUAL_AVERAGE: 'wood-mining-average',
   },
   // 在这里添加其他物品的配方类型
   // 例如：
@@ -120,18 +120,14 @@ export const getAllCustomRecipes = (): Recipe[] => {
  * 获取手动采集类型的自定义配方
  */
 export const getManualCustomRecipes = (): Recipe[] => {
-  return CUSTOM_RECIPES.filter(recipe => 
-    recipe.flags?.includes("manual")
-  );
+  return CUSTOM_RECIPES.filter((recipe) => recipe.flags?.includes('manual'));
 };
 
 /**
  * 获取采矿类型的自定义配方
  */
 export const getMiningCustomRecipes = (): Recipe[] => {
-  return CUSTOM_RECIPES.filter(recipe => 
-    recipe.flags?.includes("mining")
-  );
+  return CUSTOM_RECIPES.filter((recipe) => recipe.flags?.includes('mining'));
 };
 
 /**
@@ -150,4 +146,4 @@ export const getItemsWithCustomRecipes = (): string[] => {
 };
 
 // 向后兼容的导出（保持现有代码不变）
-export { WOOD_RECIPES, RecipeType as WoodRecipeType }; 
+export { WOOD_RECIPES, RecipeType as WoodRecipeType };

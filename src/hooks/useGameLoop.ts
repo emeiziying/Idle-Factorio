@@ -23,7 +23,7 @@ const getGlobalGameLoopState = (): GlobalGameLoopState => {
       lastUpdateTime: Date.now(),
       productionAccumulator: {},
       isRunning: false,
-      instanceCount: 0
+      instanceCount: 0,
     };
   }
   return windowWithState.__gameLoopState;
@@ -37,7 +37,7 @@ export const useGameLoop = () => {
   // 使用useRef存储globalState引用，避免依赖项问题
   const globalStateRef = useRef(getGlobalGameLoopState());
   globalStateRef.current.instanceCount++;
-  
+
   // 使用useRef存储函数引用，避免依赖项问题
   const startGameLoopRef = useRef<(() => void) | null>(null);
   const stopGameLoopRef = useRef<(() => void) | null>(null);
@@ -50,26 +50,26 @@ export const useGameLoop = () => {
 
     globalStateRef.current.isRunning = true;
     globalStateRef.current.lastUpdateTime = Date.now();
-    
+
     const gameLoop = () => {
       // 直接从store获取最新状态，避免依赖React hooks
       const timeStore = useGameTimeStore.getState();
       const currentTime = Date.now();
       const deltaTime = currentTime - globalStateRef.current.lastUpdateTime;
-      
+
       // 更新游戏时间（使用独立的store，不触发主store的persist）
       timeStore.setGameTime(timeStore.gameTime + deltaTime);
 
       // 注意：设施生产逻辑已移至 useProductionLoop，避免重复生产
       // 这里只保留游戏时间更新等基础功能
-      
+
       // TODO: 如果需要其他全局游戏逻辑，可以在这里添加
       // 例如：全局事件处理、成就检查等
 
       globalStateRef.current.lastUpdateTime = currentTime;
       globalStateRef.current.animationFrameId = requestAnimationFrame(gameLoop);
     };
-    
+
     globalStateRef.current.animationFrameId = requestAnimationFrame(gameLoop);
   };
 
@@ -97,7 +97,7 @@ export const useGameLoop = () => {
   useEffect(() => {
     const globalState = globalStateRef.current;
     startGameLoopRef.current!();
-    
+
     // 组件卸载时清理
     return () => {
       // 只有当没有其他实例时才停止游戏循环
@@ -112,6 +112,6 @@ export const useGameLoop = () => {
     startGameLoop,
     stopGameLoop,
     resetGameLoop,
-    isRunning: globalStateRef.current.isRunning
+    isRunning: globalStateRef.current.isRunning,
   };
-}; 
+};

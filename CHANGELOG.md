@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### Added
+
 - 生产系统 - 完整的物品制作和队列管理功能
 - 配方系统 - 高级配方分析，包括效率计算和依赖链分析
 - 库存管理 - 支持容量限制和物品堆叠
@@ -30,6 +31,7 @@
   - 系统设计和实现文档
 
 ### Changed
+
 - 存储配置结构优化，减少重复数据
 - 库存数据结构优化，减少约 89% 数据量
 - 设施数据存储简化
@@ -37,16 +39,19 @@
 - UI 设计采用移动端优先策略
 
 ### Fixed
+
 - 修复双重初始化问题
 - 修复 Map/Set 序列化问题
 - 修复存档兼容性问题
 
 ### Security
+
 - 实现防抖存储机制，防止频繁 localStorage 写入
 
 ## [0.0.0] - 2024-01-01
 
 ### Added
+
 - 使用 Vite 创建初始项目结构
 - React 19.1.0 + TypeScript + Vite 技术栈
 - Material-UI v7.2.0 UI 框架
@@ -58,4 +63,3 @@
 
 [Unreleased]: https://github.com/emeiziying/Idle-Factorio/compare/v0.0.0...HEAD
 [0.0.0]: https://github.com/emeiziying/Idle-Factorio/releases/tag/v0.0.0
-

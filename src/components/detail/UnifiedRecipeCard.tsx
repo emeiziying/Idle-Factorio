@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-  Box,
-  Typography,
-  Chip
-} from '@mui/material';
+import { Box, Typography, Chip } from '@mui/material';
 import type { Recipe } from '@/types/index';
 import FactorioIcon from '@/components/common/FactorioIcon';
 import { DataService } from '@/services';
@@ -20,13 +16,13 @@ interface UnifiedRecipeCardProps {
   cardVariant?: 'contained' | 'outlined';
 }
 
-const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({ 
-  recipe, 
-  variant, 
-  title, 
-  onCraft, 
+const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({
+  recipe,
+  variant,
+  title,
+  onCraft,
   disabled = false,
-  cardVariant = 'contained'
+  cardVariant = 'contained',
 }) => {
   const { getInventoryItem } = useGameStore();
   const dataService = DataService.getInstance();
@@ -59,31 +55,26 @@ const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({
   };
 
   return (
-    <Box 
-      sx={{ 
+    <Box
+      sx={{
         mb: 1.5,
         p: 1.5,
         borderRadius: 1,
         border: '1px solid',
         borderColor: 'divider',
-        bgcolor: 'background.paper'
+        bgcolor: 'background.paper',
       }}
     >
       {/* 标题 */}
       <Box display="flex" justifyContent="flex-start" alignItems="center" mb={1.5}>
-        <Typography variant="subtitle2" fontWeight="bold" color={title ? "primary.main" : themeColor}>
+        <Typography variant="subtitle2" fontWeight="bold" color={title ? 'primary.main' : themeColor}>
           {title || dataService.getLocalizedRecipeName(recipe.id)}
         </Typography>
       </Box>
 
       {/* 配方流程：使用独立组件 */}
       <Box sx={{ mb: 1.5 }}>
-        <RecipeFlowDisplay 
-          recipe={recipe}
-          themeColor={themeColor}
-          showTime={true}
-          iconSize={24}
-        />
+        <RecipeFlowDisplay recipe={recipe} themeColor={themeColor} showTime={true} iconSize={24} />
       </Box>
 
       {/* 生产者信息 - 移到配方流程下方 */}
@@ -108,13 +99,9 @@ const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({
       )}
 
       {/* 制作按钮 */}
-      <CraftingButtons 
-        onCraft={handleCraft}
-        disabled={disabled || !canCraft}
-        variant={cardVariant}
-      />
+      <CraftingButtons onCraft={handleCraft} disabled={disabled || !canCraft} variant={cardVariant} />
     </Box>
   );
 };
 
-export default UnifiedRecipeCard; 
+export default UnifiedRecipeCard;

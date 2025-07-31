@@ -13,7 +13,7 @@ import {
   Snackbar,
   Alert,
   Fab,
-  Typography
+  Typography,
 } from '@mui/material';
 import {
   Build as BuildIcon,
@@ -21,7 +21,7 @@ import {
   Science as ScienceIcon,
   BugReport as TestIcon,
   Delete as DeleteIcon,
-  Compress as CompressIcon
+  Compress as CompressIcon,
 } from '@mui/icons-material';
 
 import ProductionModule from '@/components/production/ProductionModule';
@@ -47,26 +47,26 @@ const App: React.FC = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const isMobile = useIsMobile();
   const { clearGameData } = useGameStore();
-  
+
   // 启动游戏循环
   useGameLoop();
-  
+
   // 安全修复inventory状态
   useInventoryRepair();
-  
+
   // 安全修复unlockedTechs状态
   useUnlockedTechsRepair();
-  
+
   // 安全修复设施状态
   useFacilityRepair();
-  
+
   // 使用ref来跟踪初始化状态，避免重复初始化
   const initializationRef = useRef<{
     isInitialized: boolean;
     initPromise: Promise<void> | null;
   }>({
     isInitialized: false,
-    initPromise: null
+    initPromise: null,
   });
 
   // 页面卸载时强制存档
@@ -82,7 +82,7 @@ const App: React.FC = () => {
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-    
+
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
@@ -115,7 +115,7 @@ const App: React.FC = () => {
           CraftingEngine.getInstance().start();
 
           // App initialized successfully
-          
+
           // 标记为已初始化
           initializationRef.current.isInitialized = true;
         } catch (error) {
@@ -145,28 +145,31 @@ const App: React.FC = () => {
 
   const handleClearGame = async () => {
     await clearGameData();
-    // clearGameData() 已经包含立即重载，无需额外处理
   };
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
-        width: '100vw',
-        bgcolor: 'background.default'
-      }}>
-        {/* 主内容区域 */}
-        <Box sx={{
-          flex: 1,
-          overflowY: 'auto',
+      <Box
+        sx={{
           display: 'flex',
           flexDirection: 'column',
-          boxSizing: 'border-box',
-          paddingBottom: { xs: '56px', sm: '0px' } // 移动端为底部导航留空间，桌面端不需要
-        }}>
+          height: '100vh',
+          width: '100vw',
+          bgcolor: 'background.default',
+        }}
+      >
+        {/* 主内容区域 */}
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            boxSizing: 'border-box',
+            paddingBottom: { xs: '56px', sm: '0px' }, // 移动端为底部导航留空间，桌面端不需要
+          }}
+        >
           {currentModule === 0 && <ProductionModule />}
           {currentModule === 1 && <FacilitiesModule />}
           {currentModule === 2 && <TechnologyModule />}
@@ -222,20 +225,6 @@ const App: React.FC = () => {
             icon={<ScienceIcon />}
             showLabel={true} // 强制显示标签
           />
-          {import.meta.env.DEV && (
-            <BottomNavigationAction
-              label="测试"
-              icon={<TestIcon />}
-              showLabel={true} // 强制显示标签
-            />
-          )}
-          {import.meta.env.DEV && (
-            <BottomNavigationAction
-              label="优化"
-              icon={<CompressIcon />}
-              showLabel={true} // 强制显示标签
-            />
-          )}
         </BottomNavigation>
 
         {/* 清空存档按钮 - 仅在开发模式下显示 */}
@@ -268,24 +257,13 @@ const App: React.FC = () => {
         )}
 
         {/* 清空存档对话框 */}
-        <Dialog
-          open={isClearDialogOpen}
-          onClose={() => setIsClearDialogOpen(false)}
-          maxWidth="xs"
-          fullWidth
-        >
-          <DialogTitle sx={{ color: 'error.main' }}>
-            确认清空存档
-          </DialogTitle>
+        <Dialog open={isClearDialogOpen} onClose={() => setIsClearDialogOpen(false)} maxWidth="xs" fullWidth>
+          <DialogTitle sx={{ color: 'error.main' }}>确认清空存档</DialogTitle>
           <DialogContent>
-            <Typography>
-              您确定要清空所有游戏数据吗？这将删除所有已保存的进度和设置。
-            </Typography>
+            <Typography>您确定要清空所有游戏数据吗？这将删除所有已保存的进度和设置。</Typography>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setIsClearDialogOpen(false)}>
-              取消
-            </Button>
+            <Button onClick={() => setIsClearDialogOpen(false)}>取消</Button>
             <Button onClick={handleClearGame} color="error" variant="contained">
               清空存档
             </Button>
@@ -302,7 +280,7 @@ const App: React.FC = () => {
             '& .MuiSnackbarContent-root': {
               bgcolor: 'success.main',
               color: 'white',
-            }
+            },
           }}
         >
           <Alert
@@ -314,7 +292,7 @@ const App: React.FC = () => {
               color: 'white',
               '& .MuiAlert-icon': {
                 color: 'white',
-              }
+              },
             }}
           >
             存档已清空！页面将在3秒后重新加载...
@@ -323,6 +301,6 @@ const App: React.FC = () => {
       </Box>
     </ThemeProvider>
   );
-}
+};
 
 export default App;

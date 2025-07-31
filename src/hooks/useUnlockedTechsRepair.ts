@@ -22,4 +22,4 @@ export const useUnlockedTechsRepair = () => {
   }, [_repairUnlockedTechsState]);
 
   return { repairUnlockedTechs: _repairUnlockedTechsState };
-}; 
+};

@@ -10,14 +10,9 @@ import {
   ListItemText,
   IconButton,
   Tooltip,
-  Chip
+  Chip,
 } from '@mui/material';
-import {
-  ArrowUpward,
-  ArrowDownward,
-  LocalFireDepartment,
-  Info
-} from '@mui/icons-material';
+import { ArrowUpward, ArrowDownward, LocalFireDepartment, Info } from '@mui/icons-material';
 import FactorioIcon from '@/components/common/FactorioIcon';
 import { FUEL_PRIORITY } from '@/data/fuelConfigs';
 import { DataService } from '@/services';
@@ -49,7 +44,7 @@ const FuelPrioritySettings: React.FC<FuelPrioritySettingsProps> = ({ onPriorityC
   const getFuelInfo = (fuelId: string) => {
     const item = dataService.getItem(fuelId);
     if (!item?.fuel) return { name: fuelId, energy: 0 };
-    
+
     const energy = item.fuel.value;
     let energyText = '';
     if (energy >= 1000) {
@@ -57,10 +52,10 @@ const FuelPrioritySettings: React.FC<FuelPrioritySettingsProps> = ({ onPriorityC
     } else {
       energyText = `${energy} MJ`;
     }
-    
+
     return {
       name: dataService.getItemName(fuelId),
-      energy: energyText
+      energy: energyText,
     };
   };
 
@@ -84,7 +79,7 @@ const FuelPrioritySettings: React.FC<FuelPrioritySettingsProps> = ({ onPriorityC
                 sx={{
                   bgcolor: index === 0 ? 'action.hover' : 'transparent',
                   borderRadius: 1,
-                  mb: 0.5
+                  mb: 0.5,
                 }}
               >
                 <ListItemIcon>
@@ -99,29 +94,11 @@ const FuelPrioritySettings: React.FC<FuelPrioritySettingsProps> = ({ onPriorityC
                   }
                 />
                 <Box display="flex" alignItems="center" gap={1} sx={{ mr: 1 }}>
-                  {index === 0 && (
-                    <Chip
-                      label="优先使用"
-                      size="small"
-                      color="primary"
-                      variant="outlined"
-                    />
-                  )}
-                  {fuelId === 'wood' && (
-                    <Chip
-                      label="建议保留"
-                      size="small"
-                      color="warning"
-                      variant="outlined"
-                    />
-                  )}
+                  {index === 0 && <Chip label="优先使用" size="small" color="primary" variant="outlined" />}
+                  {fuelId === 'wood' && <Chip label="建议保留" size="small" color="warning" variant="outlined" />}
                 </Box>
                 <Box>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleMoveUp(index)}
-                    disabled={index === 0}
-                  >
+                  <IconButton size="small" onClick={() => handleMoveUp(index)} disabled={index === 0}>
                     <ArrowUpward fontSize="small" />
                   </IconButton>
                   <IconButton

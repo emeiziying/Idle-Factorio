@@ -8,14 +8,7 @@ interface ProducerRecipeCardProps {
 }
 
 const ProducerRecipeCard: React.FC<ProducerRecipeCardProps> = ({ recipe, onCraft }) => {
-  return (
-    <UnifiedRecipeCard
-      recipe={recipe}
-      variant="producer"
-      onCraft={onCraft}
-      cardVariant="outlined"
-    />
-  );
+  return <UnifiedRecipeCard recipe={recipe} variant="producer" onCraft={onCraft} cardVariant="outlined" />;
 };
 
-export default ProducerRecipeCard; 
+export default ProducerRecipeCard;

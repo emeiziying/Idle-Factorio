@@ -13,7 +13,7 @@ import {
   FuelService,
   PowerService,
   StorageService,
-  UserProgressService
+  UserProgressService,
 } from '@/services';
 import type { GameStateProvider } from '@/services/interfaces/interfaces';
 
@@ -136,10 +136,13 @@ export const useCommonServices = () => {
   const dataService = useDataService();
   const recipeService = useRecipeService();
   const technologyService = useTechnologyService();
-  
-  return useMemo(() => ({
-    dataService,
-    recipeService,
-    technologyService
-  }), [dataService, recipeService, technologyService]);
+
+  return useMemo(
+    () => ({
+      dataService,
+      recipeService,
+      technologyService,
+    }),
+    [dataService, recipeService, technologyService]
+  );
 };

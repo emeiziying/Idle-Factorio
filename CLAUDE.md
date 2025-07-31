@@ -16,7 +16,7 @@ This is **Idle Factorio** - a React-based idle factory management game inspired 
 # Start development server (with hot reload)
 pnpm dev
 
-# Build for production (TypeScript compilation + Vite build)  
+# Build for production (TypeScript compilation + Vite build)
 pnpm build
 
 # Lint code (ESLint with TypeScript support)
@@ -48,7 +48,9 @@ pnpm install
 **Note**: Always run `pnpm lint` after making code changes to ensure TypeScript and React code quality.
 
 ### Testing Guidelines
+
 The project uses **Vitest** with comprehensive test coverage:
+
 - **Unit Tests**: Services, utilities, hooks, and components have dedicated test files
 - **Integration Tests**: Complex workflows like crafting chains are integration tested in `__tests__/integration/`
 - **Test Location**: Tests are located in `__tests__` directories alongside source files
@@ -60,6 +62,7 @@ The project uses **Vitest** with comprehensive test coverage:
 - **Environment**: jsdom environment with global test utilities
 
 ### Development Server Guidelines
+
 - **Priority**: Use existing dev server at `http://localhost:5173` if already running
 - **Check existing**: Use `lsof -i :5173` to check for running services before starting new ones
 - **Avoid duplicates**: Don't start multiple dev servers for the same project
@@ -68,36 +71,44 @@ The project uses **Vitest** with comprehensive test coverage:
 ## Critical Architecture Patterns
 
 ### Service Locator Pattern
+
 The application uses a service locator pattern for dependency injection:
+
 ```typescript
 // Register services at startup via ServiceInitializer
-ServiceInitializer.initialize()
+ServiceInitializer.initialize();
 
 // Access services through ServiceLocator
 const dataService = ServiceLocator.get<DataService>(SERVICE_NAMES.DATA);
 ```
 
 ### Zustand State Management with Unified Storage
+
 The gameStore.ts implements sophisticated Map/Set serialization with unified storage service:
+
 - **Map types**: inventory, craftedItemCounts, builtEntityCounts, minedEntityCounts
 - **Set types**: favoriteRecipes, unlockedTechs
 - **Unified Storage**: GameStorageService handles optimization, compression, and persistence
 
 ### Service Layer Business Logic Pattern
+
 **Critical**: Always use services for business logic, never implement it in components:
+
 ```typescript
 // ✅ Correct - use service methods
 const recipes = RecipeService.getRecipesThatProduce(itemId);
 const isUnlocked = dataService.isItemUnlocked(itemId);
 
 // ❌ Incorrect - business logic in components
-const recipes = gameData.recipes.filter(r => r.out[itemId]);
+const recipes = gameData.recipes.filter((r) => r.out[itemId]);
 ```
 
 ### Advanced Chain Crafting System
+
 The application implements sophisticated chain crafting with proper inventory management:
 
 #### DependencyService Chain Analysis
+
 ```typescript
 // Recursive calculation of total raw material needs
 calculateTotalRawMaterialNeeds(recipe, quantity, totalNeeds);
@@ -111,9 +122,10 @@ analyzeCraftingChain(itemId, quantity, inventory): CraftingChainAnalysis | null;
 ```
 
 #### Chain Crafting Execution Flow
+
 ```typescript
 // 1. Pre-calculate total raw material requirements
-// 2. Pre-deduct all raw materials from inventory immediately  
+// 2. Pre-deduct all raw materials from inventory immediately
 // 3. Create chain tasks without additional material deduction
 // 4. CraftingEngine skips material deduction for chain tasks (task.chainId exists)
 // 5. Handle chain cancellation with full raw material refund
@@ -129,6 +141,7 @@ executeChainCrafting(chainAnalysis) {
 ## Current Architecture
 
 ### Implemented Service Layer Pattern
+
 The application follows a service-oriented architecture with clear separation of concerns:
 
 - **DataService**: Singleton pattern for game data loading from `/public/data/spa/`, inventory management
@@ -145,7 +158,9 @@ The application follows a service-oriented architecture with clear separation of
 - **GameStore (Zustand)**: Reactive state management with localStorage persistence
 
 ### Phase 1 Implementation Status
+
 Currently implemented core systems:
+
 - ✅ Production Module: Item display, crafting queue, inventory management
 - ✅ Game Data Loading: Async data loading with internationalization support
 - ✅ Recipe System: Advanced recipe analysis and optimization
@@ -155,10 +170,11 @@ Currently implemented core systems:
 - 📋 Power Module: Planned
 
 ### Core Game Loop (Phase 1)
+
 ```typescript
 // Simplified production loop - no logistics constraints
 setInterval(() => {
-  facilities.forEach(facility => {
+  facilities.forEach((facility) => {
     if (hasRequiredInputs(facility) && hasPower(facility)) {
       consumeInputs(facility);
       addOutputsToInventory(facility);
@@ -188,15 +204,16 @@ src/
 ```
 
 **Key Implementation Files**:
+
 - `src/services/DataService.ts` - Singleton game data manager with i18n support
-- `src/services/RecipeService.ts` - Advanced recipe analysis and optimization  
+- `src/services/RecipeService.ts` - Advanced recipe analysis and optimization
 - `src/store/gameStore.ts` - Zustand store with Map/Set serialization
 - `src/components/common/FactorioIcon.tsx` - Sprite sheet icon system
 - `src/utils/craftingEngine.ts` - Core crafting logic and validation
 
 ### Implemented Module Architecture
 
-1. **Production Module** (✅ Complete): 
+1. **Production Module** (✅ Complete):
    - Bottom navigation with CategoryTabs
    - ItemDetailPanel with recipe analysis
    - Crafting queue management with progress tracking
@@ -217,6 +234,7 @@ src/
 ## Game Data Structure
 
 ### Current Data Assets
+
 - **Game Data**: `/public/data/spa/` - Processed game data with internationalization
   - `data.json` - Main game data (items, recipes, categories)
   - `i18n/zh.json`, `i18n/ja.json` - Localization files
@@ -225,6 +243,7 @@ src/
 - **Icons**: Sprite sheet-based icon system via FactorioIcon component
 
 ### Data Loading Architecture
+
 ```typescript
 // DataService singleton pattern
 const gameData = await DataService.loadGameData();
@@ -233,7 +252,7 @@ const gameData = await DataService.loadGameData();
 export class DataService {
   private static instance: DataService;
   private static data: GameData | null = null;
-  
+
   static async loadGameData(): Promise<GameData> {
     // Fetch from /public/data/spa/ with language support
   }
@@ -241,21 +260,22 @@ export class DataService {
 ```
 
 ### Current State Management (Zustand)
+
 ```typescript
 interface GameState {
   // Core systems
   inventory: Map<string, InventoryItem>;
   craftingQueue: CraftingTask[];
   facilities: FacilityInstance[];
-  
+
   // Recipe management
   favoriteRecipes: Set<string>;
   recentRecipes: string[];
-  
+
   // Game progression
   gameTime: number;
   totalItemsProduced: number;
-  
+
   // Persistence: Auto-save to localStorage with Map/Set serialization support
 }
 
@@ -269,11 +289,13 @@ interface GameState {
 ## UI Architecture & Patterns
 
 ### Mobile-First Design
+
 - **Bottom Navigation**: Primary navigation with 5 modules (Production, Facilities, Technology, etc.)
-- **Material-UI Theme**: Custom dark theme optimized for mobile devices  
+- **Material-UI Theme**: Custom dark theme optimized for mobile devices
 - **Responsive Layout**: Flexible breakpoints and touch-friendly interactions
 
 ### Key UI Components
+
 - **FactorioIcon**: Sprite sheet-based icon rendering system
 - **CategoryTabs**: Tab-based category navigation with dynamic content
 - **ItemDetailPanel**: Right panel with recipe analysis and crafting options
@@ -281,6 +303,7 @@ interface GameState {
 - **CraftingQueue**: Real-time progress tracking and task management
 
 ### Component Patterns
+
 - **Service Integration**: Components directly call service methods (DataService, RecipeService)
 - **Zustand Integration**: useGameStore() hook for reactive state access
 - **Async Data Loading**: Suspense-ready data loading with error boundaries
@@ -289,6 +312,7 @@ interface GameState {
 ## Key Development Patterns
 
 ### Service Initialization Pattern
+
 ```typescript
 // Services must be initialized before use via ServiceInitializer
 await ServiceInitializer.initialize();
@@ -306,7 +330,9 @@ const gameData = await dataService.loadGameData();
 ```
 
 ### Service Hooks Pattern
+
 The application provides dedicated React hooks for clean service integration:
+
 ```typescript
 // Use dedicated service hooks for clean component integration
 const dataService = useDataService();
@@ -329,20 +355,23 @@ const customService = useService<CustomService>('CustomService');
 ```
 
 ### State Management Pattern
+
 ```typescript
 // Zustand store access
 const { inventory, addCraftingTask, updateInventory } = useGameStore();
 
 // Map/Set persistence handled automatically
-const favoriteRecipes = useGameStore(state => state.favoriteRecipes);
+const favoriteRecipes = useGameStore((state) => state.favoriteRecipes);
 ```
 
 ## Key Documentation Files
 
 ### Development Planning
+
 - `docs/guides/development-guide.md` - Comprehensive development guide including all phases
 
-### System Design Documents  
+### System Design Documents
+
 - `docs/systems/物品解锁系统文档.md` - Item unlock mechanics and UserProgressService
 - `docs/systems/电力系统设计文档.md` - Power generation/consumption balance system
 - `docs/systems/科技页面设计文档.md` - Research tree and technology unlocking
@@ -351,6 +380,7 @@ const favoriteRecipes = useGameStore(state => state.favoriteRecipes);
 - `docs/systems/fuel-system.md` - Complete fuel management system
 
 ### Game Design
+
 - `docs/design/异星工厂v3设计文档.md` - Latest game design document
 - `docs/design/物品分类系统设计.md` - Item categorization strategy
 - `docs/design/UI设计说明文档.md` - UI/UX design specifications
@@ -359,6 +389,7 @@ const favoriteRecipes = useGameStore(state => state.favoriteRecipes);
 ## Development Guidelines
 
 ### Current Implementation Focus
+
 - ✅ **Production System**: Full crafting queue and inventory management
 - ✅ **Recipe System**: Advanced analysis with efficiency calculations
 - ✅ **Data Management**: Async loading with internationalization
@@ -369,6 +400,7 @@ const favoriteRecipes = useGameStore(state => state.favoriteRecipes);
 ### Working with Services
 
 #### DataService Usage
+
 ```typescript
 // Always use singleton pattern
 const gameData = await DataService.loadGameData();
@@ -381,6 +413,7 @@ if (DataService.isDataLoaded()) {
 ```
 
 #### RecipeService Integration
+
 ```typescript
 // Recipe analysis and optimization
 const recipes = RecipeService.getRecipesThatProduce(itemId);
@@ -394,6 +427,7 @@ const recommendations = RecipeService.getRecipeRecommendations(itemId, unlockedI
 ```
 
 #### DependencyService for Chain Crafting
+
 ```typescript
 // Critical for chain crafting - validates and calculates material needs
 const dependencyService = DependencyService.getInstance();
@@ -407,19 +441,21 @@ if (chainAnalysis) {
 ```
 
 ### State Management Best Practices
+
 ```typescript
 // Prefer selector patterns for performance
-const inventory = useGameStore(state => state.inventory);
-const craftingQueue = useGameStore(state => state.craftingQueue);
+const inventory = useGameStore((state) => state.inventory);
+const craftingQueue = useGameStore((state) => state.craftingQueue);
 
 // Use actions for state updates
 const { updateInventory, addCraftingTask } = useGameStore();
 
 // Handle Map/Set types correctly (auto-serialized)
-const favoriteRecipes = useGameStore(state => state.favoriteRecipes); // Set<string>
+const favoriteRecipes = useGameStore((state) => state.favoriteRecipes); // Set<string>
 ```
 
 ### Component Development
+
 - **Mobile-First**: Design for touch interactions and mobile viewports
 - **Service Layer**: Use services for business logic, not components
 - **Performance**: Utilize React.memo for expensive renders
@@ -429,14 +465,18 @@ const favoriteRecipes = useGameStore(state => state.favoriteRecipes); // Set<str
 ## Critical Development Patterns
 
 ### ESLint Configuration
+
 The project uses ESLint 9 with modern flat config:
+
 - Config: `eslint.config.js` with TypeScript ESLint v8+ integration
 - Plugins: React hooks, React refresh, TypeScript recommended rules
 - Target: Browser environment with ES2020
 - **Always run `pnpm lint` before committing changes**
 
 ### TypeScript Configuration
+
 The project uses a sophisticated multi-config TypeScript setup:
+
 - **Main config**: `tsconfig.json` with project references for better build performance
 - **Application config**: `tsconfig.app.json` for source code compilation
 - **Node config**: `tsconfig.node.json` for build tools and configuration files
@@ -445,36 +485,43 @@ The project uses a sophisticated multi-config TypeScript setup:
 - **Path mapping**: Configured for clean imports and module resolution
 
 ### State Persistence Strategy
+
 Zustand store implements custom serialization for complex types:
+
 ```typescript
 // Map and Set types are serialized/deserialized automatically
-favoriteRecipes: Set<string> // Persisted as array, restored as Set
-inventory: Map<string, InventoryItem> // Persisted as entries array
+favoriteRecipes: Set<string>; // Persisted as array, restored as Set
+inventory: Map<string, InventoryItem>; // Persisted as entries array
 ```
 
 ### Service Integration Pattern
+
 Services should be used for all business logic:
+
 ```typescript
 // Correct - use service methods
 const recipes = RecipeService.getRecipesThatProduce(itemId);
 const item = DataService.getInstance().getItem(itemId);
 
 // Incorrect - don't implement business logic in components
-const recipes = gameData.recipes.filter(r => r.out[itemId]);
+const recipes = gameData.recipes.filter((r) => r.out[itemId]);
 ```
 
 ### Application Reliability Patterns
+
 The application implements sophisticated reliability mechanisms for data integrity:
 
 #### State Repair Hooks Pattern
+
 ```typescript
 // These hooks automatically repair corrupted state on startup
-useInventoryRepair();    // Repairs inventory Map structure
-useUnlockedTechsRepair(); // Repairs unlockedTechs Set structure  
-useFacilityRepair();     // Repairs facility targetItemId issues
+useInventoryRepair(); // Repairs inventory Map structure
+useUnlockedTechsRepair(); // Repairs unlockedTechs Set structure
+useFacilityRepair(); // Repairs facility targetItemId issues
 ```
 
 #### Initialization Reliability
+
 ```typescript
 // App.tsx implements promise caching to prevent duplicate initialization
 const initializationRef = useRef<Promise<void> | null>(null);
@@ -494,18 +541,21 @@ useEffect(() => {
 ```
 
 #### ahooks Integration
+
 The project extensively uses the `ahooks` library for React utilities:
+
 ```typescript
 // Enhanced localStorage state management with ahooks
 import { useLocalStorageState } from 'ahooks';
 
 // Replaces manual localStorage handling with robust state management
 const [gameSettings, setGameSettings] = useLocalStorageState('game-settings', {
-  defaultValue: defaultSettings
+  defaultValue: defaultSettings,
 });
 ```
 
 #### Critical Fix Pattern for localStorage Map/Set Issues
+
 ```typescript
 // gameStore.ts includes robust Map/Set serialization repair
 const ensureMap = <K, V>(map: unknown, typeName: string): Map<K, V> => {
@@ -520,9 +570,11 @@ state.favoriteRecipes = new Set(state.favoriteRecipes);
 ```
 
 ### Unified Game Storage System
+
 The application implements a sophisticated save system with GameStorageService that consolidates all storage operations:
 
 #### GameStorageService Features
+
 ```typescript
 // Unified storage with integrated optimization and compression
 const gameStorageService = GameStorageService.getInstance();
@@ -536,6 +588,7 @@ const gameStorageService = GameStorageService.getInstance();
 ```
 
 #### Game Configuration Management
+
 ```typescript
 // Centralized configuration via GameConfig
 const gameConfig = GameConfig.getInstance();
@@ -549,6 +602,7 @@ const constants = gameConfig.getConstants();
 ```
 
 #### State Recovery Mechanism
+
 ```typescript
 // Automatic Map/Set serialization repair
 onRehydrateStorage: () => (state) => {
@@ -556,35 +610,40 @@ onRehydrateStorage: () => (state) => {
   state.favoriteRecipes = new Set(state.favoriteRecipes);
   state.unlockedTechs = ensureUnlockedTechsSet(state.unlockedTechs);
   // ... field validation and defaults
-}
+};
 ```
 
 #### Save Methods
+
 ```typescript
 // Regular save (automatic debouncing)
 saveGame: () => {
   set(() => ({ saveKey: `save_${Date.now()}` }));
-}
+};
 
 // Force save (bypass debounce via GameStorageService)
 forceSaveGame: async () => {
   const gameStorageService = GameStorageService.getInstance();
   await gameStorageService.forceSave(state);
-}
+};
 
 // Clear save (development only)
 clearGameData: async () => {
   const gameStorageService = GameStorageService.getInstance();
   await gameStorageService.clearSave();
-  set(() => ({ /* reset all state */ }));
+  set(() => ({
+    /* reset all state */
+  }));
   window.location.reload();
-}
+};
 ```
 
 ### Advanced Build Configuration
+
 The project uses sophisticated Vite build optimization:
 
 #### Manual Chunk Splitting Strategy
+
 ```typescript
 // vite.config.ts implements strategic code splitting
 manualChunks: (id) => {
@@ -593,26 +652,29 @@ manualChunks: (id) => {
   if (id.includes('@mui')) return 'mui-vendor';
   if (id.includes('@tanstack')) return 'virtualization-vendor';
   if (id.includes('zustand')) return 'utils-vendor';
-  
+
   // Game data chunks for lazy loading
   if (id.includes('data/spa/data.json')) return 'game-data';
   if (id.includes('data/spa/i18n/')) return 'i18n-data';
   if (id.includes('data/spa/icons.webp')) return 'game-assets';
-  
+
   // Feature chunks
   if (id.includes('services/')) return 'services';
   if (id.includes('components/')) return 'components';
-}
+};
 ```
 
 #### Asset Optimization
+
 - **Image handling**: Optimized WebP asset chunking for game sprites
 - **Dependency pre-building**: All major dependencies pre-configured for faster dev startup
 - **Chunk size limits**: 1000kb warning threshold with strategic splitting
 - **Source maps**: Disabled in production for smaller bundle size
 
 ### Browser Tools Integration
+
 Specialized debugging support via browser tools (see .cursor/rules/):
+
 - `takeScreenshot()` - Visual UI inspection
 - `getConsoleErrors()` / `getConsoleLogs()` - Debug logging
 - `runPerformanceAudit()` - Performance optimization
@@ -621,13 +683,15 @@ Specialized debugging support via browser tools (see .cursor/rules/):
 ## Recent Critical Fixes
 
 ### Chain Crafting Inventory Logic (Fixed)
+
 **Problem**: Chain crafting allowed phantom crafting with insufficient total raw materials.
 
 **Example**: Crafting 1 burner-mining-drill needs 3 gears + 3 iron-plates. 3 gears need 6 iron-plates. Total: 9 iron-plates required, but system allowed crafting with only 6 iron-plates.
 
 **Solution**: Implemented total raw material pre-calculation and immediate deduction:
+
 1. `DependencyService.calculateTotalRawMaterialNeeds()` recursively calculates all raw materials
-2. `analyzeCraftingChain()` validates total materials before allowing chain creation  
+2. `analyzeCraftingChain()` validates total materials before allowing chain creation
 3. `executeChainCrafting()` immediately deducts all raw materials from inventory
 4. `CraftingEngine` skips material deduction for chain tasks (`task.chainId` check)
 5. Chain cancellation properly refunds all pre-deducted raw materials
@@ -635,9 +699,11 @@ Specialized debugging support via browser tools (see .cursor/rules/):
 **Files modified**: `DependencyService.ts`, `useCrafting.ts`, `gameStore.ts`, `craftingEngine.ts`, `types/index.ts`
 
 ### Recent Service Architecture Refactoring (Latest)
+
 **Change**: Consolidated storage and configuration management into unified services.
 
 **Improvements**:
+
 1. **GameStorageService**: Unified save/load operations replacing separate SaveOptimizationService and DebouncedStorage
 2. **GameConfig**: Centralized game constants management replacing scattered configuration
 3. **Simplified gameStore**: Reduced complexity by moving storage logic to dedicated service
@@ -648,13 +714,17 @@ Specialized debugging support via browser tools (see .cursor/rules/):
 ## Browser Debugging & UI Design Guidelines
 
 ### Browser Tools Integration
+
 The project includes specialized browser debugging support via Cursor rules:
+
 - **UI Inspection**: Use `takeScreenshot()`, `getConsoleErrors()`, `getConsoleLogs()` for debugging
 - **Performance Monitoring**: `runPerformanceAudit()`, `runAccessibilityAudit()` for optimization
 - **Production Module Debugging**: Specific patterns for checking CategoryTabs, ItemList, ItemDetailPanel, and CraftingQueue components
 
 ### UI Design System Compliance
+
 Following established design patterns from `.cursor/rules/ui-design-system.mdc`:
+
 - **Flat Design**: Avoid nested Card components, use Box with border instead of Divider
 - **Color System**: Orange primary (#ff6b35), blue secondary (#2196f3), dark theme backgrounds
 - **Spacing**: Use 8px-based spacing system (1, 1.5, 2, 3 units)
@@ -662,9 +732,11 @@ Following established design patterns from `.cursor/rules/ui-design-system.mdc`:
 - **Mobile-First**: 44px minimum touch targets, responsive breakpoints
 
 ### Component Debugging Checklist
+
 For production module issues:
+
 1. Check CategoryTabs layout and selection state
-2. Verify ItemList categorization and selection 
+2. Verify ItemList categorization and selection
 3. Validate ItemDetailPanel layout and content
 4. Test CraftingQueue display and interactions
 5. Monitor console for initialization errors (avoid double-initialization)

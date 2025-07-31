@@ -1,8 +1,5 @@
 import React from 'react';
-import {
-  Typography,
-  Box
-} from '@mui/material';
+import { Typography, Box } from '@mui/material';
 import type { Recipe } from '@/types/index';
 import FactorioIcon from '@/components/common/FactorioIcon';
 import { DataService } from '@/services';
@@ -37,23 +34,25 @@ const UsageCard: React.FC<UsageCardProps> = ({ usedInRecipes, onItemSelect }) =>
 
   return (
     <Box sx={{ mb: 2 }}>
-      <Typography variant="subtitle2" gutterBottom sx={{ 
-        fontSize: '0.8rem',
-        fontWeight: 600,
-        color: 'text.primary',
-        mb: 1
-      }}>
+      <Typography
+        variant="subtitle2"
+        gutterBottom
+        sx={{
+          fontSize: '0.8rem',
+          fontWeight: 600,
+          color: 'text.primary',
+          mb: 1,
+        }}
+      >
         用于制作
       </Typography>
       <Box display="flex" flexWrap="wrap" gap={0.5}>
         {usedInRecipes.map((recipe) => {
           // 获取配方的主要输出物品（数量最多的输出物品）
           const outputEntries = Object.entries(recipe.out);
-          const mainOutputEntry = outputEntries.reduce((max, current) => 
-            current[1] > max[1] ? current : max
-          );
+          const mainOutputEntry = outputEntries.reduce((max, current) => (current[1] > max[1] ? current : max));
           const outputItemId = mainOutputEntry[0];
-          
+
           return (
             <Box
               key={recipe.id}
@@ -64,9 +63,11 @@ const UsageCard: React.FC<UsageCardProps> = ({ usedInRecipes, onItemSelect }) =>
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                '&:hover': onItemSelect ? { 
-                  backgroundColor: 'action.hover'
-                } : {}
+                '&:hover': onItemSelect
+                  ? {
+                      backgroundColor: 'action.hover',
+                    }
+                  : {},
               }}
             >
               <FactorioIcon itemId={outputItemId} size={32} />
@@ -78,4 +79,4 @@ const UsageCard: React.FC<UsageCardProps> = ({ usedInRecipes, onItemSelect }) =>
   );
 };
 
-export default UsageCard; 
+export default UsageCard;

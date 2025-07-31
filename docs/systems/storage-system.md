@@ -31,22 +31,22 @@
 interface InventoryItem {
   itemId: string;
   currentAmount: number;
-  
+
   // 堆叠系统
-  stackSize: number;           // 单堆叠大小
-  baseStacks: number;          // 基础堆叠数(默认1)
-  additionalStacks: number;    // 箱子提供的额外堆叠
-  totalStacks: number;         // 总堆叠数
-  maxCapacity: number;         // 总容量
+  stackSize: number; // 单堆叠大小
+  baseStacks: number; // 基础堆叠数(默认1)
+  additionalStacks: number; // 箱子提供的额外堆叠
+  totalStacks: number; // 总堆叠数
+  maxCapacity: number; // 总容量
 }
 
 interface DeployedContainer {
   id: string;
-  chestType: string;           // 箱子类型
-  chestItemId: string;         // 箱子物品ID
-  targetItemId: string;        // 为哪个物品提供存储
-  additionalStacks: number;    // 提供的堆叠数
-  deployedAt: number;          // 部署时间
+  chestType: string; // 箱子类型
+  chestItemId: string; // 箱子物品ID
+  targetItemId: string; // 为哪个物品提供存储
+  additionalStacks: number; // 提供的堆叠数
+  deployedAt: number; // 部署时间
 }
 ```
 
@@ -57,11 +57,13 @@ interface DeployedContainer {
 ### 箱子类型（基于Factorio官方数据）
 
 #### 固体存储
+
 - **木箱**: +16堆叠空间，需要木材×2（0.5秒制作）
 - **铁箱**: +32堆叠空间，需要铁板×8（0.5秒制作）
 - **钢箱**: +48堆叠空间，需要钢板×8（0.5秒制作，需要钢铁处理科技）
 
 #### 液体存储
+
 - **储液罐**: 25,000单位液体容量，需要铁板×20 + 钢板×5（3秒制作）
 
 ### 存储配置结构
@@ -70,14 +72,14 @@ interface DeployedContainer {
 interface StorageConfig {
   itemId: string;
   name: string;
-  category: 'solid' | 'liquid';           // 存储类型
-  additionalStacks?: number;               // 固体存储堆叠数
-  fluidCapacity?: number;                  // 液体存储容量
+  category: 'solid' | 'liquid'; // 存储类型
+  additionalStacks?: number; // 固体存储堆叠数
+  fluidCapacity?: number; // 液体存储容量
   recipe: { [itemId: string]: number };
   craftingTime: number;
   description: string;
-  dimensions?: string;                     // 尺寸信息
-  requiredTechnology?: string;             // 需要的科技
+  dimensions?: string; // 尺寸信息
+  requiredTechnology?: string; // 需要的科技
 }
 ```
 
@@ -120,22 +122,23 @@ interface StorageConfig {
 #### 实现细节
 
 1. **SaveOptimizationService**
+
    ```typescript
    class SaveOptimizationService {
      // 将游戏状态转换为优化格式
-     optimize(state: GameState): OptimizedSave
-     
+     optimize(state: GameState): OptimizedSave;
+
      // 从优化格式恢复游戏状态
-     restore(save: OptimizedSave): GameState
-     
+     restore(save: OptimizedSave): GameState;
+
      // LZ-String压缩
-     compress(data: string): string
-     
+     compress(data: string): string;
+
      // LZ-String解压
-     decompress(data: string): string
-     
+     decompress(data: string): string;
+
      // 比较优化效果
-     compareSizes(state: GameState): SizeComparison
+     compareSizes(state: GameState): SizeComparison;
    }
    ```
 
@@ -200,26 +203,28 @@ class DebouncedStorage implements StateStorage {
 ### 存档流程
 
 #### 自动存档
+
 1. **状态变化触发**: 通过更新 `saveKey` 触发保存
 2. **防抖处理**: 2秒内多次变化只保存一次
 3. **数据优化**: 使用优化格式 + 压缩
 4. **强制保存**: 页面卸载时立即保存
 
 #### 手动存档
+
 ```typescript
 // 普通存档
 saveGame: () => {
   set(() => ({
     lastSaveTime: Date.now(),
-    saveKey: `save_${Date.now()}`
+    saveKey: `save_${Date.now()}`,
   }));
-}
+};
 
 // 强制存档（绕过防抖）
 forceSaveGame: async () => {
   const optimized = saveOptimizationService.optimize(state);
   await storage.forceSetItem('factorio-game-storage', JSON.stringify(optimized));
-}
+};
 ```
 
 ### 状态恢复机制
@@ -233,14 +238,14 @@ onRehydrateStorage: () => (state) => {
     state.inventory = ensureInventoryMap(state.inventory);
     state.favoriteRecipes = new Set(state.favoriteRecipes);
     state.unlockedTechs = ensureUnlockedTechsSet(state.unlockedTechs);
-    
+
     // 确保所有字段都有默认值
     if (!Array.isArray(state.craftingQueue)) {
       state.craftingQueue = [];
     }
     // ... 其他字段验证
   }
-}
+};
 ```
 
 #### 辅助函数
@@ -268,6 +273,7 @@ const ensureUnlockedTechsSet = (unlockedTechs: unknown): Set<string> => {
 ### 清空存档功能
 
 #### 开发模式特性
+
 - 仅在开发环境显示清空存档按钮
 - 提供确认对话框防止误操作
 - 清空后自动重载页面
@@ -276,27 +282,29 @@ const ensureUnlockedTechsSet = (unlockedTechs: unknown): Set<string> => {
 clearGameData: async () => {
   // 清除 localStorage
   await storage.removeItem('factorio-game-storage');
-  
+
   // 重置所有状态
   set(() => ({
     inventory: new Map(),
     craftingQueue: [],
     // ... 其他状态重置
   }));
-  
+
   // 重载页面
   window.location.reload();
-}
+};
 ```
 
 ### 开发阶段特性
 
 #### 简化版本管理
+
 - 无复杂版本迁移逻辑
 - 不兼容时直接清空存档
 - 专注于功能开发而非兼容性
 
 #### 错误处理
+
 - 自动修复 Map/Set 序列化问题
 - 提供字段默认值
 - 优雅降级处理
@@ -339,6 +347,7 @@ clearGameData: async () => {
 ### Store方法
 
 #### 存储容器相关
+
 ```typescript
 // 部署容器为特定物品提供存储
 deployChestForStorage(chestType: string, targetItemId: string): Result
@@ -357,6 +366,7 @@ removeDeployedContainer(containerId: string): void
 ```
 
 #### 存档相关
+
 ```typescript
 // 普通存档
 saveGame(): void
@@ -371,6 +381,7 @@ clearGameData(): Promise<void>
 ### 配置数据
 
 #### 存储配置
+
 ```typescript
 // 获取所有存储配置
 getStorageConfigs(): StorageConfig[]
@@ -385,6 +396,7 @@ canExpandStorage(itemId: string): boolean
 ### 使用示例
 
 #### 扩展物品存储
+
 ```typescript
 const { deployChestForStorage } = useGameStore();
 
@@ -396,6 +408,7 @@ if (result.success) {
 ```
 
 #### 手动存档
+
 ```typescript
 const { saveGame, forceSaveGame } = useGameStore();
 

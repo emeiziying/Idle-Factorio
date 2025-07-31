@@ -10,11 +10,7 @@ interface CategoryTabsProps {
   onCategoryChange: (categoryId: string) => void;
 }
 
-const CategoryTabs: React.FC<CategoryTabsProps> = ({
-  categories,
-  selectedCategory,
-  onCategoryChange
-}) => {
+const CategoryTabs: React.FC<CategoryTabsProps> = ({ categories, selectedCategory, onCategoryChange }) => {
   const isMobile = useIsMobile();
 
   const handleChange = (_event: React.SyntheticEvent, newValue: string) => {
@@ -29,36 +25,40 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
   // 防止热重载时categories为空的情况
   if (!categories || categories.length === 0) {
     return (
-      <Box sx={{ 
-        borderBottom: 1, 
-        borderColor: 'divider',
-        bgcolor: 'background.paper',
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-        height: 48,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
+      <Box
+        sx={{
+          borderBottom: 1,
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          height: 48,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         {/* 空状态占位 */}
       </Box>
     );
   }
 
   return (
-    <Box sx={{ 
-      borderBottom: 1, 
-      borderColor: 'divider',
-      bgcolor: 'background.paper',
-      position: 'sticky',
-      top: 0,
-      zIndex: 10,
-      // 确保sticky定位不会导致页面滚动
-      marginTop: 0,
-      marginBottom: 0,
-      width: '100%' 
-    }}>
+    <Box
+      sx={{
+        borderBottom: 1,
+        borderColor: 'divider',
+        bgcolor: 'background.paper',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+        // 确保sticky定位不会导致页面滚动
+        marginTop: 0,
+        marginBottom: 0,
+        width: '100%',
+      }}
+    >
       <Tabs
         value={selectedCategory}
         onChange={handleChange}
@@ -81,37 +81,39 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
               color: 'primary.main',
               fontWeight: 600,
               border: 'none', // 确保选中时也没有边框
-            }
+            },
           },
           '& .MuiTabs-indicator': {
             height: 3,
-            borderRadius: '3px 3px 0 0'
+            borderRadius: '3px 3px 0 0',
           },
           '& .MuiTabs-scroller': {
             // 确保滚动容器正常工作
             overflow: 'auto',
             scrollbarWidth: 'none', // Firefox隐藏滚动条
             '&::-webkit-scrollbar': {
-              display: 'none' // Chrome/Safari隐藏滚动条
-            }
+              display: 'none', // Chrome/Safari隐藏滚动条
+            },
           },
           '& .MuiTabs-flexContainer': {
             // 确保flex容器正常工作
             gap: 0,
-            flexWrap: 'nowrap'
-          }
+            flexWrap: 'nowrap',
+          },
         }}
       >
         {categories.map((category) => (
           <Tab
             key={category.id}
             icon={
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%'
-              }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                }}
+              >
                 <FactorioIcon itemId={getCategoryIconId(category)} size={isMobile ? 40 : 48} showBorder={false} />
               </Box>
             }

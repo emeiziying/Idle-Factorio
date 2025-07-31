@@ -39,17 +39,13 @@
       "from": "service_discovery",
       "command": "action",
       "timestamp": "2025-07-27T03:09:22.646Z",
-      "args": [
-        "sean"
-      ]
+      "args": ["sean"]
     },
     {
       "from": "role_activated_with_memory",
       "command": "action",
       "timestamp": "2025-07-27T03:09:51.525Z",
-      "args": [
-        "assistant"
-      ]
+      "args": ["assistant"]
     },
     {
       "from": "role_activated_with_memory",

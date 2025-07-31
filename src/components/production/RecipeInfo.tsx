@@ -10,14 +10,14 @@ interface RecipeInfoProps {
 
 const RecipeInfo: React.FC<RecipeInfoProps> = ({ itemId, onRecipeSelect }) => {
   const [selectedRecipeId, setSelectedRecipeId] = useState<string>('');
-  
+
   const {
     getRecommendedRecipes,
     getRecipeStats,
     addFavoriteRecipe,
     removeFavoriteRecipe,
     isFavoriteRecipe,
-    addRecentRecipe
+    addRecentRecipe,
   } = useGameStore();
 
   const dataService = DataService.getInstance();
@@ -53,9 +53,7 @@ const RecipeInfo: React.FC<RecipeInfoProps> = ({ itemId, onRecipeSelect }) => {
     <div className="p-4 bg-white rounded-lg shadow">
       {/* 物品信息 */}
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">
-          {dataService.getLocalizedItemName(itemId)}
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-800">{dataService.getLocalizedItemName(itemId)}</h3>
         <p className="text-sm text-gray-600">ID: {itemId}</p>
       </div>
 
@@ -86,25 +84,19 @@ const RecipeInfo: React.FC<RecipeInfoProps> = ({ itemId, onRecipeSelect }) => {
             <div
               key={recipe.id}
               className={`p-3 border rounded cursor-pointer transition-colors ${
-                selectedRecipeId === recipe.id
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                selectedRecipeId === recipe.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
               }`}
               onClick={() => handleRecipeClick(recipe)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">
-                      {dataService.getLocalizedRecipeName(recipe.id)}
-                    </span>
-                    <span className="text-xs px-2 py-1 bg-gray-100 rounded">
-                      {recipe.category || '制造'}
-                    </span>
+                    <span className="text-sm font-medium">{dataService.getLocalizedRecipeName(recipe.id)}</span>
+                    <span className="text-xs px-2 py-1 bg-gray-100 rounded">{recipe.category || '制造'}</span>
                   </div>
                   <div className="text-xs text-gray-600 mt-1">
-                    产出: {recipe.out?.[itemId] || 0} {itemId} / {recipe.time}秒
-                    (效率: {getEfficiency(recipe)} {itemId}/秒)
+                    产出: {recipe.out?.[itemId] || 0} {itemId} / {recipe.time}秒 (效率: {getEfficiency(recipe)} {itemId}
+                    /秒)
                   </div>
                 </div>
                 <button
@@ -131,7 +123,7 @@ const RecipeInfo: React.FC<RecipeInfoProps> = ({ itemId, onRecipeSelect }) => {
         <div className="mt-4 p-3 bg-blue-50 rounded">
           <h4 className="text-sm font-medium text-gray-700 mb-2">配方详情</h4>
           {(() => {
-            const recipe = recipes.find(r => r.id === selectedRecipeId);
+            const recipe = recipes.find((r) => r.id === selectedRecipeId);
             if (!recipe) return null;
 
             return (
@@ -141,12 +133,8 @@ const RecipeInfo: React.FC<RecipeInfoProps> = ({ itemId, onRecipeSelect }) => {
                 <div>时间: {recipe.time}秒</div>
                 <div>标志: {recipe.flags?.join(', ') || '无'}</div>
                 {recipe.cost !== undefined && <div>成本: {recipe.cost}</div>}
-                {recipe.locations && recipe.locations.length > 0 && (
-                  <div>位置: {recipe.locations.join(', ')}</div>
-                )}
-                {recipe.producers && recipe.producers.length > 0 && (
-                  <div>生产者: {recipe.producers.join(', ')}</div>
-                )}
+                {recipe.locations && recipe.locations.length > 0 && <div>位置: {recipe.locations.join(', ')}</div>}
+                {recipe.producers && recipe.producers.length > 0 && <div>生产者: {recipe.producers.join(', ')}</div>}
               </div>
             );
           })()}
@@ -156,4 +144,4 @@ const RecipeInfo: React.FC<RecipeInfoProps> = ({ itemId, onRecipeSelect }) => {
   );
 };
 
-export default RecipeInfo; 
+export default RecipeInfo;

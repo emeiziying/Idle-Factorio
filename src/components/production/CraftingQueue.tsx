@@ -1,17 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
-import {
-  Box,
-  Typography,
-  LinearProgress,
-  IconButton,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  Slide
-} from '@mui/material';
-import { Clear as ClearIcon, Delete as DeleteIcon, Close as CloseIcon } from '@mui/icons-material';
-import type { TransitionProps } from '@mui/material/transitions';
+import { Box, Typography, LinearProgress, IconButton, Button } from '@mui/material';
+import { Clear as ClearIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import FactorioIcon from '@/components/common/FactorioIcon';
 import { DataService } from '@/services';
 import useGameStore from '@/store/gameStore';
@@ -19,7 +8,6 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 import type { CraftingTask } from '@/types/index';
 
 // Constants
-const QUEUE_CAPACITY = 50;
 const MOBILE_ITEM_SIZE = 48;
 const DESKTOP_ITEM_SIZE = 64;
 const PROGRESS_BAR_HEIGHT = 4;
@@ -35,12 +23,15 @@ interface CraftingQueueItemProps {
 
 const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(({ task, isMobile, onRemove }) => {
   const dataService = DataService.getInstance();
-  
+
   // Always call hooks first
-  const handleRemove = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    onRemove(task.id);
-  }, [task.id, onRemove]);
+  const handleRemove = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onRemove(task.id);
+    },
+    [task.id, onRemove]
+  );
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     // 移除键盘取消功能，因为现在只有取消按钮可以取消任务
@@ -53,7 +44,7 @@ const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(({ task, 
 
   const recipe = dataService.getRecipe(task.recipeId);
   const item = dataService.getItem(task.itemId);
-  
+
   // Handle missing data gracefully
   // 对于手动合成任务，不需要recipe数据
   const isManualTask = task.recipeId.startsWith('manual_');
@@ -63,16 +54,16 @@ const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(({ task, 
   }
 
   // Validate progress value
-  const progress = Math.max(0, Math.min(100, task.progress || 0));  
+  const progress = Math.max(0, Math.min(100, task.progress || 0));
   const itemSize = isMobile ? MOBILE_ITEM_SIZE : DESKTOP_ITEM_SIZE;
   const cancelButtonSize = isMobile ? 16 : 20;
 
   return (
-    <Box 
+    <Box
       role="button"
       tabIndex={0}
       aria-label={`制作 ${item.name || task.itemId} - 进度 ${Math.round(progress)}%`}
-      sx={{ 
+      sx={{
         position: 'relative',
         cursor: 'default',
         // 移除transform动画，使用opacity和box-shadow代替
@@ -86,233 +77,191 @@ const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(({ task, 
           boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
           '& .cancel-button': {
             opacity: 1,
-          }
+          },
         },
         '&:focus': {
           outline: '2px solid',
           outlineColor: 'primary.main',
           outlineOffset: 2,
-        }
+        },
       }}
       onKeyDown={handleKeyDown}
     >
-        {/* 物品图标和进度条容器 */}
-        <Box
+      {/* 物品图标和进度条容器 */}
+      <Box
+        sx={{
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+          height: '100%',
+          // 确保内容不会超出容器
+          overflow: 'hidden',
+        }}
+      >
+        {/* 物品图标 */}
+        <FactorioIcon itemId={task.itemId} size={itemSize} quantity={task.quantity > 1 ? task.quantity : undefined} />
+
+        {/* 底部线性进度条 */}
+        <LinearProgress
+          variant="determinate"
+          value={progress}
+          aria-label={`制作进度 ${Math.round(progress)}%`}
           sx={{
-            position: 'relative',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
             width: '100%',
-            height: '100%',
-            // 确保内容不会超出容器
-            overflow: 'hidden',
-          }}
-        >
-          {/* 物品图标 */}
-          <FactorioIcon 
-            itemId={task.itemId} 
-            size={itemSize} 
-            quantity={task.quantity > 1 ? task.quantity : undefined}
-          />
-
-          {/* 底部线性进度条 */}
-          <LinearProgress
-            variant="determinate"
-            value={progress}
-            aria-label={`制作进度 ${Math.round(progress)}%`}
-            sx={{
-              width: '100%',
-              height: PROGRESS_BAR_HEIGHT,
+            height: PROGRESS_BAR_HEIGHT,
+            borderRadius: 2,
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            transition: 'all 0.3s ease',
+            '& .MuiLinearProgress-bar': {
               borderRadius: 2,
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              transition: 'all 0.3s ease',
-              '& .MuiLinearProgress-bar': {
-                borderRadius: 2,
-                transition: 'transform 0.3s ease',
-              },
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-            }}
-          />
-        </Box>
-
-        {/* 取消按钮 */}
-        <IconButton
-          className="cancel-button"
-          size="small"
-          aria-label="取消制作任务"
-          onClick={handleRemove}
-          sx={{ 
+              transition: 'transform 0.3s ease',
+            },
             position: 'absolute',
-            top: -3,
-            right: -3,
-            bgcolor: 'error.main',
-            color: 'white',
-            opacity: 0,
-            transition: 'all 0.2s ease',
-            width: cancelButtonSize,
-            height: cancelButtonSize,
-            minWidth: 'unset',
-            '&:hover': {
-              bgcolor: 'error.dark',
-              opacity: 1,
-              transform: 'scale(1.1)',
-            }
+            bottom: 0,
+            left: 0,
+            right: 0,
           }}
-        >
-          <ClearIcon sx={{ fontSize: cancelButtonSize - 4 }} />
-        </IconButton>
+        />
       </Box>
-    );
+
+      {/* 取消按钮 */}
+      <IconButton
+        className="cancel-button"
+        size="small"
+        aria-label="取消制作任务"
+        onClick={handleRemove}
+        sx={{
+          position: 'absolute',
+          top: -3,
+          right: -3,
+          bgcolor: 'error.main',
+          color: 'white',
+          opacity: 0,
+          transition: 'all 0.2s ease',
+          width: cancelButtonSize,
+          height: cancelButtonSize,
+          minWidth: 'unset',
+          '&:hover': {
+            bgcolor: 'error.dark',
+            opacity: 1,
+            transform: 'scale(1.1)',
+          },
+        }}
+      >
+        <ClearIcon sx={{ fontSize: cancelButtonSize - 4 }} />
+      </IconButton>
+    </Box>
+  );
 });
 
 CraftingQueueItem.displayName = 'CraftingQueueItem';
 
-// 从底部向上滑入的过渡动画
-const Transition = React.forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement;
-  },
-  ref: React.Ref<unknown>,
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
-
 interface CraftingQueueProps {
-  open?: boolean;
-  onClose?: () => void;
+  // No props needed for direct display
 }
 
-const CraftingQueue: React.FC<CraftingQueueProps> = ({ 
-  open = false, 
-  onClose 
-}) => {
+const CraftingQueue: React.FC<CraftingQueueProps> = () => {
   const craftingQueue = useGameStore((state) => state.craftingQueue);
   const removeCraftingTask = useGameStore((state) => state.removeCraftingTask);
   const isMobile = useIsMobile();
 
   // Memoize the remove handler to prevent unnecessary re-renders
-  const handleRemoveTask = useCallback((taskId: string) => {
-    removeCraftingTask(taskId);
-  }, [removeCraftingTask]);
+  const handleRemoveTask = useCallback(
+    (taskId: string) => {
+      removeCraftingTask(taskId);
+    },
+    [removeCraftingTask]
+  );
 
   const handleClearAll = useCallback(() => {
     if (window.confirm('确定要清空所有制作任务吗？')) {
       // Clear all tasks by removing them one by one
-      craftingQueue.forEach(task => removeCraftingTask(task.id));
+      craftingQueue.forEach((task) => removeCraftingTask(task.id));
     }
   }, [craftingQueue, removeCraftingTask]);
 
-  // Memoize grid styles - 使用 auto-fit 替代 auto-fill 减少重新计算
-  const gridStyles = useMemo(() => ({
-    display: 'grid',
-    gridTemplateColumns: `repeat(auto-fit, ${isMobile ? MOBILE_ITEM_SIZE : DESKTOP_ITEM_SIZE}px)`,
-    gap: isMobile ? GRID_GAP_MOBILE : GRID_GAP_DESKTOP,
-    justifyContent: 'start',
-    // 添加固定高度减少布局跳动
-    minHeight: isMobile ? MOBILE_ITEM_SIZE : DESKTOP_ITEM_SIZE,
-    // 使用subgrid优化性能（如果支持）
-    gridAutoRows: 'max-content',
-  }), [isMobile]);
+  // Memoize grid styles for horizontal layout
+  const gridStyles = useMemo(
+    () => ({
+      display: 'flex',
+      flexDirection: 'row',
+      gap: isMobile ? GRID_GAP_MOBILE : GRID_GAP_DESKTOP,
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      maxWidth: '400px', // Limit width to prevent overflow
+    }),
+    [isMobile]
+  );
 
-  const dialogStyles = useMemo(() => ({
-    '& .MuiDialog-paper': {
-      margin: 0,
-      maxHeight: '70vh',
-      minHeight: isMobile ? '350px' : '400px', // 移动端稍小的最小高度
-      width: '100%',
-      maxWidth: isMobile ? '100vw' : '600px',
-      borderRadius: isMobile ? '16px 16px 0 0' : '16px',
+  // Container styles for bottom-left positioning
+  const containerStyles = useMemo(
+    () => ({
       position: 'fixed',
-      bottom: 0,
-      left: isMobile ? 0 : '50%',
-      transform: isMobile ? 'none' : 'translateX(-50%)',
-    }
-  }), [isMobile]);
+      bottom: '16px',
+      left: '16px',
+      zIndex: 1000,
+      maxWidth: isMobile ? '300px' : '400px',
+      maxHeight: isMobile ? '200px' : '300px',
+      overflow: 'auto',
+      padding: 1,
+      borderRadius: 2,
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      backdropFilter: 'blur(8px)',
+      border: '1px solid',
+      borderColor: 'divider',
+    }),
+    [isMobile]
+  );
 
-
-  // 如果不是弹窗模式且队列为空，不显示
-  if (!open && craftingQueue.length === 0) {
+  // Only show when there are tasks
+  if (craftingQueue.length === 0) {
     return null;
   }
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      slots={{ transition: Transition }}
-      sx={dialogStyles}
-      hideBackdrop={false}
-      disableEscapeKeyDown={false}
-    >
-      <DialogTitle sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        pb: 1
-      }}>
-        <Box component="span">
-          制作队列 ({craftingQueue.length}/{QUEUE_CAPACITY})
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          {craftingQueue.length > 1 && (
-            <Button
-              size="small"
-              variant="outlined"
-              color="error"
-              startIcon={<DeleteIcon />}
-              onClick={handleClearAll}
-              sx={{ minWidth: 'auto', px: 1 }}
-            >
-              清空
-            </Button>
-          )}
-          <IconButton
-            edge="end"
-            color="inherit"
-            onClick={onClose}
-            aria-label="关闭"
+    <Box sx={containerStyles}>
+      {/* Header with queue count and clear button */}
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 1,
+          minHeight: '32px',
+        }}
+      >
+        <Typography variant="caption" color="text.secondary">
+          制作中 ({craftingQueue.length})
+        </Typography>
+        {craftingQueue.length > 1 && (
+          <Button
+            size="small"
+            variant="text"
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={handleClearAll}
+            sx={{
+              minWidth: 'auto',
+              px: 1,
+              fontSize: '0.75rem',
+              height: '24px',
+            }}
           >
-            <CloseIcon />
-          </IconButton>
-        </Box>
-      </DialogTitle>
-      
-      <DialogContent sx={{ px: 2, pb: 2, minHeight: 'calc(100% - 80px)' }}>
-        {craftingQueue.length === 0 ? (
-          <Box 
-            display="flex" 
-            flexDirection="column"
-            justifyContent="center" 
-            alignItems="center" 
-            minHeight="250px"
-            color="text.secondary"
-          >
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              制作队列为空
-            </Typography>
-            <Typography variant="caption" sx={{ textAlign: 'center', maxWidth: '300px' }}>
-              添加手动制作任务或启用自动化设备来开始生产
-            </Typography>
-          </Box>
-        ) : (
-          <Box sx={gridStyles} role="grid" aria-label="制作队列">
-            {craftingQueue.map((task) => (
-              <CraftingQueueItem
-                key={task.id}
-                task={task}
-                isMobile={isMobile}
-                onRemove={handleRemoveTask}
-              />
-            ))}
-          </Box>
+            清空
+          </Button>
         )}
-      </DialogContent>
-    </Dialog>
+      </Box>
+
+      {/* Task list */}
+      <Box sx={gridStyles} role="grid" aria-label="制作队列">
+        {craftingQueue.map((task) => (
+          <CraftingQueueItem key={task.id} task={task} isMobile={isMobile} onRemove={handleRemoveTask} />
+        ))}
+      </Box>
+    </Box>
   );
 };
 

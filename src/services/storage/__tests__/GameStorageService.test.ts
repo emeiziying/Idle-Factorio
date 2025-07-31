@@ -16,17 +16,17 @@ vi.mock('@/store/gameStore', () => ({
       craftingQueue: [],
       totalItemsProduced: 0,
       favoriteRecipes: new Set(),
-      recentRecipes: []
-    }))
-  }
+      recentRecipes: [],
+    })),
+  },
 }));
 vi.mock('lz-string', () => ({
   default: {
     compressToUTF16: vi.fn((data: string) => `compressed_${data}`),
-    decompressFromUTF16: vi.fn((data: string) => data.replace('compressed_', ''))
+    decompressFromUTF16: vi.fn((data: string) => data.replace('compressed_', '')),
   },
   compressToUTF16: vi.fn((data: string) => `compressed_${data}`),
-  decompressFromUTF16: vi.fn((data: string) => data.replace('compressed_', ''))
+  decompressFromUTF16: vi.fn((data: string) => data.replace('compressed_', '')),
 }));
 
 describe('GameStorageService', () => {
@@ -36,18 +36,21 @@ describe('GameStorageService', () => {
   // 模拟游戏状态数据
   const mockGameState = {
     inventory: new Map<string, InventoryItem>([
-      ['iron-plate', {
-        itemId: 'iron-plate',
-        currentAmount: 100,
-        stackSize: 100,
-        baseStacks: 1,
-        additionalStacks: 0,
-        totalStacks: 1,
-        maxCapacity: 100,
-        productionRate: 10,
-        consumptionRate: 5,
-        status: 'normal'
-      }]
+      [
+        'iron-plate',
+        {
+          itemId: 'iron-plate',
+          currentAmount: 100,
+          stackSize: 100,
+          baseStacks: 1,
+          additionalStacks: 0,
+          totalStacks: 1,
+          maxCapacity: 100,
+          productionRate: 10,
+          consumptionRate: 5,
+          status: 'normal',
+        },
+      ],
     ]),
     craftingQueue: [
       {
@@ -56,16 +59,16 @@ describe('GameStorageService', () => {
         targetAmount: 100,
         currentAmount: 50,
         priority: 1,
-        status: 'in_progress'
-      }
+        status: 'in_progress',
+      },
     ] as unknown as CraftingTask[],
     craftingChains: [
       {
         id: 'chain-1',
         name: 'Iron Production',
         tasks: ['task-1'],
-        status: 'active'
-      }
+        status: 'active',
+      },
     ] as unknown as CraftingChain[],
     facilities: [
       {
@@ -79,31 +82,31 @@ describe('GameStorageService', () => {
           currentRecipeId: 'iron-plate',
           progress: 0.5,
           inputBuffer: [],
-          outputBuffer: []
+          outputBuffer: [],
         },
         fuelBuffer: {
           slots: [
             {
               itemId: 'coal',
               quantity: 10,
-              remainingEnergy: 500
-            }
+              remainingEnergy: 500,
+            },
           ],
           maxSlots: 1,
           totalEnergy: 500,
           maxEnergy: 1000,
           consumptionRate: 0.1,
-          lastUpdate: Date.now()
-        }
-      }
+          lastUpdate: Date.now(),
+        },
+      },
     ] as FacilityInstance[],
     deployedContainers: [
       {
         id: 'container-1',
         type: 'chest',
         position: { x: 0, y: 0 },
-        items: new Map<string, unknown>()
-      }
+        items: new Map<string, unknown>(),
+      },
     ] as unknown as DeployedContainer[],
     totalItemsProduced: 1000,
     favoriteRecipes: new Set(['iron-plate']),
@@ -111,15 +114,15 @@ describe('GameStorageService', () => {
     researchState: {
       currentTech: 'automation',
       progress: 0.3,
-      startTime: Date.now() - 10000
+      startTime: Date.now() - 10000,
     } as unknown as TechResearchState,
     researchQueue: [
       {
         id: 'research-1',
         techId: 'automation-2',
         priority: 1,
-        status: 'queued'
-      }
+        status: 'queued',
+      },
     ] as unknown as ResearchQueueItem[],
     unlockedTechs: new Set(['automation']),
     autoResearch: true,
@@ -127,7 +130,7 @@ describe('GameStorageService', () => {
     builtEntityCounts: new Map([['stone-furnace', 5]]),
     minedEntityCounts: new Map([['iron-ore', 1000]]),
     lastSaveTime: Date.now(),
-    saveKey: 'test-save'
+    saveKey: 'test-save',
   };
 
   beforeEach(() => {
@@ -138,14 +141,14 @@ describe('GameStorageService', () => {
     // 设置模拟对象
     mockDataService = {
       getInstance: vi.fn(),
-              getItem: vi.fn((itemId: string) => {
-          const items: Record<string, unknown> = {
-            'iron-plate': { id: 'iron-plate', stack: 100 },
-            'coal': { id: 'coal', fuel: { value: 100 } },
-            'stone-furnace': { id: 'stone-furnace', machine: { usage: 1000 } }
-          };
-          return items[itemId] || { id: itemId, stack: 50 };
-        })
+      getItem: vi.fn((itemId: string) => {
+        const items: Record<string, unknown> = {
+          'iron-plate': { id: 'iron-plate', stack: 100 },
+          coal: { id: 'coal', fuel: { value: 100 } },
+          'stone-furnace': { id: 'stone-furnace', machine: { usage: 1000 } },
+        };
+        return items[itemId] || { id: itemId, stack: 50 };
+      }),
     };
 
     vi.mocked(DataService.getInstance).mockReturnValue(mockDataService as unknown as DataService);
@@ -169,15 +172,15 @@ describe('GameStorageService', () => {
   describe('saveGame', () => {
     it('应该成功保存游戏数据', async () => {
       const savePromise = gameStorageService.saveGame(mockGameState);
-      
+
       // 等待防抖时间
-      await new Promise(resolve => setTimeout(resolve, 2100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2100));
+
       await savePromise;
-      
+
       const savedData = localStorage.getItem('factorio-game-storage');
       expect(savedData).toBeTruthy();
-      
+
       const parsed = JSON.parse(savedData!);
       expect(parsed.inventory).toBeDefined();
       expect(parsed.facilities).toBeDefined();
@@ -187,10 +190,10 @@ describe('GameStorageService', () => {
     it('应该使用防抖机制', async () => {
       const savePromise1 = gameStorageService.saveGame(mockGameState);
       const savePromise2 = gameStorageService.saveGame(mockGameState);
-      
+
       // 验证保存调用成功完成
-      await new Promise(resolve => setTimeout(resolve, 2100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2100));
+
       // 等待保存完成（第一个会被取消，第二个会成功）
       try {
         await savePromise1;
@@ -199,7 +202,7 @@ describe('GameStorageService', () => {
         expect((error as Error).message).toBe('保存任务被取消');
       }
       await savePromise2;
-      
+
       // 验证保存成功
       const savedData = localStorage.getItem('factorio-game-storage');
       expect(savedData).toBeTruthy();
@@ -210,20 +213,20 @@ describe('GameStorageService', () => {
   describe('forceSaveGame', () => {
     it('应该立即保存游戏数据', async () => {
       await gameStorageService.forceSaveGame(mockGameState);
-      
+
       const savedData = localStorage.getItem('factorio-game-storage');
       expect(savedData).toBeTruthy();
-      
+
       const parsed = JSON.parse(savedData!);
       expect(parsed.inventory).toBeDefined();
     });
 
     it('应该取消待处理的保存任务', async () => {
       const savePromise = gameStorageService.saveGame(mockGameState);
-      
+
       // 立即强制保存
       await gameStorageService.forceSaveGame(mockGameState);
-      
+
       // 原来的保存应该被取消
       try {
         await savePromise;
@@ -247,33 +250,33 @@ describe('GameStorageService', () => {
             type: 'stone-furnace',
             recipe: 'iron-plate',
             progress: 0.5,
-            fuel: { 'coal': 500 },
+            fuel: { coal: 500 },
             status: FacilityStatus.RUNNING,
-            efficiency: 1.0
-          }
+            efficiency: 1.0,
+          },
         ],
         stats: {
           total: 1000,
           crafted: [['iron-plate', 500]],
           built: [['stone-furnace', 5]],
-          mined: [['iron-ore', 1000]]
+          mined: [['iron-ore', 1000]],
         },
         research: {
           state: mockGameState.researchState,
           queue: mockGameState.researchQueue,
           unlocked: ['automation'],
-          auto: true
+          auto: true,
         },
         favorites: ['iron-plate'],
         recent: ['iron-plate'],
         containers: mockGameState.deployedContainers,
-        time: Date.now()
+        time: Date.now(),
       };
 
       localStorage.setItem('factorio-game-storage', JSON.stringify(optimizedData));
-      
+
       const loaded = await gameStorageService.loadGame();
-      
+
       expect(loaded).toBeTruthy();
       expect(loaded?.inventory).toBeInstanceOf(Map);
       expect(loaded?.facilities).toBeDefined();
@@ -288,13 +291,13 @@ describe('GameStorageService', () => {
         unlockedTechs: Array.from(mockGameState.unlockedTechs),
         craftedItemCounts: Array.from(mockGameState.craftedItemCounts.entries()),
         builtEntityCounts: Array.from(mockGameState.builtEntityCounts.entries()),
-        minedEntityCounts: Array.from(mockGameState.minedEntityCounts.entries())
+        minedEntityCounts: Array.from(mockGameState.minedEntityCounts.entries()),
       };
 
       localStorage.setItem('factorio-game-storage', JSON.stringify(legacyData));
-      
+
       const loaded = await gameStorageService.loadGame();
-      
+
       expect(loaded).toBeTruthy();
       expect(loaded?.inventory).toBeInstanceOf(Map);
       expect(loaded?.favoriteRecipes).toBeInstanceOf(Set);
@@ -307,10 +310,10 @@ describe('GameStorageService', () => {
 
     it('应该处理损坏的存档数据', async () => {
       localStorage.setItem('factorio-game-storage', 'invalid-json');
-      
+
       const loaded = await gameStorageService.loadGame();
       expect(loaded).toBeNull();
-      
+
       // 清理 localStorage 中的无效数据
       localStorage.removeItem('factorio-game-storage');
     });
@@ -322,7 +325,7 @@ describe('GameStorageService', () => {
       // 先保存一些数据
       await gameStorageService.forceSaveGame(mockGameState);
       expect(localStorage.getItem('factorio-game-storage')).toBeTruthy();
-      
+
       // 清除数据
       await gameStorageService.clearGameData();
       expect(localStorage.getItem('factorio-game-storage')).toBeNull();
@@ -330,9 +333,9 @@ describe('GameStorageService', () => {
 
     it('应该取消待处理的保存任务', async () => {
       const savePromise = gameStorageService.saveGame(mockGameState);
-      
+
       await gameStorageService.clearGameData();
-      
+
       await expect(savePromise).rejects.toThrow('保存任务被取消');
     });
   });
@@ -343,15 +346,15 @@ describe('GameStorageService', () => {
       const optimizedState = {
         inventory: new Map([
           ['iron-plate', { itemId: 'iron-plate', currentAmount: 100, stackSize: 100 } as InventoryItem],
-          ['copper-plate', { itemId: 'copper-plate', currentAmount: 0, stackSize: 100 } as InventoryItem] // 数量为0，应该被过滤
-        ])
+          ['copper-plate', { itemId: 'copper-plate', currentAmount: 0, stackSize: 100 } as InventoryItem], // 数量为0，应该被过滤
+        ]),
       };
 
       await gameStorageService.forceSaveGame(optimizedState);
-      
+
       const savedData = localStorage.getItem('factorio-game-storage');
       const parsed = JSON.parse(savedData!);
-      
+
       expect(parsed.inventory['iron-plate']).toBe(100);
       expect(parsed.inventory['copper-plate']).toBeUndefined();
     });
@@ -370,36 +373,36 @@ describe('GameStorageService', () => {
               currentRecipeId: 'iron-plate',
               progress: 0.75,
               inputBuffer: [],
-              outputBuffer: []
+              outputBuffer: [],
             },
             fuelBuffer: {
               slots: [
                 {
                   itemId: 'coal',
                   quantity: 10,
-                  remainingEnergy: 500
-                }
+                  remainingEnergy: 500,
+                },
               ],
               maxSlots: 1,
               totalEnergy: 500,
               maxEnergy: 1000,
               consumptionRate: 0.1,
-              lastUpdate: Date.now()
-            }
-          }
-        ]
+              lastUpdate: Date.now(),
+            },
+          },
+        ],
       };
 
       await gameStorageService.forceSaveGame(optimizedState);
-      
+
       const savedData = localStorage.getItem('factorio-game-storage');
       const parsed = JSON.parse(savedData!);
-      
+
       expect(parsed.facilities[0].id).toBe('furnace-1');
       expect(parsed.facilities[0].type).toBe('stone-furnace');
       expect(parsed.facilities[0].recipe).toBe('iron-plate');
       expect(parsed.facilities[0].progress).toBe(0.75);
-      expect(parsed.facilities[0].fuel).toEqual({ 'coal': 500 });
+      expect(parsed.facilities[0].fuel).toEqual({ coal: 500 });
     });
 
     it('应该优化统计数据', async () => {
@@ -407,14 +410,14 @@ describe('GameStorageService', () => {
         totalItemsProduced: 1000,
         craftedItemCounts: new Map([['iron-plate', 500]]),
         builtEntityCounts: new Map([['stone-furnace', 5]]),
-        minedEntityCounts: new Map([['iron-ore', 1000]])
+        minedEntityCounts: new Map([['iron-ore', 1000]]),
       };
 
       await gameStorageService.forceSaveGame(optimizedState);
-      
+
       const savedData = localStorage.getItem('factorio-game-storage');
       const parsed = JSON.parse(savedData!);
-      
+
       expect(parsed.stats.total).toBe(1000);
       expect(parsed.stats.crafted).toEqual([['iron-plate', 500]]);
       expect(parsed.stats.built).toEqual([['stone-furnace', 5]]);
@@ -435,13 +438,13 @@ describe('GameStorageService', () => {
         favorites: [],
         recent: [],
         containers: [],
-        time: Date.now()
+        time: Date.now(),
       };
 
       localStorage.setItem('factorio-game-storage', JSON.stringify(optimizedData));
-      
+
       const loaded = await gameStorageService.loadGame();
-      
+
       expect(loaded?.inventory).toBeInstanceOf(Map);
       expect(loaded?.inventory?.get('iron-plate')?.currentAmount).toBe(100);
       expect(loaded?.inventory?.get('copper-plate')?.currentAmount).toBe(50);
@@ -458,23 +461,23 @@ describe('GameStorageService', () => {
             type: 'stone-furnace',
             recipe: 'iron-plate',
             progress: 0.5,
-            fuel: { 'coal': 500 },
+            fuel: { coal: 500 },
             status: FacilityStatus.RUNNING,
-            efficiency: 1.0
-          }
+            efficiency: 1.0,
+          },
         ],
         stats: { total: 0, crafted: [], built: [], mined: [] },
         research: { state: null, queue: [], unlocked: [], auto: true },
         favorites: [],
         recent: [],
         containers: [],
-        time: Date.now()
+        time: Date.now(),
       };
 
       localStorage.setItem('factorio-game-storage', JSON.stringify(optimizedData));
-      
+
       const loaded = await gameStorageService.loadGame();
-      
+
       expect(loaded?.facilities).toBeDefined();
       expect(loaded?.facilities?.[0].id).toBe('furnace-1');
       expect(loaded?.facilities?.[0].facilityId).toBe('stone-furnace');
@@ -493,18 +496,18 @@ describe('GameStorageService', () => {
           state: { currentTech: 'automation', progress: 0.3, startTime: Date.now() },
           queue: [{ id: 'research-1', techId: 'automation-2', priority: 1, status: 'queued' }],
           unlocked: ['automation', 'electronics'],
-          auto: true
+          auto: true,
         },
         favorites: [],
         recent: [],
         containers: [],
-        time: Date.now()
+        time: Date.now(),
       };
 
       localStorage.setItem('factorio-game-storage', JSON.stringify(optimizedData));
-      
+
       const loaded = await gameStorageService.loadGame();
-      
+
       expect(loaded?.researchState).toBeDefined();
       expect(loaded?.researchQueue).toBeDefined();
       expect(loaded?.unlockedTechs).toBeInstanceOf(Set);
@@ -516,10 +519,10 @@ describe('GameStorageService', () => {
   describe('edge cases', () => {
     it('应该处理空的游戏状态', async () => {
       await gameStorageService.forceSaveGame({});
-      
+
       const savedData = localStorage.getItem('factorio-game-storage');
       const parsed = JSON.parse(savedData!);
-      
+
       expect(parsed.inventory).toEqual({});
       expect(parsed.facilities).toEqual([]);
       expect(parsed.research).toBeDefined();
@@ -528,14 +531,14 @@ describe('GameStorageService', () => {
     it('应该处理部分游戏状态', async () => {
       const partialState = {
         inventory: new Map([['iron-plate', { itemId: 'iron-plate', currentAmount: 100 } as InventoryItem]]),
-        craftingQueue: []
+        craftingQueue: [],
       };
 
       await gameStorageService.forceSaveGame(partialState);
-      
+
       const savedData = localStorage.getItem('factorio-game-storage');
       const parsed = JSON.parse(savedData!);
-      
+
       expect(parsed.inventory['iron-plate']).toBe(100);
       expect(parsed.craftingQueue).toEqual([]);
     });
@@ -544,7 +547,7 @@ describe('GameStorageService', () => {
       // 模拟页面卸载事件
       const beforeUnloadEvent = new Event('beforeunload');
       window.dispatchEvent(beforeUnloadEvent);
-      
+
       // 验证没有错误发生
       expect(true).toBe(true);
     });
@@ -555,7 +558,7 @@ describe('GameStorageService', () => {
     it('应该正确格式化文件大小', () => {
       // 通过保存操作测试formatSize方法
       const smallState = { inventory: new Map() };
-      
+
       return gameStorageService.forceSaveGame(smallState).then(() => {
         // 如果保存成功，说明formatSize方法工作正常
         expect(true).toBe(true);
@@ -574,14 +577,14 @@ describe('GameStorageService', () => {
         favorites: [],
         recent: [],
         containers: [],
-        time: Date.now()
+        time: Date.now(),
       };
 
       localStorage.setItem('factorio-game-storage', JSON.stringify(testData));
-      
+
       return gameStorageService.loadGame().then((loaded) => {
         expect(loaded?.inventory?.get('iron-plate')?.stackSize).toBe(100);
       });
     });
   });
-}); 
+});

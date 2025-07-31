@@ -15,11 +15,11 @@ export const useIsTablet = () => {
 export const useDeviceType = () => {
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
-  
+
   return {
     isMobile,
     isTablet,
     isDesktop: !isMobile && !isTablet,
-    deviceType: isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop'
+    deviceType: isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop',
   };
 };

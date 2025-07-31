@@ -15,27 +15,26 @@ const FacilitiesModule: React.FC = React.memo(() => {
     setCurrentTab(newValue);
   }, []);
 
-  const handleFuelPriorityChange = useCallback((newPriority: string[]) => {
-    fuelService.setFuelPriority(newPriority);
-  }, [fuelService]);
+  const handleFuelPriorityChange = useCallback(
+    (newPriority: string[]) => {
+      fuelService.setFuelPriority(newPriority);
+    },
+    [fuelService]
+  );
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Typography variant="h4" gutterBottom sx={{ px: 2, pt: 2 }}>
         设施管理
       </Typography>
-      
-      <Tabs 
-        value={currentTab} 
-        onChange={handleTabChange}
-        sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}
-      >
+
+      <Tabs value={currentTab} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}>
         <Tab label="电力管理" />
         <Tab label="生产监控" />
         <Tab label="效率优化" />
         <Tab label="燃料设置" />
       </Tabs>
-      
+
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
         {useMemo(() => {
           switch (currentTab) {

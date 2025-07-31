@@ -12,7 +12,7 @@ import {
   ListItemAvatar,
   ListItemText,
   Chip,
-  Divider
+  Divider,
 } from '@mui/material';
 import { Warning as WarningIcon, Build as BuildIcon } from '@mui/icons-material';
 import FactorioIcon from './FactorioIcon';
@@ -27,12 +27,7 @@ interface ChainCraftingDialogProps {
   onCancel: () => void;
 }
 
-const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
-  open,
-  chain,
-  onConfirm,
-  onCancel
-}) => {
+const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({ open, chain, onConfirm, onCancel }) => {
   const dataService = DataService.getInstance();
 
   if (!chain) return null;
@@ -52,7 +47,7 @@ const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
     const baseTime = task.craftingTime || 1;
     const manualEfficiency = 0.5;
     const actualTime = baseTime / manualEfficiency;
-    return total + (actualTime * task.quantity);
+    return total + actualTime * task.quantity;
   }, 0);
 
   return (
@@ -64,26 +59,30 @@ const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
       PaperProps={{
         sx: {
           borderRadius: 2,
-          maxHeight: '80vh'
-        }
+          maxHeight: '80vh',
+        },
       }}
     >
-      <DialogTitle sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: 1,
-        pb: 2
-      }}>
+      <DialogTitle
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          pb: 2,
+        }}
+      >
         <WarningIcon color="warning" />
-        <Box component="span">
-          材料不足 - 创建制作链？
-        </Box>
+        <Box component="span">材料不足 - 创建制作链？</Box>
       </DialogTitle>
 
       <DialogContent dividers>
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            制作 <strong>{dataService.getLocalizedItemName(chain.mainTask.itemId)} x{chain.mainTask.quantity}</strong> 需要以下材料：
+            制作{' '}
+            <strong>
+              {dataService.getLocalizedItemName(chain.mainTask.itemId)} x{chain.mainTask.quantity}
+            </strong>{' '}
+            需要以下材料：
           </Typography>
         </Box>
 
@@ -96,24 +95,13 @@ const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
             {chain.dependencies.map((dep: CraftingDependency) => (
               <ListItem key={dep.itemId} sx={{ px: 0 }}>
                 <ListItemAvatar sx={{ minWidth: 40 }}>
-                  <FactorioIcon 
-                    itemId={dep.itemId} 
-                    size={32} 
-                    showBorder={false}
-                  />
+                  <FactorioIcon itemId={dep.itemId} size={32} showBorder={false} />
                 </ListItemAvatar>
                 <ListItemText
                   primary={
                     <Box display="flex" alignItems="center" gap={1}>
-                      <Typography variant="body2">
-                        {dataService.getLocalizedItemName(dep.itemId)}
-                      </Typography>
-                      <Chip 
-                        size="small" 
-                        label={`缺少 ${dep.shortage}`}
-                        color="error"
-                        variant="outlined"
-                      />
+                      <Typography variant="body2">{dataService.getLocalizedItemName(dep.itemId)}</Typography>
+                      <Chip size="small" label={`缺少 ${dep.shortage}`} color="error" variant="outlined" />
                     </Box>
                   }
                   secondary={
@@ -141,38 +129,26 @@ const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
               return (
                 <ListItem key={task.id} sx={{ px: 0 }}>
                   <ListItemAvatar sx={{ minWidth: 40 }}>
-                    <FactorioIcon 
-                      itemId={task.itemId} 
-                      size={32} 
-                      quantity={task.quantity}
-                      showBorder={false}
-                    />
+                    <FactorioIcon itemId={task.itemId} size={32} quantity={task.quantity} showBorder={false} />
                   </ListItemAvatar>
                   <ListItemText
                     primary={
                       <Box display="flex" alignItems="center" gap={1}>
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
+                        <Typography
+                          variant="body2"
+                          sx={{
                             fontWeight: isMainTask ? 600 : 400,
-                            color: isMainTask ? 'primary.main' : 'text.primary'
+                            color: isMainTask ? 'primary.main' : 'text.primary',
                           }}
                         >
                           {dataService.getLocalizedItemName(task.itemId)} x{task.quantity}
                         </Typography>
-                        {isMainTask && (
-                          <Chip 
-                            size="small" 
-                            label="目标"
-                            color="primary"
-                            variant="outlined"
-                          />
-                        )}
+                        {isMainTask && <Chip size="small" label="目标" color="primary" variant="outlined" />}
                       </Box>
                     }
                     secondary={
                       <Typography variant="caption" color="text.secondary" component="span">
-                        {formatTime((task.craftingTime || 1) / 0.5 * task.quantity)}
+                        {formatTime(((task.craftingTime || 1) / 0.5) * task.quantity)}
                       </Typography>
                     }
                   />
@@ -183,13 +159,13 @@ const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
         </Box>
 
         {/* 总结信息 */}
-        <Box 
-          sx={{ 
-            bgcolor: 'background.default', 
-            p: 2, 
+        <Box
+          sx={{
+            bgcolor: 'background.default',
+            p: 2,
             borderRadius: 1,
             border: '1px solid',
-            borderColor: 'divider'
+            borderColor: 'divider',
           }}
         >
           <Box display="flex" alignItems="center" gap={1} mb={1}>
@@ -199,27 +175,17 @@ const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
             </Typography>
           </Box>
           <Typography variant="body2" color="text.secondary">
-            • 总任务数：{chain.tasks.length} 个<br/>
-            • 预计时间：{formatTime(totalDuration)}<br/>
-            • 所有材料均可手动制作
+            • 总任务数：{chain.tasks.length} 个<br />• 预计时间：{formatTime(totalDuration)}
+            <br />• 所有材料均可手动制作
           </Typography>
         </Box>
       </DialogContent>
 
       <DialogActions sx={{ p: 2, gap: 1 }}>
-        <Button
-          onClick={onCancel}
-          variant="outlined"
-          color="inherit"
-        >
+        <Button onClick={onCancel} variant="outlined" color="inherit">
           取消
         </Button>
-        <Button
-          onClick={onConfirm}
-          variant="contained"
-          color="primary"
-          startIcon={<BuildIcon />}
-        >
+        <Button onClick={onConfirm} variant="contained" color="primary" startIcon={<BuildIcon />}>
           开始制作链
         </Button>
       </DialogActions>

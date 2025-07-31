@@ -1,16 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Box, Typography, Fab, Badge } from '@mui/material';
-import { Build as BuildIcon } from '@mui/icons-material';
+import { Box, Typography } from '@mui/material';
 import CategoryTabs from '@/components/common/CategoryTabs';
 import ItemList from './ItemList';
 import ItemDetailPanel from './ItemDetailPanel';
 import CraftingQueue from './CraftingQueue';
-
 import { DataService } from '@/services';
 import { useLocalStorageState } from 'ahooks';
-import { useIsMobile } from '@/hooks/useIsMobile';
 import { useProductionLoop } from '@/hooks/useProductionLoop';
-import useGameStore from '@/store/gameStore';
 import type { Category, Item } from '@/types/index';
 
 const ProductionModule: React.FC = React.memo(() => {
@@ -19,11 +15,13 @@ const ProductionModule: React.FC = React.memo(() => {
     const dataService = DataService.getInstance();
     if (dataService.isDataLoaded()) {
       const allCategories = dataService.getAllCategories();
-      return allCategories.filter(category => category.id !== 'technology');
+      return allCategories.filter((category) => category.id !== 'technology');
     }
     return [];
   });
-  const [selectedCategory, setSelectedCategory] = useLocalStorageState<string>('production-selected-category', { defaultValue: '' });
+  const [selectedCategory, setSelectedCategory] = useLocalStorageState<string>('production-selected-category', {
+    defaultValue: '',
+  });
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   // 智能初始loading状态：如果数据已加载则不显示loading
   const [loading, setLoading] = useState(() => {
@@ -31,23 +29,18 @@ const ProductionModule: React.FC = React.memo(() => {
     return !dataService.isDataLoaded();
   });
   const [isItemJump, setIsItemJump] = useState(false); // 标识是否是通过物品跳转切换的分类
-  const [showCraftingQueue, setShowCraftingQueue] = useState(false); // 控制制作队列显示
   const selectedItemRef = useRef<Item | null>(null);
   const selectedCategoryRef = useRef<string>('');
   const loadingRef = useRef<boolean>(true);
-  
-  // 获取制作队列状态
-  const craftingQueue = useGameStore((state) => state.craftingQueue);
-  const isMobile = useIsMobile();
-  
+
   // 启动生产循环
   useProductionLoop({ enabled: true });
-  
+
   // Keep refs in sync with state
   useEffect(() => {
     selectedItemRef.current = selectedItem;
   }, [selectedItem]);
-  
+
   useEffect(() => {
     selectedCategoryRef.current = selectedCategory;
   }, [selectedCategory]);
@@ -61,41 +54,41 @@ const ProductionModule: React.FC = React.memo(() => {
     const loadData = async () => {
       try {
         const dataService = DataService.getInstance();
-        
+
         // 优化：如果数据已经加载，直接加载分类而不显示loading
         if (dataService.isDataLoaded()) {
           // 数据已存在，直接加载分类
           const allCategories = dataService.getAllCategories();
-          const nonTechCategories = allCategories.filter(category => category.id !== 'technology');
+          const nonTechCategories = allCategories.filter((category) => category.id !== 'technology');
           setCategories(nonTechCategories);
           setLoading(false);
           return;
         }
-        
+
         // 只有在需要加载数据时才显示loading
         setLoading(true);
-        
+
         // 先加载游戏数据
         await dataService.loadGameData();
-        
+
         // 检查数据是否真正加载完成
         if (!dataService.isDataLoaded()) {
           console.warn('Data not fully loaded, retrying...');
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
           await dataService.loadGameData();
         }
-        
+
         // 加载分类（按推荐顺序），优化性能
         const allCategories = dataService.getAllCategories();
         // Categories loaded
-        
+
         // 性能优化：直接过滤科技分类，避免进一步的昂贵检查
-        const nonTechCategories = allCategories.filter(category => category.id !== 'technology');
-        
+        const nonTechCategories = allCategories.filter((category) => category.id !== 'technology');
+
         // Available categories filtered (performance optimized)
         setCategories(nonTechCategories);
-        
-                  // Loading complete
+
+        // Loading complete
         setLoading(false);
       } catch (error) {
         console.error('Failed to load production data:', error);
@@ -104,14 +97,18 @@ const ProductionModule: React.FC = React.memo(() => {
     };
 
     loadData();
-    
+
     // 移除持续的数据检查定时器以提升性能
     // 如果需要热重载检测，可以通过其他更高效的方式实现
   }, []); // 移除loading依赖，避免循环
 
   // 设置默认分类
   useEffect(() => {
-    if (!loading && categories.length > 0 && (!selectedCategory || !categories.find(cat => cat.id === selectedCategory))) {
+    if (
+      !loading &&
+      categories.length > 0 &&
+      (!selectedCategory || !categories.find((cat) => cat.id === selectedCategory))
+    ) {
       setSelectedCategory(categories[0].id);
     }
   }, [loading, categories, selectedCategory, setSelectedCategory]);
@@ -125,7 +122,7 @@ const ProductionModule: React.FC = React.memo(() => {
   const handleItemSelect = (item: Item) => {
     // 设置选中的物品
     setSelectedItem(item);
-    
+
     // 自动切换到该物品所属的分类
     if (item.category && item.category !== selectedCategory) {
       setIsItemJump(true); // 标记这是物品跳转引起的分类切换
@@ -133,27 +130,23 @@ const ProductionModule: React.FC = React.memo(() => {
     }
   };
 
-  const handleToggleCraftingQueue = () => {
-    setShowCraftingQueue(!showCraftingQueue);
-  };
-
   // 获取当前分类的第一个物品作为默认选中项
   const firstItemInCategory = useMemo(() => {
     if (!selectedCategory || loading) {
       return null;
     }
-    
+
     const dataService = DataService.getInstance();
-    
+
     // 确保数据已加载
     if (!dataService.isDataLoaded()) {
       return null;
     }
-    
+
     try {
       const itemsByRow = dataService.getItemsByRow(selectedCategory);
       const sortedRows = Array.from(itemsByRow.keys()).sort((a, b) => a - b);
-      
+
       for (const row of sortedRows) {
         const items = itemsByRow.get(row) || [];
         if (items.length > 0) {
@@ -171,7 +164,7 @@ const ProductionModule: React.FC = React.memo(() => {
   useEffect(() => {
     const currentSelectedItem = selectedItemRef.current;
     const currentSelectedCategory = selectedCategoryRef.current;
-    
+
     // 只有在不是物品跳转的情况下才自动选择第一个物品
     if (firstItemInCategory && !loading && !isItemJump) {
       // 额外检查：如果当前选中的物品已经在正确的分类中，就不要覆盖它
@@ -211,93 +204,48 @@ const ProductionModule: React.FC = React.memo(() => {
           onCategoryChange={handleCategoryChange}
         />
       </Box>
-      
+
       {/* 主要内容区域 - 左右分割 */}
-      <Box sx={{ 
-        flex: 1, 
-        display: 'flex',
-        overflow: 'hidden'
-      }}>
-        {/* 左侧物品列表 */}
-        <Box sx={{ 
-          width: '105px',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          borderRight: 1,
-          borderColor: 'divider'
-        }}>
-          <ItemList
-            categoryId={selectedCategory}
-            selectedItem={selectedItem}
-            onItemSelect={handleItemSelect}
-          />
-        </Box>
-        
-        {/* 右侧物品详情 */}
-        <Box sx={{ 
+      <Box
+        sx={{
           flex: 1,
-          overflow: 'hidden'
-        }}>
+          display: 'flex',
+          overflow: 'hidden',
+        }}
+      >
+        {/* 左侧物品列表 */}
+        <Box
+          sx={{
+            width: '25%',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            borderRight: 1,
+            borderColor: 'divider',
+          }}
+        >
+          <ItemList categoryId={selectedCategory} selectedItem={selectedItem} onItemSelect={handleItemSelect} />
+        </Box>
+
+        {/* 右侧物品详情 */}
+        <Box
+          sx={{
+            flex: 1,
+            overflow: 'hidden',
+          }}
+        >
           {selectedItem ? (
-            <ItemDetailPanel 
-              item={selectedItem} 
-              onItemSelect={handleItemSelect}
-            />
+            <ItemDetailPanel item={selectedItem} onItemSelect={handleItemSelect} />
           ) : (
-            <Box 
-              display="flex" 
-              justifyContent="center" 
-              alignItems="center" 
-              height="100%"
-              color="text.secondary"
-            >
-              <Typography variant="body2">
-                请选择一个物品查看详情
-              </Typography>
+            <Box display="flex" justifyContent="center" alignItems="center" height="100%" color="text.secondary">
+              <Typography variant="body2">请选择一个物品查看详情</Typography>
             </Box>
           )}
         </Box>
       </Box>
-      
-      {/* 制作队列入口按钮 - 左下角 */}
-      <Box sx={{ 
-        position: 'fixed',
-        bottom: isMobile ? '72px' : '72px', // 与清除存档按钮相同高度
-        left: '16px', // 与清除存档按钮对称
-        zIndex: 1000
-      }}>
-        <Badge 
-          badgeContent={craftingQueue.length} 
-          color="primary"
-          invisible={craftingQueue.length === 0}
-        >
-          <Fab 
-            color="primary" 
-            size="small" // 与清除存档按钮相同尺寸
-            aria-label="制作队列"
-            onClick={handleToggleCraftingQueue}
-            sx={{
-              bgcolor: 'primary.main',
-              width: isMobile ? '44px' : '48px', // 与清除存档按钮相同尺寸
-              height: isMobile ? '44px' : '48px',
-              '&:hover': {
-                bgcolor: 'primary.dark',
-                transform: 'scale(1.1)',
-              },
-              '&:active': {
-                transform: 'scale(0.95)',
-              },
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <BuildIcon />
-          </Fab>
-        </Badge>
-      </Box>
 
-      {/* 制作队列弹窗 */}
-      <CraftingQueue open={showCraftingQueue} onClose={() => setShowCraftingQueue(false)} />
+      {/* 制作队列 - 直接显示在左下角 */}
+      <CraftingQueue />
     </Box>
   );
 });

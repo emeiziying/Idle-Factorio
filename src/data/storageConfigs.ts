@@ -48,4 +48,4 @@ export const getChestConfig = (chestType: string): StorageConfig | undefined => 
 export const getAvailableChestTypes = (): string[] => {
   const service = getStorageService();
   return service ? service.getAvailableChestTypes() : [];
-}; 
+};

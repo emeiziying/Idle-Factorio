@@ -21,8 +21,8 @@ describe('PowerService', () => {
     facilityId: 'electric-furnace',
     machine: {
       type: 'electric',
-      usage: 180000 // 180kW
-    }
+      usage: 180000, // 180kW
+    },
   };
 
   const mockBurnerFurnace = {
@@ -30,8 +30,8 @@ describe('PowerService', () => {
     facilityId: 'stone-furnace',
     machine: {
       type: 'burner',
-      usage: 0 // burner设施不消耗电力
-    }
+      usage: 0, // burner设施不消耗电力
+    },
   };
 
   const mockSteamEngine = {
@@ -39,8 +39,8 @@ describe('PowerService', () => {
     facilityId: 'steam-engine',
     machine: {
       type: 'electric',
-      usage: 900 // 900kW (实际实现中的硬编码值)
-    }
+      usage: 900, // 900kW (实际实现中的硬编码值)
+    },
   };
 
   const mockSolarPanel = {
@@ -48,8 +48,8 @@ describe('PowerService', () => {
     facilityId: 'solar-panel',
     machine: {
       type: 'electric',
-      usage: 60 // 60kW (实际实现中的硬编码值)
-    }
+      usage: 60, // 60kW (实际实现中的硬编码值)
+    },
   };
 
   const mockMiningDrill = {
@@ -57,8 +57,8 @@ describe('PowerService', () => {
     facilityId: 'electric-mining-drill',
     machine: {
       type: 'electric',
-      usage: 90000 // 90kW
-    }
+      usage: 90000, // 90kW
+    },
   };
 
   const mockAssemblingMachine = {
@@ -66,8 +66,8 @@ describe('PowerService', () => {
     facilityId: 'assembling-machine-1',
     machine: {
       type: 'electric',
-      usage: 77000 // 77kW
-    }
+      usage: 77000, // 77kW
+    },
   };
 
   beforeEach(() => {
@@ -85,10 +85,10 @@ describe('PowerService', () => {
           'steam-engine': mockSteamEngine,
           'solar-panel': mockSolarPanel,
           'electric-mining-drill': mockMiningDrill,
-          'assembling-machine-1': mockAssemblingMachine
+          'assembling-machine-1': mockAssemblingMachine,
         };
         return items[itemId] as unknown;
-      })
+      }),
     };
 
     mockGameConfig = {
@@ -96,30 +96,30 @@ describe('PowerService', () => {
       getConstants: vi.fn(() => ({
         power: {
           surplusThreshold: 110, // 110%
-          balancedThreshold: 90,  // 90%
-          solarPanelDayRatio: 0.7 // 70% 平均发电率
+          balancedThreshold: 90, // 90%
+          solarPanelDayRatio: 0.7, // 70% 平均发电率
         },
         crafting: {
           minCraftingTime: 0.1,
           updateInterval: 100,
-          maxProductivityBonus: 0.5
+          maxProductivityBonus: 0.5,
         },
         fuel: {
           defaultFuelSlots: 1,
           fuelBufferFullThreshold: 95,
-          autoRefuelCheckInterval: 5000
+          autoRefuelCheckInterval: 5000,
         },
         storage: {
           defaultStackSize: 50,
           maxInventorySlots: 1000,
-          storageOptimizationThreshold: 100
+          storageOptimizationThreshold: 100,
         },
         ui: {
           autoSaveInterval: 10000,
           debounceDelay: 2000,
-          maxRecentRecipes: 10
-        }
-      }))
+          maxRecentRecipes: 10,
+        },
+      })),
     };
 
     vi.mocked(DataService.getInstance).mockReturnValue(mockDataService as unknown as DataService);
@@ -147,7 +147,7 @@ describe('PowerService', () => {
       // 模拟蒸汽供应
       vi.spyOn(powerService, 'getSteamSupply').mockReturnValue({
         normal: 60, // 60单位/秒蒸汽供应
-        highTemp: 0
+        highTemp: 0,
       });
 
       const facilities: FacilityInstance[] = [
@@ -156,15 +156,15 @@ describe('PowerService', () => {
           facilityId: 'steam-engine',
           count: 2,
           status: FacilityStatus.RUNNING,
-          efficiency: 1.0
+          efficiency: 1.0,
         },
         {
           id: 'electric-furnace',
           facilityId: 'electric-furnace',
           count: 1,
           status: FacilityStatus.RUNNING,
-          efficiency: 1.0
-        }
+          efficiency: 1.0,
+        },
       ];
 
       const balance = powerService.calculatePowerBalance(facilities);
@@ -181,7 +181,7 @@ describe('PowerService', () => {
       // 模拟蒸汽供应
       vi.spyOn(powerService, 'getSteamSupply').mockReturnValue({
         normal: 30, // 30单位/秒蒸汽供应
-        highTemp: 0
+        highTemp: 0,
       });
 
       const facilities: FacilityInstance[] = [
@@ -190,15 +190,15 @@ describe('PowerService', () => {
           facilityId: 'steam-engine',
           count: 1,
           status: FacilityStatus.RUNNING,
-          efficiency: 1.0
+          efficiency: 1.0,
         },
         {
           id: 'electric-furnace',
           facilityId: 'electric-furnace',
           count: 10,
           status: FacilityStatus.RUNNING,
-          efficiency: 1.0
-        }
+          efficiency: 1.0,
+        },
       ];
 
       const balance = powerService.calculatePowerBalance(facilities);
@@ -215,7 +215,7 @@ describe('PowerService', () => {
       // 模拟蒸汽供应
       vi.spyOn(powerService, 'getSteamSupply').mockReturnValue({
         normal: 30, // 30单位/秒蒸汽供应
-        highTemp: 0
+        highTemp: 0,
       });
 
       const facilities: FacilityInstance[] = [
@@ -224,15 +224,15 @@ describe('PowerService', () => {
           facilityId: 'steam-engine',
           count: 1,
           status: FacilityStatus.RUNNING,
-          efficiency: 1.0
+          efficiency: 1.0,
         },
         {
           id: 'electric-furnace',
           facilityId: 'electric-furnace',
           count: 5,
           status: FacilityStatus.RUNNING,
-          efficiency: 1.0
-        }
+          efficiency: 1.0,
+        },
       ];
 
       const balance = powerService.calculatePowerBalance(facilities);
@@ -250,21 +250,21 @@ describe('PowerService', () => {
           facilityId: 'steam-engine',
           count: 1,
           status: FacilityStatus.RUNNING,
-          efficiency: 1.0
+          efficiency: 1.0,
         },
         {
           id: 'electric-furnace',
           facilityId: 'electric-furnace',
           count: 1,
           status: FacilityStatus.STOPPED,
-          efficiency: 0
-        }
+          efficiency: 0,
+        },
       ];
 
       // 模拟蒸汽供应
       vi.spyOn(powerService, 'getSteamSupply').mockReturnValue({
         normal: 30, // 30单位/秒蒸汽供应
-        highTemp: 0
+        highTemp: 0,
       });
 
       const balance = powerService.calculatePowerBalance(facilities);
@@ -280,22 +280,22 @@ describe('PowerService', () => {
           facilityId: 'electric-mining-drill',
           count: 1,
           status: FacilityStatus.RUNNING,
-          efficiency: 1.0
+          efficiency: 1.0,
         },
         {
           id: 'electric-furnace',
           facilityId: 'electric-furnace',
           count: 1,
           status: FacilityStatus.RUNNING,
-          efficiency: 1.0
+          efficiency: 1.0,
         },
         {
           id: 'assembling-machine-1',
           facilityId: 'assembling-machine-1',
           count: 1,
           status: FacilityStatus.RUNNING,
-          efficiency: 1.0
-        }
+          efficiency: 1.0,
+        },
       ];
 
       const balance = powerService.calculatePowerBalance(facilities);
@@ -316,7 +316,7 @@ describe('PowerService', () => {
       actualConsumption: 180000,
       consumptionByCategory: { smelting: 180000 },
       satisfactionRatio: 1,
-      status: 'surplus'
+      status: 'surplus',
     };
 
     it('应该更新电力设施的效率和状态 - 充足电力', () => {
@@ -325,7 +325,7 @@ describe('PowerService', () => {
         facilityId: 'electric-furnace',
         count: 1,
         status: FacilityStatus.NO_POWER,
-        efficiency: 0
+        efficiency: 0,
       };
 
       const updated = powerService.updateFacilityPowerStatus(facility, mockPowerBalance);
@@ -338,7 +338,7 @@ describe('PowerService', () => {
       const powerBalance: PowerBalance = {
         ...mockPowerBalance,
         satisfactionRatio: 0.5,
-        status: 'deficit'
+        status: 'deficit',
       };
 
       const facility: FacilityInstance = {
@@ -346,7 +346,7 @@ describe('PowerService', () => {
         facilityId: 'electric-furnace',
         count: 1,
         status: FacilityStatus.RUNNING,
-        efficiency: 1.0
+        efficiency: 1.0,
       };
 
       const updated = powerService.updateFacilityPowerStatus(facility, powerBalance);
@@ -359,7 +359,7 @@ describe('PowerService', () => {
       const powerBalance: PowerBalance = {
         ...mockPowerBalance,
         satisfactionRatio: 0,
-        status: 'deficit'
+        status: 'deficit',
       };
 
       const facility: FacilityInstance = {
@@ -367,7 +367,7 @@ describe('PowerService', () => {
         facilityId: 'electric-furnace',
         count: 1,
         status: FacilityStatus.RUNNING,
-        efficiency: 1.0
+        efficiency: 1.0,
       };
 
       const updated = powerService.updateFacilityPowerStatus(facility, powerBalance);
@@ -382,7 +382,7 @@ describe('PowerService', () => {
         facilityId: 'stone-furnace',
         count: 1,
         status: FacilityStatus.RUNNING,
-        efficiency: 0.8
+        efficiency: 0.8,
       };
 
       const updated = powerService.updateFacilityPowerStatus(facility, mockPowerBalance);
@@ -396,7 +396,7 @@ describe('PowerService', () => {
       (mockDataService.getItem as ReturnType<typeof vi.fn>).mockReturnValueOnce({
         id: 'some-facility',
         facilityId: 'some-facility',
-        machine: { type: 'electric', usage: 0 }
+        machine: { type: 'electric', usage: 0 },
       });
 
       const facility: FacilityInstance = {
@@ -404,7 +404,7 @@ describe('PowerService', () => {
         facilityId: 'some-facility',
         count: 1,
         status: FacilityStatus.RUNNING,
-        efficiency: 0.9
+        efficiency: 0.9,
       };
 
       const updated = powerService.updateFacilityPowerStatus(facility, mockPowerBalance);
@@ -421,7 +421,7 @@ describe('PowerService', () => {
         facilityId: 'electric-furnace',
         count: 2,
         status: FacilityStatus.RUNNING,
-        efficiency: 1.0
+        efficiency: 1.0,
       };
 
       const demand = powerService.getFacilityPowerDemand(facility);
@@ -435,7 +435,7 @@ describe('PowerService', () => {
         facilityId: 'electric-furnace',
         count: 2,
         status: FacilityStatus.STOPPED,
-        efficiency: 0
+        efficiency: 0,
       };
 
       const demand = powerService.getFacilityPowerDemand(facility);
@@ -449,7 +449,7 @@ describe('PowerService', () => {
         facilityId: 'stone-furnace',
         count: 2,
         status: FacilityStatus.RUNNING,
-        efficiency: 1.0
+        efficiency: 1.0,
       };
 
       const demand = powerService.getFacilityPowerDemand(facility);
@@ -466,7 +466,7 @@ describe('PowerService', () => {
         facilityId: 'steam-engine',
         count: 2,
         status: FacilityStatus.RUNNING,
-        efficiency: 1.0
+        efficiency: 1.0,
       };
 
       const generation = powerService.getFacilityPowerGeneration(facility, 60); // 60单位/秒蒸汽供应
@@ -480,7 +480,7 @@ describe('PowerService', () => {
         facilityId: 'steam-engine',
         count: 2,
         status: FacilityStatus.STOPPED,
-        efficiency: 0
+        efficiency: 0,
       };
 
       const generation = powerService.getFacilityPowerGeneration(facility);
@@ -494,7 +494,7 @@ describe('PowerService', () => {
         facilityId: 'solar-panel',
         count: 10,
         status: FacilityStatus.RUNNING,
-        efficiency: 1.0
+        efficiency: 1.0,
       };
 
       const generation = powerService.getFacilityPowerGeneration(facility);
@@ -508,7 +508,7 @@ describe('PowerService', () => {
         facilityId: 'steam-engine',
         count: 1,
         status: FacilityStatus.RUNNING,
-        efficiency: 1.0
+        efficiency: 1.0,
       };
 
       // 蒸汽供应不足的情况
@@ -523,7 +523,7 @@ describe('PowerService', () => {
         facilityId: 'steam-turbine',
         count: 1,
         status: FacilityStatus.RUNNING,
-        efficiency: 1.0
+        efficiency: 1.0,
       };
 
       // 蒸汽供应不足的情况
@@ -538,7 +538,7 @@ describe('PowerService', () => {
         facilityId: 'steam-engine',
         count: 1,
         status: FacilityStatus.RUNNING,
-        efficiency: 1.0
+        efficiency: 1.0,
       };
 
       const generation = powerService.getFacilityPowerGeneration(facility, 0);
@@ -554,7 +554,7 @@ describe('PowerService', () => {
 
       expect(steamSupply).toEqual({
         normal: 0,
-        highTemp: 0
+        highTemp: 0,
       });
     });
   });
@@ -570,7 +570,7 @@ describe('PowerService', () => {
         actualConsumption: 500000,
         consumptionByCategory: {},
         satisfactionRatio: 1,
-        status: 'surplus'
+        status: 'surplus',
       };
 
       const recommendations = powerService.getPowerPriorityRecommendations([], powerBalance);
@@ -588,10 +588,10 @@ describe('PowerService', () => {
         consumptionByCategory: {
           research: 100000,
           smelting: 400000,
-          crafting: 500000
+          crafting: 500000,
         },
         satisfactionRatio: 0.5,
-        status: 'deficit'
+        status: 'deficit',
       };
 
       const recommendations = powerService.getPowerPriorityRecommendations([], powerBalance);
@@ -608,23 +608,54 @@ describe('PowerService', () => {
       // 为测试添加更多设施数据
       (mockDataService.getItem as ReturnType<typeof vi.fn>).mockImplementation((itemId: string) => {
         switch (itemId) {
-          case 'electric-mining-drill': return { id: itemId, facilityId: itemId, machine: { type: 'electric', usage: 90000 } };
-          case 'stone-furnace': return { id: itemId, facilityId: itemId, machine: { type: 'burner', usage: 0 } };
-          case 'assembling-machine-1': return { id: itemId, facilityId: itemId, machine: { type: 'electric', usage: 77000 } };
-          case 'chemical-plant': return { id: itemId, facilityId: itemId, machine: { type: 'electric', usage: 210000 } };
-          case 'lab': return { id: itemId, facilityId: itemId, machine: { type: 'electric', usage: 60000 } };
-          case 'unknown-facility': return { id: itemId, facilityId: itemId, machine: { type: 'electric', usage: 50000 } };
-          default: return null;
+          case 'electric-mining-drill':
+            return { id: itemId, facilityId: itemId, machine: { type: 'electric', usage: 90000 } };
+          case 'stone-furnace':
+            return { id: itemId, facilityId: itemId, machine: { type: 'burner', usage: 0 } };
+          case 'assembling-machine-1':
+            return { id: itemId, facilityId: itemId, machine: { type: 'electric', usage: 77000 } };
+          case 'chemical-plant':
+            return { id: itemId, facilityId: itemId, machine: { type: 'electric', usage: 210000 } };
+          case 'lab':
+            return { id: itemId, facilityId: itemId, machine: { type: 'electric', usage: 60000 } };
+          case 'unknown-facility':
+            return { id: itemId, facilityId: itemId, machine: { type: 'electric', usage: 50000 } };
+          default:
+            return null;
         }
       });
 
       const facilities: FacilityInstance[] = [
-        { id: 'electric-mining-drill', facilityId: 'electric-mining-drill', count: 1, status: FacilityStatus.RUNNING, efficiency: 1.0 },
+        {
+          id: 'electric-mining-drill',
+          facilityId: 'electric-mining-drill',
+          count: 1,
+          status: FacilityStatus.RUNNING,
+          efficiency: 1.0,
+        },
         { id: 'stone-furnace', facilityId: 'stone-furnace', count: 1, status: FacilityStatus.RUNNING, efficiency: 1.0 },
-        { id: 'assembling-machine-1', facilityId: 'assembling-machine-1', count: 1, status: FacilityStatus.RUNNING, efficiency: 1.0 },
-        { id: 'chemical-plant', facilityId: 'chemical-plant', count: 1, status: FacilityStatus.RUNNING, efficiency: 1.0 },
+        {
+          id: 'assembling-machine-1',
+          facilityId: 'assembling-machine-1',
+          count: 1,
+          status: FacilityStatus.RUNNING,
+          efficiency: 1.0,
+        },
+        {
+          id: 'chemical-plant',
+          facilityId: 'chemical-plant',
+          count: 1,
+          status: FacilityStatus.RUNNING,
+          efficiency: 1.0,
+        },
         { id: 'lab', facilityId: 'lab', count: 1, status: FacilityStatus.RUNNING, efficiency: 1.0 },
-        { id: 'unknown-facility', facilityId: 'unknown-facility', count: 1, status: FacilityStatus.RUNNING, efficiency: 1.0 }
+        {
+          id: 'unknown-facility',
+          facilityId: 'unknown-facility',
+          count: 1,
+          status: FacilityStatus.RUNNING,
+          efficiency: 1.0,
+        },
       ];
 
       const balance = powerService.calculatePowerBalance(facilities);
@@ -656,8 +687,8 @@ describe('PowerService', () => {
           facilityId: 'electric-furnace',
           count: 1,
           status: FacilityStatus.RUNNING,
-          efficiency: 1.0
-        }
+          efficiency: 1.0,
+        },
       ];
 
       const balance = powerService.calculatePowerBalance(facilities);
@@ -673,7 +704,7 @@ describe('PowerService', () => {
         facilityId: 'unknown-facility',
         count: 1,
         status: FacilityStatus.RUNNING,
-        efficiency: 1.0
+        efficiency: 1.0,
       };
 
       const demand = powerService.getFacilityPowerDemand(facility);
@@ -683,4 +714,4 @@ describe('PowerService', () => {
       expect(generation).toBe(0);
     });
   });
-}); 
+});

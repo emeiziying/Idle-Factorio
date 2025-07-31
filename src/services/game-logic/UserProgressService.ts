@@ -37,7 +37,7 @@ export class UserProgressService {
 
   // 批量解锁物品
   unlockItems(itemIds: string[]): void {
-    itemIds.forEach(id => this.unlockedItems.add(id));
+    itemIds.forEach((id) => this.unlockedItems.add(id));
     this.saveProgress();
   }
 
@@ -61,7 +61,7 @@ export class UserProgressService {
 
   // 批量解锁科技
   unlockTechs(techIds: string[]): void {
-    techIds.forEach(id => this.unlockedTechs.add(id));
+    techIds.forEach((id) => this.unlockedTechs.add(id));
     this.saveProgress();
   }
 
@@ -98,7 +98,7 @@ export class UserProgressService {
       const data = {
         unlockedItems: Array.from(this.unlockedItems),
         unlockedTechs: Array.from(this.unlockedTechs),
-        lastUpdated: Date.now()
+        lastUpdated: Date.now(),
       };
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
     } catch (error) {

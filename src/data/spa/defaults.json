@@ -11,24 +11,14 @@
       "id": 0,
       "label": "options.preset.minimum",
       "belt": "transport-belt",
-      "machineRank": [
-        "electric-mining-drill",
-        "stone-furnace",
-        "assembling-machine-1",
-        "chemical-plant"
-      ]
+      "machineRank": ["electric-mining-drill", "stone-furnace", "assembling-machine-1", "chemical-plant"]
     },
     {
       "id": 1,
       "label": "options.preset.upgraded",
       "moduleRank": [],
       "belt": "express-transport-belt",
-      "machineRank": [
-        "electric-mining-drill",
-        "electric-furnace",
-        "assembling-machine-3",
-        "chemical-plant"
-      ]
+      "machineRank": ["electric-mining-drill", "electric-furnace", "assembling-machine-3", "chemical-plant"]
     },
     {
       "id": 2,

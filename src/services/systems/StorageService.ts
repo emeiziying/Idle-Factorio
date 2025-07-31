@@ -50,7 +50,7 @@ export class StorageService {
       craftingTime: recipe.time,
       description: specificConfig.description || '',
       dimensions: specificConfig.dimensions,
-      requiredTechnology: specificConfig.requiredTechnology
+      requiredTechnology: specificConfig.requiredTechnology,
     };
   }
 
@@ -61,16 +61,12 @@ export class StorageService {
 
   // 获取固体存储类型
   public getSolidStorageTypes(): string[] {
-    return Object.keys(STORAGE_SPECIFIC_CONFIGS).filter(
-      key => STORAGE_SPECIFIC_CONFIGS[key].category === 'solid'
-    );
+    return Object.keys(STORAGE_SPECIFIC_CONFIGS).filter((key) => STORAGE_SPECIFIC_CONFIGS[key].category === 'solid');
   }
 
   // 获取液体存储类型
   public getLiquidStorageTypes(): string[] {
-    return Object.keys(STORAGE_SPECIFIC_CONFIGS).filter(
-      key => STORAGE_SPECIFIC_CONFIGS[key].category === 'liquid'
-    );
+    return Object.keys(STORAGE_SPECIFIC_CONFIGS).filter((key) => STORAGE_SPECIFIC_CONFIGS[key].category === 'liquid');
   }
 
   // 检查是否为存储设备
@@ -94,4 +90,4 @@ export class StorageService {
 }
 
 // 导出单例实例获取函数，避免循环依赖
-export const getStorageService = () => StorageService.getInstance(); 
+export const getStorageService = () => StorageService.getInstance();

@@ -15,9 +15,9 @@ vi.mock('@/store/gameStore', () => ({
       craftingQueue: [],
       totalItemsProduced: 0,
       favoriteRecipes: new Set(),
-      recentRecipes: []
-    }))
-  }
+      recentRecipes: [],
+    })),
+  },
 }));
 
 const mockRecipeService = vi.mocked(RecipeService);
@@ -32,20 +32,20 @@ describe('DependencyService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Setup mock validator instance with proper return values
     const mockValidation: ManualCraftingValidation = {
       canCraftManually: true,
       reason: 'basic_crafting',
-      category: 'craftable'
+      category: 'craftable',
     };
-    
+
     mockValidatorInstance = {
       validateManualCrafting: vi.fn().mockReturnValue(mockValidation),
-      validateRecipe: vi.fn().mockReturnValue(mockValidation)
+      validateRecipe: vi.fn().mockReturnValue(mockValidation),
     };
     mockValidator.getInstance.mockReturnValue(mockValidatorInstance as unknown as ManualCraftingValidator);
-    
+
     // Reset the singleton instance to ensure fresh mocks
     (DependencyService as unknown as { instance?: DependencyService }).instance = undefined;
     dependencyService = DependencyService.getInstance();
@@ -59,7 +59,7 @@ describe('DependencyService', () => {
     it('should return singleton instance', () => {
       const instance1 = DependencyService.getInstance();
       const instance2 = DependencyService.getInstance();
-      
+
       expect(instance1).toBe(instance2);
     });
   });
@@ -67,7 +67,7 @@ describe('DependencyService', () => {
   describe('hasMissingDependencies', () => {
     const mockInventory = new Map([
       ['iron-ore', { currentAmount: 10 }],
-      ['iron-plate', { currentAmount: 2 }]
+      ['iron-plate', { currentAmount: 2 }],
     ]);
 
     const mockRecipe: Recipe = {
@@ -76,7 +76,7 @@ describe('DependencyService', () => {
       time: 0.5,
       in: { 'iron-plate': 2 },
       out: { 'iron-gear-wheel': 1 },
-      category: 'crafting'
+      category: 'crafting',
     };
 
     beforeEach(() => {
@@ -85,21 +85,21 @@ describe('DependencyService', () => {
 
     it('should return false when all dependencies are satisfied', () => {
       const result = dependencyService.hasMissingDependencies('iron-gear-wheel', 1, mockInventory);
-      
+
       expect(result).toBe(false);
     });
 
     it('should return true when dependencies are missing', () => {
       const result = dependencyService.hasMissingDependencies('iron-gear-wheel', 3, mockInventory);
-      
+
       expect(result).toBe(true);
     });
 
     it('should return false when no recipe is available', () => {
       mockRecipeService.getRecipesThatProduce.mockReturnValue([]);
-      
+
       const result = dependencyService.hasMissingDependencies('unknown-item', 1, mockInventory);
-      
+
       expect(result).toBe(false);
     });
   });
@@ -115,8 +115,8 @@ describe('DependencyService', () => {
           time: 3.2,
           in: { 'iron-ore': 1 },
           out: { 'iron-plate': 1 },
-          category: 'smelting'
-        }
+          category: 'smelting',
+        },
       },
       dependencies: [
         {
@@ -131,10 +131,10 @@ describe('DependencyService', () => {
             in: {},
             out: { 'iron-ore': 1 },
             category: 'mining',
-            flags: ['mining']
+            flags: ['mining'],
           },
-          canCraftManually: true
-        }
+          canCraftManually: true,
+        },
       ],
       tasks: [
         {
@@ -145,7 +145,7 @@ describe('DependencyService', () => {
           progress: 0,
           startTime: 0,
           craftingTime: 1,
-          status: 'pending' as const
+          status: 'pending' as const,
         },
         {
           id: 'chain_2',
@@ -155,16 +155,16 @@ describe('DependencyService', () => {
           progress: 0,
           startTime: 0,
           craftingTime: 3.2,
-          status: 'pending' as const
-        }
+          status: 'pending' as const,
+        },
       ],
       totalItems: 2,
-      totalRawMaterialNeeds: new Map()
+      totalRawMaterialNeeds: new Map(),
     };
 
     it('should calculate total duration correctly', () => {
       const duration = dependencyService.calculateChainDuration(mockChain);
-      
+
       // Expected: (5 * 1 / 0.5) + (5 * 3.2 / 0.5) = 10 + 32 = 42 seconds
       expect(duration).toBe(42);
     });
@@ -172,11 +172,11 @@ describe('DependencyService', () => {
     it('should handle chain with single task', () => {
       const singleTaskChain = {
         ...mockChain,
-        tasks: [mockChain.tasks[1]] // Only main task
+        tasks: [mockChain.tasks[1]], // Only main task
       };
-      
+
       const duration = dependencyService.calculateChainDuration(singleTaskChain);
-      
+
       // Expected: 5 * 3.2 / 0.5 = 32 seconds
       expect(duration).toBe(32);
     });
@@ -187,13 +187,13 @@ describe('DependencyService', () => {
         tasks: [
           {
             ...mockChain.tasks[0],
-            craftingTime: 1 // Use default time
-          }
-        ]
+            craftingTime: 1, // Use default time
+          },
+        ],
       };
-      
+
       const duration = dependencyService.calculateChainDuration(chainWithDefaultTime);
-      
+
       // Expected: 5 * 1 / 0.5 = 10 seconds
       expect(duration).toBe(10);
     });
@@ -203,16 +203,14 @@ describe('DependencyService', () => {
     const mockInventory = new Map([
       ['iron-ore', { currentAmount: 10 }],
       ['copper-ore', { currentAmount: 5 }],
-      ['coal', { currentAmount: 20 }]
+      ['coal', { currentAmount: 20 }],
     ]);
-
-
 
     it('should return null when no manual crafting recipe available', () => {
       mockRecipeService.getRecipesThatProduce.mockReturnValue([]);
-      
+
       const result = dependencyService.analyzeCraftingChain('unknown-item', 1, mockInventory);
-      
+
       expect(result).toBeNull();
     });
 
@@ -224,16 +222,16 @@ describe('DependencyService', () => {
         time: 1,
         in: { 'iron-ore': 5 },
         out: { 'expensive-item': 1 },
-        category: 'crafting'
+        category: 'crafting',
       };
-      
+
       // Mock to return empty array for iron-ore to prevent recursion
       mockRecipeService.getRecipesThatProduce
         .mockReturnValueOnce([expensiveRecipe]) // For expensive-item
         .mockReturnValue([]); // For iron-ore (no recipes to prevent recursion)
-      
+
       const result = dependencyService.analyzeCraftingChain('expensive-item', 3, mockInventory);
-      
+
       expect(result).toBeNull();
     });
 
@@ -245,15 +243,15 @@ describe('DependencyService', () => {
         in: {},
         out: { 'iron-ore': 1 },
         category: 'mining',
-        flags: ['mining']
+        flags: ['mining'],
       };
-      
+
       mockRecipeService.getRecipesThatProduce.mockReturnValue([miningRecipe]);
-      
+
       const result = dependencyService.analyzeCraftingChain('iron-ore', 5, mockInventory);
-      
+
       expect(result).toBeDefined();
       expect(result?.dependencies).toHaveLength(0); // Mining recipes have no dependencies
     });
   });
-}); 
+});

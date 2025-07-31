@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect } from 'vitest';
 import {
   getClickableStyles,
   getDisabledStyles,
@@ -10,8 +10,8 @@ import {
   getGradientStyles,
   getCardStyles,
   getCenterStyles,
-  mergeStyles
-} from '@/utils/styleHelpers'
+  mergeStyles,
+} from '@/utils/styleHelpers';
 
 // 样式辅助函数测试套件
 describe('styleHelpers', () => {
@@ -19,60 +19,60 @@ describe('styleHelpers', () => {
   describe('getClickableStyles', () => {
     // 测试：isClickable 为 true 时应返回可点击样式
     it('should return clickable styles when isClickable is true', () => {
-      const styles = getClickableStyles(true) as any
-      
-      expect(styles.cursor).toBe('pointer')
-      expect(styles.transition).toBe('opacity 0.2s')
-      expect(styles['&:hover']).toEqual({ opacity: 0.8 })
-      expect(styles['&:active']).toEqual({ opacity: 0.7000000000000001 }) // 修复：浮点数精度问题
-    })
+      const styles = getClickableStyles(true) as any;
+
+      expect(styles.cursor).toBe('pointer');
+      expect(styles.transition).toBe('opacity 0.2s');
+      expect(styles['&:hover']).toEqual({ opacity: 0.8 });
+      expect(styles['&:active']).toEqual({ opacity: 0.7000000000000001 }); // 修复：浮点数精度问题
+    });
 
     // 测试：isClickable 为 false 时应返回不可点击样式
     it('should return non-clickable styles when isClickable is false', () => {
-      const styles = getClickableStyles(false) as any
-      
-      expect(styles.cursor).toBe('default')
-      expect(styles['&:hover']).toEqual({})
-      expect(styles['&:active']).toEqual({})
-    })
+      const styles = getClickableStyles(false) as any;
+
+      expect(styles.cursor).toBe('default');
+      expect(styles['&:hover']).toEqual({});
+      expect(styles['&:active']).toEqual({});
+    });
 
     // 测试：应该使用自定义悬停透明度
     it('should use custom hover opacity', () => {
-      const styles = getClickableStyles(true, 0.6) as any
-      
-      expect(styles['&:hover']).toEqual({ opacity: 0.6 })
-      expect(styles['&:active']).toEqual({ opacity: 0.5 })
-    })
-  })
+      const styles = getClickableStyles(true, 0.6) as any;
+
+      expect(styles['&:hover']).toEqual({ opacity: 0.6 });
+      expect(styles['&:active']).toEqual({ opacity: 0.5 });
+    });
+  });
 
   // 禁用样式测试
   describe('getDisabledStyles', () => {
     // 测试：isDisabled 为 true 时应返回禁用样式
     it('should return disabled styles when isDisabled is true', () => {
-      const styles = getDisabledStyles(true) as any
-      
-      expect(styles.opacity).toBe(0.5)
-      expect(styles.pointerEvents).toBe('none')
-      expect(styles.filter).toBe('grayscale(50%)')
-    })
+      const styles = getDisabledStyles(true) as any;
+
+      expect(styles.opacity).toBe(0.5);
+      expect(styles.pointerEvents).toBe('none');
+      expect(styles.filter).toBe('grayscale(50%)');
+    });
 
     // 测试：isDisabled 为 false 时应返回启用样式
     it('should return enabled styles when isDisabled is false', () => {
-      const styles = getDisabledStyles(false) as any
-      
-      expect(styles.opacity).toBe(1)
-      expect(styles.pointerEvents).toBe('auto')
-      expect(styles.filter).toBe('none')
-    })
-  })
+      const styles = getDisabledStyles(false) as any;
+
+      expect(styles.opacity).toBe(1);
+      expect(styles.pointerEvents).toBe('auto');
+      expect(styles.filter).toBe('none');
+    });
+  });
 
   // 加载样式测试
   describe('getLoadingStyles', () => {
     // 测试：isLoading 为 true 时应返回加载遮罩
     it('should return loading overlay when isLoading is true', () => {
-      const styles = getLoadingStyles(true) as any
-      
-      expect(styles.position).toBe('relative')
+      const styles = getLoadingStyles(true) as any;
+
+      expect(styles.position).toBe('relative');
       expect(styles['&::after']).toMatchObject({
         content: '""',
         position: 'absolute',
@@ -83,218 +83,218 @@ describe('styleHelpers', () => {
         backgroundColor: 'rgba(255, 255, 255, 0.7)',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
-      })
-    })
+        justifyContent: 'center',
+      });
+    });
 
     // 测试：isLoading 为 false 时不应显示遮罩
     it('should not show overlay when isLoading is false', () => {
-      const styles = getLoadingStyles(false) as any
-      
-      expect(styles.position).toBe('relative')
-      expect(styles['&::after']).toEqual({})
-    })
-  })
+      const styles = getLoadingStyles(false) as any;
+
+      expect(styles.position).toBe('relative');
+      expect(styles['&::after']).toEqual({});
+    });
+  });
 
   // 选中样式测试
   describe('getSelectedStyles', () => {
     // 测试：isSelected 为 true 时应返回选中样式
     it('should return selected styles when isSelected is true', () => {
-      const styles = getSelectedStyles(true) as any
-      
-      expect(styles.borderColor).toBe('primary.main')
-      expect(styles.borderWidth).toBe(2)
-      expect(styles.borderStyle).toBe('solid')
-      expect(styles.backgroundColor).toBe('action.selected')
-    })
+      const styles = getSelectedStyles(true) as any;
+
+      expect(styles.borderColor).toBe('primary.main');
+      expect(styles.borderWidth).toBe(2);
+      expect(styles.borderStyle).toBe('solid');
+      expect(styles.backgroundColor).toBe('action.selected');
+    });
 
     // 测试：isSelected 为 false 时应返回未选中样式
     it('should return unselected styles when isSelected is false', () => {
-      const styles = getSelectedStyles(false) as any
-      
-      expect(styles.borderColor).toBe('transparent')
-      expect(styles.backgroundColor).toBe('transparent')
-    })
+      const styles = getSelectedStyles(false) as any;
+
+      expect(styles.borderColor).toBe('transparent');
+      expect(styles.backgroundColor).toBe('transparent');
+    });
 
     // 测试：应该使用自定义选中颜色
     it('should use custom selected color', () => {
-      const styles = getSelectedStyles(true, 'secondary.main') as any
-      
-      expect(styles.borderColor).toBe('secondary.main')
-    })
-  })
+      const styles = getSelectedStyles(true, 'secondary.main') as any;
+
+      expect(styles.borderColor).toBe('secondary.main');
+    });
+  });
 
   // 响应式网格样式测试
   describe('getResponsiveGridStyles', () => {
     // 测试：应该返回默认值的响应式网格
     it('should return responsive grid with default values', () => {
-      const styles = getResponsiveGridStyles() as any
-      
-      expect(styles.display).toBe('grid')
+      const styles = getResponsiveGridStyles() as any;
+
+      expect(styles.display).toBe('grid');
       expect(styles.gridTemplateColumns).toEqual({
         xs: 'repeat(2, 1fr)',
         sm: 'repeat(2, 1fr)',
-        md: 'repeat(4, 1fr)'
-      })
-      expect(styles.gap).toBe(2)
-    })
+        md: 'repeat(4, 1fr)',
+      });
+      expect(styles.gap).toBe(2);
+    });
 
     // 测试：应该使用自定义每行项目数
     it('should use custom items per row', () => {
-      const styles = getResponsiveGridStyles(6, 3) as any
-      
+      const styles = getResponsiveGridStyles(6, 3) as any;
+
       expect(styles.gridTemplateColumns).toEqual({
         xs: 'repeat(3, 1fr)',
         sm: 'repeat(3, 1fr)',
-        md: 'repeat(6, 1fr)'
-      })
-    })
-  })
+        md: 'repeat(6, 1fr)',
+      });
+    });
+  });
 
   // 截断样式测试
   describe('getTruncateStyles', () => {
     // 测试：默认应返回单行截断样式
     it('should return single line truncate styles by default', () => {
-      const styles = getTruncateStyles() as any
-      
-      expect(styles.overflow).toBe('hidden')
-      expect(styles.textOverflow).toBe('ellipsis')
-      expect(styles.display).toBe('-webkit-box')
-      expect(styles.WebkitLineClamp).toBe(1)
-      expect(styles.WebkitBoxOrient).toBe('vertical')
-      expect(styles.wordBreak).toBe('break-word')
-    })
+      const styles = getTruncateStyles() as any;
+
+      expect(styles.overflow).toBe('hidden');
+      expect(styles.textOverflow).toBe('ellipsis');
+      expect(styles.display).toBe('-webkit-box');
+      expect(styles.WebkitLineClamp).toBe(1);
+      expect(styles.WebkitBoxOrient).toBe('vertical');
+      expect(styles.wordBreak).toBe('break-word');
+    });
 
     // 测试：应该支持多行截断
     it('should support multi-line truncation', () => {
-      const styles = getTruncateStyles(3) as any
-      
-      expect(styles.WebkitLineClamp).toBe(3)
-    })
-  })
+      const styles = getTruncateStyles(3) as any;
+
+      expect(styles.WebkitLineClamp).toBe(3);
+    });
+  });
 
   // 渐变样式测试
   describe('getGradientStyles', () => {
     // 测试：应该返回默认角度的渐变
     it('should return gradient with default angle', () => {
-      const styles = getGradientStyles('#000', '#fff') as any
-      
-      expect(styles.background).toBe('linear-gradient(135deg, #000, #fff)')
-    })
+      const styles = getGradientStyles('#000', '#fff') as any;
+
+      expect(styles.background).toBe('linear-gradient(135deg, #000, #fff)');
+    });
 
     // 测试：应该使用自定义角度
     it('should use custom angle', () => {
-      const styles = getGradientStyles('#ff0000', '#00ff00', 90) as any
-      
-      expect(styles.background).toBe('linear-gradient(90deg, #ff0000, #00ff00)')
-    })
-  })
+      const styles = getGradientStyles('#ff0000', '#00ff00', 90) as any;
+
+      expect(styles.background).toBe('linear-gradient(90deg, #ff0000, #00ff00)');
+    });
+  });
 
   // 卡片样式测试
   describe('getCardStyles', () => {
     // 测试：应该返回基本卡片样式
     it('should return basic card styles', () => {
-      const styles = getCardStyles() as any
-      
-      expect(styles.boxShadow).toBe(1)
-      expect(styles.borderRadius).toBe(1)
-      expect(styles.transition).toBe('all 0.3s ease')
-      expect(styles['&:hover']).toBeUndefined()
-    })
+      const styles = getCardStyles() as any;
+
+      expect(styles.boxShadow).toBe(1);
+      expect(styles.borderRadius).toBe(1);
+      expect(styles.transition).toBe('all 0.3s ease');
+      expect(styles['&:hover']).toBeUndefined();
+    });
 
     // 测试：isHoverable 为 true 时应添加悬停效果
     it('should add hover effects when isHoverable is true', () => {
-      const styles = getCardStyles(true, 2) as any
-      
-      expect(styles.boxShadow).toBe(2)
+      const styles = getCardStyles(true, 2) as any;
+
+      expect(styles.boxShadow).toBe(2);
       expect(styles['&:hover']).toEqual({
         boxShadow: 4,
-        transform: 'translateY(-2px)'
-      })
-    })
-  })
+        transform: 'translateY(-2px)',
+      });
+    });
+  });
 
   // 居中样式测试
   describe('getCenterStyles', () => {
     // 测试：默认应该水平和垂直居中
     it('should center both horizontally and vertically by default', () => {
-      const styles = getCenterStyles() as any
-      
-      expect(styles.display).toBe('flex')
-      expect(styles.justifyContent).toBe('center')
-      expect(styles.alignItems).toBe('center')
-    })
+      const styles = getCenterStyles() as any;
+
+      expect(styles.display).toBe('flex');
+      expect(styles.justifyContent).toBe('center');
+      expect(styles.alignItems).toBe('center');
+    });
 
     // 测试：应该只水平居中
     it('should center only horizontally', () => {
-      const styles = getCenterStyles(true, false) as any
-      
-      expect(styles.display).toBe('flex')
-      expect(styles.justifyContent).toBe('center')
-      expect(styles.alignItems).toBeUndefined()
-    })
+      const styles = getCenterStyles(true, false) as any;
+
+      expect(styles.display).toBe('flex');
+      expect(styles.justifyContent).toBe('center');
+      expect(styles.alignItems).toBeUndefined();
+    });
 
     // 测试：应该只垂直居中
     it('should center only vertically', () => {
-      const styles = getCenterStyles(false, true) as any
-      
-      expect(styles.display).toBe('flex')
-      expect(styles.justifyContent).toBeUndefined()
-      expect(styles.alignItems).toBe('center')
-    })
-  })
+      const styles = getCenterStyles(false, true) as any;
+
+      expect(styles.display).toBe('flex');
+      expect(styles.justifyContent).toBeUndefined();
+      expect(styles.alignItems).toBe('center');
+    });
+  });
 
   // 合并样式测试
   describe('mergeStyles', () => {
     // 测试：应该合并多个样式对象
     it('should merge multiple style objects', () => {
-      const style1 = { color: 'red', fontSize: 14 }
-      const style2 = { backgroundColor: 'blue', fontSize: 16 }
-      const style3 = { padding: 2 }
-      
-      const merged = mergeStyles(style1, style2, style3) as any
-      
+      const style1 = { color: 'red', fontSize: 14 };
+      const style2 = { backgroundColor: 'blue', fontSize: 16 };
+      const style3 = { padding: 2 };
+
+      const merged = mergeStyles(style1, style2, style3) as any;
+
       expect(merged).toEqual({
         color: 'red',
         fontSize: 16,
         backgroundColor: 'blue',
-        padding: 2
-      })
-    })
+        padding: 2,
+      });
+    });
 
     // 测试：应该过滤掉 undefined 样式
     it('should filter out undefined styles', () => {
-      const style1 = { color: 'red' }
-      const merged = mergeStyles(style1, undefined, null as any) as any
-      
-      expect(merged).toEqual({ color: 'red' })
-    })
+      const style1 = { color: 'red' };
+      const merged = mergeStyles(style1, undefined, null as any) as any;
+
+      expect(merged).toEqual({ color: 'red' });
+    });
 
     // 测试：没有提供样式时应返回空对象
     it('should return empty object when no styles provided', () => {
-      const merged = mergeStyles() as any
-      
-      expect(merged).toEqual({})
-    })
+      const merged = mergeStyles() as any;
+
+      expect(merged).toEqual({});
+    });
 
     // 测试：应该处理嵌套对象
     it('should handle nested objects', () => {
-      const style1 = { 
+      const style1 = {
         color: 'red',
-        '&:hover': { color: 'blue' }
-      }
-      const style2 = { 
+        '&:hover': { color: 'blue' },
+      };
+      const style2 = {
         fontSize: 16,
-        '&:hover': { backgroundColor: 'gray' }
-      }
-      
-      const merged = mergeStyles(style1, style2) as any
-      
+        '&:hover': { backgroundColor: 'gray' },
+      };
+
+      const merged = mergeStyles(style1, style2) as any;
+
       expect(merged).toEqual({
         color: 'red',
         fontSize: 16,
-        '&:hover': { backgroundColor: 'gray' }
-      })
-    })
-  })
-})
+        '&:hover': { backgroundColor: 'gray' },
+      });
+    });
+  });
+});

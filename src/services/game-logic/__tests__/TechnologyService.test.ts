@@ -26,17 +26,17 @@ describe('TechnologyService', () => {
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks();
-    
+
     // Reset TechnologyService instance
     (TechnologyService as unknown as ServiceInstance<TechnologyService>).instance = null;
-    
+
     // Create mock instances
     mockDataService = {
       loadGameData: vi.fn().mockResolvedValue({}),
       loadI18nData: vi.fn().mockResolvedValue({}),
       getRawGameData: vi.fn().mockReturnValue({
         recipes: [],
-        items: []
+        items: [],
       }),
       getTechCategories: vi.fn().mockReturnValue([]),
       getLocalizedRecipeName: vi.fn().mockImplementation((id: string) => id),
@@ -69,25 +69,25 @@ describe('TechnologyService', () => {
     it('应该返回 true 当物品通过科技解锁时', () => {
       // 模拟科技解锁了某个物品
       technologyService.setTechStateForTesting({
-        unlockedItems: new Set(['advanced-circuit'])
+        unlockedItems: new Set(['advanced-circuit']),
       });
-      
+
       const result = technologyService.isItemUnlocked('advanced-circuit');
-      
+
       expect(result).toBe(true);
     });
 
     it('应该返回 true 当物品是原材料时（无配方）', () => {
       // 模拟物品不在科技解锁列表中
       technologyService.setTechStateForTesting({
-        unlockedItems: new Set()
+        unlockedItems: new Set(),
       });
-      
+
       // 模拟RecipeService返回空数组（表示原材料）
       vi.mocked(RecipeService.getRecipesThatProduce).mockReturnValue([]);
-      
+
       const result = technologyService.isItemUnlocked('iron-ore');
-      
+
       expect(result).toBe(true);
       expect(RecipeService.getRecipesThatProduce).toHaveBeenCalledWith('iron-ore');
     });
@@ -95,100 +95,100 @@ describe('TechnologyService', () => {
     it('应该返回 true 当物品有mining配方时', () => {
       // 模拟物品不在科技解锁列表中
       technologyService.setTechStateForTesting({
-        unlockedItems: new Set()
+        unlockedItems: new Set(),
       });
-      
+
       // 模拟有mining配方
       const miningRecipe: Partial<Recipe> = {
         id: 'iron-ore-mining',
         flags: ['mining'],
-        locations: ['nauvis']
+        locations: ['nauvis'],
       };
       vi.mocked(RecipeService.getRecipesThatProduce).mockReturnValue([miningRecipe as Recipe]);
-      
+
       const result = technologyService.isItemUnlocked('iron-ore');
-      
+
       expect(result).toBe(true);
     });
 
     it('应该返回 true 当物品有无locked标记的基础配方且材料可用时', () => {
       // 模拟物品不在科技解锁列表中
       technologyService.setTechStateForTesting({
-        unlockedItems: new Set()
+        unlockedItems: new Set(),
       });
-      
+
       // 模拟有基础配方（无locked标记）
       const basicRecipe: Partial<Recipe> = {
         id: 'iron-plate-recipe',
         in: { 'iron-ore': 1 },
-        locations: ['nauvis']
+        locations: ['nauvis'],
       };
       vi.mocked(RecipeService.getRecipesThatProduce)
         .mockReturnValueOnce([basicRecipe as Recipe]) // iron-plate
         .mockReturnValueOnce([]); // iron-ore (原材料)
-      
+
       const result = technologyService.isItemUnlocked('iron-plate');
-      
+
       expect(result).toBe(true);
     });
 
     it('应该返回 false 当物品有locked配方但科技未解锁时', () => {
       // 模拟物品不在科技解锁列表中
       technologyService.setTechStateForTesting({
-        unlockedItems: new Set()
+        unlockedItems: new Set(),
       });
-      
+
       // 模拟有locked配方
       const lockedRecipe: Partial<Recipe> = {
         id: 'advanced-circuit-recipe',
         flags: ['locked'],
         in: { 'electronic-circuit': 2, 'plastic-bar': 2, 'copper-cable': 4 },
-        locations: ['nauvis']
+        locations: ['nauvis'],
       };
       vi.mocked(RecipeService.getRecipesThatProduce).mockReturnValue([lockedRecipe as Recipe]);
-      
+
       const result = technologyService.isItemUnlocked('advanced-circuit');
-      
+
       expect(result).toBe(false);
     });
 
     it('应该返回 false 当物品配方的材料不可用时', () => {
       // 模拟物品不在科技解锁列表中
       technologyService.setTechStateForTesting({
-        unlockedItems: new Set()
+        unlockedItems: new Set(),
       });
-      
+
       // 模拟有配方但材料不可用
       const recipe: Partial<Recipe> = {
         id: 'gear-wheel-recipe',
         in: { 'unavailable-material': 2 },
-        locations: ['nauvis']
+        locations: ['nauvis'],
       };
       vi.mocked(RecipeService.getRecipesThatProduce)
         .mockReturnValueOnce([recipe as Recipe]) // gear-wheel
         .mockReturnValueOnce([]); // unavailable-material 被认为是原材料但实际不可用
-      
+
       // 为了测试递归调用，我们需要模拟第二层调用返回false
       const spy = vi.spyOn(technologyService, 'checkItemUnlockedViaDataService' as keyof TechnologyService);
       spy.mockReturnValueOnce(false); // gear-wheel 本身
-      spy.mockReturnValueOnce(true);  // unavailable-material (原材料)
-      
+      spy.mockReturnValueOnce(true); // unavailable-material (原材料)
+
       const result = technologyService.isItemUnlocked('gear-wheel');
-      
+
       expect(result).toBe(false);
     });
 
     it('应该委托给DataService的fallback逻辑', () => {
       // 这个测试确保TechnologyService正确地委托给DataService
       technologyService.setTechStateForTesting({
-        unlockedItems: new Set()
+        unlockedItems: new Set(),
       });
-      
+
       // 模拟原材料（无配方）
       vi.mocked(RecipeService.getRecipesThatProduce).mockReturnValue([]);
-      
+
       const result = technologyService.isItemUnlocked('iron-ore');
-      
+
       // 应该返回true，因为原材料总是可用的
       expect(result).toBe(true);
     });
@@ -196,30 +196,30 @@ describe('TechnologyService', () => {
     it('应该返回 false 当DataService不可用时', () => {
       // 模拟物品不在科技解锁列表中
       technologyService.setTechStateForTesting({
-        unlockedItems: new Set()
+        unlockedItems: new Set(),
       });
-      
+
       // 模拟ServiceLocator找不到DataService
       vi.mocked(ServiceLocator.has).mockImplementation((serviceName: string) => {
         return serviceName !== SERVICE_NAMES.DATA;
       });
-      
+
       const result = technologyService.isItemUnlocked('some-item');
-      
+
       expect(result).toBe(false);
     });
 
     it('应该防止循环依赖', () => {
       // 测试循环依赖检测功能 - 简化版本
       technologyService.setTechStateForTesting({
-        unlockedItems: new Set()
+        unlockedItems: new Set(),
       });
-      
+
       // 模拟无配方的情况，应该返回true（原材料）
       vi.mocked(RecipeService.getRecipesThatProduce).mockReturnValue([]);
-      
+
       const result = technologyService.isItemUnlocked('safe-item');
-      
+
       // 原材料应该返回true，不会有循环依赖问题
       expect(result).toBe(true);
     });
@@ -228,18 +228,18 @@ describe('TechnologyService', () => {
   describe('科技状态管理', () => {
     it('应该正确检查科技是否解锁', () => {
       technologyService.setTechStateForTesting({
-        unlockedTechs: new Set(['automation'])
+        unlockedTechs: new Set(['automation']),
       });
-      
+
       expect(technologyService.isTechUnlocked('automation')).toBe(true);
       expect(technologyService.isTechUnlocked('electronics')).toBe(false);
     });
 
     it('应该正确检查科技是否可用', () => {
       technologyService.setTechStateForTesting({
-        availableTechs: new Set(['automation', 'electronics'])
+        availableTechs: new Set(['automation', 'electronics']),
       });
-      
+
       expect(technologyService.isTechAvailable('automation')).toBe(true);
       expect(technologyService.isTechAvailable('electronics')).toBe(true);
       expect(technologyService.isTechAvailable('advanced-electronics')).toBe(false);
@@ -247,18 +247,18 @@ describe('TechnologyService', () => {
 
     it('应该正确检查配方是否解锁', () => {
       technologyService.setTechStateForTesting({
-        unlockedRecipes: new Set(['iron-plate'])
+        unlockedRecipes: new Set(['iron-plate']),
       });
-      
+
       expect(technologyService.isRecipeUnlocked('iron-plate')).toBe(true);
       expect(technologyService.isRecipeUnlocked('copper-plate')).toBe(false);
     });
 
     it('应该正确检查建筑是否解锁', () => {
       technologyService.setTechStateForTesting({
-        unlockedBuildings: new Set(['assembling-machine-1'])
+        unlockedBuildings: new Set(['assembling-machine-1']),
       });
-      
+
       expect(technologyService.isBuildingUnlocked('assembling-machine-1')).toBe(true);
       expect(technologyService.isBuildingUnlocked('assembling-machine-2')).toBe(false);
     });
@@ -271,10 +271,10 @@ describe('TechnologyService', () => {
           techId: 'researching-tech',
           status: 'researching',
           progress: 0.5,
-          currentCost: {}
-        }
+          currentCost: {},
+        },
       });
-      
+
       expect(technologyService.getTechStatus('automation')).toBe('unlocked');
       expect(technologyService.getTechStatus('electronics')).toBe('available');
       expect(technologyService.getTechStatus('researching-tech')).toBe('researching');
@@ -293,16 +293,18 @@ describe('TechnologyService', () => {
         unlocks: { recipes: [], items: [], buildings: [] },
         researchCost: {},
         researchTime: 15,
-        position: { x: 0, y: 0 }
+        position: { x: 0, y: 0 },
       };
-      
+
       // 直接设置私有属性
-      (technologyService as unknown as { techTree: Map<string, unknown> }).techTree = new Map([['automation', mockTech]]);
-      
+      (technologyService as unknown as { techTree: Map<string, unknown> }).techTree = new Map([
+        ['automation', mockTech],
+      ]);
+
       const result = technologyService.addToResearchQueue('automation', ResearchPriority.HIGH);
-      
+
       expect(result.success).toBe(true);
-      
+
       const queue = technologyService.getResearchQueue();
       expect(queue).toHaveLength(1);
       expect(queue[0].techId).toBe('automation');
@@ -319,19 +321,21 @@ describe('TechnologyService', () => {
         unlocks: { recipes: [], items: [], buildings: [] },
         researchCost: {},
         researchTime: 15,
-        position: { x: 0, y: 0 }
+        position: { x: 0, y: 0 },
       };
-      
+
       // 直接设置私有属性
-      (technologyService as unknown as { techTree: Map<string, unknown> }).techTree = new Map([['automation', mockTech]]);
-      
+      (technologyService as unknown as { techTree: Map<string, unknown> }).techTree = new Map([
+        ['automation', mockTech],
+      ]);
+
       // 先添加一个研究
       technologyService.addToResearchQueue('automation');
-      
+
       // 然后移除
       const removed = technologyService.removeFromResearchQueue('automation');
       expect(removed).toBe(true);
-      
+
       const queue = technologyService.getResearchQueue();
       expect(queue).toHaveLength(0);
     });
@@ -351,7 +355,7 @@ describe('TechnologyService', () => {
         unlocks: { recipes: [], items: [], buildings: [] },
         researchCost: {},
         researchTime: 15,
-        position: { x: 0, y: 0 }
+        position: { x: 0, y: 0 },
       };
       const mockTech2 = {
         id: 'electronics',
@@ -361,7 +365,7 @@ describe('TechnologyService', () => {
         unlocks: { recipes: [], items: [], buildings: [] },
         researchCost: {},
         researchTime: 30,
-        position: { x: 1, y: 0 }
+        position: { x: 1, y: 0 },
       };
       const mockTech3 = {
         id: 'advanced-electronics',
@@ -371,32 +375,32 @@ describe('TechnologyService', () => {
         unlocks: { recipes: [], items: [], buildings: [] },
         researchCost: {},
         researchTime: 45,
-        position: { x: 2, y: 0 }
+        position: { x: 2, y: 0 },
       };
-      
+
       // 直接设置私有属性
       (technologyService as unknown as { techTree: Map<string, unknown> }).techTree = new Map([
         ['automation', mockTech1],
         ['electronics', mockTech2],
-        ['advanced-electronics', mockTech3]
+        ['advanced-electronics', mockTech3],
       ]);
-      
+
       // 添加多个研究
       technologyService.addToResearchQueue('automation');
       technologyService.addToResearchQueue('electronics');
       technologyService.addToResearchQueue('advanced-electronics');
-      
+
       // 重新排序
       const reordered = technologyService.reorderResearchQueue('electronics', 0);
       expect(reordered).toBe(true);
-      
+
       const queue = technologyService.getResearchQueue();
       expect(queue[0].techId).toBe('electronics');
     });
 
     it('应该正确处理重新排序无效位置', () => {
       technologyService.addToResearchQueue('automation');
-      
+
       const reordered = technologyService.reorderResearchQueue('automation', 999);
       expect(reordered).toBe(false);
     });
@@ -404,9 +408,9 @@ describe('TechnologyService', () => {
     it('应该正确清空研究队列', () => {
       technologyService.addToResearchQueue('automation');
       technologyService.addToResearchQueue('electronics');
-      
+
       technologyService.clearResearchQueue();
-      
+
       const queue = technologyService.getResearchQueue();
       expect(queue).toHaveLength(0);
     });
@@ -419,15 +423,15 @@ describe('TechnologyService', () => {
         techId: 'automation',
         status: 'researching',
         progress: 0.5,
-        currentCost: {}
+        currentCost: {},
       };
-      
+
       technologyService.setTechStateForTesting({
-        currentResearch: mockResearch
+        currentResearch: mockResearch,
       });
-      
+
       technologyService.updateResearchProgress(1000);
-      
+
       const currentResearch = technologyService.getCurrentResearch();
       expect(currentResearch).toBeDefined();
       expect(currentResearch?.techId).toBe('automation');
@@ -438,17 +442,17 @@ describe('TechnologyService', () => {
         techId: 'automation',
         status: 'researching',
         progress: 1.0,
-        currentCost: {}
+        currentCost: {},
       };
-      
+
       technologyService.setTechStateForTesting({
         currentResearch: mockResearch,
         unlockedTechs: new Set(),
         unlockedRecipes: new Set(),
         unlockedItems: new Set(),
-        unlockedBuildings: new Set()
+        unlockedBuildings: new Set(),
       });
-      
+
       // 模拟科技存在
       const mockTech = {
         id: 'automation',
@@ -458,14 +462,16 @@ describe('TechnologyService', () => {
         unlocks: { recipes: [], items: [], buildings: [] },
         researchCost: {},
         researchTime: 15,
-        position: { x: 0, y: 0 }
+        position: { x: 0, y: 0 },
       };
-      
+
       // 直接设置私有属性
-      (technologyService as unknown as { techTree: Map<string, unknown> }).techTree = new Map([['automation', mockTech]]);
-      
+      (technologyService as unknown as { techTree: Map<string, unknown> }).techTree = new Map([
+        ['automation', mockTech],
+      ]);
+
       technologyService.completeResearch('automation');
-      
+
       const currentResearch = technologyService.getCurrentResearch();
       expect(currentResearch).toBeUndefined();
     });
@@ -474,9 +480,9 @@ describe('TechnologyService', () => {
   describe('解锁内容管理', () => {
     it('应该正确获取解锁的物品', () => {
       technologyService.setTechStateForTesting({
-        unlockedItems: new Set(['iron-plate', 'copper-plate'])
+        unlockedItems: new Set(['iron-plate', 'copper-plate']),
       });
-      
+
       const unlockedItems = technologyService.getUnlockedItems();
       expect(unlockedItems).toContain('iron-plate');
       expect(unlockedItems).toContain('copper-plate');
@@ -484,9 +490,9 @@ describe('TechnologyService', () => {
 
     it('应该正确获取解锁的配方', () => {
       technologyService.setTechStateForTesting({
-        unlockedRecipes: new Set(['iron-plate', 'copper-plate'])
+        unlockedRecipes: new Set(['iron-plate', 'copper-plate']),
       });
-      
+
       const unlockedRecipes = technologyService.getUnlockedRecipes();
       expect(unlockedRecipes).toContain('iron-plate');
       expect(unlockedRecipes).toContain('copper-plate');
@@ -494,9 +500,9 @@ describe('TechnologyService', () => {
 
     it('应该正确获取解锁的建筑', () => {
       technologyService.setTechStateForTesting({
-        unlockedBuildings: new Set(['assembling-machine-1', 'furnace'])
+        unlockedBuildings: new Set(['assembling-machine-1', 'furnace']),
       });
-      
+
       const unlockedBuildings = technologyService.getUnlockedBuildings();
       expect(unlockedBuildings).toContain('assembling-machine-1');
       expect(unlockedBuildings).toContain('furnace');
@@ -514,11 +520,11 @@ describe('TechnologyService', () => {
     it('应该正确注册和触发事件', () => {
       const mockCallback = vi.fn();
       technologyService.on('research-started', mockCallback);
-      
+
       // 模拟触发事件
       const event = new CustomEvent('research-started', { detail: { techId: 'automation' } });
       technologyService['eventEmitter'].dispatchEvent(event);
-      
+
       expect(mockCallback).toHaveBeenCalled();
     });
   });
@@ -543,7 +549,7 @@ describe('TechnologyService', () => {
   describe('initialization', () => {
     it('应该正确初始化基础状态', () => {
       const service = TechnologyService.getInstance();
-      
+
       expect(service).toBeDefined();
       expect(service.isServiceInitialized()).toBe(false);
     });
@@ -555,13 +561,13 @@ describe('TechnologyService', () => {
           loadI18nData: vi.fn().mockResolvedValue({}),
           getRawGameData: vi.fn().mockReturnValue({
             recipes: [],
-            items: []
+            items: [],
           }),
           getTechCategories: vi.fn().mockReturnValue([]),
           getLocalizedRecipeName: vi.fn().mockImplementation((id: string) => `Localized ${id}`),
           getLocalizedItemName: vi.fn().mockImplementation((id: string) => `Localized ${id}`),
           getLocalizedCategoryName: vi.fn().mockImplementation((id: string) => `Localized ${id}`),
-        })
+        }),
       };
 
       // Mock DataService.getInstance()
