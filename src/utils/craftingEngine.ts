@@ -1,10 +1,7 @@
-// 制作引擎 - 处理制作队列和物品生产
+// 制作引擎 - 纯业务逻辑类，处理制作时间计算和效率分析
 
-import type { CraftingTask, Recipe } from '@/types/index';
-import useGameStore from '@/store/gameStore';
+import type { Recipe } from '@/types/index';
 import { DataService, RecipeService, GameConfig } from '@/services';
-import { secondsToMs } from '@/utils/common';
-import GameLoopManager from '@/utils/GameLoopManager';
 
 // 设备效率配置 - 基于Factorio的采矿机设计
 interface DeviceEfficiency {
@@ -23,10 +20,7 @@ interface ResourceProperties {
 
 class CraftingEngine {
   private static instance: CraftingEngine;
-  private gameLoopManager: GameLoopManager;
   private gameConfig: GameConfig;
-  private isStarting: boolean = false; // 防止重复启动
-  private readonly LOOP_ID = 'crafting-engine';
 
   // 设备效率缓存 - 从data.json的机器数据动态获取
   private deviceEfficiencyCache = new Map<string, DeviceEfficiency>();
@@ -36,7 +30,6 @@ class CraftingEngine {
 
   private constructor() {
     this.gameConfig = GameConfig.getInstance();
-    this.gameLoopManager = GameLoopManager.getInstance();
   }
 
   static getInstance(): CraftingEngine {
@@ -46,35 +39,9 @@ class CraftingEngine {
     return CraftingEngine.instance;
   }
 
-  // 启动制作引擎
-  start(): void {
-    // 如果已经在运行或正在启动中，直接返回
-    if (this.gameLoopManager.getTaskInfo(this.LOOP_ID) || this.isStarting) {
-      return;
-    }
-
-    this.isStarting = true;
-
-    try {
-      const constants = this.gameConfig.getConstants();
-      this.gameLoopManager.register(
-        this.LOOP_ID,
-        () => this.updateCraftingQueue(),
-        constants.crafting.updateInterval
-      );
-
-      // Crafting engine started
-    } finally {
-      this.isStarting = false;
-    }
-  }
-
-  // 停止制作引擎
-  stop(): void {
-    if (this.gameLoopManager.getTaskInfo(this.LOOP_ID)) {
-      this.gameLoopManager.unregister(this.LOOP_ID);
-      // Crafting engine stopped
-    }
+  // 检查制作引擎是否正在运行 - 兼容性方法，始终返回 false（由 MainGameLoop 管理）
+  isRunning(): boolean {
+    return false;
   }
 
   // 获取资源特性 - 从data.json的mining配方动态获取
@@ -217,8 +184,8 @@ class CraftingEngine {
     return Math.min(productivityBonus, constants.crafting.maxProductivityBonus); // 使用配置的最大加成
   }
 
-  // 计算最终制作时间 - 基于Factorio的效率公式
-  private calculateCraftingTime(recipe: Recipe, quantity: number, preferredMachineId?: string): number {
+  // 计算最终制作时间 - 基于Factorio的效率公式（公共方法，供MainGameLoop使用）
+  calculateCraftingTime(recipe: Recipe, quantity: number, preferredMachineId?: string): number {
     // 基础制作时间
     const baseTime = recipe.time;
 
@@ -237,169 +204,9 @@ class CraftingEngine {
     return Math.max(totalTime, constants.crafting.minCraftingTime); // 使用配置的最小制作时间
   }
 
-  // 更新制作队列
-  private updateCraftingQueue(): void {
-    const gameStore = useGameStore.getState();
-    const { craftingQueue, updateCraftingProgress } = gameStore;
-
-    if (craftingQueue.length === 0) return;
-
-    const now = Date.now();
-    const dataService = DataService.getInstance();
-
-    // 处理队列中的第一个任务（只有第一个任务会进行制作）
-    const currentTask = craftingQueue[0];
-    if (!currentTask || currentTask.status === 'completed') return;
-
-    // 检查是否为手动合成任务
-    if (currentTask.recipeId.startsWith('manual_')) {
-      // 手动合成任务需要时间计算
-      const itemId = currentTask.itemId;
-
-      // 获取物品的配方数据（用于时间计算）
-      const recipes = RecipeService.getRecipesThatProduce(itemId);
-
-      // 优先选择mining类型的配方，而不是recycling配方
-      let selectedRecipe = null;
-      if (recipes.length > 0) {
-        // 优先选择mining配方
-        const miningRecipe = recipes.find((r) => r.flags?.includes('mining'));
-        if (miningRecipe) {
-          selectedRecipe = miningRecipe;
-        } else {
-          // 如果没有mining配方，选择第一个非recycling配方
-          const nonRecyclingRecipe = recipes.find((r) => !r.flags?.includes('recycling'));
-          selectedRecipe = nonRecyclingRecipe || recipes[0];
-        }
-      }
-
-      if (selectedRecipe) {
-        // 使用手动合成效率计算时间
-        const manualEfficiency = 0.5; // 玩家默认效率
-        const baseTime = selectedRecipe.time || 1; // 基础时间
-        const craftingTime = secondsToMs((baseTime / manualEfficiency) * currentTask.quantity);
-
-        // 确保有开始时间 - 只在第一次执行时设定
-        if (!currentTask.startTime || currentTask.startTime === 0) {
-          currentTask.startTime = now;
-          updateCraftingProgress(currentTask.id, 0);
-        }
-
-        // 计算进度
-        const elapsed = now - currentTask.startTime;
-        const progress = Math.min((elapsed / craftingTime) * 100, 100);
-
-        updateCraftingProgress(currentTask.id, progress);
-
-        // 检查是否完成
-        if (progress >= 100) {
-          this.completeManualCraft(currentTask);
-        }
-      } else {
-        // 如果没有配方（原材料），立即完成
-        this.completeManualCraft(currentTask);
-      }
-      return;
-    }
-
-    const recipe = dataService.getRecipe(currentTask.recipeId);
-    if (!recipe) return;
-
-    // 如果任务刚开始，设置开始时间并开始制作
-    if (currentTask.status === 'pending') {
-      // 只在第一次执行时设定开始时间
-      if (!currentTask.startTime || currentTask.startTime === 0) {
-        currentTask.startTime = now;
-        updateCraftingProgress(currentTask.id, 0);
-      }
-    }
-
-    // 基于Factorio机制计算制作时间（使用配方的第一个生产者）
-    const craftingTime = this.calculateCraftingTime(recipe, currentTask.quantity) * 1000; // 转换为毫秒
-    const elapsed = now - currentTask.startTime;
-    const progress = Math.min((elapsed / craftingTime) * 100, 100);
-
-    updateCraftingProgress(currentTask.id, progress);
-
-    // 检查是否完成
-    if (progress >= 100) {
-      this.completeCraft(currentTask, recipe);
-    }
-  }
-
-  // 完成制作
-  private completeCraft(task: CraftingTask, recipe: Recipe): void {
-    const { updateInventory, completeCraftingTask, trackMinedEntity } = useGameStore.getState();
-
-    // 1. 先消耗输入材料（链式任务的原材料已在创建时扣除，这里只扣除中间产物）
-    if (recipe.in && !task.chainId) {
-      // 非链式任务才扣除材料
-      Object.entries(recipe.in).forEach(([itemId, required]) => {
-        const totalRequired = (required as number) * task.quantity;
-        updateInventory(itemId, -totalRequired);
-      });
-    }
-
-    // 2. 计算生产力加成后的产出
-    const productivityBonus = this.calculateProductivityBonus(recipe);
-    const bonusMultiplier = 1 + productivityBonus;
-
-    // 3. 添加产品到库存（包含生产力加成）
-    Object.entries(recipe.out).forEach(([itemId, quantity]) => {
-      const baseQuantity = (quantity as number) * task.quantity;
-      const bonusQuantity = Math.floor(baseQuantity * bonusMultiplier);
-      updateInventory(itemId, bonusQuantity);
-
-      // 4. 如果是采矿配方，追踪挖掘的实体（用于研究触发器）
-      if (recipe.flags?.includes('mining')) {
-        trackMinedEntity(itemId, bonusQuantity);
-      }
-    });
-
-    // 5. 完成任务
-    completeCraftingTask(task.id);
-
-    // Completed crafting task
-  }
-
-  // 完成手动合成
-  private completeManualCraft(task: CraftingTask): void {
-    const { updateInventory, completeCraftingTask, trackMinedEntity } = useGameStore.getState();
-
-    // 获取手动合成的配方信息
-    const itemId = task.itemId;
-    const recipes = RecipeService.getRecipesThatProduce(itemId);
-
-    // 找到合适的配方（优先mining配方）
-    let selectedRecipe = null;
-    if (recipes.length > 0) {
-      const miningRecipe = recipes.find((r) => r.flags?.includes('mining'));
-      if (miningRecipe) {
-        selectedRecipe = miningRecipe;
-      } else {
-        const nonRecyclingRecipe = recipes.find((r) => !r.flags?.includes('recycling'));
-        selectedRecipe = nonRecyclingRecipe || recipes[0];
-      }
-    }
-
-    // 如果有配方且有输入材料，则消耗材料（链式任务的原材料已在创建时扣除）
-    if (selectedRecipe && selectedRecipe.in && !task.chainId) {
-      // 非链式任务才扣除材料
-      Object.entries(selectedRecipe.in).forEach(([inputItemId, required]) => {
-        const totalRequired = (required as number) * task.quantity;
-        updateInventory(inputItemId, -totalRequired);
-      });
-    }
-
-    // 如果是采矿配方，追踪挖掘的实体（用于研究触发器）
-    if (selectedRecipe && selectedRecipe.flags?.includes('mining')) {
-      trackMinedEntity(itemId, task.quantity);
-    }
-
-    // 完成任务（completeCraftingTask会自动调用updateInventory添加产品）
-    completeCraftingTask(task.id);
-
-    // Completed manual crafting task
+  // 计算生产力加成（公共方法，供MainGameLoop使用）
+  getProductivityBonus(recipe: Recipe): number {
+    return this.calculateProductivityBonus(recipe);
   }
 }
 

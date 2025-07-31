@@ -62,47 +62,9 @@ vi.mock('@/store/gameStore', () => ({
   },
 }));
 
-describe('CraftingEngine GameLoopManager Integration', () => {
+describe('CraftingEngine Business Logic', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGameLoopManager.getInstance.mockReturnValue(mockGameLoopManager);
-  });
-
-  it('should integrate with GameLoopManager correctly', async () => {
-    // Dynamic import to ensure mocks are in place
-    const { default: CraftingEngine } = await import('../craftingEngine');
-    
-    const craftingEngine = CraftingEngine.getInstance();
-    
-    // Test start
-    mockGameLoopManager.getTaskInfo.mockReturnValue(null); // Not running
-    
-    craftingEngine.start();
-    
-    expect(mockGameLoopManager.register).toHaveBeenCalledWith(
-      'crafting-engine',
-      expect.any(Function),
-      100
-    );
-    
-    // Test stop
-    mockGameLoopManager.getTaskInfo.mockReturnValue({ id: 'crafting-engine' }); // Running
-    
-    craftingEngine.stop();
-    
-    expect(mockGameLoopManager.unregister).toHaveBeenCalledWith('crafting-engine');
-  });
-
-  it('should not start if already running', async () => {
-    const { default: CraftingEngine } = await import('../craftingEngine');
-    
-    const craftingEngine = CraftingEngine.getInstance();
-    
-    mockGameLoopManager.getTaskInfo.mockReturnValue({ id: 'crafting-engine' }); // Already running
-    
-    craftingEngine.start();
-    
-    expect(mockGameLoopManager.register).not.toHaveBeenCalled();
   });
 
   it('should maintain singleton pattern', async () => {
@@ -112,5 +74,56 @@ describe('CraftingEngine GameLoopManager Integration', () => {
     const instance2 = CraftingEngine.getInstance();
     
     expect(instance1).toBe(instance2);
+  });
+
+  it('should report not running (loop management moved to MainGameLoop)', async () => {
+    const { default: CraftingEngine } = await import('../craftingEngine');
+    
+    const craftingEngine = CraftingEngine.getInstance();
+    
+    // CraftingEngine is now a pure business logic class - always returns false
+    expect(craftingEngine.isRunning()).toBe(false);
+  });
+
+  it('should provide crafting time calculation', async () => {
+    const { default: CraftingEngine } = await import('../craftingEngine');
+    
+    const craftingEngine = CraftingEngine.getInstance();
+    
+    const testRecipe = {
+      id: 'test-recipe',
+      name: 'Test Recipe',
+      time: 2,
+      in: { 'iron-ore': 2 },
+      out: { 'iron-plate': 1 },
+      category: 'smelting',
+      producers: ['furnace']
+    };
+    
+    const craftingTime = craftingEngine.calculateCraftingTime(testRecipe, 5);
+    
+    expect(craftingTime).toBeGreaterThan(0);
+    expect(typeof craftingTime).toBe('number');
+  });
+
+  it('should provide productivity bonus calculation', async () => {
+    const { default: CraftingEngine } = await import('../craftingEngine');
+    
+    const craftingEngine = CraftingEngine.getInstance();
+    
+    const testRecipe = {
+      id: 'test-recipe',
+      name: 'Test Recipe',
+      time: 2,
+      in: { 'iron-ore': 2 },
+      out: { 'iron-plate': 1 },
+      category: 'smelting',
+      producers: ['furnace']
+    };
+    
+    const productivityBonus = craftingEngine.getProductivityBonus(testRecipe);
+    
+    expect(typeof productivityBonus).toBe('number');
+    expect(productivityBonus).toBeGreaterThanOrEqual(0);
   });
 });

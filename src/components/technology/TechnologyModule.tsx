@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, CircularProgress, Alert, useTheme, useMediaQuery } from '@mui/material';
 import TechSimpleGrid from './TechSimpleGrid';
 import TechDetailPanel from './TechDetailPanel';
@@ -10,7 +10,6 @@ import type { TechStatus } from '@/types/technology';
 import { ResearchPriority } from '@/types/technology';
 import { useLocalStorageState } from 'ahooks';
 import { useUnlockedTechsRepair } from '@/hooks/useUnlockedTechsRepair';
-import GameLoopManager from '@/utils/GameLoopManager';
 
 const TechnologyModule: React.FC = React.memo(() => {
   const theme = useTheme();
@@ -31,7 +30,6 @@ const TechnologyModule: React.FC = React.memo(() => {
     addToResearchQueue,
     removeFromResearchQueue,
     setAutoResearch,
-    updateResearchProgress,
   } = useGameStore();
 
   // 本地状态 - 智能初始化loading状态
@@ -41,8 +39,6 @@ const TechnologyModule: React.FC = React.memo(() => {
     defaultValue: null,
   });
 
-  const gameLoopManager = GameLoopManager.getInstance();
-  const researchLoopIdRef = useRef<string>(`research-progress-${Date.now()}-${Math.random().toString(36).substring(2)}`);
 
   // 初始化科技服务 - 优化版本，避免不必要的loading
   useEffect(() => {
@@ -72,24 +68,7 @@ const TechnologyModule: React.FC = React.memo(() => {
     initializeTech();
   }, [initializeTechnologyService, technologies.size]);
 
-  // 研究进度更新循环
-  useEffect(() => {
-    const loopId = researchLoopIdRef.current;
-    
-    if (researchState) {
-      gameLoopManager.register(
-        loopId,
-        (deltaTime) => updateResearchProgress(deltaTime),
-        1000 // 每秒更新
-      );
-    } else {
-      gameLoopManager.unregister(loopId);
-    }
-
-    return () => {
-      gameLoopManager.unregister(loopId);
-    };
-  }, [researchState, updateResearchProgress, gameLoopManager]);
+  // 研究进度更新现在由 MainGameLoop 统一处理，无需组件级别的循环管理
 
   // 处理科技点击
   const handleTechClick = (techId: string) => {

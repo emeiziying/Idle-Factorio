@@ -64,10 +64,20 @@
       "Bash(./update-external-imports.sh)",
       "Bash(# 创建新的测试目录结构\nmkdir -p src/services/core/__tests__ src/services/data/__tests__ src/services/game-logic/__tests__ src/services/systems/__tests__ src/services/storage/__tests__\n\n# 移动测试文件到对应目录\nmv src/services/__tests__/ServiceLocator.test.ts src/services/core/__tests__/\nmv src/services/__tests__/ServiceInitializer.test.ts src/services/core/__tests__/\nmv src/services/__tests__/GameConfig.test.ts src/services/core/__tests__/\n\nmv src/services/__tests__/DataService.test.ts src/services/data/__tests__/\nmv src/services/__tests__/RecipeService.test.ts src/services/data/__tests__/\nmv src/services/__tests__/DependencyService.test.ts src/services/data/__tests__/\n\nmv src/services/__tests__/TechnologyService.test.ts src/services/game-logic/__tests__/\nmv src/services/__tests__/UserProgressService.test.ts src/services/game-logic/__tests__/\n\nmv src/services/__tests__/FuelService.test.ts src/services/systems/__tests__/\nmv src/services/__tests__/PowerService.test.ts src/services/systems/__tests__/\nmv src/services/__tests__/StorageService.test.ts src/services/systems/__tests__/\n\nmv src/services/__tests__/GameStorageService.test.ts src/services/storage/__tests__/\n\n# 删除空的原测试目录\nrmdir src/services/__tests__)",
       "Bash(./update-test-imports.sh)",
-      "Bash(./fix-test-alias-imports.sh:*)"
+      "Bash(./fix-test-alias-imports.sh:*)",
+      "Bash(pntml lint:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["context7", "sequential-thinking", "mui-mcp", "browser-tools"],
-  "disabledMcpjsonServers": ["mcp-feedback-enhanced", "promptx", "serena"]
+  "enabledMcpjsonServers": [
+    "context7",
+    "sequential-thinking",
+    "mui-mcp",
+    "browser-tools"
+  ],
+  "disabledMcpjsonServers": [
+    "mcp-feedback-enhanced",
+    "promptx",
+    "serena"
+  ]
 }

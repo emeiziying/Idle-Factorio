@@ -6,7 +6,6 @@ import ItemDetailPanel from './ItemDetailPanel';
 import CraftingQueue from './CraftingQueue';
 import { DataService } from '@/services';
 import { useLocalStorageState } from 'ahooks';
-import { useProductionLoop } from '@/hooks/useProductionLoop';
 import type { Category, Item } from '@/types/index';
 
 const ProductionModule: React.FC = React.memo(() => {
@@ -33,8 +32,7 @@ const ProductionModule: React.FC = React.memo(() => {
   const selectedCategoryRef = useRef<string>('');
   const loadingRef = useRef<boolean>(true);
 
-  // 启动生产循环
-  useProductionLoop({ enabled: true });
+  // 生产循环现在由 MainGameLoop 统一处理，无需组件级别的循环管理
 
   // Keep refs in sync with state
   useEffect(() => {

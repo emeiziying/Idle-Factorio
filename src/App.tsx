@@ -26,10 +26,8 @@ import ProductionModule from '@/components/production/ProductionModule';
 import FacilitiesModule from '@/components/facilities/FacilitiesModule';
 import TechnologyModule from '@/components/technology/TechnologyModule';
 import ManualCraftingTestPage from '@/components/test/ManualCraftingTestPage';
-import { useGameLoop } from '@/hooks/useGameLoop';
 
 import { ServiceInitializer } from '@/services';
-import CraftingEngine from '@/utils/craftingEngine';
 import useGameStore from '@/store/gameStore';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useLocalStorageState } from 'ahooks';
@@ -45,9 +43,6 @@ const App: React.FC = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const isMobile = useIsMobile();
   const { clearGameData } = useGameStore();
-
-  // 启动游戏循环
-  useGameLoop();
 
   // 安全修复inventory状态
   useInventoryRepair();
@@ -113,8 +108,7 @@ const App: React.FC = () => {
           const { initializeTechnologyService } = useGameStore.getState();
           await initializeTechnologyService();
 
-          // 启动制作引擎
-          CraftingEngine.getInstance().start();
+          // CraftingEngine 现在是纯业务逻辑类，不需要启动（由 MainGameLoop 管理）
 
           // App initialized successfully
 
@@ -135,9 +129,9 @@ const App: React.FC = () => {
 
     initializeApp();
 
-    // 清理函数：组件卸载时停止制作引擎
+    // 清理函数：组件卸载时停止主游戏循环
     return () => {
-      CraftingEngine.getInstance().stop();
+      // MainGameLoop 会在 ServiceInitializer 中管理，组件卸载时会自动清理
     };
   }, []);
 

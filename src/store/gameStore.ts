@@ -23,7 +23,6 @@ import type { InventoryOperations } from '@/types/inventory';
 import type { FacilityInstance } from '@/types/facilities';
 import { RecipeService, DataService, TechnologyService, FuelService } from '@/services';
 import { getStorageConfig } from '@/data/storageConfigs';
-import GameLoopManager from '@/utils/GameLoopManager';
 
 // 延迟加载 GameStorageService 避免循环依赖
 const getGameStorageService = async () => {
@@ -244,26 +243,13 @@ const useGameStore = create<GameState>()(
     },
 
     initializeDataLoading: () => {
-      const gameLoopManager = GameLoopManager.getInstance();
-      const loopId = 'global-data-check';
-      
-      const checkData = () => {
-        const dataService = DataService.getInstance();
-        const loaded = dataService.isDataLoaded();
-        if (loaded) {
-          get().setDataLoaded(true);
-          gameLoopManager.unregister(loopId);
-        }
-        return loaded;
-      };
-
-      // 立即检查
-      if (checkData()) {
-        return;
+      // 数据加载检查现在由 MainGameLoop 统一处理
+      // 立即检查一次数据状态
+      const dataService = DataService.getInstance();
+      const loaded = dataService.isDataLoaded();
+      if (loaded) {
+        get().setDataLoaded(true);
       }
-
-      // 如果数据未加载，注册到游戏循环中定期检查
-      gameLoopManager.register(loopId, checkData, 100);
     },
 
     // 库存管理
@@ -1318,50 +1304,6 @@ const initializeStore = async () => {
 // 立即执行初始化
 initializeStore();
 
-// 使用 GameLoopManager 管理自动存档
-const gameLoopManager = GameLoopManager.getInstance();
-const AUTO_SAVE_LOOP_ID = 'auto-save';
-let lastAutoSaveTime = Date.now();
-
-// 创建自动存档循环
-const createAutoSaveLoop = () => {
-  // 先清理旧的循环，防止热更新时重复创建
-  gameLoopManager.unregister(AUTO_SAVE_LOOP_ID);
-
-  // 创建新的循环
-  gameLoopManager.register(
-    AUTO_SAVE_LOOP_ID,
-    async () => {
-      const state = useGameStore.getState();
-      const now = Date.now();
-
-      // 只有当游戏时间有变化时才存档（说明游戏在运行）
-      if (now - lastAutoSaveTime > 10000) {
-        console.log('[AutoSave] 定期强制存档触发');
-        try {
-          await state.forceSaveGame(); // 使用强制存档确保可靠性
-          lastAutoSaveTime = now;
-        } catch (error) {
-          console.error('[AutoSave] 自动存档失败:', error);
-          // 强制存档失败，但会在下次循环触发时重试
-        }
-      }
-    },
-    10000 // 10秒间隔
-  );
-
-  console.log('[AutoSave] 创建自动存档循环');
-};
-
-// 初始化自动存档循环
-createAutoSaveLoop();
-
-// 在开发环境中，监听热更新事件（如果可用）
-if (typeof import.meta !== 'undefined' && import.meta.env?.DEV && import.meta.hot) {
-  import.meta.hot.dispose(() => {
-    console.log('[AutoSave] 热更新时清理循环');
-    gameLoopManager.unregister(AUTO_SAVE_LOOP_ID);
-  });
-}
+// 自动存档现在由 MainGameLoop 统一处理，无需在此处重复实现
 
 export default useGameStore;

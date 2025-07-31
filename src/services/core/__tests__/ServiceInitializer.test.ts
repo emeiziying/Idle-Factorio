@@ -10,6 +10,7 @@ import { PowerService } from '@/services/systems/PowerService';
 import { StorageService } from '@/services/systems/StorageService';
 import { GameStateAdapter } from '@/adapters/GameStateAdapter';
 import ManualCraftingValidator from '@/utils/manualCraftingValidator';
+import MainGameLoop from '@/core/MainGameLoop';
 
 // Mock all dependencies
 vi.mock('@/services/core/ServiceLocator');
@@ -22,6 +23,7 @@ vi.mock('@/services/systems/PowerService');
 vi.mock('@/services/systems/StorageService');
 vi.mock('@/adapters/GameStateAdapter');
 vi.mock('@/utils/manualCraftingValidator');
+vi.mock('@/core/MainGameLoop');
 
 describe('ServiceInitializer', () => {
   let mockServiceLocator: { register: ReturnType<typeof vi.fn>; clear: ReturnType<typeof vi.fn> };
@@ -34,6 +36,7 @@ describe('ServiceInitializer', () => {
   let mockStorageService: { getInstance: ReturnType<typeof vi.fn> };
   let mockGameStateAdapter: { getInstance: ReturnType<typeof vi.fn> };
   let mockManualCraftingValidator: { getInstance: ReturnType<typeof vi.fn> };
+  let mockMainGameLoop: { getInstance: ReturnType<typeof vi.fn>; start: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     // Reset static state
@@ -88,6 +91,16 @@ describe('ServiceInitializer', () => {
       getInstance: vi.fn().mockReturnValue({}),
     };
 
+    mockMainGameLoop = {
+      getInstance: vi.fn(),
+      start: vi.fn(),
+    };
+
+    // Set up the return value for getInstance
+    mockMainGameLoop.getInstance.mockReturnValue({
+      start: mockMainGameLoop.start,
+    });
+
     mockServiceLocator = {
       register: vi.fn(),
       clear: vi.fn(),
@@ -107,6 +120,7 @@ describe('ServiceInitializer', () => {
     vi.mocked(TechnologyService.getInstance).mockReturnValue(mockTechnologyService.getInstance());
     vi.mocked(FuelService.getInstance).mockReturnValue(mockFuelService.getInstance());
     vi.mocked(PowerService.getInstance).mockReturnValue(mockPowerService.getInstance());
+    vi.mocked(MainGameLoop.getInstance).mockReturnValue(mockMainGameLoop.getInstance());
   });
 
   afterEach(() => {

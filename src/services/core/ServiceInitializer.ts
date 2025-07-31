@@ -8,6 +8,7 @@ import { PowerService } from '../systems/PowerService';
 import { StorageService } from '../systems/StorageService';
 import { GameStateAdapter } from '@/adapters/GameStateAdapter';
 import ManualCraftingValidator from '@/utils/manualCraftingValidator';
+import MainGameLoop from '@/core/MainGameLoop';
 
 /**
  * 服务初始化器
@@ -65,6 +66,10 @@ export class ServiceInitializer {
 
     const powerService = PowerService.getInstance();
     ServiceLocator.register(SERVICE_NAMES.POWER, powerService);
+
+    // 6. 启动主游戏循环
+    const mainGameLoop = MainGameLoop.getInstance();
+    mainGameLoop.start();
 
     this.initialized = true;
   }

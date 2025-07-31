@@ -1,20 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// Mock GameLoopManager before any other imports
-const mockGameLoopManager = {
-  register: vi.fn(),
-  unregister: vi.fn(),
-  getInstance: vi.fn(),
-};
-
-vi.mock('@/utils/GameLoopManager', () => ({
-  default: class {
-    static getInstance() {
-      return mockGameLoopManager;
-    }
-  },
-}));
-
 // Mock DataService
 const mockDataService = {
   isDataLoaded: vi.fn(),
@@ -55,7 +40,6 @@ vi.mock('@/services', () => ({
 describe('GameStore Data Loading Management', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGameLoopManager.getInstance.mockReturnValue(mockGameLoopManager);
     mockDataService.getInstance.mockReturnValue(mockDataService);
   });
 
@@ -76,22 +60,7 @@ describe('GameStore Data Loading Management', () => {
     expect(state.dataLoaded).toBe(true);
   });
 
-  it('should initialize data loading check', async () => {
-    const { default: useGameStore } = await import('../gameStore');
-    
-    mockDataService.isDataLoaded.mockReturnValue(false);
-    
-    const { initializeDataLoading } = useGameStore.getState();
-    initializeDataLoading();
-    
-    expect(mockGameLoopManager.register).toHaveBeenCalledWith(
-      'global-data-check',
-      expect.any(Function),
-      100
-    );
-  });
-
-  it('should not register loop if data is already loaded', async () => {
+  it('should set dataLoaded to true when data is already loaded during initialization', async () => {
     const { default: useGameStore } = await import('../gameStore');
     
     mockDataService.isDataLoaded.mockReturnValue(true);
@@ -99,39 +68,34 @@ describe('GameStore Data Loading Management', () => {
     const { initializeDataLoading } = useGameStore.getState();
     initializeDataLoading();
     
-    expect(mockGameLoopManager.register).not.toHaveBeenCalled();
-    
     const state = useGameStore.getState();
     expect(state.dataLoaded).toBe(true);
   });
 
-  it('should unregister loop when data becomes loaded', async () => {
+  it('should not change dataLoaded when data is not loaded during initialization', async () => {
     const { default: useGameStore } = await import('../gameStore');
     
-    // First call returns false, second call returns true
-    mockDataService.isDataLoaded
-      .mockReturnValueOnce(false)
-      .mockReturnValueOnce(true);
+    // Reset the store state first
+    const { setDataLoaded } = useGameStore.getState();
+    setDataLoaded(false);
+    
+    mockDataService.isDataLoaded.mockReturnValue(false);
     
     const { initializeDataLoading } = useGameStore.getState();
     initializeDataLoading();
     
-    // Get the registered callback
-    expect(mockGameLoopManager.register).toHaveBeenCalledWith(
-      'global-data-check',
-      expect.any(Function),
-      100
-    );
-    
-    const checkDataCallback = mockGameLoopManager.register.mock.calls[0][1];
-    
-    // Simulate the callback being called
-    const result = checkDataCallback();
-    
-    expect(result).toBe(true);
-    expect(mockGameLoopManager.unregister).toHaveBeenCalledWith('global-data-check');
-    
     const state = useGameStore.getState();
-    expect(state.dataLoaded).toBe(true);
+    expect(state.dataLoaded).toBe(false);
+  });
+
+  it('should call DataService.isDataLoaded during initialization', async () => {
+    const { default: useGameStore } = await import('../gameStore');
+    
+    mockDataService.isDataLoaded.mockReturnValue(false);
+    
+    const { initializeDataLoading } = useGameStore.getState();
+    initializeDataLoading();
+    
+    expect(mockDataService.isDataLoaded).toHaveBeenCalled();
   });
 });
