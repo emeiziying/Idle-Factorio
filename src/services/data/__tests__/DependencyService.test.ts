@@ -6,8 +6,19 @@ import type { Recipe } from '@/types/index';
 import type { ManualCraftingValidation } from '@/utils/manualCraftingValidator';
 
 // Mock dependencies
-vi.mock('../RecipeService');
-vi.mock('../../utils/manualCraftingValidator');
+vi.mock('@/services/data/RecipeService');
+vi.mock('@/utils/manualCraftingValidator');
+vi.mock('@/store/gameStore', () => ({
+  default: {
+    getState: vi.fn(() => ({
+      inventory: new Map(),
+      craftingQueue: [],
+      totalItemsProduced: 0,
+      favoriteRecipes: new Set(),
+      recentRecipes: []
+    }))
+  }
+}));
 
 const mockRecipeService = vi.mocked(RecipeService);
 const mockValidator = vi.mocked(ManualCraftingValidator);

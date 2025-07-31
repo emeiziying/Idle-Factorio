@@ -12,7 +12,7 @@ import TechDetailPanel from './TechDetailPanel';
 import ResearchQueue from './ResearchQueue';
 
 import useGameStore from '@/store/gameStore';
-import { TechnologyService } from '@/services/game-logic/TechnologyService';
+import { TechnologyService } from '@/services';
 import type { TechStatus } from '@/types/technology';
 import { ResearchPriority } from '@/types/technology';
 import { useLocalStorageState } from 'ahooks';

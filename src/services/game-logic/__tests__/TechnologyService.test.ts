@@ -15,9 +15,9 @@ interface ServiceInstance<T> {
 }
 
 // Mock dependencies
-vi.mock('../DataService');
-vi.mock('../RecipeService');
-vi.mock('../ServiceLocator');
+vi.mock('@/services/data/DataService');
+vi.mock('@/services/data/RecipeService');
+vi.mock('@/services/core/ServiceLocator');
 
 describe('TechnologyService', () => {
   let technologyService: TechnologyService;

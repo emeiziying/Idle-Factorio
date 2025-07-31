@@ -16,7 +16,7 @@ import type { IManualCraftingValidator } from '@/services/interfaces/IManualCraf
 import type { ServiceInstance } from '@/types/test-utils'
 
 // 模拟自定义配方数据
-vi.mock('../../data/customRecipes', () => ({
+vi.mock('@/data/customRecipes', () => ({
   CUSTOM_RECIPES: [
     {
       id: 'custom-recipe-1',

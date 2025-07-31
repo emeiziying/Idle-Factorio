@@ -12,15 +12,15 @@ import { GameStateAdapter } from '@/services/game-logic/GameStateAdapter';
 import ManualCraftingValidator from '@/utils/manualCraftingValidator';
 
 // Mock all dependencies
-vi.mock('./ServiceLocator');
-vi.mock('../data/DataService');
-vi.mock('../data/RecipeService');
-vi.mock('../game-logic/TechnologyService');
-vi.mock('../game-logic/UserProgressService');
-vi.mock('../systems/FuelService');
-vi.mock('../systems/PowerService');
-vi.mock('../systems/StorageService');
-vi.mock('../game-logic/GameStateAdapter');
+vi.mock('@/services/core/ServiceLocator');
+vi.mock('@/services/data/DataService');
+vi.mock('@/services/data/RecipeService');
+vi.mock('@/services/game-logic/TechnologyService');
+vi.mock('@/services/game-logic/UserProgressService');
+vi.mock('@/services/systems/FuelService');
+vi.mock('@/services/systems/PowerService');
+vi.mock('@/services/systems/StorageService');
+vi.mock('@/services/game-logic/GameStateAdapter');
 vi.mock('@/utils/manualCraftingValidator');
 
 describe('ServiceInitializer', () => {

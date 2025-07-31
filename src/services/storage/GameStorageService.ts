@@ -3,7 +3,7 @@
  * 整合了数据优化、压缩、防抖和localStorage操作
  */
 
-import { DataService } from '../data/DataService';
+import { DataService } from '@/services';
 import type { FacilityInstance, FacilityStatus } from '@/types/facilities';
 import type { CraftingTask, CraftingChain, DeployedContainer, InventoryItem } from '@/types/index';
 import type { TechResearchState, ResearchQueueItem } from '@/types/technology';

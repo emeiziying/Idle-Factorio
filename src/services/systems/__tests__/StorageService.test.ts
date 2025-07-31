@@ -5,7 +5,7 @@ import type { DataService } from '@/services/data/DataService'
 import type { Item, Recipe } from '@/types'
 
 // 模拟存储设备的特定配置
-vi.mock('../../data/storageConfigData', () => ({
+vi.mock('@/data/storageConfigData', () => ({
   STORAGE_SPECIFIC_CONFIGS: {
     'wooden-chest': {
       category: 'solid',

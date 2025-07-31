@@ -1,12 +1,19 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { act } from '@testing-library/react'
 import useGameStore from '@/store/gameStore'
-import { RecipeService } from '@/services/data/RecipeService'
-import { DataService } from '@/services/data/DataService'
-import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator'
+import { RecipeService, DataService, ServiceLocator, SERVICE_NAMES } from '@/services'
 
 // 模拟服务
-vi.mock('../../services/GameStorageService')
+vi.mock('@/services/storage/GameStorageService', () => ({
+  GameStorageService: {
+    getInstance: vi.fn(() => ({
+      saveGame: vi.fn().mockResolvedValue(undefined),
+      loadGame: vi.fn().mockResolvedValue(null),
+      forceSaveGame: vi.fn().mockResolvedValue(undefined),
+      clearGameData: vi.fn().mockResolvedValue(undefined)
+    }))
+  }
+}))
 
 // 制作系统集成测试
 describe('Crafting Integration Tests', () => {

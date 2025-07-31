@@ -23,7 +23,8 @@ export {
 export {
   FuelService,
   PowerService,
-  StorageService
+  StorageService,
+  type GenericFuelBuffer
 } from './systems';
 
 // Storage services - Game state persistence and configuration

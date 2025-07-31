@@ -2,9 +2,9 @@
 // 基于 Factorio Wiki 官方规则实现
 
 import { ServiceLocator, SERVICE_NAMES, RecipeService } from '@/services';
-import type { DataService } from '@/services/data/DataService';
+import type { DataService } from '@/services';
 import type { Recipe } from '@/types/index';
-import type { IManualCraftingValidator } from '@/services/interfaces/IManualCraftingValidator';
+import type { IManualCraftingValidator } from '@/services/interfaces';
 
 // 验证结果类别常量
 export const ValidationCategory = {

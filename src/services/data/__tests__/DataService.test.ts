@@ -64,17 +64,26 @@ const mockI18nData = {
   items: {
     'iron-plate': '铁板',
     'copper-plate': '铜板',
-    'transport-belt': '传送带'
+    'transport-belt': '传送带',
+     'automation': '自动化',
+    'logistics': '物流学'
   },
   recipes: {
     'iron-plate': '铁板',
     'copper-plate': '铜板'
   },
-  locations: {}
+  "locations": {
+    "space-platform": "太空平台",
+    "nauvis": "新地星",
+    "vulcanus": "祝融星",
+    "gleba": "句芒星",
+    "fulgora": "雷神星",
+    "aquilo": "玄冥星"
+  }
 }
 
 // Mock imports - must be hoisted to avoid circular reference
-vi.mock('../../data/spa/data.json', () => ({
+vi.mock('@/data/spa/data.json', () => ({
   default: {
     categories: [
       { id: 'intermediate-products', name: 'Intermediate products' },
@@ -149,7 +158,7 @@ vi.mock('../../data/spa/data.json', () => ({
   }
 }))
 
-vi.mock('../../utils/logger', () => ({
+vi.mock('@/utils/logger', () => ({
   error: vi.fn()
 }))
 
@@ -791,8 +800,8 @@ describe('DataService', () => {
 
     // 测试：应返回位置的本地化名称
     it('应返回位置的本地化名称', () => {
-      expect(dataService.getLocalizedLocationName('nauvis')).toBe('诺维斯')
-      expect(dataService.getLocalizedLocationName('vulcanus')).toBe('火山星')
+      expect(dataService.getLocalizedLocationName('nauvis')).toBe('新地星')
+      expect(dataService.getLocalizedLocationName('vulcanus')).toBe('祝融星')
     })
 
     // 测试：找不到翻译时应返回原始ID

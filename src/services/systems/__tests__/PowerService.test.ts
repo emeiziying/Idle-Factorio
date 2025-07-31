@@ -7,8 +7,8 @@ import { FacilityStatus } from '@/types/facilities';
 import type { ServiceInstance } from '@/types/test-utils';
 
 // Mock dependencies
-vi.mock('../DataService');
-vi.mock('../GameConfig');
+vi.mock('@/services/data/DataService');
+vi.mock('@/services/core/GameConfig');
 
 describe('PowerService', () => {
   let powerService: PowerService;

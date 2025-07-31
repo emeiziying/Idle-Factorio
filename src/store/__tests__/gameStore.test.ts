@@ -6,11 +6,17 @@ import useGameStore from '@/store/gameStore'
 import type { CraftingTask } from '@/types/index'
 
 // 模拟服务
-vi.mock('../../services/RecipeService')
-vi.mock('../../services/DataService')
-vi.mock('../../services/TechnologyService')
-vi.mock('../../services/FuelService')
-vi.mock('../../services/GameStorageService')
+vi.mock('@/services/game-logic/TechnologyService')
+vi.mock('@/services/storage/GameStorageService', () => ({
+  GameStorageService: {
+    getInstance: vi.fn(() => ({
+      saveGame: vi.fn().mockResolvedValue(undefined),
+      loadGame: vi.fn().mockResolvedValue(null),
+      forceSaveGame: vi.fn().mockResolvedValue(undefined),
+      clearGameData: vi.fn().mockResolvedValue(undefined)
+    }))
+  }
+}))
 
 // 模拟 DataService
 const mockDataService = {
@@ -37,14 +43,27 @@ const mockRecipeService = {
 }
 
 // 设置模拟实现
-const { DataService } = await import('../../services/DataService')
-const { FuelService } = await import('../../services/FuelService')
-const { RecipeService } = await import('../../services/RecipeService')
+vi.mock('@/services/data/DataService', () => ({
+  DataService: {
+    getInstance: vi.fn(() => mockDataService)
+  }
+}))
 
-vi.mocked(DataService.getInstance).mockReturnValue(mockDataService)
-vi.mocked(FuelService.getInstance).mockReturnValue(mockFuelService)
-vi.mocked(RecipeService.getRecipeById).mockReturnValue(null)
-vi.mocked(RecipeService.getAllRecipes).mockReturnValue([])
+vi.mock('@/services/systems/FuelService', () => ({
+  FuelService: {
+    getInstance: vi.fn(() => mockFuelService)
+  }
+}))
+
+vi.mock('@/services/data/RecipeService', () => ({
+  RecipeService: {
+    getInstance: vi.fn(() => mockRecipeService),
+    getRecipeById: vi.fn(() => null),
+    getAllRecipes: vi.fn(() => [])
+  }
+}))
+
+// 模拟设置已完成，无需额外配置
 
 // 模拟 window.location.reload
 Object.defineProperty(window, 'location', {

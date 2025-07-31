@@ -268,6 +268,9 @@ describe("UserProgressService", () => {
         const newService = UserProgressService.getInstance();
         expect(newService.getUnlockedItems()).toEqual([]);
         expect(newService.getUnlockedTechs()).toEqual([]);
+        
+        // 清理 localStorage 中的无效数据
+        localStorage.removeItem(STORAGE_KEY);
       });
 
       // 测试：保存时应处理 localStorage 错误

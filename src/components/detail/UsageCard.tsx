@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import type { Recipe } from '@/types/index';
 import FactorioIcon from '@/components/common/FactorioIcon';
-import { DataService } from '@/services/data/DataService';
+import { DataService } from '@/services';
 
 interface UsageCardProps {
   usedInRecipes: Recipe[];

@@ -6,7 +6,7 @@ import { Add as AddIcon, ArrowForward as ArrowIcon } from '@mui/icons-material';
 import type { Recipe } from '@/types/index';
 import FactorioIcon from '@/components/common/FactorioIcon';
 import useGameStore from '@/store/gameStore';
-import { DataService } from '@/services/data/DataService';
+import { DataService } from '@/services';
 import TimeIcon from '@/assets/Time.png';
 
 interface RecipeFlowDisplayProps {

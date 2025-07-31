@@ -21,9 +21,8 @@ import {
 import type { Item } from '@/types/index';
 import useGameStore from '@/store/gameStore';
 import FactorioIcon from '@/components/common/FactorioIcon';
-import { DataService } from '@/services/data/DataService';
+import { DataService, getStorageService } from '@/services';
 import { getAvailableChestTypes } from '@/data/storageConfigs';
-import { getStorageService } from '@/services/systems/StorageService';
 
 interface StorageExpansionDialogProps {
   open: boolean;

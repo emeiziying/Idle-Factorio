@@ -9,13 +9,13 @@ import { FacilityStatus } from '@/types/facilities'
 import type { ServiceInstance, MockObject } from '@/types/test-utils'
 
 // 模拟依赖项
-vi.mock('../DataService')
-vi.mock('../GameConfig')
-vi.mock('../../utils/logger', () => ({
+vi.mock('@/services/data/DataService')
+vi.mock('@/services/core/GameConfig')
+vi.mock('@/utils/logger', () => ({
   warn: vi.fn(),
   error: vi.fn()
 }))
-vi.mock('../../utils/common', () => ({
+vi.mock('@/utils/common', () => ({
   msToSeconds: (ms: number) => ms / 1000
 }))
 

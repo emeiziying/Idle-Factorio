@@ -5,7 +5,7 @@ import {
   useTheme
 } from '@mui/material';
 import type { Item } from '@/types/index';
-import { DataService } from '@/services/data/DataService';
+import { DataService } from '@/services';
 import useGameStore from '@/store/gameStore';
 
 interface ItemDetailHeaderProps {

@@ -8,7 +8,18 @@ import type { TechResearchState, ResearchQueueItem } from '@/types/technology';
 import type { ServiceInstance } from '@/types/test-utils';
 
 // Mock dependencies
-vi.mock('../../data/DataService');
+vi.mock('@/services/data/DataService');
+vi.mock('@/store/gameStore', () => ({
+  default: {
+    getState: vi.fn(() => ({
+      inventory: new Map(),
+      craftingQueue: [],
+      totalItemsProduced: 0,
+      favoriteRecipes: new Set(),
+      recentRecipes: []
+    }))
+  }
+}));
 vi.mock('lz-string', () => ({
   default: {
     compressToUTF16: vi.fn((data: string) => `compressed_${data}`),
@@ -174,11 +185,15 @@ describe('GameStorageService', () => {
     });
 
     it('应该使用防抖机制', async () => {
-      gameStorageService.saveGame(mockGameState);
-      gameStorageService.saveGame(mockGameState);
+      const savePromise1 = gameStorageService.saveGame(mockGameState);
+      const savePromise2 = gameStorageService.saveGame(mockGameState);
       
       // 验证保存调用成功完成
       await new Promise(resolve => setTimeout(resolve, 2100));
+      
+      // 等待保存完成（第一个会被取消，第二个会成功）
+      await expect(savePromise1).rejects.toThrow('保存任务被取消');
+      await savePromise2;
       
       // 验证保存成功
       const savedData = localStorage.getItem('factorio-game-storage');
@@ -203,9 +218,6 @@ describe('GameStorageService', () => {
       
       // 立即强制保存
       await gameStorageService.forceSaveGame(mockGameState);
-      
-      // 等待防抖时间
-      await new Promise(resolve => setTimeout(resolve, 2100));
       
       // 原来的保存应该被取消
       await expect(savePromise).rejects.toThrow('保存任务被取消');
@@ -288,6 +300,9 @@ describe('GameStorageService', () => {
       
       const loaded = await gameStorageService.loadGame();
       expect(loaded).toBeNull();
+      
+      // 清理 localStorage 中的无效数据
+      localStorage.removeItem('factorio-game-storage');
     });
   });
 

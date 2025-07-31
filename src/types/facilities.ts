@@ -1,5 +1,5 @@
 // 设施相关类型定义
-import type { GenericFuelBuffer } from '@/services/systems/FuelService';
+import type { GenericFuelBuffer } from '@/services';
 
 export interface Facility {
   id: string;

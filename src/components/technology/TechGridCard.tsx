@@ -16,8 +16,7 @@ import {
   NewReleases as TriggerIcon
 } from '@mui/icons-material';
 import FactorioIcon from '@/components/common/FactorioIcon';
-import { TechnologyService } from '@/services/game-logic/TechnologyService';
-import { DataService } from '@/services/data/DataService';
+import { TechnologyService, DataService } from '@/services';
 import type { Technology, TechStatus } from '@/types/technology';
 
 // Factorio Design System
