@@ -29,10 +29,14 @@ export class DIContainer {
   /**
    * 注册服务类（自动依赖注入）
    */
-  register<T>(token: string, constructor: Constructor<T>, options?: {
-    singleton?: boolean;
-    dependencies?: string[];
-  }): void {
+  register<T>(
+    token: string,
+    constructor: Constructor<T>,
+    options?: {
+      singleton?: boolean;
+      dependencies?: string[];
+    }
+  ): void {
     this.services.set(token, {
       factory: () => {
         const deps = options?.dependencies || [];
@@ -47,10 +51,14 @@ export class DIContainer {
   /**
    * 注册服务工厂函数
    */
-  registerFactory<T>(token: string, factory: Factory<T> | AsyncFactory<T>, options?: {
-    singleton?: boolean;
-    dependencies?: string[];
-  }): void {
+  registerFactory<T>(
+    token: string,
+    factory: Factory<T> | AsyncFactory<T>,
+    options?: {
+      singleton?: boolean;
+      dependencies?: string[];
+    }
+  ): void {
     this.services.set(token, {
       factory,
       singleton: options?.singleton ?? true,
@@ -76,7 +84,9 @@ export class DIContainer {
 
     // 检查循环依赖
     if (this.resolving.has(token)) {
-      throw new Error(`Circular dependency detected: ${Array.from(this.resolving).join(' -> ')} -> ${token}`);
+      throw new Error(
+        `Circular dependency detected: ${Array.from(this.resolving).join(' -> ')} -> ${token}`
+      );
     }
 
     const serviceDefinition = this.services.get(token);
@@ -88,7 +98,7 @@ export class DIContainer {
 
     try {
       const instance = serviceDefinition.factory();
-      
+
       // 如果是单例，缓存实例
       if (serviceDefinition.singleton) {
         this.instances.set(token, instance);
@@ -111,7 +121,9 @@ export class DIContainer {
 
     // 检查循环依赖
     if (this.resolving.has(token)) {
-      throw new Error(`Circular dependency detected: ${Array.from(this.resolving).join(' -> ')} -> ${token}`);
+      throw new Error(
+        `Circular dependency detected: ${Array.from(this.resolving).join(' -> ')} -> ${token}`
+      );
     }
 
     const serviceDefinition = this.services.get(token);
@@ -123,7 +135,7 @@ export class DIContainer {
 
     try {
       const instance = await serviceDefinition.factory();
-      
+
       // 如果是单例，缓存实例
       if (serviceDefinition.singleton) {
         this.instances.set(token, instance);
@@ -156,11 +168,11 @@ export class DIContainer {
    */
   getDependencyGraph(): Record<string, string[]> {
     const graph: Record<string, string[]> = {};
-    
+
     for (const [token, definition] of this.services) {
       graph[token] = definition.dependencies || [];
     }
-    
+
     return graph;
   }
 }

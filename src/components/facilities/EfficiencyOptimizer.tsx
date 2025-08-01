@@ -27,9 +27,8 @@ import {
   LocalFireDepartment,
 } from '@mui/icons-material';
 import useGameStore from '@/store/gameStore';
-import { PowerService } from '@/services/game/PowerService';
-import { DataService } from '@/services/core/DataService';
-import { RecipeService } from '@/services/crafting/RecipeService';
+import { usePowerService, useDataService } from '@/hooks/useDIServices';
+import { useRecipeService } from '@/hooks/useDIServices';
 import { FacilityStatus } from '@/types/facilities';
 import FactorioIcon from '@/components/common/FactorioIcon';
 
@@ -46,8 +45,9 @@ interface OptimizationSuggestion {
 
 const EfficiencyOptimizer: React.FC = () => {
   const { facilities } = useGameStore();
-  const powerService = PowerService.getInstance();
-  const dataService = DataService.getInstance();
+  const powerService = usePowerService();
+  const dataService = useDataService();
+  const recipeService = useRecipeService();
 
   // 识别生产瓶颈
   const identifyBottlenecks = useCallback((): Map<string, number> => {
@@ -56,7 +56,7 @@ const EfficiencyOptimizer: React.FC = () => {
     // 分析每个设施的输入需求
     facilities.forEach(facility => {
       if (facility.status === FacilityStatus.NO_RESOURCE && facility.production?.currentRecipeId) {
-        const recipe = RecipeService.getRecipeById(facility.production.currentRecipeId);
+        const recipe = recipeService?.getRecipeById(facility.production.currentRecipeId);
         if (recipe?.in) {
           Object.entries(recipe.in).forEach(([itemId, amount]) => {
             const current = itemDeficits.get(itemId) || 0;
@@ -71,7 +71,15 @@ const EfficiencyOptimizer: React.FC = () => {
 
   // 计算各种效率指标
   const efficiencyMetrics = useMemo(() => {
-    const powerBalance = powerService.calculatePowerBalance(facilities);
+    const powerBalance = powerService?.calculatePowerBalance(facilities) || {
+      status: 'balanced',
+      satisfactionRatio: 1,
+      generationCapacity: 0,
+      actualGeneration: 0,
+      consumptionDemand: 0,
+      actualConsumption: 0,
+      consumptionByCategory: {},
+    };
 
     // 设施利用率
     const totalFacilities = facilities.length;
@@ -93,7 +101,7 @@ const EfficiencyOptimizer: React.FC = () => {
       avgEfficiency,
       bottlenecks,
     };
-  }, [facilities, identifyBottlenecks, powerService]);
+  }, [facilities, identifyBottlenecks, powerService, recipeService]);
 
   // 生成优化建议
   const suggestions = useMemo((): OptimizationSuggestion[] => {
@@ -140,7 +148,7 @@ const EfficiencyOptimizer: React.FC = () => {
 
     // 瓶颈物品建议
     efficiencyMetrics.bottlenecks.forEach((_deficit, itemId) => {
-      const itemName = dataService.getItemName(itemId);
+      const itemName = dataService?.getItemName(itemId) || itemId;
       suggestions.push({
         id: `bottleneck-${itemId}`,
         type: 'warning',
@@ -172,7 +180,16 @@ const EfficiencyOptimizer: React.FC = () => {
       const priority = { critical: 0, warning: 1, improvement: 2 };
       return priority[a.type] - priority[b.type];
     });
-  }, [efficiencyMetrics, dataService, facilities]);
+  }, [efficiencyMetrics, dataService, facilities, recipeService]);
+
+  // 如果服务未初始化，显示加载状态
+  if (!powerService || !dataService || !recipeService) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" p={4}>
+        <Typography>正在加载服务...</Typography>
+      </Box>
+    );
+  }
 
   // 获取建议图标
   const getSuggestionIcon = (suggestion: OptimizationSuggestion) => {
@@ -355,7 +372,7 @@ const EfficiencyOptimizer: React.FC = () => {
                     <FactorioIcon itemId={itemId} size={32} />
                   </ListItemIcon>
                   <ListItemText
-                    primary={dataService.getItemName(itemId)}
+                    primary={dataService?.getItemName(itemId) || itemId}
                     secondary={`需求缺口：${deficit.toFixed(0)} 个/分钟`}
                   />
                 </ListItem>

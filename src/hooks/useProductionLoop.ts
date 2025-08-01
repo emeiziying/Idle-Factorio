@@ -2,9 +2,7 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 import useGameStore from '@/store/gameStore';
-import { FuelService } from '@/services/crafting/FuelService';
-import { RecipeService } from '@/services/crafting/RecipeService';
-import { PowerService } from '@/services/game/PowerService';
+import { useFuelService, useRecipeService, usePowerService } from '@/hooks/useServices';
 import type { FacilityInstance } from '@/types/facilities';
 import { msToSeconds } from '@/utils/common';
 
@@ -31,8 +29,9 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
   } = useGameStore();
 
   const lastUpdateRef = useRef<number>(Date.now());
-  const fuelService = FuelService.getInstance();
-  const powerService = PowerService.getInstance();
+  const fuelService = useFuelService();
+  const recipeService = useRecipeService();
+  const powerService = usePowerService();
 
   // 更新单个设施的生产
   const updateFacilityProduction = useCallback(
@@ -44,7 +43,7 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
       const { currentRecipeId, progress } = facility.production;
       if (!currentRecipeId) return;
 
-      const recipe = RecipeService.getRecipeById(currentRecipeId);
+      const recipe = recipeService?.getRecipeById(currentRecipeId);
       if (!recipe) return;
 
       // 检查是否有足够的输入材料
@@ -131,6 +130,8 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
 
   // 主更新循环
   const updateProduction = useCallback(() => {
+    if (!fuelService || !powerService) return;
+    
     const currentTime = Date.now();
     const deltaTime = msToSeconds(currentTime - lastUpdateRef.current);
     lastUpdateRef.current = currentTime;

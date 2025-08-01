@@ -15,7 +15,7 @@ import {
 import { ArrowUpward, ArrowDownward, LocalFireDepartment, Info } from '@mui/icons-material';
 import FactorioIcon from '@/components/common/FactorioIcon';
 import { FUEL_PRIORITY } from '@/data/fuelConfigs';
-import { DataService } from '@/services/core/DataService';
+import { useDataService } from '@/hooks/useDIServices';
 
 interface FuelPrioritySettingsProps {
   onPriorityChange?: (newPriority: string[]) => void;
@@ -23,7 +23,7 @@ interface FuelPrioritySettingsProps {
 
 const FuelPrioritySettings: React.FC<FuelPrioritySettingsProps> = ({ onPriorityChange }) => {
   const [fuelPriority, setFuelPriority] = useState<string[]>(FUEL_PRIORITY);
-  const dataService = DataService.getInstance();
+  const dataService = useDataService();
 
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
@@ -42,7 +42,7 @@ const FuelPrioritySettings: React.FC<FuelPrioritySettingsProps> = ({ onPriorityC
   };
 
   const getFuelInfo = (fuelId: string) => {
-    const item = dataService.getItem(fuelId);
+    const item = dataService?.getItem(fuelId);
     if (!item?.fuel) return { name: fuelId, energy: 0 };
 
     const energy = item.fuel.value;
@@ -54,10 +54,23 @@ const FuelPrioritySettings: React.FC<FuelPrioritySettingsProps> = ({ onPriorityC
     }
 
     return {
-      name: dataService.getItemName(fuelId),
+      name: dataService?.getItemName(fuelId) || fuelId,
       energy: energyText,
     };
   };
+
+  // 如果服务未初始化，显示加载状态
+  if (!dataService) {
+    return (
+      <Card>
+        <CardContent>
+          <Box display="flex" justifyContent="center" alignItems="center" p={4}>
+            <Typography>正在加载服务...</Typography>
+          </Box>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

@@ -1,8 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { Item, Recipe } from '@/types/index';
-import { DataService } from '@/services/core/DataService';
-import { RecipeService } from '@/services/crafting/RecipeService';
-import ManualCraftingValidator from '@/utils/manualCraftingValidator';
+import { useDataService, useRecipeService, useManualCraftingValidator } from '@/hooks/useServices';
 
 export const useItemRecipes = (item: Item) => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -11,8 +9,9 @@ export const useItemRecipes = (item: Item) => {
   const [restrictedRecipes, setRestrictedRecipes] = useState<Recipe[]>([]);
   const [producerRecipes, setProducerRecipes] = useState<Recipe[]>([]);
 
-  const dataService = DataService.getInstance();
-  const validator = ManualCraftingValidator.getInstance();
+  const dataService = useDataService();
+  const recipeService = useRecipeService();
+  const validator = useManualCraftingValidator();
 
   // 性能优化：使用useMemo缓存昂贵的计算
   const { recipes: memoizedRecipes, usedInRecipes: memoizedUsedInRecipes } = useMemo(() => {
@@ -20,8 +19,12 @@ export const useItemRecipes = (item: Item) => {
       return { recipes: [], usedInRecipes: [] };
     }
 
-    const itemRecipes = RecipeService.getRecipesThatProduce(item.id);
-    const usageRecipes = RecipeService.getRecipesThatUse(item.id);
+    if (!recipeService || !dataService) {
+      return { recipes: [], usedInRecipes: [] };
+    }
+
+    const itemRecipes = recipeService.getRecipesThatProduce(item.id);
+    const usageRecipes = recipeService.getRecipesThatUse(item.id);
 
     // 恢复解锁过滤，但优化性能
     const isProducerUnlocked = (recipe: Recipe) => {
@@ -42,11 +45,11 @@ export const useItemRecipes = (item: Item) => {
       recipes: filteredRecipes,
       usedInRecipes: filteredUsageRecipes,
     };
-  }, [item, dataService]); // 包含dataService依赖
+  }, [item, dataService, recipeService]); // 包含所有服务依赖
 
   // 进一步优化：分类配方计算也使用useMemo
   const { manualCraftable, restricted, producer } = useMemo(() => {
-    if (!memoizedRecipes.length) {
+    if (!memoizedRecipes.length || !validator) {
       return { manualCraftable: [], restricted: [], producer: [] };
     }
 

@@ -60,7 +60,6 @@ export class DataService {
     return result;
   }
 
-
   // 加载游戏数据 - 改为异步import
   async loadGameData(): Promise<GameData> {
     // 如果数据已加载，直接返回
@@ -649,4 +648,3 @@ export class DataService {
     return this.getLocalizedCategoryName(categoryId);
   }
 }
-

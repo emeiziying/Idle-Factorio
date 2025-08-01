@@ -16,7 +16,7 @@ export const useItemName = (item?: Item | string | null): string => {
   const dataService = useDataService();
 
   return useMemo(() => {
-    if (!item) return '';
+    if (!item || !dataService) return '';
 
     // 如果是字符串ID，先获取物品对象
     const itemObj = typeof item === 'string' ? dataService.getItem(item) : item;
@@ -37,7 +37,7 @@ export const useCategoryName = (categoryId?: string | null): string => {
   const dataService = useDataService();
 
   return useMemo(() => {
-    if (!categoryId) return '';
+    if (!categoryId || !dataService) return '';
     return dataService.getCategoryI18nName(categoryId) || categoryId;
   }, [categoryId, dataService]);
 };
@@ -51,7 +51,7 @@ export const useRecipeName = (recipe?: Recipe | string | null): string => {
   const dataService = useDataService();
 
   return useMemo(() => {
-    if (!recipe) return '';
+    if (!recipe || !dataService) return '';
 
     // 如果是字符串ID，先获取配方对象
     const recipeObj = typeof recipe === 'string' ? dataService.getRecipe(recipe) : recipe;
@@ -81,6 +81,8 @@ export const useItemNames = (items: (Item | string)[]): Record<string, string> =
 
   return useMemo(() => {
     const names: Record<string, string> = {};
+
+    if (!dataService) return names;
 
     items.forEach(item => {
       const itemId = typeof item === 'string' ? item : item.id;

@@ -70,7 +70,10 @@
       "Bash(rg:*)",
       "Bash(pnpm run build:*)",
       "Bash(timeout:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(pnpm tsc:*)",
+      "Bash(./node_modules/.bin/eslint:*)",
+      "Bash(./node_modules/.bin/prettier:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

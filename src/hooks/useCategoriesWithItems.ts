@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { DataService } from '@/services/core/DataService';
+import { useDataService } from '@/hooks/useServices';
 import useGameStore from '@/store/gameStore';
 import type { Category } from '@/types/index';
 
@@ -10,13 +10,18 @@ import type { Category } from '@/types/index';
 export const useCategoriesWithItems = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const dataService = useDataService();
 
   // 监听科技解锁状态变化
   const unlockedTechs = useGameStore(state => state.unlockedTechs);
 
   // 获取分类的函数
   const updateCategories = useCallback(() => {
-    const dataService = DataService.getInstance();
+    if (!dataService) {
+      setCategories([]);
+      setLoading(true);
+      return;
+    }
 
     if (!dataService.isDataLoaded()) {
       setCategories([]);
@@ -27,12 +32,16 @@ export const useCategoriesWithItems = () => {
     const availableCategories = dataService.getCategoriesWithAvailableItems();
     setCategories(availableCategories);
     setLoading(false);
-  }, []);
+  }, [dataService]);
 
   // 初始化和数据加载
   useEffect(() => {
     const loadCategories = async () => {
-      const dataService = DataService.getInstance();
+      if (!dataService) {
+        setCategories([]);
+        setLoading(false);
+        return;
+      }
 
       // 如果数据已加载，直接更新分类
       if (dataService.isDataLoaded()) {
@@ -53,7 +62,7 @@ export const useCategoriesWithItems = () => {
     };
 
     loadCategories();
-  }, [updateCategories]);
+  }, [updateCategories, dataService]);
 
   // 当科技解锁时，更新分类列表
   useEffect(() => {

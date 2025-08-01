@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography, Chip } from '@mui/material';
 import type { Recipe } from '@/types/index';
 import FactorioIcon from '@/components/common/FactorioIcon';
-import { DataService } from '@/services/core/DataService';
+import { useDataService } from '@/hooks/useDIServices';
 import useGameStore from '@/store/gameStore';
 import CraftingButtons from '@/components/detail/CraftingButtons';
 import RecipeFlowDisplay from '@/components/detail/RecipeFlowDisplay';
@@ -25,10 +25,10 @@ const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({
   cardVariant = 'contained',
 }) => {
   const { getInventoryItem } = useGameStore();
-  const dataService = DataService.getInstance();
+  const dataService = useDataService();
 
   const getLocalizedItemName = (itemId: string): string => {
-    return dataService.getLocalizedItemName(itemId);
+    return dataService?.getLocalizedItemName(itemId) || itemId;
   };
 
   const getThemeColor = () => {
@@ -72,7 +72,7 @@ const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({
           fontWeight="bold"
           color={title ? 'primary.main' : themeColor}
         >
-          {title || dataService.getLocalizedRecipeName(recipe.id)}
+          {title || dataService?.getLocalizedRecipeName(recipe.id) || recipe.id}
         </Typography>
       </Box>
 

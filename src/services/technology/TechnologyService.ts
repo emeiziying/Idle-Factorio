@@ -40,7 +40,6 @@ import Logger from '@/utils/logger';
  * 负责协调各个子服务，提供统一的对外接口
  */
 export class TechnologyService {
-
   // 子服务
   private treeService: TechTreeService;
   private unlockService: TechUnlockService;
@@ -73,7 +72,6 @@ export class TechnologyService {
     // 设置服务间事件监听
     this.setupEventListeners();
   }
-
 
   /**
    * 设置库存操作接口

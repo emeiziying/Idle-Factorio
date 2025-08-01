@@ -5,7 +5,7 @@ import { Box, Typography, useTheme } from '@mui/material';
 import TechGridCard from '@/components/technology/TechGridCard';
 import TechVirtualizedGridWithAutoSizer from '@/components/technology/TechVirtualizedGridWithAutoSizer';
 import type { Technology, TechStatus } from '@/types/technology';
-import { TechnologyService } from '@/services/technology/TechnologyService';
+import { useTechnologyService } from '@/hooks/useDIServices';
 
 interface TechSimpleGridProps {
   /** 要显示的科技列表 */
@@ -27,16 +27,17 @@ interface TechSimpleGridProps {
 const TechSimpleGrid: React.FC<TechSimpleGridProps> = React.memo(
   ({ technologies, techStates, queuedTechIds, onTechClick, useVirtualization = false }) => {
     const theme = useTheme();
+    const technologyService = useTechnologyService();
 
     // 修改排序逻辑：保持依赖关系排序，按状态分组显示
     const sortedTechnologies = React.useMemo(() => {
-      return TechnologyService.getTechnologiesSortedByStatus(technologies, techStates);
-    }, [technologies, techStates]);
+      return technologyService.getTechnologiesSortedByStatus(technologies, techStates);
+    }, [technologies, techStates, technologyService]);
 
     // 过滤逻辑：只显示当前可研究的和依赖当前可研究的项目 - 使用useMemo缓存
     const filteredTechnologies = React.useMemo(() => {
-      return TechnologyService.getDisplayTechnologies(sortedTechnologies, techStates);
-    }, [sortedTechnologies, techStates]);
+      return technologyService.getDisplayTechnologies(sortedTechnologies, techStates);
+    }, [sortedTechnologies, techStates, technologyService]);
 
     // 获取科技状态 - 使用useCallback缓存
     const getTechState = React.useCallback(

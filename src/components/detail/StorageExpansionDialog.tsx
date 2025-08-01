@@ -17,9 +17,8 @@ import { Close as CloseIcon, Add as AddIcon, Remove as RemoveIcon } from '@mui/i
 import type { Item } from '@/types/index';
 import useGameStore from '@/store/gameStore';
 import FactorioIcon from '@/components/common/FactorioIcon';
-import { DataService } from '@/services/core/DataService';
+import { useDataService, useStorageService } from '@/hooks/useDIServices';
 import { getAvailableChestTypes } from '@/data/storageConfigs';
-import { getStorageService } from '@/services/storage/StorageService';
 
 interface StorageExpansionDialogProps {
   open: boolean;
@@ -36,9 +35,10 @@ interface ChestCraftingDialogProps {
 const ChestCraftingDialog: React.FC<ChestCraftingDialogProps> = ({ open, onClose, chestType }) => {
   const [craftQuantity, setCraftQuantity] = useState(1);
   const { craftChest, canCraftChest, getInventoryItem } = useGameStore();
-  const dataService = DataService.getInstance();
+  const dataService = useDataService();
+  const storageService = useStorageService();
 
-  const config = getStorageService().getStorageConfig(chestType);
+  const config = storageService?.getStorageConfig(chestType);
   if (!config) return null;
 
   const handleCraft = () => {
@@ -83,7 +83,7 @@ const ChestCraftingDialog: React.FC<ChestCraftingDialogProps> = ({ open, onClose
           {Object.entries(config.recipe).map(([itemId, amount]) => {
             const available = getInventoryItem(itemId).currentAmount;
             const needed = (amount as number) * craftQuantity;
-            const itemName = dataService.getLocalizedItemName(itemId);
+            const itemName = dataService?.getLocalizedItemName(itemId) || itemId;
 
             return (
               <Card key={itemId} variant="outlined">
@@ -154,7 +154,8 @@ const StorageExpansionDialog: React.FC<StorageExpansionDialogProps> = ({ open, o
 
   const { deployChestForStorage, getInventoryItem, canCraftChest } = useGameStore();
 
-  const dataService = DataService.getInstance();
+  const dataService = useDataService();
+  const storageService = useStorageService();
 
   const handleDeployChest = (chestType: string) => {
     const result = deployChestForStorage(chestType, item.id);
@@ -178,11 +179,11 @@ const StorageExpansionDialog: React.FC<StorageExpansionDialogProps> = ({ open, o
   };
 
   const getItemName = (itemId: string) => {
-    return dataService.getLocalizedItemName(itemId);
+    return dataService?.getLocalizedItemName(itemId) || itemId;
   };
 
   const getItemStackSize = (itemId: string) => {
-    const gameItem = dataService.getItem(itemId);
+    const gameItem = dataService?.getItem(itemId);
     return gameItem?.stack || 100;
   };
 
@@ -198,7 +199,7 @@ const StorageExpansionDialog: React.FC<StorageExpansionDialogProps> = ({ open, o
 
         <DialogContent>
           {getAvailableChestTypes().map(chestType => {
-            const config = getStorageService().getStorageConfig(chestType);
+            const config = storageService?.getStorageConfig(chestType);
             if (!config) return null;
             const chestInventory = getInventoryItem(config.itemId);
             const hasChest = chestInventory.currentAmount > 0;

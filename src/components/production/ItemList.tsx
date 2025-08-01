@@ -2,8 +2,7 @@ import React, { useMemo } from 'react';
 import { Box, Typography, Divider } from '@mui/material';
 import ItemCard from '@/components/production/ItemCard';
 import InlineLoading from '@/components/common/InlineLoading';
-import { DataService } from '@/services/core/DataService';
-import { useServicesReady } from '@/hooks/useServicesReady';
+import { useDataService } from '@/hooks/useDIServices';
 import type { Item } from '@/types/index';
 
 interface ItemListProps {
@@ -14,13 +13,12 @@ interface ItemListProps {
 
 const ItemList: React.FC<ItemListProps> = React.memo(
   ({ categoryId, selectedItem, onItemSelect }) => {
-    const dataService = DataService.getInstance();
-    const servicesState = useServicesReady();
+    const dataService = useDataService();
 
     // 使用useMemo缓存计算结果
     const { itemsByRow, sortedRows, loadError } = useMemo(() => {
       // 只有在服务就绪时才计算
-      if (!servicesState.isReady) {
+      if (!dataService) {
         return {
           itemsByRow: new Map(),
           sortedRows: [],
@@ -40,17 +38,11 @@ const ItemList: React.FC<ItemListProps> = React.memo(
           loadError: error instanceof Error ? error.message : String(error),
         };
       }
-    }, [categoryId, dataService, servicesState.isReady]);
+    }, [categoryId, dataService]);
 
     // 如果服务还未就绪，显示加载状态
-    if (!servicesState.isReady) {
-      return (
-        <InlineLoading
-          message={servicesState.error ? `服务错误: ${servicesState.error}` : '加载物品数据中...'}
-          showSpinner={!servicesState.error}
-          color={servicesState.error ? 'error' : undefined}
-        />
-      );
+    if (!dataService) {
+      return <InlineLoading message="加载物品数据中..." showSpinner={true} />;
     }
 
     // 如果有加载错误，显示错误信息
@@ -86,7 +78,7 @@ const ItemList: React.FC<ItemListProps> = React.memo(
       >
         {sortedRows.map((row, index) => {
           const items = itemsByRow.get(row) || [];
-          const rowName = dataService.getRowDisplayName(categoryId, row);
+          const rowName = dataService?.getRowDisplayName(categoryId, row) || '';
 
           return (
             <Box key={`${categoryId}-row-${row}`} sx={{ mb: 0.5, width: '100%' }}>

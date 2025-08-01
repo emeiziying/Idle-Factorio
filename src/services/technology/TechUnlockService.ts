@@ -296,7 +296,7 @@ export class TechUnlockService {
   resetUnlocks(): void {
     // 重置 UserProgressService
     this.userProgressService.resetProgress();
-    
+
     // 重置本地管理的配方和建筑
     this.unlockedRecipes.clear();
     this.unlockedBuildings.clear();

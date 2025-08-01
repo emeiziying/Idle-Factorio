@@ -27,9 +27,11 @@ import {
   Block as BlockIcon,
   Info as InfoIcon,
 } from '@mui/icons-material';
-import { DataService } from '@/services/core/DataService';
-import { RecipeService } from '@/services/crafting/RecipeService';
-import ManualCraftingValidator from '@/utils/manualCraftingValidator';
+import {
+  useDataService,
+  useRecipeService,
+  useManualCraftingValidator,
+} from '@/hooks/useDIServices';
 import type { ManualCraftingValidation } from '@/utils/manualCraftingValidator';
 import ItemCard from '@/components/test/ItemCard';
 import type { Item, Recipe } from '@/types/index';
@@ -90,8 +92,9 @@ const ManualCraftingTestPage: React.FC = () => {
     statistics: { total: 0, craftable: 0, notCraftable: 0, categories: {} },
   });
 
-  const dataService = DataService.getInstance();
-  const validator = ManualCraftingValidator.getInstance();
+  const dataService = useDataService();
+  const recipeService = useRecipeService();
+  const validator = useManualCraftingValidator();
 
   const analyzeItems = useCallback(() => {
     const allItems = dataService.getAllItems();
@@ -104,7 +107,7 @@ const ManualCraftingTestPage: React.FC = () => {
 
     allItems.forEach(item => {
       const validation = validator.validateManualCrafting(item.id);
-      const recipes = RecipeService.getRecipesThatProduce(item.id);
+      const recipes = recipeService.getRecipesThatProduce(item.id);
 
       const itemData: ItemWithValidation = {
         item,
@@ -161,7 +164,7 @@ const ManualCraftingTestPage: React.FC = () => {
         categories: categoryStats,
       },
     });
-  }, [dataService, validator]);
+  }, [dataService, recipeService, validator]);
 
   useEffect(() => {
     const loadData = async () => {

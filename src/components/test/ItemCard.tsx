@@ -7,7 +7,7 @@ import {
   getValidationCategoryText,
 } from '../../utils/manualCraftingValidator';
 import FactorioIcon from '@/components/common/FactorioIcon';
-import { DataService } from '@/services/core/DataService';
+import { useDataService } from '@/hooks/useDIServices';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface ItemCardProps {
@@ -17,7 +17,7 @@ interface ItemCardProps {
 }
 
 const ItemCard: React.FC<ItemCardProps> = ({ item, validation }) => {
-  const dataService = DataService.getInstance();
+  const dataService = useDataService();
   const localizedName = dataService.getLocalizedItemName(item.id);
   const isMobile = useIsMobile();
 

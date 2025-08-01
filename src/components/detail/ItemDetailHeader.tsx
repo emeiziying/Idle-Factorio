@@ -1,7 +1,7 @@
 import React from 'react';
 import { Typography, Box, useTheme } from '@mui/material';
 import type { Item } from '@/types/index';
-import { DataService } from '@/services/core/DataService';
+import { useDataService } from '@/hooks/useDIServices';
 import useGameStore from '@/store/gameStore';
 
 interface ItemDetailHeaderProps {
@@ -10,11 +10,11 @@ interface ItemDetailHeaderProps {
 
 const ItemDetailHeader: React.FC<ItemDetailHeaderProps> = ({ item }) => {
   const theme = useTheme();
-  const dataService = DataService.getInstance();
+  const dataService = useDataService();
   const { getInventoryItem } = useGameStore();
 
   const getLocalizedItemName = (itemId: string): string => {
-    return dataService.getLocalizedItemName(itemId);
+    return dataService?.getLocalizedItemName(itemId) ?? itemId;
   };
 
   const inventoryItem = getInventoryItem(item.id);

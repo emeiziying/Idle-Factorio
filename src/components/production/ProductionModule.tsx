@@ -6,7 +6,7 @@ import ItemList from '@/components/production/ItemList';
 import ItemDetailPanel from '@/components/production/ItemDetailPanel';
 import CraftingQueue from '@/components/production/CraftingQueue';
 
-import { DataService } from '@/services/core/DataService';
+import { useDataService } from '@/hooks/useDIServices';
 import { useLocalStorageState } from 'ahooks';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useCategoriesWithItems } from '@/hooks/useCategoriesWithItems';
@@ -75,16 +75,17 @@ const ProductionModule: React.FC = React.memo(() => {
     setShowCraftingQueue(!showCraftingQueue);
   };
 
+  // 获取服务实例
+  const dataService = useDataService();
+
   // 获取当前分类的第一个物品作为默认选中项
   const firstItemInCategory = useMemo(() => {
     if (!selectedCategory || loading) {
       return null;
     }
 
-    const dataService = DataService.getInstance();
-
     // 确保数据已加载
-    if (!dataService.isDataLoaded()) {
+    if (!dataService?.isDataLoaded()) {
       return null;
     }
 
@@ -103,7 +104,7 @@ const ProductionModule: React.FC = React.memo(() => {
       console.error('Error getting first item for category', selectedCategory, ':', error);
       return null;
     }
-  }, [selectedCategory, loading]);
+  }, [selectedCategory, loading, dataService]);
 
   // 当分类变化时，自动选中第一个物品（仅在手动切换分类时）
   useEffect(() => {

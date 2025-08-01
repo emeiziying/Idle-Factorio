@@ -5,7 +5,7 @@ import TechDetailPanel from '@/components/technology/TechDetailPanel';
 import ResearchQueue from '@/components/technology/ResearchQueue';
 
 import useGameStore from '@/store/gameStore';
-import { TechnologyService } from '@/services/technology/TechnologyService';
+import { useTechnologyService } from '@/hooks/useDIServices';
 import type { TechStatus } from '@/types/technology';
 import { ResearchPriority } from '@/types/technology';
 import { useLocalStorageState } from 'ahooks';
@@ -14,6 +14,7 @@ import { useUnlockedTechsRepair } from '@/hooks/useUnlockedTechsRepair';
 const TechnologyModule: React.FC = React.memo(() => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const technologyService = useTechnologyService();
 
   // 安全修复unlockedTechs状态
   useUnlockedTechsRepair();
@@ -117,8 +118,6 @@ const TechnologyModule: React.FC = React.memo(() => {
       return states;
     }
 
-    const techService = TechnologyService.getInstance();
-
     Array.from(technologies.values()).forEach(tech => {
       let status: TechStatus = 'locked';
       let progress: number | undefined;
@@ -128,7 +127,10 @@ const TechnologyModule: React.FC = React.memo(() => {
       } else if (researchState?.techId === tech.id) {
         status = 'researching';
         progress = researchState?.progress;
-      } else if (techService.isServiceInitialized() && techService.isTechAvailable(tech.id)) {
+      } else if (
+        technologyService.isServiceInitialized() &&
+        technologyService.isTechAvailable(tech.id)
+      ) {
         status = 'available';
       }
 
@@ -136,7 +138,7 @@ const TechnologyModule: React.FC = React.memo(() => {
     });
 
     return states;
-  }, [technologies, unlockedTechs, researchState]);
+  }, [technologies, unlockedTechs, researchState, technologyService]);
 
   // 获取队列中的科技ID
   const queuedTechIds = React.useMemo(() => {

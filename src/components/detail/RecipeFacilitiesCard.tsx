@@ -4,12 +4,10 @@ import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import type { Item } from '@/types/index';
 import type { FacilityInstance } from '@/types/facilities';
 import { useItemRecipes } from '@/hooks/useItemRecipes';
-import { DataService } from '@/services/core/DataService';
+import { useDataService, useManualCraftingValidator, useFuelService } from '@/hooks/useDIServices';
 import useGameStore from '@/store/gameStore';
 import FactorioIcon from '@/components/common/FactorioIcon';
-import ManualCraftingValidator from '@/utils/manualCraftingValidator';
 import { FuelStatusDisplay } from '@/components/facilities/FuelStatusDisplay';
-import { FuelService } from '@/services/crafting/FuelService';
 
 interface RecipeFacilitiesCardProps {
   item: Item;
@@ -19,8 +17,9 @@ interface RecipeFacilitiesCardProps {
 const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onItemSelect }) => {
   const { getInventoryItem, facilities, addFacility, removeFacility } = useGameStore();
   const { recipes } = useItemRecipes(item);
-  const dataService = DataService.getInstance();
-  const validator = ManualCraftingValidator.getInstance();
+  const dataService = useDataService();
+  const validator = useManualCraftingValidator();
+  const fuelService = useFuelService();
 
   // 处理设施图标点击
   const handleFacilityClick = (facilityId: string) => {
@@ -104,7 +103,6 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
     );
 
     // 初始化燃料缓存区（如果需要）
-    const fuelService = FuelService.getInstance();
     const fuelBuffer = fuelService.initializeFuelBuffer(facilityType);
 
     // 创建新设施实例，添加目标物品关联

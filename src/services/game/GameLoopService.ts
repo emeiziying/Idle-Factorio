@@ -117,7 +117,6 @@ export class GameLoopService {
     this.setupPerformanceMonitoring();
   }
 
-
   // 启动游戏循环
   start(): void {
     if (this.isRunning) return;

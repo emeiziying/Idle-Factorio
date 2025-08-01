@@ -4,7 +4,7 @@ import { Add as AddIcon, ArrowForward as ArrowIcon } from '@mui/icons-material';
 import type { Recipe } from '@/types/index';
 import FactorioIcon from '@/components/common/FactorioIcon';
 import useGameStore from '@/store/gameStore';
-import { DataService } from '@/services/core/DataService';
+import { useDataService } from '@/hooks/useDIServices';
 import TimeIcon from '@/assets/Time.png';
 
 interface RecipeFlowDisplayProps {
@@ -25,7 +25,7 @@ const RecipeFlowDisplay: React.FC<RecipeFlowDisplayProps> = ({
   customTime,
 }) => {
   const { getInventoryItem } = useGameStore();
-  const dataService = DataService.getInstance();
+  const dataService = useDataService();
 
   // 处理物品图标点击
   const handleItemClick = (itemId: string) => {

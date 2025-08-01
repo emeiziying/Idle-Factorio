@@ -16,7 +16,6 @@ export class RecipeService {
     // 公开构造函数，支持依赖注入
   }
 
-
   /**
    * 初始化配方数据
    * @param dataJsonRecipes 从 data.json 加载的配方

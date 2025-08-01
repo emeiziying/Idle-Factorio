@@ -17,7 +17,6 @@ export class StorageService {
     return null;
   }
 
-
   // 获取完整的存储配置（合并data.json和特定配置）
   public getStorageConfig(storageType: string): StorageConfig | undefined {
     const specificConfig = STORAGE_SPECIFIC_CONFIGS[storageType];
@@ -92,4 +91,3 @@ export const getStorageService = (): StorageService | null => {
   }
   return null;
 };
-

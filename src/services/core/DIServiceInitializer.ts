@@ -50,7 +50,7 @@ export class DIServiceInitializer {
 
     // 3. 注册科技系统子服务
     container.register(SERVICE_TOKENS.TECH_TREE_SERVICE, TechTreeService);
-    
+
     container.register(SERVICE_TOKENS.TECH_UNLOCK_SERVICE, TechUnlockService, {
       dependencies: [
         SERVICE_TOKENS.USER_PROGRESS_SERVICE,
@@ -73,10 +73,16 @@ export class DIServiceInitializer {
     container.registerFactory(SERVICE_TOKENS.TECHNOLOGY_SERVICE, () => {
       const eventEmitter = container.resolve<TechEventEmitter>(SERVICE_TOKENS.TECH_EVENT_EMITTER);
       const treeService = container.resolve<TechTreeService>(SERVICE_TOKENS.TECH_TREE_SERVICE);
-      const unlockService = container.resolve<TechUnlockService>(SERVICE_TOKENS.TECH_UNLOCK_SERVICE);
+      const unlockService = container.resolve<TechUnlockService>(
+        SERVICE_TOKENS.TECH_UNLOCK_SERVICE
+      );
       const researchService = container.resolve<ResearchService>(SERVICE_TOKENS.RESEARCH_SERVICE);
-      const queueService = container.resolve<ResearchQueueService>(SERVICE_TOKENS.RESEARCH_QUEUE_SERVICE);
-      const progressTracker = container.resolve<TechProgressTracker>(SERVICE_TOKENS.TECH_PROGRESS_TRACKER);
+      const queueService = container.resolve<ResearchQueueService>(
+        SERVICE_TOKENS.RESEARCH_QUEUE_SERVICE
+      );
+      const progressTracker = container.resolve<TechProgressTracker>(
+        SERVICE_TOKENS.TECH_PROGRESS_TRACKER
+      );
 
       const technologyService = new TechnologyService();
       // 通过反射设置私有属性（临时方案，后续可以通过构造函数注入）
@@ -117,11 +123,14 @@ export class DIServiceInitializer {
 
     // 3. 初始化配方服务
     if (gameData.recipes) {
-      RecipeService.initializeRecipes(gameData.recipes);
+      const recipeService = container.resolve<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+      recipeService.initializeRecipes(gameData.recipes);
     }
 
     // 4. 初始化科技服务
-    const technologyService = container.resolve<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
+    const technologyService = container.resolve<TechnologyService>(
+      SERVICE_TOKENS.TECHNOLOGY_SERVICE
+    );
     await technologyService.initialize();
 
     // 5. 初始化应用层
@@ -168,7 +177,7 @@ export class DIServiceInitializer {
       gameLoopService.stop();
     }
 
-    // 停止状态管理层的游戏循环控制器  
+    // 停止状态管理层的游戏循环控制器
     try {
       const { stopGameLoop } = useGameStore.getState();
       stopGameLoop();

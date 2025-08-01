@@ -8,8 +8,7 @@ import {
   NewReleases as TriggerIcon,
 } from '@mui/icons-material';
 import FactorioIcon from '@/components/common/FactorioIcon';
-import { TechnologyService } from '@/services/technology/TechnologyService';
-import { DataService } from '@/services/core/DataService';
+import { useTechnologyService, useDataService } from '@/hooks/useDIServices';
 import type { Technology, TechStatus } from '@/types/technology';
 
 // Factorio Design System
@@ -455,15 +454,17 @@ const UnlockContent: React.FC<{
 const TechGridCard: React.FC<TechGridCardProps> = React.memo(
   ({ technology, status, progress, inQueue, onClick }) => {
     const theme = useTheme();
+    const technologyService = useTechnologyService();
+    const dataService = useDataService();
 
     // Memoize service calls
     const techData = useMemo(
       () => ({
-        unlockedContent: TechnologyService.getUnlockedContentInfo(technology),
-        prerequisiteNames: TechnologyService.getPrerequisiteNames(technology.prerequisites),
-        researchTriggerInfo: TechnologyService.getResearchTriggerInfo(technology.id),
+        unlockedContent: technologyService.getUnlockedContentInfo(technology),
+        prerequisiteNames: technologyService.getPrerequisiteNames(technology.prerequisites),
+        researchTriggerInfo: technologyService.getResearchTriggerInfo(technology.id),
       }),
-      [technology]
+      [technology, technologyService]
     );
 
     const { unlockedContent, prerequisiteNames, researchTriggerInfo } = techData;
@@ -776,7 +777,6 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(
               {/* 获取研究配方信息 */}
               {(() => {
                 try {
-                  const dataService = DataService.getInstance();
                   const techRecipe = dataService.getRecipe(technology.id);
                   const researchTime = techRecipe?.time || technology.researchTime;
                   const researchCount = techRecipe?.count || 1;
@@ -851,7 +851,6 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.25 }}>
                       {Object.entries(technology.researchCost).map(([packId, totalAmount]) => {
                         // 尝试从researchCost反推单次数量
-                        const dataService = DataService.getInstance();
                         const techRecipe = dataService.getRecipe(technology.id);
                         const unitAmount = techRecipe?.in?.[packId] || totalAmount;
 

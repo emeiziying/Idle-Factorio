@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
-import type { Item } from '@/types/index';
-import { RecipeService } from '@/services/crafting/RecipeService';
-import ManualCraftingValidator from '@/utils/manualCraftingValidator';
+import type { Item, Recipe } from '@/types/index';
+import { useRecipeService, useManualCraftingValidator } from '@/hooks/useServices';
 
 export interface ManualCraftingStatus {
   title: string;
@@ -11,9 +10,20 @@ export interface ManualCraftingStatus {
 }
 
 export const useManualCraftingStatus = (item: Item): ManualCraftingStatus => {
+  const recipeService = useRecipeService();
+  const validator = useManualCraftingValidator();
+  
   return useMemo(() => {
-    const itemRecipes = RecipeService.getRecipesThatProduce(item.id);
-    const validator = ManualCraftingValidator.getInstance();
+    if (!recipeService || !validator) {
+      return {
+        title: '加载中...',
+        color: '#666666',
+        canCraft: false,
+        hasRecipes: false,
+      };
+    }
+
+    const itemRecipes = recipeService.getRecipesThatProduce(item.id);
 
     // 如果没有配方（原材料）
     if (itemRecipes.length === 0) {
@@ -26,17 +36,17 @@ export const useManualCraftingStatus = (item: Item): ManualCraftingStatus => {
     }
 
     // 检查配方验证状态
-    const recipeValidations = itemRecipes.map(recipe => ({
+    const recipeValidations = itemRecipes.map((recipe: Recipe) => ({
       recipe,
       validation: validator.validateRecipe(recipe),
     }));
 
     const manualCraftableRecipes = recipeValidations.filter(
-      ({ validation }) => validation.canCraftManually
+      ({ validation }: { validation: any }) => validation.canCraftManually
     );
 
     const restrictedRecipes = recipeValidations.filter(
-      ({ validation }) => !validation.canCraftManually && validation.category === 'restricted'
+      ({ validation }: { validation: any }) => !validation.canCraftManually && validation.category === 'restricted'
     );
 
     // 如果有可手动制作的配方
@@ -66,5 +76,5 @@ export const useManualCraftingStatus = (item: Item): ManualCraftingStatus => {
       canCraft: false,
       hasRecipes: false,
     };
-  }, [item.id]);
+  }, [item.id, recipeService, validator]);
 };

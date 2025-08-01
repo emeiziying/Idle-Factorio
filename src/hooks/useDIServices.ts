@@ -16,6 +16,7 @@ import type { TechUnlockService } from '@/services/technology/TechUnlockService'
 import type { FuelService } from '@/services/crafting/FuelService';
 import type { PowerService } from '@/services/game/PowerService';
 import type { StorageService } from '@/services/storage/StorageService';
+import type { ManualCraftingValidator } from '@/utils/manualCraftingValidator';
 
 /**
  * 获取 DataService 实例
@@ -86,6 +87,15 @@ export const usePowerService = (): PowerService => {
 export const useStorageService = (): StorageService => {
   return useMemo(() => {
     return getService<StorageService>(SERVICE_TOKENS.STORAGE_SERVICE);
+  }, []);
+};
+
+/**
+ * 获取 ManualCraftingValidator 实例
+ */
+export const useManualCraftingValidator = (): ManualCraftingValidator => {
+  return useMemo(() => {
+    return getService<ManualCraftingValidator>(SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR);
   }, []);
 };
 

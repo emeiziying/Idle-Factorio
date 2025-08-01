@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
-import { DataService } from '@/services/core/DataService';
+import { useDataService } from '@/hooks/useDIServices';
 import type { IconData } from '@/types/index';
 
 // 导入图标精灵图
@@ -44,11 +44,12 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
   // 状态：从服务层获取的iconText
   const [recipeIconText, setRecipeIconText] = useState<string | undefined>(undefined);
 
+  const dataService = useDataService();
+
   // 监听数据加载状态
   useEffect(() => {
-    const dataService = DataService.getInstance();
     const checkData = () => {
-      const loaded = dataService.isDataLoaded();
+      const loaded = dataService?.isDataLoaded() ?? false;
       setDataLoaded(loaded);
       return loaded;
     };
@@ -66,25 +67,23 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
     }, 100);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [dataService]);
 
   // 获取图标信息
   useEffect(() => {
-    if (!itemId || !dataLoaded) return;
+    if (!itemId || !dataLoaded || !dataService) return;
 
-    const dataService = DataService.getInstance();
     const iconInfo = dataService.getIconInfo(itemId);
 
     setEffectiveIconId(iconInfo.iconId);
     setRecipeIconText(iconInfo.iconText);
-  }, [itemId, dataLoaded]);
+  }, [itemId, dataLoaded, dataService]);
 
   // 加载iconData - 只在没有customImage时加载
   useEffect(() => {
-    if (customImage || !effectiveIconId || !dataLoaded) return;
-    const dataService = DataService.getInstance();
+    if (customImage || !effectiveIconId || !dataLoaded || !dataService) return;
     setIconData(dataService.getIconData(effectiveIconId));
-  }, [effectiveIconId, customImage, dataLoaded]);
+  }, [effectiveIconId, customImage, dataLoaded, dataService]);
 
   // 动态获取精灵图尺寸 - 只在没有customImage时加载
   useEffect(() => {

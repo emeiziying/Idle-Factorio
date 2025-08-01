@@ -13,7 +13,7 @@ import {
 import { Clear as ClearIcon, Delete as DeleteIcon, Close as CloseIcon } from '@mui/icons-material';
 import type { TransitionProps } from '@mui/material/transitions';
 import FactorioIcon from '@/components/common/FactorioIcon';
-import { DataService } from '@/services/core/DataService';
+import { useDataService } from '@/hooks/useDIServices';
 import useGameStore from '@/store/gameStore';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import type { CraftingTask } from '@/types/index';
@@ -35,7 +35,7 @@ interface CraftingQueueItemProps {
 
 const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(
   ({ task, isMobile, onRemove }) => {
-    const dataService = DataService.getInstance();
+    const dataService = useDataService();
 
     // Always call hooks first
     const handleRemove = useCallback(
@@ -55,10 +55,15 @@ const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(
       }
     }, []);
 
-    const recipe = dataService.getRecipe(task.recipeId);
-    const item = dataService.getItem(task.itemId);
+    const recipe = dataService?.getRecipe(task.recipeId);
+    const item = dataService?.getItem(task.itemId);
 
     // Handle missing data gracefully
+    // 如果DataService还未加载或数据缺失，不渲染
+    if (!dataService) {
+      return null;
+    }
+
     // 对于手动合成任务，不需要recipe数据
     const isManualTask = task.recipeId.startsWith('manual_');
     if (!item || (!isManualTask && !recipe)) {

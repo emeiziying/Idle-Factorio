@@ -1,8 +1,7 @@
 import React from 'react';
 import { Box, Typography, Alert } from '@mui/material';
 import type { Item, Recipe } from '@/types/index';
-import { RecipeService } from '@/services/crafting/RecipeService';
-import ManualCraftingValidator from '@/utils/manualCraftingValidator';
+import { useRecipeService, useManualCraftingValidator } from '@/hooks/useDIServices';
 import UnifiedRecipeCard from '@/components/detail/UnifiedRecipeCard';
 
 interface ManualCraftingFlowCardProps {
@@ -11,25 +10,30 @@ interface ManualCraftingFlowCardProps {
 }
 
 const ManualCraftingFlowCard: React.FC<ManualCraftingFlowCardProps> = ({ item, onManualCraft }) => {
-  const validator = ManualCraftingValidator.getInstance();
+  const recipeService = useRecipeService();
+  const validator = useManualCraftingValidator();
 
-  const itemRecipes = RecipeService.getRecipesThatProduce(item.id);
+  const itemRecipes = recipeService?.getRecipesThatProduce(item.id) ?? [];
 
   // 使用验证器检查哪些配方可以手动制作
-  const recipeValidations = itemRecipes.map(recipe => ({
+  const recipeValidations = itemRecipes.map((recipe: Recipe) => ({
     recipe,
-    validation: validator.validateRecipe(recipe),
+    validation: validator?.validateRecipe(recipe) ?? {
+      canCraftManually: false,
+      category: 'restricted',
+    },
   }));
 
   const manualCraftableRecipes = recipeValidations
-    .filter(({ validation }) => validation.canCraftManually)
-    .map(({ recipe }) => recipe);
+    .filter(({ validation }: { validation: any }) => validation.canCraftManually)
+    .map(({ recipe }: { recipe: Recipe }) => recipe);
 
   const restrictedRecipes = recipeValidations
     .filter(
-      ({ validation }) => !validation.canCraftManually && validation.category === 'restricted'
+      ({ validation }: { validation: any }) =>
+        !validation.canCraftManually && validation.category === 'restricted'
     )
-    .map(({ recipe }) => recipe);
+    .map(({ recipe }: { recipe: Recipe }) => recipe);
 
   // 如果有可手动制作的配方，显示第一个
   if (manualCraftableRecipes.length > 0) {

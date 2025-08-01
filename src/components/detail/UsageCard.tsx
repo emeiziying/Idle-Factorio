@@ -2,7 +2,7 @@ import React from 'react';
 import { Typography, Box } from '@mui/material';
 import type { Recipe } from '@/types/index';
 import FactorioIcon from '@/components/common/FactorioIcon';
-import { DataService } from '@/services/core/DataService';
+import { useDataService } from '@/hooks/useDIServices';
 
 interface UsageCardProps {
   usedInRecipes: Recipe[];
@@ -10,13 +10,13 @@ interface UsageCardProps {
 }
 
 const UsageCard: React.FC<UsageCardProps> = ({ usedInRecipes, onItemSelect }) => {
-  const dataService = DataService.getInstance();
+  const dataService = useDataService();
 
   // 处理物品点击
   const handleItemClick = (itemId: string) => {
     // Navigate to item detail
     if (onItemSelect) {
-      const clickedItem = dataService.getItem(itemId);
+      const clickedItem = dataService?.getItem(itemId);
       if (clickedItem) {
         // Navigate to clicked item
         onItemSelect(clickedItem);

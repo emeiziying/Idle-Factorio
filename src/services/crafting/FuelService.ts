@@ -73,7 +73,6 @@ export class FuelService {
     }
   }
 
-
   /**
    * 设置自定义燃料优先级
    */

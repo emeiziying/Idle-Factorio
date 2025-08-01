@@ -1,8 +1,7 @@
 import React from 'react';
 import { Box, Typography, Alert, Chip } from '@mui/material';
 import type { Item, Recipe } from '@/types/index';
-import { RecipeService } from '@/services/crafting/RecipeService';
-import { DataService } from '@/services/core/DataService';
+import { useDataService, useRecipeService } from '@/hooks/useDIServices';
 import useGameStore from '@/store/gameStore';
 import {
   getValidationReasonText,
@@ -25,19 +24,20 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({
   onItemSelect,
 }) => {
   const { getInventoryItem } = useGameStore();
-  const dataService = DataService.getInstance();
+  const dataService = useDataService();
+  const recipeService = useRecipeService();
 
   // 使用 RecipeService 的新方法获取手动制作信息
-  const manualCraftingInfo = RecipeService.getManualCraftingInfo(item.id);
+  const manualCraftingInfo = recipeService?.getManualCraftingInfo(item.id);
 
   // 如果不能手动制作，显示受限提示
-  if (!manualCraftingInfo.canCraft) {
+  if (!manualCraftingInfo?.canCraft) {
     return (
       <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
         <Alert severity="info" sx={{ mb: 2 }}>
           <Typography variant="body2">
             {getValidationReasonText(
-              manualCraftingInfo.validation.reason as ValidationReasonType,
+              manualCraftingInfo?.validation?.reason as ValidationReasonType,
               'zh'
             )}
           </Typography>
@@ -50,7 +50,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({
   }
 
   // 如果是原材料（无需配方），显示无需材料
-  if (manualCraftingInfo.validation.reason === 'raw_material') {
+  if (manualCraftingInfo?.validation?.reason === 'raw_material') {
     return (
       <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
         {/* 简单显示：无需材料的配方 */}
@@ -75,7 +75,9 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({
             →
           </Typography>
           <FactorioIcon itemId={item.id} size={32} />
-          <Typography variant="body2">{dataService.getLocalizedItemName(item.id)} x1</Typography>
+          <Typography variant="body2">
+            {dataService?.getLocalizedItemName(item.id) ?? item.id} x1
+          </Typography>
         </Box>
 
         {/* 制作按钮 */}
@@ -85,7 +87,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({
   }
 
   // 如果有可手动制作的配方，显示第一个
-  if (manualCraftingInfo.recipe) {
+  if (manualCraftingInfo?.recipe) {
     const recipe = manualCraftingInfo.recipe;
     const isMiningRecipe = recipe.flags && recipe.flags.includes('mining');
     const hasInputMaterials = Object.keys(recipe.in).length > 0;
@@ -141,7 +143,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({
                     key={itemId}
                     size="small"
                     avatar={<FactorioIcon itemId={itemId} size={16} />}
-                    label={`${dataService.getLocalizedItemName(itemId)}: ${available}/${required}`}
+                    label={`${dataService?.getLocalizedItemName(itemId) ?? itemId}: ${available}/${required}`}
                     color="warning"
                     variant="outlined"
                     onClick={() => onItemSelect && onItemSelect({ id: itemId } as Item)}
@@ -163,11 +165,11 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({
     );
   }
 
-  // 如果逻辑到达这里，说明有问题，显示默认信息
+  // 如果逻辑到达这里，说明有问题或服务未加载，显示默认信息
   return (
     <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
       <Typography variant="body2" color="text.secondary">
-        无法确定此物品的制作方式。
+        {!recipeService ? '正在加载...' : '无法确定此物品的制作方式。'}
       </Typography>
     </Box>
   );

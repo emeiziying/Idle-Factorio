@@ -4,11 +4,11 @@ import PowerManagement from '@/components/facilities/PowerManagement';
 import FuelPrioritySettings from '@/components/facilities/FuelPrioritySettings';
 import ProductionMonitor from '@/components/facilities/ProductionMonitor';
 import EfficiencyOptimizer from '@/components/facilities/EfficiencyOptimizer';
-import { FuelService } from '@/services/crafting/FuelService';
+import { useFuelService } from '@/hooks/useDIServices';
 
 const FacilitiesModule: React.FC = React.memo(() => {
   const [currentTab, setCurrentTab] = React.useState(0);
-  const fuelService = FuelService.getInstance();
+  const fuelService = useFuelService();
 
   // 使用useCallback缓存事件处理函数，避免重复创建
   const handleTabChange = useCallback((_event: React.SyntheticEvent, newValue: number) => {
@@ -17,7 +17,7 @@ const FacilitiesModule: React.FC = React.memo(() => {
 
   const handleFuelPriorityChange = useCallback(
     (newPriority: string[]) => {
-      fuelService.setFuelPriority(newPriority);
+      fuelService?.setFuelPriority(newPriority);
     },
     [fuelService]
   );
@@ -41,6 +41,15 @@ const FacilitiesModule: React.FC = React.memo(() => {
 
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
         {useMemo(() => {
+          // 如果服务未初始化，显示加载状态
+          if (!fuelService) {
+            return (
+              <Box display="flex" justifyContent="center" alignItems="center" p={4}>
+                <Typography>正在加载服务...</Typography>
+              </Box>
+            );
+          }
+
           switch (currentTab) {
             case 0:
               return <PowerManagement />;
@@ -53,7 +62,7 @@ const FacilitiesModule: React.FC = React.memo(() => {
             default:
               return <PowerManagement />;
           }
-        }, [currentTab, handleFuelPriorityChange])}
+        }, [currentTab, handleFuelPriorityChange, fuelService])}
       </Box>
     </Box>
   );

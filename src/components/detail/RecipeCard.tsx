@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import type { Recipe } from '@/types/index';
 import FactorioIcon from '@/components/common/FactorioIcon';
-import { DataService } from '@/services/core/DataService';
+import { useDataService } from '@/hooks/useDIServices';
 import useGameStore from '@/store/gameStore';
 import CraftingButtons from '@/components/detail/CraftingButtons';
 
@@ -20,7 +20,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   variant = 'contained',
 }) => {
   const { getInventoryItem } = useGameStore();
-  const dataService = DataService.getInstance();
+  const dataService = useDataService();
 
   const getLocalizedItemName = (itemId: string): string => {
     return dataService.getLocalizedItemName(itemId);

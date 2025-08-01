@@ -53,7 +53,6 @@ export class PowerService {
     this.gameConfig = gameConfig;
   }
 
-
   /**
    * 计算电力平衡
    */

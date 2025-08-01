@@ -89,7 +89,6 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
     return null;
   }
 
-
   /**
    * 清除缓存 - 当数据更新时调用
    */

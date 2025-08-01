@@ -12,6 +12,7 @@ import { FuelService } from '@/services/crafting/FuelService';
 import { PowerService } from '@/services/game/PowerService';
 import { StorageService } from '@/services/storage/StorageService';
 import { UserProgressService } from '@/services/game/UserProgressService';
+import type { IManualCraftingValidator } from '@/services/interfaces/IManualCraftingValidator';
 
 /**
  * 获取 DataService 实例
@@ -97,6 +98,17 @@ export const useUserProgressService = (): UserProgressService | null => {
   }, []);
 };
 
+/**
+ * 获取 ManualCraftingValidator 实例
+ */
+export const useManualCraftingValidator = (): IManualCraftingValidator | null => {
+  return useMemo(() => {
+    if (ServiceLocator.has(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)) {
+      return ServiceLocator.get<IManualCraftingValidator>(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR);
+    }
+    return null;
+  }, []);
+};
 
 /**
  * 通用的服务获取 Hook

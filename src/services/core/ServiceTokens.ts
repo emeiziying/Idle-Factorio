@@ -31,4 +31,4 @@ export const SERVICE_TOKENS = {
   TECH_EVENT_EMITTER: 'TechEventEmitter',
 } as const;
 
-export type ServiceToken = typeof SERVICE_TOKENS[keyof typeof SERVICE_TOKENS];
+export type ServiceToken = (typeof SERVICE_TOKENS)[keyof typeof SERVICE_TOKENS];

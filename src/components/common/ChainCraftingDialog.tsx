@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import { Warning as WarningIcon, Build as BuildIcon } from '@mui/icons-material';
 import FactorioIcon from '@/components/common/FactorioIcon';
-import { DataService } from '@/services/core/DataService';
+import { useDataService } from '@/hooks/useDIServices';
 import type {
   CraftingChainAnalysis,
   CraftingDependency,
@@ -36,7 +36,7 @@ const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
   onConfirm,
   onCancel,
 }) => {
-  const dataService = DataService.getInstance();
+  const dataService = useDataService();
 
   if (!chain) return null;
 
@@ -88,7 +88,8 @@ const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
           <Typography variant="body2" color="text.secondary">
             制作{' '}
             <strong>
-              {dataService.getLocalizedItemName(chain.mainTask.itemId)} x{chain.mainTask.quantity}
+              {dataService?.getLocalizedItemName(chain.mainTask.itemId) ?? chain.mainTask.itemId} x
+              {chain.mainTask.quantity}
             </strong>{' '}
             需要以下材料：
           </Typography>
@@ -109,7 +110,7 @@ const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
                   primary={
                     <Box display="flex" alignItems="center" gap={1}>
                       <Typography variant="body2">
-                        {dataService.getLocalizedItemName(dep.itemId)}
+                        {dataService?.getLocalizedItemName(dep.itemId) ?? dep.itemId}
                       </Typography>
                       <Chip
                         size="small"
@@ -161,7 +162,8 @@ const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
                             color: isMainTask ? 'primary.main' : 'text.primary',
                           }}
                         >
-                          {dataService.getLocalizedItemName(task.itemId)} x{task.quantity}
+                          {dataService?.getLocalizedItemName(task.itemId) ?? task.itemId} x
+                          {task.quantity}
                         </Typography>
                         {isMainTask && (
                           <Chip size="small" label="目标" color="primary" variant="outlined" />
