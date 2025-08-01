@@ -12,6 +12,14 @@ vi.mock('../../services/technology/TechnologyService');
 vi.mock('../../services/crafting/FuelService');
 vi.mock('../../services/storage/GameStorageService');
 
+// 模拟 window.location.reload
+Object.defineProperty(window, 'location', {
+  value: {
+    reload: vi.fn(),
+  },
+  writable: true,
+});
+
 // 模拟 DataService
 const mockDataService = {
   getInstance: vi.fn(() => mockDataService),
