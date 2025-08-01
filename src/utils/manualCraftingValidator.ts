@@ -8,7 +8,6 @@ import type { IManualCraftingValidator } from '@/services/interfaces/IManualCraf
 
 // 验证结果类别常量
 export const ValidationCategory = {
-  RAW_MATERIAL: 'raw_material',
   CRAFTABLE: 'craftable',
   RESTRICTED: 'restricted',
   DATA_ERROR: 'data_error',
@@ -20,7 +19,6 @@ export type ValidationCategoryType = (typeof ValidationCategory)[keyof typeof Va
 export const ValidationReason = {
   ITEM_NOT_FOUND: 'item_not_found',
   DATA_SERVICE_UNAVAILABLE: 'data_service_unavailable',
-  RAW_MATERIAL: 'raw_material',
   RECIPE_AVAILABLE: 'recipe_available',
   FLUID_INVOLVED: 'fluid_involved',
   BLACKLISTED_ITEM: 'blacklisted_item',
@@ -28,16 +26,7 @@ export const ValidationReason = {
   MINING_RECIPE: 'mining_recipe',
   RECYCLING_RECIPE: 'recycling_recipe',
   TECHNOLOGY_RECIPE: 'technology_recipe',
-  AGRICULTURE_RECIPE: 'agriculture_recipe',
-  SMELTING_REQUIRED: 'smelting_required',
-  CHEMICAL_EQUIPMENT: 'chemical_equipment',
-  FLUID_EXTRACTION: 'fluid_extraction',
-  RECYCLER_REQUIRED: 'recycler_required',
-  AGRICULTURE_EQUIPMENT: 'agriculture_equipment',
-  LAB_REQUIRED: 'lab_required',
-  COLLECTION_RECIPE: 'collection_recipe',
-  BASIC_CRAFTING: 'basic_crafting',
-  SPECIAL_EQUIPMENT: 'special_equipment',
+  NO_RECIPES: 'no_recipes',
 } as const;
 
 export type ValidationReasonType = (typeof ValidationReason)[keyof typeof ValidationReason];
@@ -149,18 +138,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
     const recipeService = this.getRecipeService();
     const recipes = recipeService ? RecipeService.getRecipesThatProduce(itemId) : [];
 
-    // 1. 检查是否为原材料（没有配方）
-    if (recipes.length === 0) {
-      const result = {
-        canCraftManually: true,
-        reason: ValidationReason.RAW_MATERIAL,
-        category: ValidationCategory.RAW_MATERIAL,
-      };
-      this.validationCache.set(itemId, result);
-      return result;
-    }
-
-    // 2. 检查配方是否有限制
+    // 检查配方是否有限制
     for (const recipe of recipes) {
       const validation = this.validateRecipe(recipe);
       if (validation.canCraftManually) {
@@ -239,7 +217,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
         const result = {
           canCraftManually: true,
           reason: ValidationReason.MINING_RECIPE,
-          category: ValidationCategory.RAW_MATERIAL,
+          category: ValidationCategory.CRAFTABLE,
         };
         this.recipeValidationCache.set(cacheKey, result);
         return result;
@@ -284,7 +262,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
       const result = {
         canCraftManually: true,
         reason: ValidationReason.COLLECTION_RECIPE,
-        category: ValidationCategory.RAW_MATERIAL,
+        category: ValidationCategory.CRAFTABLE,
       };
       this.recipeValidationCache.set(cacheKey, result);
       return result;
@@ -574,47 +552,47 @@ export function getValidationReasonText(reason: ValidationReasonType, locale: st
   const reasonTexts: Record<string, Record<ValidationReasonType, string>> = {
     zh: {
       [ValidationReason.ITEM_NOT_FOUND]: '物品不存在',
-      [ValidationReason.RAW_MATERIAL]: '原材料，可直接采集',
-      [ValidationReason.RECIPE_AVAILABLE]: '可通过配方手动制作',
-      [ValidationReason.FLUID_INVOLVED]: '配方涉及流体，无法手动制作',
-      [ValidationReason.BLACKLISTED_ITEM]: '黑名单物品，无法手动制作',
-      [ValidationReason.COMPLEX_MACHINE]: '复杂机械设备，无法手动制作',
-      [ValidationReason.MINING_RECIPE]: '采矿配方，可手动采集',
-      [ValidationReason.RECYCLING_RECIPE]: '回收配方，需要回收设备',
+      [ValidationReason.DATA_SERVICE_UNAVAILABLE]: '数据服务不可用',
+      [ValidationReason.RECIPE_AVAILABLE]: '有可用配方',
+      [ValidationReason.FLUID_INVOLVED]: '涉及流体，需要管道系统',
+      [ValidationReason.BLACKLISTED_ITEM]: '物品在黑名单中',
+      [ValidationReason.COMPLEX_MACHINE]: '需要复杂机器',
+      [ValidationReason.MINING_RECIPE]: '采矿配方，需要采矿机',
+      [ValidationReason.RECYCLING_RECIPE]: '回收配方，需要回收机',
       [ValidationReason.TECHNOLOGY_RECIPE]: '研究配方，需要实验室',
-      [ValidationReason.AGRICULTURE_RECIPE]: '农业配方，需要农业设备',
+      [ValidationReason.NO_RECIPES]: '没有可用配方',
+      [ValidationReason.BASIC_CRAFTING]: '基础制作配方，可手动制作',
+      [ValidationReason.SPECIAL_EQUIPMENT]: '需要特殊设备制作',
+      [ValidationReason.COLLECTION_RECIPE]: '采集类配方，可手动操作',
       [ValidationReason.SMELTING_REQUIRED]: '冶炼配方，必须使用熔炉',
       [ValidationReason.CHEMICAL_EQUIPMENT]: '化工配方，需要特殊设备',
       [ValidationReason.FLUID_EXTRACTION]: '流体提取，需要专用设备',
       [ValidationReason.RECYCLER_REQUIRED]: '回收配方，需要回收设备',
       [ValidationReason.AGRICULTURE_EQUIPMENT]: '农业配方，需要农业设备',
       [ValidationReason.LAB_REQUIRED]: '研究配方，需要实验室',
-      [ValidationReason.COLLECTION_RECIPE]: '采集类配方，可手动操作',
-      [ValidationReason.BASIC_CRAFTING]: '基础制作配方，可手动制作',
-      [ValidationReason.SPECIAL_EQUIPMENT]: '需要特殊设备制作',
-      [ValidationReason.DATA_SERVICE_UNAVAILABLE]: '数据服务不可用',
+      [ValidationReason.AGRICULTURE_RECIPE]: '农业配方，需要农业设备',
     },
     en: {
       [ValidationReason.ITEM_NOT_FOUND]: 'Item not found',
-      [ValidationReason.RAW_MATERIAL]: 'Raw material, can be collected directly',
-      [ValidationReason.RECIPE_AVAILABLE]: 'Can be crafted manually via recipe',
-      [ValidationReason.FLUID_INVOLVED]: 'Recipe involves fluids, cannot be crafted manually',
-      [ValidationReason.BLACKLISTED_ITEM]: 'Blacklisted item, cannot be crafted manually',
-      [ValidationReason.COMPLEX_MACHINE]: 'Complex mechanical device, cannot be crafted manually',
-      [ValidationReason.MINING_RECIPE]: 'Mining recipe, can be collected manually',
-      [ValidationReason.RECYCLING_RECIPE]: 'Recycling recipe, requires recycling equipment',
+      [ValidationReason.DATA_SERVICE_UNAVAILABLE]: 'Data service unavailable',
+      [ValidationReason.RECIPE_AVAILABLE]: 'Recipe available',
+      [ValidationReason.FLUID_INVOLVED]: 'Involves fluids, requires piping system',
+      [ValidationReason.BLACKLISTED_ITEM]: 'Item is blacklisted',
+      [ValidationReason.COMPLEX_MACHINE]: 'Requires complex machinery',
+      [ValidationReason.MINING_RECIPE]: 'Mining recipe, requires mining drill',
+      [ValidationReason.RECYCLING_RECIPE]: 'Recycling recipe, requires recycler',
       [ValidationReason.TECHNOLOGY_RECIPE]: 'Research recipe, requires laboratory',
-      [ValidationReason.AGRICULTURE_RECIPE]: 'Agriculture recipe, requires agriculture equipment',
+      [ValidationReason.NO_RECIPES]: 'No available recipes',
+      [ValidationReason.BASIC_CRAFTING]: 'Basic crafting recipe, can be crafted manually',
+      [ValidationReason.SPECIAL_EQUIPMENT]: 'Requires special equipment to craft',
+      [ValidationReason.COLLECTION_RECIPE]: 'Collection recipe, can be operated manually',
       [ValidationReason.SMELTING_REQUIRED]: 'Smelting recipe, must use furnace',
       [ValidationReason.CHEMICAL_EQUIPMENT]: 'Chemical recipe, requires special equipment',
       [ValidationReason.FLUID_EXTRACTION]: 'Fluid extraction, requires dedicated equipment',
       [ValidationReason.RECYCLER_REQUIRED]: 'Recycling recipe, requires recycling equipment',
       [ValidationReason.AGRICULTURE_EQUIPMENT]: 'Agriculture recipe, requires agriculture equipment',
       [ValidationReason.LAB_REQUIRED]: 'Research recipe, requires laboratory',
-      [ValidationReason.COLLECTION_RECIPE]: 'Collection recipe, can be operated manually',
-      [ValidationReason.BASIC_CRAFTING]: 'Basic crafting recipe, can be crafted manually',
-      [ValidationReason.SPECIAL_EQUIPMENT]: 'Requires special equipment to craft',
-      [ValidationReason.DATA_SERVICE_UNAVAILABLE]: 'Data service unavailable',
+      [ValidationReason.AGRICULTURE_RECIPE]: 'Agriculture recipe, requires agriculture equipment',
     },
   };
 
@@ -630,13 +608,11 @@ export function getValidationReasonText(reason: ValidationReasonType, locale: st
 export function getValidationCategoryText(category: ValidationCategoryType, locale: string = 'zh'): string {
   const categoryTexts: Record<string, Record<ValidationCategoryType, string>> = {
     zh: {
-      [ValidationCategory.RAW_MATERIAL]: '原材料',
       [ValidationCategory.CRAFTABLE]: '可制作',
-      [ValidationCategory.RESTRICTED]: '受限制',
+      [ValidationCategory.RESTRICTED]: '受限',
       [ValidationCategory.DATA_ERROR]: '数据错误',
     },
     en: {
-      [ValidationCategory.RAW_MATERIAL]: 'Raw Material',
       [ValidationCategory.CRAFTABLE]: 'Craftable',
       [ValidationCategory.RESTRICTED]: 'Restricted',
       [ValidationCategory.DATA_ERROR]: 'Data Error',
