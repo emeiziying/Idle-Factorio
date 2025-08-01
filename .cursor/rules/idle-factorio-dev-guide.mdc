@@ -1,0 +1,339 @@
+# Idle Factorio 开发指南
+
+## 项目架构概述
+
+### 技术栈
+- **前端框架**: React 18 + TypeScript
+- **构建工具**: Vite
+- **UI 框架**: Material-UI (MUI)
+- **状态管理**: Zustand
+- **数据持久化**: localStorage + lz-string 压缩
+- **性能优化**: @tanstack/react-virtual (虚拟列表)
+
+### 目录结构（使用 @/ 别名）
+```
+src/
+├── components/          # UI 组件
+│   ├── production/     # 生产模块
+│   ├── facilities/     # 设施模块
+│   ├── technology/     # 科技模块
+│   ├── common/         # 通用组件
+│   └── test/           # 测试组件
+├── services/           # 业务逻辑层
+│   ├── production/     # 生产计算服务
+│   ├── crafting/       # 制造服务
+│   └── save/           # 存档服务
+├── store/              # Zustand 状态管理
+│   ├── gameStore.ts    # 游戏核心状态
+│   └── slices/         # 状态切片
+├── hooks/              # 自定义 Hooks
+├── utils/              # 工具函数
+├── types/              # TypeScript 类型定义
+├── data/               # 游戏数据
+│   └── spa/           # Factorio 数据文件
+└── theme/              # MUI 主题配置
+```
+
+## 开发规范
+
+### 1. 导入规范（重要！）
+
+**所有导入必须使用 @/ 别名**：
+
+```typescript
+// ✅ 正确的导入方式
+import { useGameStore } from '@/store/gameStore';
+import { ProductionService } from '@/services/production/ProductionService';
+import { RecipeCard } from '@/components/production/RecipeCard';
+import { formatNumber } from '@/utils/format';
+import type { Recipe, Item } from '@/types/game';
+
+// ❌ 错误的导入方式
+import { useGameStore } from '../store/gameStore';
+import { ProductionService } from './services/production/ProductionService';
+```
+
+### 2. 组件开发模式
+
+#### 基础组件结构
+```typescript
+// 文件: @/components/production/ProductionPanel.tsx
+import React, { useMemo, useCallback } from 'react';
+import { Box, Typography, Card } from '@mui/material';
+import { useGameStore } from '@/store/gameStore';
+import { ProductionService } from '@/services/production/ProductionService';
+import { formatNumber } from '@/utils/format';
+import type { Recipe } from '@/types/game';
+
+interface ProductionPanelProps {
+  recipeId: string;
+  onUpdate?: (production: number) => void;
+}
+
+export const ProductionPanel: React.FC<ProductionPanelProps> = ({ 
+  recipeId, 
+  onUpdate 
+}) => {
+  // 使用 store
+  const { recipes, facilities, updateRecipe } = useGameStore();
+  
+  // 计算逻辑
+  const production = useMemo(() => {
+    return ProductionService.calculateProduction(recipeId, facilities);
+  }, [recipeId, facilities]);
+  
+  // 事件处理
+  const handleUpgrade = useCallback(() => {
+    updateRecipe(recipeId, { level: recipes[recipeId].level + 1 });
+    onUpdate?.(production);
+  }, [recipeId, production, updateRecipe, onUpdate]);
+  
+  return (
+    <Card sx={{ p: 2, mb: 2 }}>
+      <Typography variant="h6">
+        生产速率: {formatNumber(production)}/秒
+      </Typography>
+      {/* 更多UI内容 */}
+    </Card>
+  );
+};
+```
+
+### 3. 服务层设计
+
+```typescript
+// 文件: @/services/production/ProductionService.ts
+import { gameData } from '@/data/spa/data.json';
+import type { Recipe, Facility } from '@/types/game';
+import { calculateBonus } from '@/utils/calculations';
+
+export class ProductionService {
+  static calculateProduction(
+    recipeId: string, 
+    facilities: Record<string, Facility>
+  ): number {
+    const recipe = gameData.recipes[recipeId];
+    const baseProduction = recipe.products[0].amount;
+    const facilityBonus = this.calculateFacilityBonus(recipe, facilities);
+    
+    return baseProduction * facilityBonus;
+  }
+  
+  private static calculateFacilityBonus(
+    recipe: Recipe, 
+    facilities: Record<string, Facility>
+  ): number {
+    // 计算设施加成
+    return calculateBonus(recipe.category, facilities);
+  }
+}
+```
+
+### 4. 状态管理最佳实践
+
+```typescript
+// 文件: @/store/gameStore.ts
+import { create } from 'zustand';
+import { immer } from 'zustand/middleware/immer';
+import { persist } from 'zustand/middleware';
+import { compress, decompress } from 'lz-string';
+import type { GameState } from '@/types/store';
+
+export const useGameStore = create<GameState>()(
+  persist(
+    immer((set, get) => ({
+      // 状态
+      resources: {},
+      recipes: {},
+      facilities: {},
+      
+      // Actions
+      updateResource: (id: string, amount: number) => {
+        set((state) => {
+          state.resources[id] = (state.resources[id] || 0) + amount;
+        });
+      },
+      
+      // 复杂计算使用 getter
+      getTotalProduction: () => {
+        const state = get();
+        return Object.values(state.recipes).reduce((total, recipe) => {
+          return total + recipe.productionRate;
+        }, 0);
+      },
+    })),
+    {
+      name: 'idle-factorio-save',
+      storage: {
+        getItem: (name) => {
+          const str = localStorage.getItem(name);
+          if (!str) return null;
+          return JSON.parse(decompress(str) || '{}');
+        },
+        setItem: (name, value) => {
+          localStorage.setItem(name, compress(JSON.stringify(value)));
+        },
+      },
+    }
+  )
+);
+```
+
+### 5. 性能优化策略
+
+#### 虚拟列表实现
+```typescript
+// 文件: @/components/common/VirtualList.tsx
+import React from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { Box } from '@mui/material';
+
+interface VirtualListProps<T> {
+  items: T[];
+  renderItem: (item: T, index: number) => React.ReactNode;
+  itemHeight: number;
+}
+
+export function VirtualList<T>({ items, renderItem, itemHeight }: VirtualListProps<T>) {
+  const parentRef = React.useRef<HTMLDivElement>(null);
+  
+  const virtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => itemHeight,
+    overscan: 5,
+  });
+  
+  return (
+    <Box ref={parentRef} sx={{ height: '100%', overflow: 'auto' }}>
+      <Box sx={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
+        {virtualizer.getVirtualItems().map((virtualItem) => (
+          <Box
+            key={virtualItem.key}
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: `${virtualItem.size}px`,
+              transform: `translateY(${virtualItem.start}px)`,
+            }}
+          >
+            {renderItem(items[virtualItem.index], virtualItem.index)}
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+}
+```
+
+### 6. 游戏特定功能
+
+#### 自动保存 Hook
+```typescript
+// 文件: @/hooks/useAutoSave.ts
+import { useEffect } from 'react';
+import { useGameStore } from '@/store/gameStore';
+
+export function useAutoSave(interval: number = 30000) {
+  const saveGame = useGameStore((state) => state.saveGame);
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      saveGame();
+      console.log('游戏已自动保存');
+    }, interval);
+    
+    return () => clearInterval(timer);
+  }, [interval, saveGame]);
+}
+```
+
+#### 生产计算 Hook
+```typescript
+// 文件: @/hooks/useProduction.ts
+import { useMemo } from 'react';
+import { useGameStore } from '@/store/gameStore';
+import { ProductionService } from '@/services/production/ProductionService';
+
+export function useProduction(recipeId: string) {
+  const facilities = useGameStore((state) => state.facilities);
+  const technologies = useGameStore((state) => state.technologies);
+  
+  const production = useMemo(() => {
+    return ProductionService.calculateProduction(
+      recipeId, 
+      facilities, 
+      technologies
+    );
+  }, [recipeId, facilities, technologies]);
+  
+  return production;
+}
+```
+
+### 7. 测试规范
+
+```typescript
+// 文件: @/components/production/__tests__/ProductionPanel.test.tsx
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { ProductionPanel } from '@/components/production/ProductionPanel';
+import { useGameStore } from '@/store/gameStore';
+
+describe('ProductionPanel', () => {
+  it('should display production rate', () => {
+    // 设置测试数据
+    useGameStore.setState({
+      recipes: {
+        'iron-plate': { id: 'iron-plate', level: 1, productionRate: 1.5 }
+      }
+    });
+    
+    render(<ProductionPanel recipeId="iron-plate" />);
+    
+    expect(screen.getByText(/生产速率: 1.5\/秒/)).toBeInTheDocument();
+  });
+});
+```
+
+## 常见问题解决
+
+### 1. 导入路径错误
+如果遇到导入错误，检查：
+- 是否使用了 @/ 别名
+- 路径是否正确（从 src/ 开始）
+- TypeScript 配置是否正确
+
+### 2. 性能问题
+- 使用 React.memo 包装组件
+- 使用 useMemo/useCallback 优化计算
+- 大列表使用虚拟滚动
+- 避免在渲染中进行复杂计算
+
+### 3. 状态管理
+- 合理拆分 store
+- 使用选择器避免不必要的重渲染
+- 使用 immer 简化状态更新
+
+## 开发工作流
+
+1. **创建新功能时**：
+   - 先在 @/types/ 定义类型
+   - 在 @/services/ 实现业务逻辑
+   - 在 @/components/ 创建 UI 组件
+   - 在 @/store/ 添加状态管理
+   - 编写测试用例
+
+2. **修改现有代码时**：
+   - 确保所有导入使用 @/ 别名
+   - 运行测试确保没有破坏现有功能
+   - 考虑性能影响
+
+3. **提交代码前**：
+   - 运行 `pnpm lint` 检查代码规范
+   - 运行 `pnpm test` 确保测试通过
+   - 确保所有导入路径正确
+
+记住：**始终使用 @/ 别名，保持代码整洁和一致！**
