@@ -8,6 +8,7 @@ import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 
 // 核心服务
 import { DataService } from '@/services/core/DataService';
+import { GameConfig } from '@/services/core/GameConfig';
 import { UserProgressService } from '@/services/game/UserProgressService';
 import { StorageService } from '@/services/storage/StorageService';
 import ManualCraftingValidator from '@/utils/manualCraftingValidator';
@@ -86,28 +87,29 @@ export class DIServiceInitializer {
 
       const technologyService = new TechnologyService();
       // 通过反射设置私有属性（临时方案，后续可以通过构造函数注入）
-      const serviceWithProps = technologyService as TechnologyService & {
-        eventEmitter: TechEventEmitter;
-        treeService: TechTreeService;
-        unlockService: TechUnlockService;
-        researchService: ResearchService;
-        queueService: ResearchQueueService;
-        progressTracker: TechProgressTracker;
-      };
-      serviceWithProps.eventEmitter = eventEmitter;
-      serviceWithProps.treeService = treeService;
-      serviceWithProps.unlockService = unlockService;
-      serviceWithProps.researchService = researchService;
-      serviceWithProps.queueService = queueService;
-      serviceWithProps.progressTracker = progressTracker;
+      (technologyService as any).eventEmitter = eventEmitter;
+      (technologyService as any).treeService = treeService;
+      (technologyService as any).unlockService = unlockService;
+      (technologyService as any).researchService = researchService;
+      (technologyService as any).queueService = queueService;
+      (technologyService as any).progressTracker = progressTracker;
 
       return technologyService;
     });
 
     // 5. 注册其他业务服务
     container.register(SERVICE_TOKENS.RECIPE_SERVICE, RecipeService);
-    container.register(SERVICE_TOKENS.FUEL_SERVICE, FuelService);
-    container.register(SERVICE_TOKENS.POWER_SERVICE, PowerService);
+    container.registerFactory(SERVICE_TOKENS.FUEL_SERVICE, () => {
+      const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+      const gameConfig = GameConfig.getInstance();
+      const recipeService = container.resolve<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+      return new FuelService(dataService, gameConfig, recipeService);
+    });
+    container.registerFactory(SERVICE_TOKENS.POWER_SERVICE, () => {
+      const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+      const gameConfig = GameConfig.getInstance();
+      return new PowerService(dataService, gameConfig);
+    });
 
     // 6. 注册游戏循环服务
     container.register(SERVICE_TOKENS.GAME_LOOP_SERVICE, GameLoopService);

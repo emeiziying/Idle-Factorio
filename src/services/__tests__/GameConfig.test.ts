@@ -3,12 +3,7 @@ import { GameConfig } from '@/services/core/GameConfig';
 import { DataService } from '@/services/core/DataService';
 import type { Item } from '@/types';
 
-// 模拟 DataService
-vi.mock('../core/DataService', () => ({
-  DataService: {
-    getInstance: vi.fn(),
-  },
-}));
+// 模拟 DataService - 移除因为我们将使用 DI 容器
 
 // GameConfig 测试套件 - 游戏配置管理服务
 describe('GameConfig', () => {
@@ -24,10 +19,8 @@ describe('GameConfig', () => {
       getItem: vi.fn(),
     };
 
-    // 设置 DataService 模拟
-    vi.mocked(DataService.getInstance).mockReturnValue(mockDataService as unknown as DataService);
-
-    gameConfig = GameConfig.getInstance();
+    // 创建带有模拟 DataService 的 GameConfig 实例
+    gameConfig = new GameConfig(mockDataService as unknown as DataService);
   });
 
   afterEach(() => {

@@ -3,6 +3,7 @@ import { DataService } from '@/services/core/DataService';
 import { container } from '@/services/core/DIContainer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import { DIServiceInitializer } from '@/services/core/DIServiceInitializer';
+import { createDataServiceForTest, resetServiceInstances } from '@/test-utils/serviceHelpers';
 import type { GameData } from '@/types/index';
 import type { ServiceInstance } from '@/types/test-utils';
 
@@ -191,20 +192,22 @@ describe('DataService', () => {
 
     // 不注册 RecipeService，让 DataService 使用回退逻辑（直接从游戏数据查找）
 
-    dataService = DataService.getInstance();
+    dataService = createDataServiceForTest();
   });
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  // 单例模式测试
-  describe('getInstance', () => {
-    // 测试：应该返回单例实例
-    it('should return singleton instance', () => {
-      const instance1 = DataService.getInstance();
-      const instance2 = DataService.getInstance();
-      expect(instance1).toBe(instance2);
+  // DataService 创建测试
+  describe('instance creation', () => {
+    // 测试：应该能创建新实例
+    it('should create new instances', () => {
+      const instance1 = createDataServiceForTest();
+      const instance2 = createDataServiceForTest();
+      expect(instance1).not.toBe(instance2);
+      expect(instance1).toBeInstanceOf(DataService);
+      expect(instance2).toBeInstanceOf(DataService);
     });
   });
 

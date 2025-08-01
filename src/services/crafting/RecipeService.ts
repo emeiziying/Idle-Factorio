@@ -268,9 +268,12 @@ export class RecipeService {
     allRecipes: Recipe[];
     validation: import('../interfaces/IManualCraftingValidator').ManualCraftingValidation;
   } {
-    const validator = ServiceLocator.has(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
-      ? ServiceLocator.get<IManualCraftingValidator>(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
-      : null;
+    let validator: IManualCraftingValidator | null = null;
+    try {
+      validator = getService<IManualCraftingValidator>(SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR);
+    } catch {
+      // 服务未注册
+    }
 
     if (!validator) {
       return {

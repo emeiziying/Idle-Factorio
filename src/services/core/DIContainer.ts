@@ -3,7 +3,7 @@
  * 负责服务的注册、解析和生命周期管理
  */
 
-type Constructor<T = object> = new (...args: unknown[]) => T;
+type Constructor<T = object> = new (...args: any[]) => T;
 type Factory<T> = () => T;
 type AsyncFactory<T> = () => Promise<T>;
 
@@ -79,7 +79,7 @@ export class DIContainer {
   resolve<T>(token: string): T {
     // 检查是否已有实例
     if (this.instances.has(token)) {
-      return this.instances.get(token);
+      return this.instances.get(token) as T;
     }
 
     // 检查循环依赖
@@ -104,7 +104,7 @@ export class DIContainer {
         this.instances.set(token, instance);
       }
 
-      return instance;
+      return instance as T;
     } finally {
       this.resolving.delete(token);
     }
@@ -116,7 +116,7 @@ export class DIContainer {
   async resolveAsync<T>(token: string): Promise<T> {
     // 检查是否已有实例
     if (this.instances.has(token)) {
-      return this.instances.get(token);
+      return this.instances.get(token) as T;
     }
 
     // 检查循环依赖
@@ -141,7 +141,7 @@ export class DIContainer {
         this.instances.set(token, instance);
       }
 
-      return instance;
+      return instance as T;
     } finally {
       this.resolving.delete(token);
     }
