@@ -12,7 +12,7 @@ export class TechDataLoader {
   private dataService: DataService;
 
   constructor() {
-    this.dataService = DataService.getInstance();
+    this.dataService = new DataService();
   }
 
   /**

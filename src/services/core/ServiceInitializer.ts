@@ -1,5 +1,6 @@
 import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
 import { DataService } from '@/services/core/DataService';
+import { GameConfig } from '@/services/core/GameConfig';
 import { RecipeService } from '@/services/crafting/RecipeService';
 import { TechnologyService } from '@/services/technology/TechnologyService';
 import { UserProgressService } from '@/services/game/UserProgressService';
@@ -105,8 +106,8 @@ export class ServiceInitializer {
     // 6. 初始化其他业务服务
     // 这些服务提供特定的游戏功能支持
     // GameConfig is still singleton, so get instance
-    const gameConfig = GameConfig.getInstance();
-    const fuelService = new FuelService(dataService, gameConfig);
+    const gameConfig = new GameConfig(dataService);
+    const fuelService = new FuelService(dataService, gameConfig, recipeService);
     ServiceLocator.register(SERVICE_NAMES.FUEL, fuelService);
 
     const powerService = new PowerService(dataService, gameConfig);

@@ -5,7 +5,7 @@
 
 import { useMemo } from 'react';
 import type { Item, Recipe } from '@/types/index';
-import { useDataService } from '@/hooks/useServices';
+import { useDataService } from '@/hooks/useDIServices';
 
 /**
  * 获取物品的国际化名称

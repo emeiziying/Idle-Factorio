@@ -82,7 +82,7 @@ export class GameStorageService {
   private readonly storageKey = 'factorio-game-storage';
 
   private constructor() {
-    this.dataService = DataService.getInstance();
+    this.dataService = new DataService();
 
     // 页面卸载时立即保存
     if (typeof window !== 'undefined') {

@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 import useGameStore from '@/store/gameStore';
-import { useFuelService, useRecipeService, usePowerService } from '@/hooks/useServices';
+import { useFuelService, useRecipeService, usePowerService } from '@/hooks/useDIServices';
 import type { FacilityInstance } from '@/types/facilities';
 import { msToSeconds } from '@/utils/common';
 

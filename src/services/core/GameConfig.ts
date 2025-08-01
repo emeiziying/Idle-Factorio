@@ -45,8 +45,8 @@ export class GameConfig {
   private constants: GameConstants;
   private dataService: DataService;
 
-  private constructor() {
-    this.dataService = DataService.getInstance();
+  constructor(dataService?: DataService) {
+    this.dataService = dataService || {} as DataService; // 临时处理，在DI容器中会注入正确的实例
     this.constants = this.initializeConstants();
   }
 

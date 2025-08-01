@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useDataService } from '@/hooks/useServices';
+import { useDataService } from '@/hooks/useDIServices';
 import useGameStore from '@/store/gameStore';
 import type { Category } from '@/types/index';
 

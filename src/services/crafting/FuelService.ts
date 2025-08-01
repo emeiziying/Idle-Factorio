@@ -57,11 +57,13 @@ export interface FuelStatus {
 export class FuelService {
   private dataService: DataService;
   private gameConfig: GameConfig;
+  private recipeService: RecipeService;
   private customFuelPriority: string[] | null = null;
 
-  constructor(dataService: DataService, gameConfig: GameConfig) {
+  constructor(dataService: DataService, gameConfig: GameConfig, recipeService: RecipeService) {
     this.dataService = dataService;
     this.gameConfig = gameConfig;
+    this.recipeService = recipeService;
     // 从本地存储加载自定义优先级
     const stored = localStorage.getItem('fuelPriority');
     if (stored) {
@@ -163,7 +165,7 @@ export class FuelService {
 
     // 检查是否有足够的输入材料
     if (getInventoryItem && facility.production?.currentRecipeId) {
-      const recipe = RecipeService.getRecipeById(facility.production.currentRecipeId);
+      const recipe = this.recipeService.getRecipeById(facility.production.currentRecipeId);
       if (recipe && recipe.in) {
         // 检查所有输入材料是否充足
         for (const [itemId, required] of Object.entries(recipe.in)) {

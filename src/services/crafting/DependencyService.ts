@@ -3,6 +3,7 @@ import type { Recipe, CraftingTask } from '@/types/index';
 
 import { RecipeService } from '@/services/crafting/RecipeService';
 import ManualCraftingValidator from '@/utils/manualCraftingValidator';
+import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
 
 export interface CraftingDependency {
   itemId: string;
@@ -31,8 +32,8 @@ export class DependencyService {
   private validator: ManualCraftingValidator;
 
   private constructor() {
-    // this.dataService = DataService.getInstance();
-    this.validator = ManualCraftingValidator.getInstance();
+    // 在singleton模式下暂时创建实例，后续可能需要重构为DI
+    this.validator = new (require('@/utils/manualCraftingValidator').default)();
   }
 
   static getInstance(): DependencyService {
@@ -218,7 +219,9 @@ export class DependencyService {
    * @returns 配方或null
    */
   private getBestManualCraftingRecipe(itemId: string): Recipe | null {
-    const recipes = RecipeService.getRecipesThatProduce(itemId);
+    // 临时解决方案：通过ServiceLocator获取RecipeService实例
+    const recipeService = ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE);
+    const recipes = recipeService?.getRecipesThatProduce(itemId) || [];
 
     // 过滤出可手动制作的配方
     const manualRecipes = recipes.filter(recipe => {
