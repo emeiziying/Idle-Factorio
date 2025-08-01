@@ -1,7 +1,7 @@
 // 设施管理切片
-import type { SliceCreator, FacilitySlice } from '../types';
-import { FuelService } from '../../services/crafting/FuelService';
-import { DataService } from '../../services/core/DataService';
+import type { SliceCreator, FacilitySlice } from '@/store/types';
+import { FuelService } from '@/services/crafting/FuelService';
+import { DataService } from '@/services/core/DataService';
 
 export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
   // 初始状态

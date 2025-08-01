@@ -1,7 +1,7 @@
 // 制作队列切片
-import type { SliceCreator, CraftingSlice } from '../types';
-import type { CraftingTask, CraftingChain } from '../../types/index';
-import { RecipeService } from '../../services/crafting/RecipeService';
+import type { SliceCreator, CraftingSlice } from '@/store/types';
+import type { CraftingTask, CraftingChain } from '@/types/index';
+import { RecipeService } from '@/services/crafting/RecipeService';
 
 export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
   // 初始状态

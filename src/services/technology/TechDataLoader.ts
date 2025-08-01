@@ -3,10 +3,10 @@
  * 负责从 data.json 加载和解析科技数据
  */
 
-import type { Technology, TechCategory } from '../../types/technology';
-import type { TechRecipe, TechItem } from './types';
-import { DataService } from '../core/DataService';
-import { RecipeService } from '../crafting/RecipeService';
+import type { Technology, TechCategory } from '@/types/technology';
+import type { TechRecipe, TechItem } from '@/services/technology/types';
+import { DataService } from '@/services/core/DataService';
+import { RecipeService } from '@/services/crafting/RecipeService';
 
 export class TechDataLoader {
   private dataService: DataService;

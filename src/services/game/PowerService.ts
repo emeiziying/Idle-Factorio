@@ -1,9 +1,9 @@
 // 电力系统服务 - 管理电力平衡和设施效率
 
-import type { FacilityInstance } from '../../types/facilities';
-import { FacilityStatus } from '../../types/facilities';
-import { DataService } from '../core/DataService';
-import { GameConfig } from '../core/GameConfig';
+import type { FacilityInstance } from '@/types/facilities';
+import { FacilityStatus } from '@/types/facilities';
+import { DataService } from '@/services/core/DataService';
+import { GameConfig } from '@/services/core/GameConfig';
 
 export interface PowerBalance {
   // 发电能力

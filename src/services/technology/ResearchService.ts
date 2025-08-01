@@ -3,12 +3,12 @@
  * 管理当前研究进度、资源消耗和研究完成
  */
 
-import type { Technology, TechResearchState, ResearchResult } from '../../types/technology';
-import type { InventoryOperations } from '../../types/inventory';
-import type { TechTreeService } from './TechTreeService';
-import type { TechUnlockService } from './TechUnlockService';
-import type { FacilityInstance } from '../../types/facilities';
-import { FacilityStatus } from '../../types/facilities';
+import type { Technology, TechResearchState, ResearchResult } from '@/types/technology';
+import type { InventoryOperations } from '@/types/inventory';
+import type { TechTreeService } from '@/services/technology/TechTreeService';
+import type { TechUnlockService } from '@/services/technology/TechUnlockService';
+import type { FacilityInstance } from '@/types/facilities';
+import { FacilityStatus } from '@/types/facilities';
 import { 
   TechEventEmitter, 
   TechEventType, 
@@ -16,9 +16,9 @@ import {
   type ResearchProgressEvent,
   type ResearchCompletedEvent 
 } from './events';
-import { ServiceLocator, SERVICE_NAMES } from '../core/ServiceLocator';
-import type { GameStateProvider } from '../interfaces';
-import type { ResearchCalculation } from './types';
+import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
+import type { GameStateProvider } from '@/services/interfaces';
+import type { ResearchCalculation } from '@/services/technology/types';
 
 export class ResearchService {
   // 当前研究状态

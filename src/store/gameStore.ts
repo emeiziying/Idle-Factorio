@@ -2,7 +2,7 @@
 // 这个文件保持与原始 gameStore.ts 相同的导出接口，
 // 但内部使用重构后的模块化 store
 
-import useGameStore from './index';
+import useGameStore from '@/store/index';
 
 // 默认导出，保持向后兼容
 export default useGameStore;

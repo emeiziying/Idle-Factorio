@@ -1,10 +1,10 @@
 import React, { useMemo, useCallback } from 'react';
 import { Box, Typography, Tab, Tabs } from '@mui/material';
-import PowerManagement from './PowerManagement';
-import FuelPrioritySettings from './FuelPrioritySettings';
-import ProductionMonitor from './ProductionMonitor';
-import EfficiencyOptimizer from './EfficiencyOptimizer';
-import { FuelService } from '../../services/crafting/FuelService';
+import PowerManagement from '@/components/facilities/PowerManagement';
+import FuelPrioritySettings from '@/components/facilities/FuelPrioritySettings';
+import ProductionMonitor from '@/components/facilities/ProductionMonitor';
+import EfficiencyOptimizer from '@/components/facilities/EfficiencyOptimizer';
+import { FuelService } from '@/services/crafting/FuelService';
 
 const FacilitiesModule: React.FC = React.memo(() => {
   const [currentTab, setCurrentTab] = React.useState(0);

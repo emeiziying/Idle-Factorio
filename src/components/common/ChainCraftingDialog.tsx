@@ -15,10 +15,10 @@ import {
   Divider,
 } from '@mui/material';
 import { Warning as WarningIcon, Build as BuildIcon } from '@mui/icons-material';
-import FactorioIcon from './FactorioIcon';
-import { DataService } from '../../services/core/DataService';
-import type { CraftingChainAnalysis, CraftingDependency } from '../../services/crafting/DependencyService';
-import type { CraftingTask } from '../../types';
+import FactorioIcon from '@/components/common/FactorioIcon';
+import { DataService } from '@/services/core/DataService';
+import type { CraftingChainAnalysis, CraftingDependency } from '@/services/crafting/DependencyService';
+import type { CraftingTask } from '@/types';
 
 interface ChainCraftingDialogProps {
   open: boolean;

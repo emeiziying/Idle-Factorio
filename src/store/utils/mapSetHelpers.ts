@@ -1,5 +1,5 @@
 // Map/Set 序列化辅助工具函数
-import type { InventoryItem } from '../../types/index';
+import type { InventoryItem } from '@/types/index';
 
 // 确保Map对象正确初始化的辅助函数
 export const ensureMap = <K, V>(map: unknown, typeName: string): Map<K, V> => {

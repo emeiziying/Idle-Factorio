@@ -14,12 +14,12 @@ import {
   TextField,
 } from '@mui/material';
 import { Close as CloseIcon, Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
-import type { Item } from '../../types/index';
-import useGameStore from '../../store/gameStore';
-import FactorioIcon from '../common/FactorioIcon';
-import { DataService } from '../../services/core/DataService';
-import { getAvailableChestTypes } from '../../data/storageConfigs';
-import { getStorageService } from '../../services/storage/StorageService';
+import type { Item } from '@/types/index';
+import useGameStore from '@/store/gameStore';
+import FactorioIcon from '@/components/common/FactorioIcon';
+import { DataService } from '@/services/core/DataService';
+import { getAvailableChestTypes } from '@/data/storageConfigs';
+import { getStorageService } from '@/services/storage/StorageService';
 
 interface StorageExpansionDialogProps {
   open: boolean;

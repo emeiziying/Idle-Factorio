@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { Box, Typography, Divider } from '@mui/material';
-import ItemCard from './ItemCard';
-import { DataService } from '../../services/core/DataService';
-import type { Item } from '../../types/index';
+import ItemCard from '@/components/production/ItemCard';
+import { DataService } from '@/services/core/DataService';
+import type { Item } from '@/types/index';
 
 interface ItemListProps {
   categoryId: string;

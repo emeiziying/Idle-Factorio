@@ -1,13 +1,13 @@
 // 燃料服务 - 管理所有燃料相关逻辑
 
-import { DataService } from '../core/DataService';
-import { RecipeService } from './RecipeService';
-import { GameConfig } from '../core/GameConfig';
-import type { FacilityInstance } from '../../types/facilities';
-import { FacilityStatus } from '../../types/facilities';
-import type { InventoryItem } from '../../types/index';
-import { warn as logWarn, error as logError } from '../../utils/logger';
-import { msToSeconds } from '../../utils/common';
+import { DataService } from '@/services/core/DataService';
+import { RecipeService } from '@/services/crafting/RecipeService';
+import { GameConfig } from '@/services/core/GameConfig';
+import type { FacilityInstance } from '@/types/facilities';
+import { FacilityStatus } from '@/types/facilities';
+import type { InventoryItem } from '@/types/index';
+import { warn as logWarn, error as logError } from '@/utils/logger';
+import { msToSeconds } from '@/utils/common';
 
 // 燃料更新结果
 export interface FuelUpdateResult {

@@ -14,9 +14,9 @@ import {
   IconButton,
 } from '@mui/material';
 import { Bolt, Add, Remove } from '@mui/icons-material';
-import { PowerService } from '../../services/game/PowerService';
-import useGameStore from '../../store/gameStore';
-import FactorioIcon from '../common/FactorioIcon';
+import { PowerService } from '@/services/game/PowerService';
+import useGameStore from '@/store/gameStore';
+import FactorioIcon from '@/components/common/FactorioIcon';
 
 const PowerManagement: React.FC = () => {
   const { facilities, updateFacility, addFacility, removeFacility, getInventoryItem } =

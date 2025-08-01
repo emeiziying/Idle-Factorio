@@ -1,12 +1,12 @@
 // 科技系统切片
-import type { SliceCreator, TechnologySlice } from '../types';
-import type { ResearchPriority } from '../../types/technology';
-import type { InventoryOperations } from '../../types/inventory';
-import { TechnologyService } from '../../services/technology/TechnologyService';
-import { DataService } from '../../services/core/DataService';
-import { RecipeService } from '../../services/crafting/RecipeService';
-import { ensureMap, ensureUnlockedTechsSet } from '../utils/mapSetHelpers';
-import { error as logError } from '../../utils/logger';
+import type { SliceCreator, TechnologySlice } from '@/store/types';
+import type { ResearchPriority } from '@/types/technology';
+import type { InventoryOperations } from '@/types/inventory';
+import { TechnologyService } from '@/services/technology/TechnologyService';
+import { DataService } from '@/services/core/DataService';
+import { RecipeService } from '@/services/crafting/RecipeService';
+import { ensureMap, ensureUnlockedTechsSet } from '@/store/utils/mapSetHelpers';
+import { error as logError } from '@/utils/logger';
 
 export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) => ({
   // 科技系统初始状态

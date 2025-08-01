@@ -1,9 +1,9 @@
 import React from 'react';
 import { Box, Typography, Alert } from '@mui/material';
-import type { Item, Recipe } from '../../types/index';
-import { RecipeService } from '../../services/crafting/RecipeService';
-import ManualCraftingValidator from '../../utils/manualCraftingValidator';
-import UnifiedRecipeCard from './UnifiedRecipeCard';
+import type { Item, Recipe } from '@/types/index';
+import { RecipeService } from '@/services/crafting/RecipeService';
+import ManualCraftingValidator from '@/utils/manualCraftingValidator';
+import UnifiedRecipeCard from '@/components/detail/UnifiedRecipeCard';
 
 interface ManualCraftingFlowCardProps {
   item: Item;

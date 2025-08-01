@@ -15,15 +15,15 @@ import type {
   TechStatistics,
   TechCategory,
 } from '../../types/technology';
-import { ResearchPriority } from '../../types/technology';
-import type { InventoryOperations } from '../../types/inventory';
+import { ResearchPriority } from '@/types/technology';
+import type { InventoryOperations } from '@/types/inventory';
 
 // 子服务
-import { TechTreeService } from './TechTreeService';
-import { TechUnlockService } from './TechUnlockService';
-import { ResearchService } from './ResearchService';
-import { ResearchQueueService } from './ResearchQueueService';
-import { TechProgressTracker } from './TechProgressTracker';
+import { TechTreeService } from '@/services/technology/TechTreeService';
+import { TechUnlockService } from '@/services/technology/TechUnlockService';
+import { ResearchService } from '@/services/technology/ResearchService';
+import { ResearchQueueService } from '@/services/technology/ResearchQueueService';
+import { TechProgressTracker } from '@/services/technology/TechProgressTracker';
 
 // 事件系统
 import { 
@@ -33,7 +33,7 @@ import {
   type TechEventHandler
 } from './events';
 
-import Logger from '../../utils/logger';
+import Logger from '@/utils/logger';
 
 /**
  * 科技系统服务类

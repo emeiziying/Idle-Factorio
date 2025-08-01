@@ -3,8 +3,8 @@
  * 管理科技树结构、数据查询和依赖关系
  */
 
-import type { Technology, TechCategory, TechSearchFilter } from '../../types/technology';
-import { TechDataLoader } from './TechDataLoader';
+import type { Technology, TechCategory, TechSearchFilter } from '@/types/technology';
+import { TechDataLoader } from '@/services/technology/TechDataLoader';
 
 export class TechTreeService {
   private techTree: Map<string, Technology> = new Map();

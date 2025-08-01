@@ -3,16 +3,16 @@
 
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import type { GameState } from './types';
+import type { GameState } from '@/store/types';
 
 // 导入所有切片
-import { createInventorySlice } from './slices/inventoryStore';
-import { createCraftingSlice } from './slices/craftingStore';
-import { createRecipeSlice } from './slices/recipeStore';
-import { createFacilitySlice } from './slices/facilityStore';
-import { createTechnologySlice } from './slices/technologyStore';
-import { createGameMetaSlice } from './slices/gameMetaStore';
-import { createGameLoopSlice } from './slices/gameLoopStore';
+import { createInventorySlice } from '@/store/slices/inventoryStore';
+import { createCraftingSlice } from '@/store/slices/craftingStore';
+import { createRecipeSlice } from '@/store/slices/recipeStore';
+import { createFacilitySlice } from '@/store/slices/facilityStore';
+import { createTechnologySlice } from '@/store/slices/technologyStore';
+import { createGameMetaSlice } from '@/store/slices/gameMetaStore';
+import { createGameLoopSlice } from '@/store/slices/gameLoopStore';
 
 // 页面卸载时立即保存
 if (typeof window !== 'undefined') {

@@ -8,12 +8,12 @@
  * - 性能和边界情况
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { RecipeService } from '../crafting/RecipeService';
-import { DataService } from '../core/DataService';
-import { ServiceLocator, SERVICE_NAMES } from '../core/ServiceLocator';
-import type { Recipe } from '../../types';
-import type { IManualCraftingValidator } from '../interfaces/IManualCraftingValidator';
-import type { ServiceInstance } from '../../types/test-utils';
+import { RecipeService } from '@/services/crafting/RecipeService';
+import { DataService } from '@/services/core/DataService';
+import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
+import type { Recipe } from '@/types';
+import type { IManualCraftingValidator } from '@/services/interfaces/IManualCraftingValidator';
+import type { ServiceInstance } from '@/types/test-utils';
 
 // 模拟自定义配方数据
 vi.mock('../../data/customRecipes', () => ({

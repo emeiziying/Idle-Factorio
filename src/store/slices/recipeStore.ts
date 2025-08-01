@@ -1,7 +1,7 @@
 // 配方管理切片
-import type { SliceCreator, RecipeSlice } from '../types';
-import type { Recipe } from '../../types/index';
-import { RecipeService } from '../../services/crafting/RecipeService';
+import type { SliceCreator, RecipeSlice } from '@/store/types';
+import type { Recipe } from '@/types/index';
+import { RecipeService } from '@/services/crafting/RecipeService';
 
 export const createRecipeSlice: SliceCreator<RecipeSlice> = (set, get) => ({
   // 初始状态

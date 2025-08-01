@@ -3,9 +3,9 @@
  * 管理科技研究队列、优先级和自动研究
  */
 
-import type { ResearchQueueItem, QueueResult } from '../../types/technology';
-import { ResearchPriority } from '../../types/technology';
-import type { TechTreeService } from './TechTreeService';
+import type { ResearchQueueItem, QueueResult } from '@/types/technology';
+import { ResearchPriority } from '@/types/technology';
+import type { TechTreeService } from '@/services/technology/TechTreeService';
 import { 
   TechEventEmitter, 
   TechEventType, 

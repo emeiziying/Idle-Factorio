@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 import { Box, Typography, Divider } from '@mui/material';
-import ItemCard from './ItemCard';
-import { DataService } from '../../services/core/DataService';
-import { useIsMobile } from '../../hooks/useIsMobile';
-import type { Item } from '../../types/index';
+import ItemCard from '@/components/production/ItemCard';
+import { DataService } from '@/services/core/DataService';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import type { Item } from '@/types/index';
 
 interface CategoryItemGridProps {
   categoryId: string;

@@ -26,12 +26,12 @@ import {
   Battery20,
   LocalFireDepartment,
 } from '@mui/icons-material';
-import useGameStore from '../../store/gameStore';
-import { PowerService } from '../../services/game/PowerService';
-import { DataService } from '../../services/core/DataService';
-import { RecipeService } from '../../services/crafting/RecipeService';
-import { FacilityStatus } from '../../types/facilities';
-import FactorioIcon from '../common/FactorioIcon';
+import useGameStore from '@/store/gameStore';
+import { PowerService } from '@/services/game/PowerService';
+import { DataService } from '@/services/core/DataService';
+import { RecipeService } from '@/services/crafting/RecipeService';
+import { FacilityStatus } from '@/types/facilities';
+import FactorioIcon from '@/components/common/FactorioIcon';
 
 interface OptimizationSuggestion {
   id: string;

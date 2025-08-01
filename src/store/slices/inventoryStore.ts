@@ -1,9 +1,9 @@
 // 库存管理切片
-import type { SliceCreator, InventorySlice } from '../types';
-import { ensureInventoryMap } from '../utils/mapSetHelpers';
-import { getStorageConfig } from '../../data/storageConfigs';
-import { DataService } from '../../services/core/DataService';
-import type { DeployedContainer } from '../../types/index';
+import type { SliceCreator, InventorySlice } from '@/store/types';
+import { ensureInventoryMap } from '@/store/utils/mapSetHelpers';
+import { getStorageConfig } from '@/data/storageConfigs';
+import { DataService } from '@/services/core/DataService';
+import type { DeployedContainer } from '@/types/index';
 
 export const createInventorySlice: SliceCreator<InventorySlice> = (set, get) => ({
   // 初始状态

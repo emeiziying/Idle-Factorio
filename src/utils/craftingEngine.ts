@@ -1,11 +1,11 @@
 // 制作引擎 - 处理制作队列和物品生产
 
-import type { CraftingTask, Recipe } from '../types/index';
-import useGameStore from '../store/gameStore';
-import { DataService } from '../services/core/DataService';
-import { RecipeService } from '../services/crafting/RecipeService';
-import { GameConfig } from '../services/core/GameConfig';
-import { secondsToMs } from '../utils/common';
+import type { CraftingTask, Recipe } from '@/types/index';
+import useGameStore from '@/store/gameStore';
+import { DataService } from '@/services/core/DataService';
+import { RecipeService } from '@/services/crafting/RecipeService';
+import { GameConfig } from '@/services/core/GameConfig';
+import { secondsToMs } from '@/utils/common';
 
 // 设备效率配置 - 基于Factorio的采矿机设计
 interface DeviceEfficiency {

@@ -3,10 +3,10 @@
  * 管理科技、物品、配方和建筑的解锁状态
  */
 
-import type { Technology } from '../../types/technology';
-import type { TechTreeService } from './TechTreeService';
-import { TechEventEmitter, TechEventType, type TechUnlockedEvent } from './events';
-import { UserProgressService } from '../game/UserProgressService';
+import type { Technology } from '@/types/technology';
+import type { TechTreeService } from '@/services/technology/TechTreeService';
+import { TechEventEmitter, TechEventType, type TechUnlockedEvent } from '@/services/technology/events';
+import { UserProgressService } from '@/services/game/UserProgressService';
 
 export class TechUnlockService {
   // 解锁状态存储

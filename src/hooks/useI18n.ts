@@ -4,8 +4,8 @@
  */
 
 import { useMemo } from 'react';
-import type { Item, Recipe } from '../types/index';
-import { useDataService } from './useServices';
+import type { Item, Recipe } from '@/types/index';
+import { useDataService } from '@/hooks/useServices';
 
 /**
  * 获取物品的国际化名称

@@ -6,7 +6,7 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import type { BoxProps } from '@mui/material';
-import { getClickableStyles, mergeStyles } from '../../utils/styleHelpers';
+import { getClickableStyles, mergeStyles } from '@/utils/styleHelpers';
 
 interface ClickableWrapperProps extends BoxProps {
   /**

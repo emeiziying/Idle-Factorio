@@ -3,7 +3,7 @@
  * 用于服务间的解耦通信
  */
 
-import type { Technology } from '../../types/technology';
+import type { Technology } from '@/types/technology';
 
 // 事件类型枚举
 export const TechEventType = {

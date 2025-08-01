@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import type { Item } from '../types/index';
-import { RecipeService } from '../services/crafting/RecipeService';
-import ManualCraftingValidator from '../utils/manualCraftingValidator';
+import type { Item } from '@/types/index';
+import { RecipeService } from '@/services/crafting/RecipeService';
+import ManualCraftingValidator from '@/utils/manualCraftingValidator';
 
 export interface ManualCraftingStatus {
   title: string;

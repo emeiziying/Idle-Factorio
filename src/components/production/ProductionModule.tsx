@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Box, Typography, Fab, Badge } from '@mui/material';
 import { Build as BuildIcon } from '@mui/icons-material';
-import CategoryTabs from '../common/CategoryTabs';
-import ItemList from './ItemList';
-import ItemDetailPanel from './ItemDetailPanel';
-import CraftingQueue from './CraftingQueue';
+import CategoryTabs from '@/components/common/CategoryTabs';
+import ItemList from '@/components/production/ItemList';
+import ItemDetailPanel from '@/components/production/ItemDetailPanel';
+import CraftingQueue from '@/components/production/CraftingQueue';
 
-import { DataService } from '../../services/core/DataService';
+import { DataService } from '@/services/core/DataService';
 import { useLocalStorageState } from 'ahooks';
-import { useIsMobile } from '../../hooks/useIsMobile';
+import { useIsMobile } from '@/hooks/useIsMobile';
 // useProductionLoop已被GameLoopService替代
-import useGameStore from '../../store/gameStore';
-import type { Category, Item } from '../../types/index';
+import useGameStore from '@/store/gameStore';
+import type { Category, Item } from '@/types/index';
 
 const ProductionModule: React.FC = React.memo(() => {
   // 智能初始categories状态：如果数据已加载则直接设置

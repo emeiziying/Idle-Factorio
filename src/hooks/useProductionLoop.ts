@@ -1,12 +1,12 @@
 // 生产循环 Hook - 管理设施生产和燃料消耗
 
 import { useEffect, useCallback, useRef } from 'react';
-import useGameStore from '../store/gameStore';
-import { FuelService } from '../services/crafting/FuelService';
-import { RecipeService } from '../services/crafting/RecipeService';
-import { PowerService } from '../services/game/PowerService';
-import type { FacilityInstance } from '../types/facilities';
-import { msToSeconds } from '../utils/common';
+import useGameStore from '@/store/gameStore';
+import { FuelService } from '@/services/crafting/FuelService';
+import { RecipeService } from '@/services/crafting/RecipeService';
+import { PowerService } from '@/services/game/PowerService';
+import type { FacilityInstance } from '@/types/facilities';
+import { msToSeconds } from '@/utils/common';
 
 interface UseProductionLoopOptions {
   updateInterval?: number; // 更新间隔（毫秒）

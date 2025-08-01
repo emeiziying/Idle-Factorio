@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Grid } from '@mui/material';
-import ItemCard from './ItemCard';
-import { useIsMobile } from '../../hooks/useIsMobile';
-import type { Item } from '../../types/index';
+import ItemCard from '@/components/production/ItemCard';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import type { Item } from '@/types/index';
 
 interface ItemGridProps {
   items: Item[];
