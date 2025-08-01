@@ -1,7 +1,7 @@
 // 手动采集验证工具类
 // 基于 Factorio Wiki 官方规则实现
 
-import { getService, hasService } from '@/services/core/DIServiceInitializer';
+import { getService } from '@/services/core/DIServiceInitializer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type { DataService } from '@/services/core/DataService';
 import { RecipeService } from '@/services/crafting/RecipeService';

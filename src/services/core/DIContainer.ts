@@ -3,7 +3,7 @@
  * 负责服务的注册、解析和生命周期管理
  */
 
-type Constructor<T = {}> = new (...args: any[]) => T;
+type Constructor<T = object> = new (...args: unknown[]) => T;
 type Factory<T> = () => T;
 type AsyncFactory<T> = () => Promise<T>;
 
@@ -15,8 +15,8 @@ interface ServiceDefinition<T> {
 
 export class DIContainer {
   private static instance: DIContainer;
-  private services = new Map<string, ServiceDefinition<any>>();
-  private instances = new Map<string, any>();
+  private services = new Map<string, ServiceDefinition<unknown>>();
+  private instances = new Map<string, unknown>();
   private resolving = new Set<string>(); // 防止循环依赖
 
   static getInstance(): DIContainer {

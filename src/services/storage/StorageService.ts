@@ -2,7 +2,7 @@
 
 import type { StorageConfig } from '@/types/index';
 import { STORAGE_SPECIFIC_CONFIGS } from '@/data/storageConfigData';
-import { getService, hasService } from '@/services/core/DIServiceInitializer';
+import { getService } from '@/services/core/DIServiceInitializer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type { DataService } from '@/services/core/DataService';
 

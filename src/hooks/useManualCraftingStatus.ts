@@ -42,11 +42,11 @@ export const useManualCraftingStatus = (item: Item): ManualCraftingStatus => {
     }));
 
     const manualCraftableRecipes = recipeValidations.filter(
-      ({ validation }: { validation: any }) => validation.canCraftManually
+      ({ validation }) => validation.canCraftManually
     );
 
     const restrictedRecipes = recipeValidations.filter(
-      ({ validation }: { validation: any }) => !validation.canCraftManually && validation.category === 'restricted'
+      ({ validation }) => !validation.canCraftManually && validation.category === 'restricted'
     );
 
     // 如果有可手动制作的配方

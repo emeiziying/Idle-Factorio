@@ -86,12 +86,20 @@ export class DIServiceInitializer {
 
       const technologyService = new TechnologyService();
       // 通过反射设置私有属性（临时方案，后续可以通过构造函数注入）
-      (technologyService as any).eventEmitter = eventEmitter;
-      (technologyService as any).treeService = treeService;
-      (technologyService as any).unlockService = unlockService;
-      (technologyService as any).researchService = researchService;
-      (technologyService as any).queueService = queueService;
-      (technologyService as any).progressTracker = progressTracker;
+      const serviceWithProps = technologyService as TechnologyService & {
+        eventEmitter: TechEventEmitter;
+        treeService: TechTreeService;
+        unlockService: TechUnlockService;
+        researchService: ResearchService;
+        queueService: ResearchQueueService;
+        progressTracker: TechProgressTracker;
+      };
+      serviceWithProps.eventEmitter = eventEmitter;
+      serviceWithProps.treeService = treeService;
+      serviceWithProps.unlockService = unlockService;
+      serviceWithProps.researchService = researchService;
+      serviceWithProps.queueService = queueService;
+      serviceWithProps.progressTracker = progressTracker;
 
       return technologyService;
     });

@@ -1,6 +1,6 @@
 import type { Recipe } from '@/types';
 import { CUSTOM_RECIPES } from '@/data/customRecipes';
-import { getService, hasService } from '@/services/core/DIServiceInitializer';
+import { getService } from '@/services/core/DIServiceInitializer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type { DataService } from '@/services/core/DataService';
 import type { IManualCraftingValidator } from '@/services/interfaces/IManualCraftingValidator';

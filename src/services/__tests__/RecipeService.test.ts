@@ -10,7 +10,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { RecipeService } from '@/services/crafting/RecipeService';
 import { DataService } from '@/services/core/DataService';
-import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
+import { container } from '@/services/core/DIContainer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
+import { DIServiceInitializer } from '@/services/core/DIServiceInitializer';
 import type { Recipe } from '@/types';
 import type { IManualCraftingValidator } from '@/services/interfaces/IManualCraftingValidator';
 import type { ServiceInstance } from '@/types/test-utils';
@@ -49,8 +51,9 @@ describe('RecipeService 配方服务测试', () => {
   let testRecipes: Recipe[];
 
   beforeEach(async () => {
-    // Clear service locator
-    ServiceLocator.clear();
+    // Clear DI container
+    container.clear();
+    DIServiceInitializer.reset();
 
     // Clear static state - 需要访问私有静态属性来重置测试状态
     // 使用 as unknown 绕过 TypeScript 类型检查访问私有属性
@@ -115,8 +118,8 @@ describe('RecipeService 配方服务测试', () => {
     };
 
     // Register services
-    ServiceLocator.register(SERVICE_NAMES.DATA, mockDataService);
-    ServiceLocator.register(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR, mockCraftingValidator);
+    container.registerInstance(SERVICE_TOKENS.DATA_SERVICE, mockDataService);
+    container.registerInstance(SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR, mockCraftingValidator);
 
     // Initialize testRecipes with real data
     RecipeService.initializeRecipes(testRecipes);
@@ -519,8 +522,8 @@ describe('RecipeService 配方服务测试', () => {
     });
 
     it('无验证器时应返回null', () => {
-      // 清空服务定位器，模拟无验证器情况
-      ServiceLocator.clear();
+      // 清空DI容器，模拟无验证器情况
+      container.clear();
 
       // 在无验证器的情况下获取手动制作配方
       const recipe = RecipeService.getManualCraftingRecipe('iron-gear-wheel');

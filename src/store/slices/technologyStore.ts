@@ -281,7 +281,7 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
 
       // 查找科技类配方
       const techRecipes = allRecipes.filter(
-        (recipe: any) =>
+        (recipe) =>
           recipe.category === 'technology' &&
           recipe.researchTrigger &&
           !state.unlockedTechs.has(recipe.id)

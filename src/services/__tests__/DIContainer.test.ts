@@ -101,11 +101,11 @@ describe('DIContainer', () => {
   // 测试：应该检测循环依赖
   it('should detect circular dependencies', () => {
     class ServiceA {
-      constructor(public serviceB: any) {}
+      constructor(public serviceB: ServiceB) {}
     }
 
     class ServiceB {
-      constructor(public serviceA: any) {}
+      constructor(public serviceA: ServiceA) {}
     }
 
     container.register('ServiceA', ServiceA, { dependencies: ['ServiceB'] });

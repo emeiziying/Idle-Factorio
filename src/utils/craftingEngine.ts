@@ -86,7 +86,7 @@ class CraftingEngine {
 
     // 查找该物品的mining配方
     const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
-    const miningRecipes = recipeService.getRecipesThatProduce(itemId).filter((recipe: any) =>
+    const miningRecipes = recipeService.getRecipesThatProduce(itemId).filter((recipe) =>
       recipe.flags?.includes('mining')
     );
 

@@ -1,7 +1,7 @@
 // 游戏数据管理服务
 
 import type { GameData, Item, Recipe, Category, IconData } from '@/types/index';
-import { getService, hasService } from '@/services/core/DIServiceInitializer';
+import { getService } from '@/services/core/DIServiceInitializer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type { UserProgressService } from '@/services/game/UserProgressService';
 import { RecipeService } from '@/services/crafting/RecipeService';
@@ -279,6 +279,7 @@ export class DataService {
       // 如果 RecipeService 不可用，直接从游戏数据中查找
       if (this.gameData) {
         return this.gameData.recipes.find((recipe: Recipe) => recipe.id === recipeId);
+      }
     }
     return undefined;
   }
