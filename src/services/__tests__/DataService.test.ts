@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { DataService } from '../DataService';
-import { ServiceLocator, SERVICE_NAMES } from '../ServiceLocator';
+import { DataService } from '../core/DataService';
+import { ServiceLocator, SERVICE_NAMES } from '../core/ServiceLocator';
 import type { GameData } from '../../types/index';
 import type { ServiceInstance } from '../../types/test-utils';
 

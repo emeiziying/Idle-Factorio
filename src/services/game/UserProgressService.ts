@@ -1,6 +1,6 @@
 // 用户进度管理服务
 
-import { warn as logWarn } from '../utils/logger';
+import { warn as logWarn } from '../../utils/logger';
 
 export class UserProgressService {
   private static instance: UserProgressService;

@@ -7,7 +7,7 @@ import {
   getValidationCategoryText,
 } from '../../utils/manualCraftingValidator';
 import FactorioIcon from '../common/FactorioIcon';
-import { DataService } from '../../services/DataService';
+import { DataService } from '../../services/core/DataService';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
 interface ItemCardProps {

@@ -14,7 +14,7 @@ import {
   IconButton,
 } from '@mui/material';
 import { Bolt, Add, Remove } from '@mui/icons-material';
-import { PowerService } from '../../services/PowerService';
+import { PowerService } from '../../services/game/PowerService';
 import useGameStore from '../../store/gameStore';
 import FactorioIcon from '../common/FactorioIcon';
 

@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Typography, Alert, Chip } from '@mui/material';
 import type { Item, Recipe } from '../../types/index';
-import { RecipeService } from '../../services/RecipeService';
-import { DataService } from '../../services/DataService';
+import { RecipeService } from '../../services/crafting/RecipeService';
+import { DataService } from '../../services/core/DataService';
 import useGameStore from '../../store/gameStore';
 import {
   getValidationReasonText,

@@ -3,8 +3,8 @@
 import React from 'react';
 import { Box, Typography, LinearProgress, Tooltip, Chip } from '@mui/material';
 import { LocalFireDepartment, Timer } from '@mui/icons-material';
-import type { GenericFuelBuffer } from '../../services/FuelService';
-import { FuelService } from '../../services/FuelService';
+import type { GenericFuelBuffer } from '../../services/crafting/FuelService';
+import { FuelService } from '../../services/crafting/FuelService';
 import FactorioIcon from '../common/FactorioIcon';
 
 interface FuelStatusDisplayProps {

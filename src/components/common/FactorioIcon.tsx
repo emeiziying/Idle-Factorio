@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
-import { DataService } from '../../services/DataService';
+import { DataService } from '../../services/core/DataService';
 import type { IconData } from '../../types/index';
 
 // 导入图标精灵图

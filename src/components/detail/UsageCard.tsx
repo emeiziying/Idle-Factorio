@@ -2,7 +2,7 @@ import React from 'react';
 import { Typography, Box } from '@mui/material';
 import type { Recipe } from '../../types/index';
 import FactorioIcon from '../common/FactorioIcon';
-import { DataService } from '../../services/DataService';
+import { DataService } from '../../services/core/DataService';
 
 interface UsageCardProps {
   usedInRecipes: Recipe[];

@@ -30,9 +30,9 @@ import TechnologyModule from './components/technology/TechnologyModule';
 import ManualCraftingTestPage from './components/test/ManualCraftingTestPage';
 import { useGameLoop } from './hooks/useGameLoop';
 
-import { ServiceInitializer } from './services/ServiceInitializer';
-import { GameLoopService } from './services/GameLoopService';
-import { GameLoopTaskFactory } from './services/GameLoopTaskFactory';
+import { ServiceInitializer } from './services/core/ServiceInitializer';
+import { GameLoopService } from './services/game/GameLoopService';
+import { GameLoopTaskFactory } from './services/game/GameLoopTaskFactory';
 import useGameStore from './store/gameStore';
 import { useIsMobile } from './hooks/useIsMobile';
 import { useLocalStorageState } from 'ahooks';

@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography, Chip } from '@mui/material';
 import type { Recipe } from '../../types/index';
 import FactorioIcon from '../common/FactorioIcon';
-import { DataService } from '../../services/DataService';
+import { DataService } from '../../services/core/DataService';
 import useGameStore from '../../store/gameStore';
 import CraftingButtons from './CraftingButtons';
 import RecipeFlowDisplay from './RecipeFlowDisplay';

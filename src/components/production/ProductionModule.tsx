@@ -6,7 +6,7 @@ import ItemList from './ItemList';
 import ItemDetailPanel from './ItemDetailPanel';
 import CraftingQueue from './CraftingQueue';
 
-import { DataService } from '../../services/DataService';
+import { DataService } from '../../services/core/DataService';
 import { useLocalStorageState } from 'ahooks';
 import { useIsMobile } from '../../hooks/useIsMobile';
 // useProductionLoop已被GameLoopService替代

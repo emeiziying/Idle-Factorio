@@ -2,7 +2,7 @@
 import type { SliceCreator, InventorySlice } from '../types';
 import { ensureInventoryMap } from '../utils/mapSetHelpers';
 import { getStorageConfig } from '../../data/storageConfigs';
-import { DataService } from '../../services/DataService';
+import { DataService } from '../../services/core/DataService';
 import type { DeployedContainer } from '../../types/index';
 
 export const createInventorySlice: SliceCreator<InventorySlice> = (set, get) => ({
