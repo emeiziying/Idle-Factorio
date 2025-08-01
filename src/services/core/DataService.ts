@@ -344,13 +344,13 @@ export class DataService {
 
     try {
       // 1. 优先检查 TechnologyService（决定性因素）
-      if (ServiceLocator.has(SERVICE_NAMES.TECHNOLOGY)) {
-        const techService = ServiceLocator.get<TechnologyService>(SERVICE_NAMES.TECHNOLOGY);
+      const techService = ServiceLocator.has(SERVICE_NAMES.TECHNOLOGY)
+        ? ServiceLocator.get<TechnologyService>(SERVICE_NAMES.TECHNOLOGY)
+        : null;
 
-        // 使用 isItemUnlocked 方法作为决定性因素
-        if (techService.isItemUnlocked) {
-          return techService.isItemUnlocked(itemId);
-        }
+      // 如果有完整的科技服务且已初始化，使用其决定性判断
+      if (techService?.isItemUnlocked && techService?.isServiceInitialized?.()) {
+        return techService.isItemUnlocked(itemId);
       }
 
       // 2. 检查是否为原材料（无配方的物品，可直接采集）
@@ -359,10 +359,16 @@ export class DataService {
         : null;
       const recipes = recipeService ? RecipeService.getRecipesThatProduce(itemId) : [];
       if (recipes.length === 0) {
-        return true; // 原材料始终可用
+        // 对于无配方的物品，检查是否有科技要求
+        if (techService?.isItemUnlocked && techService?.isServiceInitialized?.()) {
+          return techService.isItemUnlocked(itemId);
+        }
+        // 如果没有科技服务或未初始化，假设原材料始终可用
+        return true;
       }
 
       // 全局过滤：只允许Nauvis星球的配方（暂时限制）
+      // TODO: 未来可能需要支持其他星球的配方，当前限制可能过于严格
       const nauvisRecipes = recipes.filter(
         (recipe: Recipe) =>
           !recipe.locations || recipe.locations.length === 0 || recipe.locations.includes('nauvis')
@@ -398,16 +404,14 @@ export class DataService {
       for (const recipe of nauvisRecipes) {
         // 检查配方是否通过科技解锁
         if (recipe.flags && recipe.flags.includes('locked')) {
-          // 对于locked配方，需要检查科技是否已解锁
-          if (ServiceLocator.has(SERVICE_NAMES.TECHNOLOGY)) {
-            const techService = ServiceLocator.get<TechnologyService>(SERVICE_NAMES.TECHNOLOGY);
-            // 检查是否有科技解锁了这个配方
+          // 检查是否有科技解锁了这个配方
+          if (techService?.isRecipeUnlocked && techService?.isServiceInitialized?.()) {
             const isRecipeUnlocked = techService.isRecipeUnlocked(recipe.id);
             if (!isRecipeUnlocked) {
               continue; // 配方未通过科技解锁，跳过
             }
           } else {
-            // 如果没有科技服务，locked配方默认不可用
+            // 如果没有科技服务、方法或未初始化，locked配方默认不可用
             continue;
           }
         }
@@ -417,10 +421,13 @@ export class DataService {
           return true; // 手动制作或无需设备
         }
 
-        // 检查是否有任何生产设备被解锁
+        // 检查是否有任何生产设备被解锁且可以制作此配方
         for (const producerId of recipe.producers) {
           if (this.isItemUnlockedInternal(producerId, visiting)) {
-            return true; // 至少有一个生产设备可用
+            // 额外检查：验证生产设备确实可以制作此配方
+            // 这里可以添加更严格的验证逻辑，比如检查生产设备的配方兼容性
+            // 目前假设 recipe.producers 列表已经正确，即列出的生产设备都能制作此配方
+            return true; // 至少有一个生产设备可用且兼容
           }
         }
       }

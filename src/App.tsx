@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   ThemeProvider,
@@ -28,11 +28,11 @@ import ProductionModule from '@/components/production/ProductionModule';
 import FacilitiesModule from '@/components/facilities/FacilitiesModule';
 import TechnologyModule from '@/components/technology/TechnologyModule';
 import ManualCraftingTestPage from '@/components/test/ManualCraftingTestPage';
+import LoadingScreen from '@/components/common/LoadingScreen';
+import ErrorScreen from '@/components/common/ErrorScreen';
 import { useGameLoop } from '@/hooks/useGameLoop';
 
 import { ServiceInitializer } from '@/services/core/ServiceInitializer';
-import { GameLoopService } from '@/services/game/GameLoopService';
-import { GameLoopTaskFactory } from '@/services/game/GameLoopTaskFactory';
 import useGameStore from '@/store/gameStore';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useLocalStorageState } from 'ahooks';
@@ -48,6 +48,8 @@ const App: React.FC = () => {
   });
   const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [isAppReady, setIsAppReady] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const { clearGameData } = useGameStore();
 
@@ -63,14 +65,7 @@ const App: React.FC = () => {
   // 安全修复设施状态
   useFacilityRepair();
 
-  // 使用ref来跟踪初始化状态，避免重复初始化
-  const initializationRef = useRef<{
-    isInitialized: boolean;
-    initPromise: Promise<void> | null;
-  }>({
-    isInitialized: false,
-    initPromise: null,
-  });
+  // 简化：不再需要本地状态跟踪，ServiceInitializer会处理
 
   // 页面卸载时强制存档
   useEffect(() => {
@@ -91,69 +86,31 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // 初始化游戏数据
+  // 初始化游戏数据 - ServiceInitializer已处理防重复逻辑
   useEffect(() => {
     const initializeApp = async () => {
-      // 如果已经初始化过，直接返回
-      if (initializationRef.current.isInitialized) {
-        return;
+      try {
+        setInitError(null);
+        console.time('[App] 应用启动');
+
+        // ServiceInitializer 内部已处理防重复和Promise缓存
+        await ServiceInitializer.initialize();
+
+        console.timeEnd('[App] 应用启动');
+        console.log('[App] 应用初始化完成，UI即将就绪');
+        setIsAppReady(true);
+      } catch (error) {
+        logError('Failed to initialize app:', error);
+        setInitError(`初始化失败: ${error instanceof Error ? error.message : String(error)}`);
+        setIsAppReady(false);
       }
-
-      // 如果正在初始化中，返回同一个Promise
-      if (initializationRef.current.initPromise) {
-        return initializationRef.current.initPromise;
-      }
-
-      // 开始新的初始化过程
-      initializationRef.current.initPromise = (async () => {
-        try {
-          // 初始化所有服务
-          await ServiceInitializer.initialize();
-
-          // 同步科技数据到gameStore（确保科技数据可用）
-          const { initializeTechnologyService } = useGameStore.getState();
-          await initializeTechnologyService();
-
-          // 启动游戏循环系统
-          const gameLoopService = GameLoopService.getInstance();
-
-          // 添加所有游戏系统任务
-          const defaultTasks = GameLoopTaskFactory.createAllDefaultTasks();
-          defaultTasks.forEach(task => gameLoopService.addTask(task));
-
-          // 启动游戏循环
-          gameLoopService.start();
-
-          // 同时启动gameStore的游戏循环状态管理
-          const { startGameLoop } = useGameStore.getState();
-          startGameLoop();
-
-          // App initialized successfully
-
-          // 标记为已初始化
-          initializationRef.current.isInitialized = true;
-        } catch (error) {
-          logError('Failed to initialize app:', error);
-          // 初始化失败时重置状态，允许重试
-          initializationRef.current.isInitialized = false;
-        } finally {
-          // 清除Promise缓存
-          initializationRef.current.initPromise = null;
-        }
-      })();
-
-      return initializationRef.current.initPromise;
     };
 
     initializeApp();
 
     // 清理函数：组件卸载时停止游戏循环
     return () => {
-      const gameLoopService = GameLoopService.getInstance();
-      gameLoopService.stop();
-
-      const { stopGameLoop } = useGameStore.getState();
-      stopGameLoop();
+      ServiceInitializer.cleanup();
     };
   }, []);
 
@@ -165,6 +122,41 @@ const App: React.FC = () => {
     await clearGameData();
     // clearGameData() 已经包含立即重载，无需额外处理
   };
+
+  // 如果初始化出错，显示错误页面
+  if (initError) {
+    return (
+      <ErrorScreen
+        withTheme
+        error={initError}
+        showRetry
+        retryText="重试初始化"
+        onRetry={() => {
+          setInitError(null);
+          setIsAppReady(false);
+          // 重置ServiceInitializer状态，重新初始化
+          ServiceInitializer.reset();
+          // 触发重新初始化
+          ServiceInitializer.initialize()
+            .then(() => setIsAppReady(true))
+            .catch(error =>
+              setInitError(`重试失败: ${error instanceof Error ? error.message : String(error)}`)
+            );
+        }}
+      />
+    );
+  }
+
+  // 如果还在初始化中，显示加载页面
+  if (!isAppReady) {
+    return (
+      <LoadingScreen
+        withTheme
+        message="正在初始化游戏系统..."
+        subtitle="请稍候，首次加载可能需要几秒钟"
+      />
+    );
+  }
 
   return (
     <ThemeProvider theme={theme}>

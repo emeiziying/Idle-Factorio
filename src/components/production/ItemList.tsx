@@ -1,7 +1,9 @@
 import React, { useMemo } from 'react';
 import { Box, Typography, Divider } from '@mui/material';
 import ItemCard from '@/components/production/ItemCard';
+import InlineLoading from '@/components/common/InlineLoading';
 import { DataService } from '@/services/core/DataService';
+import { useServicesReady } from '@/hooks/useServicesReady';
 import type { Item } from '@/types/index';
 
 interface ItemListProps {
@@ -13,23 +15,48 @@ interface ItemListProps {
 const ItemList: React.FC<ItemListProps> = React.memo(
   ({ categoryId, selectedItem, onItemSelect }) => {
     const dataService = DataService.getInstance();
+    const servicesState = useServicesReady();
 
-    // 使用useMemo缓存计算结果，避免每次渲染都重新计算
-    const { itemsByRow, sortedRows } = useMemo(() => {
-      // 检查数据是否已加载
-      if (!dataService.isDataLoaded()) {
-        return { itemsByRow: new Map(), sortedRows: [] };
+    // 使用useMemo缓存计算结果
+    const { itemsByRow, sortedRows, loadError } = useMemo(() => {
+      // 只有在服务就绪时才计算
+      if (!servicesState.isReady) {
+        return {
+          itemsByRow: new Map(),
+          sortedRows: [],
+          loadError: null,
+        };
       }
 
       try {
         const itemsByRow = dataService.getItemsByRow(categoryId);
         const sortedRows = Array.from(itemsByRow.keys()).sort((a, b) => a - b);
-        return { itemsByRow, sortedRows };
+        return { itemsByRow, sortedRows, loadError: null };
       } catch (error) {
         console.error('Error loading items for category', categoryId, ':', error);
-        return { itemsByRow: new Map(), sortedRows: [] };
+        return {
+          itemsByRow: new Map(),
+          sortedRows: [],
+          loadError: error instanceof Error ? error.message : String(error),
+        };
       }
-    }, [categoryId, dataService]);
+    }, [categoryId, dataService, servicesState.isReady]);
+
+    // 如果服务还未就绪，显示加载状态
+    if (!servicesState.isReady) {
+      return (
+        <InlineLoading
+          message={servicesState.error ? `服务错误: ${servicesState.error}` : '加载物品数据中...'}
+          showSpinner={!servicesState.error}
+          color={servicesState.error ? 'error' : undefined}
+        />
+      );
+    }
+
+    // 如果有加载错误，显示错误信息
+    if (loadError) {
+      return <InlineLoading message={`加载失败: ${loadError}`} showSpinner={false} color="error" />;
+    }
 
     if (sortedRows.length === 0) {
       return (

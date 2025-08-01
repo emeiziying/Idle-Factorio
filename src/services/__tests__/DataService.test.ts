@@ -162,6 +162,7 @@ describe('DataService', () => {
     canCraftItem: ReturnType<typeof vi.fn>;
     isItemUnlocked: ReturnType<typeof vi.fn>;
     isRecipeUnlocked: ReturnType<typeof vi.fn>;
+    isServiceInitialized: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
@@ -179,6 +180,7 @@ describe('DataService', () => {
       canCraftItem: vi.fn(() => true),
       isItemUnlocked: vi.fn(() => false),
       isRecipeUnlocked: vi.fn(() => false),
+      isServiceInitialized: vi.fn(() => true),
     };
 
     ServiceLocator.register(SERVICE_NAMES.USER_PROGRESS, mockUserProgressService);
