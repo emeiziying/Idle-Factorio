@@ -8,7 +8,7 @@ import {
   NewReleases as TriggerIcon,
 } from '@mui/icons-material';
 import FactorioIcon from '../common/FactorioIcon';
-import { TechnologyService } from '../../services/crafting/TechnologyService';
+import { TechnologyService } from '../../services/technology/TechnologyService';
 import { DataService } from '../../services/core/DataService';
 import type { Technology, TechStatus } from '../../types/technology';
 

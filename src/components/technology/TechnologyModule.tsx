@@ -5,7 +5,7 @@ import TechDetailPanel from './TechDetailPanel';
 import ResearchQueue from './ResearchQueue';
 
 import useGameStore from '../../store/gameStore';
-import { TechnologyService } from '../../services/crafting/TechnologyService';
+import { TechnologyService } from '../../services/technology/TechnologyService';
 import type { TechStatus } from '../../types/technology';
 import { ResearchPriority } from '../../types/technology';
 import { useLocalStorageState } from 'ahooks';

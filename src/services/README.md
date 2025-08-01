@@ -30,7 +30,12 @@ services/
 │   ├── DependencyService.ts   # 依赖分析服务
 │   ├── FuelService.ts         # 燃料管理服务
 │   ├── RecipeService.ts       # 配方管理服务
-│   ├── TechnologyService.ts   # 科技系统服务（需要拆分）
+│   └── index.ts
+│
+├── technology/         # 科技系统服务
+│   ├── TechnologyService.ts   # 科技主服务（1776行，需要拆分）
+│   ├── TechDataLoader.ts      # 科技数据加载
+│   ├── TechTreeService.ts     # 科技树管理
 │   └── index.ts
 │
 ├── interfaces/         # 服务接口定义
@@ -62,8 +67,12 @@ services/
 ### Crafting（制作系统）
 - **RecipeService**: 配方查询和管理
 - **FuelService**: 燃料系统管理
-- **TechnologyService**: 科技研究系统（1776行，需要拆分）
 - **DependencyService**: 制作依赖分析
+
+### Technology（科技系统）
+- **TechnologyService**: 科技研究主服务（1776行，需要拆分）
+- **TechDataLoader**: 科技数据加载
+- **TechTreeService**: 科技树结构管理
 
 ## 使用方式
 

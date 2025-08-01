@@ -12,6 +12,9 @@ export * from './storage';
 // 制作相关服务
 export * from './crafting';
 
+// 科技系统服务
+export * from './technology';
+
 // 接口
 export * from './interfaces';
 export type { IManualCraftingValidator } from './interfaces/IManualCraftingValidator';

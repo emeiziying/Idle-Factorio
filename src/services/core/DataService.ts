@@ -4,7 +4,7 @@ import type { GameData, Item, Recipe, Category, IconData } from '../types/index'
 import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
 import type { UserProgressService } from '../game/UserProgressService';
 import { RecipeService } from '../crafting/RecipeService';
-import type { TechnologyService } from '../crafting/TechnologyService';
+import type { TechnologyService } from '../technology/TechnologyService';
 import { error as logError } from '../../utils/logger';
 
 // 异步导入游戏数据

@@ -1,7 +1,6 @@
 // 制作相关服务导出
 export { RecipeService } from './RecipeService';
 export { FuelService } from './FuelService';
-export { TechnologyService } from './TechnologyService';
 export { DependencyService } from './DependencyService';
 
 // 导出类型

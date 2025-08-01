@@ -1,7 +1,7 @@
 import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
 import { DataService } from './DataService';
 import { RecipeService } from '../crafting/RecipeService';
-import { TechnologyService } from '../crafting/TechnologyService';
+import { TechnologyService } from '../technology/TechnologyService';
 import { UserProgressService } from '../game/UserProgressService';
 import { FuelService } from '../crafting/FuelService';
 import { PowerService } from '../game/PowerService';

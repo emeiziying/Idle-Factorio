@@ -29,7 +29,7 @@ import {
 import FactorioIcon from '../common/FactorioIcon';
 import type { TechResearchState } from '../../types/technology';
 import type { ResearchTrigger } from '../../types/index';
-import { TechnologyService } from '../../services/crafting/TechnologyService';
+import { TechnologyService } from '../../services/technology/TechnologyService';
 import { DataService } from '../../services/core/DataService';
 
 // Factorio Design System (与TechGridCard保持一致)
