@@ -1,13 +1,15 @@
 // 科技系统服务导出
 export { TechnologyService } from './TechnologyService';
 
-// 如果已经拆分，则导出子服务
-// export { TechTreeService } from './TechTreeService';
+// 已拆分的子服务（部分实现）
+export { TechTreeService } from './TechTreeService';
+export { TechDataLoader } from './TechDataLoader';
+
+// 待实现的子服务
 // export { TechUnlockService } from './TechUnlockService';
 // export { ResearchService } from './ResearchService';
 // export { ResearchQueueService } from './ResearchQueueService';
 // export { TechProgressTracker } from './TechProgressTracker';
-// export { TechDataLoader } from './TechDataLoader';
 
-// 导出类型
-// export type * from './types';
+// 导出内部类型
+export type * from './types';
