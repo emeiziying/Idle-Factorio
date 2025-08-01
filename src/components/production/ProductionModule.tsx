@@ -9,35 +9,24 @@ import CraftingQueue from '@/components/production/CraftingQueue';
 import { DataService } from '@/services/core/DataService';
 import { useLocalStorageState } from 'ahooks';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useCategoriesWithItems } from '@/hooks/useCategoriesWithItems';
 // useProductionLoop已被GameLoopService替代
 import useGameStore from '@/store/gameStore';
-import type { Category, Item } from '@/types/index';
+import type { Item } from '@/types/index';
 
 const ProductionModule: React.FC = React.memo(() => {
-  // 智能初始categories状态：如果数据已加载则直接设置
-  const [categories, setCategories] = useState<Category[]>(() => {
-    const dataService = DataService.getInstance();
-    if (dataService.isDataLoaded()) {
-      const allCategories = dataService.getAllCategories();
-      return allCategories.filter(category => category.id !== 'technology');
-    }
-    return [];
-  });
+  // 使用自定义 hook 管理分类
+  const { categories, loading } = useCategoriesWithItems();
+
   const [selectedCategory, setSelectedCategory] = useLocalStorageState<string>(
     'production-selected-category',
     { defaultValue: '' }
   );
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
-  // 智能初始loading状态：如果数据已加载则不显示loading
-  const [loading, setLoading] = useState(() => {
-    const dataService = DataService.getInstance();
-    return !dataService.isDataLoaded();
-  });
   const [isItemJump, setIsItemJump] = useState(false); // 标识是否是通过物品跳转切换的分类
   const [showCraftingQueue, setShowCraftingQueue] = useState(false); // 控制制作队列显示
   const selectedItemRef = useRef<Item | null>(null);
   const selectedCategoryRef = useRef<string>('');
-  const loadingRef = useRef<boolean>(true);
 
   // 获取制作队列状态
   const craftingQueue = useGameStore(state => state.craftingQueue);
@@ -53,63 +42,6 @@ const ProductionModule: React.FC = React.memo(() => {
   useEffect(() => {
     selectedCategoryRef.current = selectedCategory;
   }, [selectedCategory]);
-
-  useEffect(() => {
-    loadingRef.current = loading;
-  }, [loading]);
-
-  // 初始化数据加载 - 优化版本，避免重复加载
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const dataService = DataService.getInstance();
-
-        // 优化：如果数据已经加载，直接加载分类而不显示loading
-        if (dataService.isDataLoaded()) {
-          // 数据已存在，直接加载分类
-          const allCategories = dataService.getAllCategories();
-          const nonTechCategories = allCategories.filter(category => category.id !== 'technology');
-          setCategories(nonTechCategories);
-          setLoading(false);
-          return;
-        }
-
-        // 只有在需要加载数据时才显示loading
-        setLoading(true);
-
-        // 先加载游戏数据
-        await dataService.loadGameData();
-
-        // 检查数据是否真正加载完成
-        if (!dataService.isDataLoaded()) {
-          console.warn('Data not fully loaded, retrying...');
-          await new Promise(resolve => setTimeout(resolve, 100));
-          await dataService.loadGameData();
-        }
-
-        // 加载分类（按推荐顺序），优化性能
-        const allCategories = dataService.getAllCategories();
-        // Categories loaded
-
-        // 性能优化：直接过滤科技分类，避免进一步的昂贵检查
-        const nonTechCategories = allCategories.filter(category => category.id !== 'technology');
-
-        // Available categories filtered (performance optimized)
-        setCategories(nonTechCategories);
-
-        // Loading complete
-        setLoading(false);
-      } catch (error) {
-        console.error('Failed to load production data:', error);
-        setLoading(false);
-      }
-    };
-
-    loadData();
-
-    // 移除持续的数据检查定时器以提升性能
-    // 如果需要热重载检测，可以通过其他更高效的方式实现
-  }, []); // 移除loading依赖，避免循环
 
   // 设置默认分类
   useEffect(() => {
@@ -237,7 +169,7 @@ const ProductionModule: React.FC = React.memo(() => {
         {/* 左侧物品列表 */}
         <Box
           sx={{
-            width: '105px',
+            width: '25%',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',

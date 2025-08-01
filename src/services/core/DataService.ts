@@ -302,6 +302,26 @@ export class DataService {
     return this.gameData.categories || [];
   }
 
+  // 获取有可用物品的分类（用于生产模块）
+  getCategoriesWithAvailableItems(): Category[] {
+    if (!this.gameData) return [];
+
+    const allCategories = this.getAllCategories();
+    return allCategories.filter(category => {
+      // 跳过科技分类
+      if (category.id === 'technology') {
+        return false;
+      }
+
+      // 检查该分类是否有可用物品
+      const itemsByRow = this.getItemsByRow(category.id);
+      const hasItems =
+        itemsByRow.size > 0 && Array.from(itemsByRow.values()).some(items => items.length > 0);
+
+      return hasItems;
+    });
+  }
+
   // 获取分类
   getCategory(categoryId: string): Category | undefined {
     if (!this.gameData) return undefined;
