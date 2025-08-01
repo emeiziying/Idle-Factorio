@@ -61,7 +61,8 @@
       "mcp__context7__get-library-docs",
       "Bash(pnpm add:*)",
       "Bash(pnpm format:check:*)",
-      "Bash(pnpm prettier:*)"
+      "Bash(pnpm prettier:*)",
+      "Bash(pnpm format:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -18,20 +18,20 @@ export class TechDataLoader {
   /**
    * 从 data.json 加载所有科技数据
    */
-  async loadTechnologiesFromDataJson(): Promise<{ 
-    technologies: Technology[]; 
-    techOrder: string[] 
+  async loadTechnologiesFromDataJson(): Promise<{
+    technologies: Technology[];
+    techOrder: string[];
   }> {
     const technologies: Technology[] = [];
     const techOrder: string[] = [];
-    
+
     // 获取所有科技配方
     const techRecipes = this.dataService.getTechnologies();
-    
+
     for (const recipe of techRecipes) {
       const techRecipe: TechRecipe = {
         ...recipe,
-        row: recipe.row || 0
+        row: recipe.row || 0,
       };
       const tech = this.parseTechRecipe(techRecipe);
       technologies.push(tech);
@@ -54,7 +54,7 @@ export class TechDataLoader {
 
     // 从科技配方中收集分类信息
     const techRecipes = this.dataService.getTechnologies();
-    
+
     for (const recipe of techRecipes) {
       if (!categoryMap.has(recipe.category)) {
         categoryMap.set(recipe.category, new Set());
@@ -71,7 +71,7 @@ export class TechDataLoader {
         color: this.getCategoryColor(categoryId),
         description: this.getCategoryDescription(categoryId),
         icon: 'default-tech-icon', // TODO: 从配置获取图标
-        order: 0 // TODO: 从配置获取排序
+        order: 0, // TODO: 从配置获取排序
       });
     }
 
@@ -98,8 +98,8 @@ export class TechDataLoader {
       researchTrigger: recipe.researchTrigger,
       position: {
         x: 0, // TODO: 从配置或算法计算实际位置
-        y: recipe.row || 0
-      }
+        y: recipe.row || 0,
+      },
     };
 
     return tech;
@@ -110,7 +110,7 @@ export class TechDataLoader {
    */
   private calculateResearchCostFromRecipe(techRecipe: TechRecipe): Record<string, number> {
     const cost: Record<string, number> = {};
-    
+
     // 输入物品就是科技瓶需求
     for (const [itemId, amount] of Object.entries(techRecipe.in)) {
       // 只包含科技瓶类物品
@@ -168,7 +168,7 @@ export class TechDataLoader {
           const tech = techMap.get(item.id);
           if (tech) {
             tech.unlocks.recipes = item.technology.unlockedRecipes;
-            
+
             // 同时收集解锁的物品（从配方输出推断）
             const unlockedItems = new Set<string>();
             for (const recipeId of item.technology.unlockedRecipes) {
@@ -192,7 +192,7 @@ export class TechDataLoader {
    */
   private validateAndFixPrerequisites(technologies: Technology[]): void {
     const techIds = new Set(technologies.map(t => t.id));
-    
+
     for (const tech of technologies) {
       // 过滤掉不存在的前置科技
       tech.prerequisites = tech.prerequisites.filter((prereqId: string) => techIds.has(prereqId));
@@ -203,14 +203,16 @@ export class TechDataLoader {
    * 判断物品是否为科技瓶
    */
   private isSciencePack(itemId: string): boolean {
-    return itemId.includes('science-pack') || 
-           itemId === 'automation-science-pack' ||
-           itemId === 'logistic-science-pack' ||
-           itemId === 'military-science-pack' ||
-           itemId === 'chemical-science-pack' ||
-           itemId === 'production-science-pack' ||
-           itemId === 'utility-science-pack' ||
-           itemId === 'space-science-pack';
+    return (
+      itemId.includes('science-pack') ||
+      itemId === 'automation-science-pack' ||
+      itemId === 'logistic-science-pack' ||
+      itemId === 'military-science-pack' ||
+      itemId === 'chemical-science-pack' ||
+      itemId === 'production-science-pack' ||
+      itemId === 'utility-science-pack' ||
+      itemId === 'space-science-pack'
+    );
   }
 
   /**
@@ -218,10 +220,10 @@ export class TechDataLoader {
    */
   private getCategoryDisplayName(categoryId: string): string {
     const nameMap: Record<string, string> = {
-      'technology': '科技',
-      'military': '军事',
-      'production': '生产',
-      'logistics': '物流',
+      technology: '科技',
+      military: '军事',
+      production: '生产',
+      logistics: '物流',
       // 添加更多映射
     };
     return nameMap[categoryId] || categoryId;
@@ -232,10 +234,10 @@ export class TechDataLoader {
    */
   private getCategoryColor(categoryId: string): string {
     const colorMap: Record<string, string> = {
-      'technology': '#4A90E2',
-      'military': '#E74C3C',
-      'production': '#F39C12',
-      'logistics': '#27AE60',
+      technology: '#4A90E2',
+      military: '#E74C3C',
+      production: '#F39C12',
+      logistics: '#27AE60',
       // 添加更多映射
     };
     return colorMap[categoryId] || '#7F8C8D';
@@ -246,10 +248,10 @@ export class TechDataLoader {
    */
   private getCategoryDescription(categoryId: string): string {
     const descriptionMap: Record<string, string> = {
-      'technology': '基础科技研究',
-      'military': '军事科技与武器',
-      'production': '生产效率提升',
-      'logistics': '物流与运输优化',
+      technology: '基础科技研究',
+      military: '军事科技与武器',
+      production: '生产效率提升',
+      logistics: '物流与运输优化',
       // 添加更多映射
     };
     return descriptionMap[categoryId] || '';

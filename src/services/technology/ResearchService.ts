@@ -9,12 +9,12 @@ import type { TechTreeService } from '@/services/technology/TechTreeService';
 import type { TechUnlockService } from '@/services/technology/TechUnlockService';
 import type { FacilityInstance } from '@/types/facilities';
 import { FacilityStatus } from '@/types/facilities';
-import { 
-  TechEventEmitter, 
-  TechEventType, 
+import {
+  TechEventEmitter,
+  TechEventType,
   type ResearchStartedEvent,
   type ResearchProgressEvent,
-  type ResearchCompletedEvent 
+  type ResearchCompletedEvent,
 } from './events';
 import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
 import type { GameStateProvider } from '@/services/interfaces';
@@ -23,13 +23,13 @@ import type { ResearchCalculation } from '@/services/technology/types';
 export class ResearchService {
   // 当前研究状态
   private currentResearch: TechResearchState | undefined;
-  
+
   // 服务依赖
   private treeService: TechTreeService | null = null;
   private unlockService: TechUnlockService | null = null;
   private inventoryOps: InventoryOperations | null = null;
   private eventEmitter: TechEventEmitter;
-  
+
   // 研究配置
   private readonly BASE_LAB_SPEED = 1.0;
   private readonly LAB_EFFICIENCY_MULTIPLIER = 0.5; // 每个额外研究室增加50%速度
@@ -41,10 +41,7 @@ export class ResearchService {
   /**
    * 初始化服务
    */
-  async initialize(
-    treeService: TechTreeService, 
-    unlockService: TechUnlockService
-  ): Promise<void> {
+  async initialize(treeService: TechTreeService, unlockService: TechUnlockService): Promise<void> {
     this.treeService = treeService;
     this.unlockService = unlockService;
   }
@@ -154,7 +151,10 @@ export class ResearchService {
     const oldProgress = this.currentResearch.progress;
     const progressIncrement = deltaTime / totalTime;
     this.currentResearch.progress = Math.min(1, oldProgress + progressIncrement);
-    this.currentResearch.timeRemaining = Math.max(0, totalTime * (1 - this.currentResearch.progress));
+    this.currentResearch.timeRemaining = Math.max(
+      0,
+      totalTime * (1 - this.currentResearch.progress)
+    );
 
     // 发送进度更新事件
     if (Math.floor(oldProgress * 100) !== Math.floor(this.currentResearch.progress * 100)) {
@@ -170,7 +170,7 @@ export class ResearchService {
     if (this.currentResearch.progress >= 1) {
       const completedTechId = this.currentResearch.techId;
       const totalResearchTime = Date.now() - (this.currentResearch.timeStarted || Date.now());
-      
+
       // 清除当前研究
       this.currentResearch = undefined;
 
@@ -209,8 +209,8 @@ export class ResearchService {
     if (!tech) return false;
 
     // 检查前置科技
-    return tech.prerequisites.every((prereqId: string) => 
-      this.unlockService?.isTechUnlocked(prereqId) ?? false
+    return tech.prerequisites.every(
+      (prereqId: string) => this.unlockService?.isTechUnlocked(prereqId) ?? false
     );
   }
 
@@ -234,7 +234,9 @@ export class ResearchService {
   /**
    * 尝试消耗科技包
    */
-  private async tryConsumeSciencePacks(tech: Technology): Promise<{ success: boolean; error?: string }> {
+  private async tryConsumeSciencePacks(
+    tech: Technology
+  ): Promise<{ success: boolean; error?: string }> {
     if (!this.inventoryOps) {
       return { success: false, error: '库存系统未初始化' };
     }
@@ -243,9 +245,9 @@ export class ResearchService {
     for (const [packId, required] of Object.entries(tech.researchCost)) {
       const available = await this.inventoryOps.getItemAmount(packId);
       if (available < required) {
-        return { 
-          success: false, 
-          error: `${packId} 不足，需要 ${required}，当前 ${available}` 
+        return {
+          success: false,
+          error: `${packId} 不足，需要 ${required}，当前 ${available}`,
         };
       }
     }
@@ -271,13 +273,14 @@ export class ResearchService {
    */
   private calculateResearchTime(tech: Technology): ResearchCalculation {
     const labStats = this.getLabStatistics();
-    
+
     // 基础时间
     let effectiveTime = tech.researchTime;
-    
+
     // 根据研究室数量和效率计算
     if (labStats.count > 0) {
-      const speedMultiplier = this.BASE_LAB_SPEED + 
+      const speedMultiplier =
+        this.BASE_LAB_SPEED +
         (labStats.count - 1) * this.LAB_EFFICIENCY_MULTIPLIER * labStats.avgEfficiency;
       effectiveTime = tech.researchTime / speedMultiplier;
     }
@@ -301,9 +304,8 @@ export class ResearchService {
     }
 
     const facilities = gameStateProvider.getFacilities();
-    const labs = facilities.filter(f => 
-      f.facilityId === 'lab' && 
-      f.status === FacilityStatus.RUNNING
+    const labs = facilities.filter(
+      f => f.facilityId === 'lab' && f.status === FacilityStatus.RUNNING
     );
 
     if (labs.length === 0) {
@@ -327,7 +329,7 @@ export class ResearchService {
   /**
    * 获取模块加成
    */
-    private getModuleBonus(facility: FacilityInstance): number {
+  private getModuleBonus(facility: FacilityInstance): number {
     // 简化实现，实际应该检查安装的模块
     // TODO: 实现模块检查逻辑
     // 暂时不使用facility参数

@@ -363,7 +363,7 @@ const UnlockContent: React.FC<{
   const allItems = [
     ...unlockedContent.items.map(item => ({ ...item, type: 'item' })),
     ...unlockedContent.recipes.map(recipe => ({ ...recipe, type: 'recipe' })),
-    ...unlockedContent.buildings.map(building => ({ ...building, type: 'building' }))
+    ...unlockedContent.buildings.map(building => ({ ...building, type: 'building' })),
   ];
   const displayItems = allItems.slice(0, maxDisplayItems);
   const hasMoreItems = unlockCount > maxDisplayItems;
@@ -712,13 +712,14 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(
                                 border: `1px solid ${alpha(theme.palette.info.main, 0.3)}`,
                               }}
                             >
-                              {researchTriggerInfo.hasResearchTrigger && researchTriggerInfo.triggerItem && (
-                                <FactorioIcon
-                                  itemId={researchTriggerInfo.triggerItem}
-                                  size={16}
-                                  showBorder={false}
-                                />
-                              )}
+                              {researchTriggerInfo.hasResearchTrigger &&
+                                researchTriggerInfo.triggerItem && (
+                                  <FactorioIcon
+                                    itemId={researchTriggerInfo.triggerItem}
+                                    size={16}
+                                    showBorder={false}
+                                  />
+                                )}
                               <Typography
                                 variant="caption"
                                 sx={{
@@ -727,7 +728,7 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(
                                   fontWeight: 600,
                                 }}
                               >
-                                {researchTriggerInfo.hasResearchTrigger 
+                                {researchTriggerInfo.hasResearchTrigger
                                   ? `${researchTriggerInfo.triggerType} ${researchTriggerInfo.triggerCount || 1}`
                                   : ''}
                               </Typography>

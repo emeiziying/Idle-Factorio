@@ -4,10 +4,10 @@ export { FuelService } from './FuelService';
 export { DependencyService } from './DependencyService';
 
 // 导出类型
-export type { 
-  FuelUpdateResult, 
-  AddFuelResult, 
-  AutoRefuelResult, 
-  GenericFuelBuffer, 
-  FuelStatus 
+export type {
+  FuelUpdateResult,
+  AddFuelResult,
+  AutoRefuelResult,
+  GenericFuelBuffer,
+  FuelStatus,
 } from './FuelService';

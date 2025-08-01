@@ -5,7 +5,11 @@
 
 import type { Technology } from '@/types/technology';
 import type { TechTreeService } from '@/services/technology/TechTreeService';
-import { TechEventEmitter, TechEventType, type TechUnlockedEvent } from '@/services/technology/events';
+import {
+  TechEventEmitter,
+  TechEventType,
+  type TechUnlockedEvent,
+} from '@/services/technology/events';
 import { UserProgressService } from '@/services/game/UserProgressService';
 
 export class TechUnlockService {
@@ -14,7 +18,7 @@ export class TechUnlockService {
   private unlockedItems: Set<string> = new Set();
   private unlockedRecipes: Set<string> = new Set();
   private unlockedBuildings: Set<string> = new Set();
-  
+
   // 服务依赖
   private treeService: TechTreeService | null = null;
   private userProgressService: UserProgressService;
@@ -30,7 +34,7 @@ export class TechUnlockService {
    */
   async initialize(treeService: TechTreeService): Promise<void> {
     this.treeService = treeService;
-    
+
     // 从用户进度服务加载已解锁的内容
     await this.loadUnlockedContent();
   }
@@ -42,11 +46,11 @@ export class TechUnlockService {
     // 加载已解锁的科技
     const unlockedTechIds = this.userProgressService.getUnlockedTechs();
     this.unlockedTechs = new Set(unlockedTechIds);
-    
+
     // 加载已解锁的物品
     const unlockedItemIds = this.userProgressService.getUnlockedItems();
     this.unlockedItems = new Set(unlockedItemIds);
-    
+
     // 重建其他解锁内容（从科技推导）
     this.rebuildUnlockedContent();
   }
@@ -57,10 +61,10 @@ export class TechUnlockService {
   private rebuildUnlockedContent(): void {
     this.unlockedRecipes.clear();
     this.unlockedBuildings.clear();
-    
+
     // 添加初始解锁的内容
     this.addInitialUnlocks();
-    
+
     // 从每个已解锁的科技收集解锁内容
     for (const techId of this.unlockedTechs) {
       const tech = this.treeService?.getTechnology(techId);
@@ -80,24 +84,16 @@ export class TechUnlockService {
       'copper-plate',
       'iron-gear-wheel',
       'stone-furnace',
-      'wooden-chest'
+      'wooden-chest',
     ];
     initialItems.forEach(item => this.unlockedItems.add(item));
-    
+
     // 初始配方
-    const initialRecipes = [
-      'iron-plate',
-      'copper-plate',
-      'iron-gear-wheel',
-      'wooden-chest'
-    ];
+    const initialRecipes = ['iron-plate', 'copper-plate', 'iron-gear-wheel', 'wooden-chest'];
     initialRecipes.forEach(recipe => this.unlockedRecipes.add(recipe));
-    
+
     // 初始建筑
-    const initialBuildings = [
-      'stone-furnace',
-      'wooden-chest'
-    ];
+    const initialBuildings = ['stone-furnace', 'wooden-chest'];
     initialBuildings.forEach(building => this.unlockedBuildings.add(building));
   }
 
@@ -108,11 +104,11 @@ export class TechUnlockService {
     if (tech.unlocks.items) {
       tech.unlocks.items.forEach(item => this.unlockedItems.add(item));
     }
-    
+
     if (tech.unlocks.recipes) {
       tech.unlocks.recipes.forEach(recipe => this.unlockedRecipes.add(recipe));
     }
-    
+
     if (tech.unlocks.buildings) {
       tech.unlocks.buildings.forEach(building => this.unlockedBuildings.add(building));
     }
@@ -253,24 +249,24 @@ export class TechUnlockService {
     // 这里简化处理，实际应该从 DataService 获取名称
     const items = (technology.unlocks.items || []).map(id => ({
       id,
-      name: id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+      name: id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
     }));
 
     const recipes = (technology.unlocks.recipes || []).map(id => ({
       id,
-      name: id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+      name: id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
     }));
 
     const buildings = (technology.unlocks.buildings || []).map(id => ({
       id,
-      name: id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+      name: id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
     }));
 
     return {
       items,
       recipes,
       buildings,
-      total: items.length + recipes.length + buildings.length
+      total: items.length + recipes.length + buildings.length,
     };
   }
 
@@ -287,14 +283,14 @@ export class TechUnlockService {
   } {
     const totalTechs = this.treeService?.getAllTechnologies().length || 0;
     const unlockedTechs = this.unlockedTechs.size;
-    
+
     return {
       totalTechs,
       unlockedTechs,
       unlockedItems: this.unlockedItems.size,
       unlockedRecipes: this.unlockedRecipes.size,
       unlockedBuildings: this.unlockedBuildings.size,
-      progress: totalTechs > 0 ? unlockedTechs / totalTechs : 0
+      progress: totalTechs > 0 ? unlockedTechs / totalTechs : 0,
     };
   }
 
@@ -306,7 +302,7 @@ export class TechUnlockService {
     this.unlockedItems.clear();
     this.unlockedRecipes.clear();
     this.unlockedBuildings.clear();
-    
+
     // 添加初始解锁
     this.addInitialUnlocks();
   }

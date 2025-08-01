@@ -12,24 +12,24 @@ export const TechEventType = {
   RESEARCH_PROGRESS: 'research.progress',
   RESEARCH_COMPLETED: 'research.completed',
   RESEARCH_CANCELLED: 'research.cancelled',
-  
+
   // 解锁事件
   TECH_UNLOCKED: 'tech.unlocked',
   ITEM_UNLOCKED: 'item.unlocked',
   RECIPE_UNLOCKED: 'recipe.unlocked',
   BUILDING_UNLOCKED: 'building.unlocked',
-  
+
   // 队列事件
   QUEUE_UPDATED: 'queue.updated',
   QUEUE_ITEM_ADDED: 'queue.item.added',
   QUEUE_ITEM_REMOVED: 'queue.item.removed',
-  
+
   // 资源事件
   SCIENCE_PACKS_CONSUMED: 'resources.science_packs_consumed',
   SCIENCE_PACKS_INSUFFICIENT: 'resources.science_packs_insufficient',
 } as const;
 
-export type TechEventType = typeof TechEventType[keyof typeof TechEventType];
+export type TechEventType = (typeof TechEventType)[keyof typeof TechEventType];
 
 // 事件数据接口
 export interface TechEventData {
@@ -93,9 +93,11 @@ export class TechEventEmitter implements ITechEventEmitter {
 
     // 异步执行所有处理器
     typeHandlers.forEach(handler => {
-      Promise.resolve().then(() => handler(eventData)).catch(error => {
-        console.error(`Error in event handler for ${type}:`, error);
-      });
+      Promise.resolve()
+        .then(() => handler(eventData))
+        .catch(error => {
+          console.error(`Error in event handler for ${type}:`, error);
+        });
     });
   }
 

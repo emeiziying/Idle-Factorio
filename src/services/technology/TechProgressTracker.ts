@@ -14,7 +14,7 @@ export class TechProgressTracker {
   private researchedTechs: Set<string> = new Set();
   private researchStartTimes: Map<string, number> = new Map();
   private researchCompletionTimes: Map<string, number> = new Map();
-  
+
   // 服务依赖
   private treeService: TechTreeService | null = null;
   private unlockService: TechUnlockService | null = null;
@@ -28,7 +28,7 @@ export class TechProgressTracker {
   ): Promise<void> {
     if (treeService) this.treeService = treeService;
     if (unlockService) this.unlockService = unlockService;
-    
+
     // 从已解锁的科技重建统计
     if (this.unlockService) {
       this.rebuildStatisticsFromUnlocked();
@@ -44,15 +44,15 @@ export class TechProgressTracker {
 
     unlockedTechs.forEach(techId => {
       this.researchedTechs.add(techId);
-      
+
       // 估算研究时间和消耗
       const tech = this.treeService?.getTechnology(techId);
       if (tech) {
         this.totalResearchTime += tech.researchTime;
-        
+
         // 累加科技包消耗
         Object.entries(tech.researchCost).forEach(([packId, amount]) => {
-          this.totalSciencePacksConsumed[packId] = 
+          this.totalSciencePacksConsumed[packId] =
             (this.totalSciencePacksConsumed[packId] || 0) + (amount as number);
         });
       }
@@ -71,11 +71,11 @@ export class TechProgressTracker {
    */
   recordResearchComplete(tech: Technology): void {
     const now = Date.now();
-    
+
     // 记录完成的科技
     this.researchedTechs.add(tech.id);
     this.researchCompletionTimes.set(tech.id, now);
-    
+
     // 计算实际研究时间
     const startTime = this.researchStartTimes.get(tech.id);
     if (startTime) {
@@ -86,7 +86,7 @@ export class TechProgressTracker {
       // 如果没有开始时间记录，使用理论时间
       this.totalResearchTime += tech.researchTime;
     }
-    
+
     // 记录科技包消耗
     this.recordSciencePackConsumption(tech.researchCost);
   }
@@ -96,7 +96,7 @@ export class TechProgressTracker {
    */
   recordSciencePackConsumption(packs: Record<string, number>): void {
     Object.entries(packs).forEach(([packId, amount]) => {
-      this.totalSciencePacksConsumed[packId] = 
+      this.totalSciencePacksConsumed[packId] =
         (this.totalSciencePacksConsumed[packId] || 0) + amount;
     });
   }
@@ -108,14 +108,12 @@ export class TechProgressTracker {
     const totalTechs = this.treeService?.getAllTechnologies().length || 0;
     const unlockedCount = this.unlockService?.getUnlockedTechs().size || 0;
     const researchedCount = this.researchedTechs.size;
-    
+
     // 获取分类统计
     // const categoryProgress = this.getCategoryProgress(); // TODO: 使用分类进度
-    
+
     // 计算平均研究时间
-    const avgResearchTime = researchedCount > 0 
-      ? this.totalResearchTime / researchedCount 
-      : 0;
+    const avgResearchTime = researchedCount > 0 ? this.totalResearchTime / researchedCount : 0;
 
     return {
       totalTechs: totalTechs,
@@ -124,7 +122,7 @@ export class TechProgressTracker {
       totalResearchTime: this.totalResearchTime,
       availableTechs: 0, // TODO: 实现可研究科技数量计算
       techsByCategory: {}, // TODO: 实现分类统计
-      averageResearchTime: avgResearchTime
+      averageResearchTime: avgResearchTime,
     } as TechStatistics;
   }
 
@@ -134,46 +132,44 @@ export class TechProgressTracker {
    */
   getCategoryProgress(): Record<string, { unlocked: number; total: number; progress: number }> {
     const progress: Record<string, { unlocked: number; total: number; progress: number }> = {};
-    
+
     if (!this.treeService || !this.unlockService) return progress;
-    
+
     const categories = this.treeService.getTechCategories();
     const unlockedTechs = this.unlockService.getUnlockedTechs();
-    
+
     categories.forEach(category => {
       const categoryTechs = category.technologies;
-      const unlockedInCategory = categoryTechs.filter((techId: string) => 
+      const unlockedInCategory = categoryTechs.filter((techId: string) =>
         unlockedTechs.has(techId)
       ).length;
-      
+
       progress[category.id] = {
         unlocked: unlockedInCategory,
         total: categoryTechs.length,
-        progress: categoryTechs.length > 0 ? unlockedInCategory / categoryTechs.length : 0
+        progress: categoryTechs.length > 0 ? unlockedInCategory / categoryTechs.length : 0,
       };
     });
-    
+
     return progress;
   }
-
-
 
   /**
    * 获取研究速度（科技/小时）
    */
   getResearchSpeed(): number {
     if (this.researchCompletionTimes.size === 0) return 0;
-    
+
     // 获取最近一小时的研究
     const oneHourAgo = Date.now() - 3600000;
     let recentCount = 0;
-    
+
     this.researchCompletionTimes.forEach(time => {
       if (time >= oneHourAgo) {
         recentCount++;
       }
     });
-    
+
     return recentCount;
   }
 
@@ -242,15 +238,15 @@ export class TechProgressTracker {
     if (data.totalResearchTime !== undefined) {
       this.totalResearchTime = data.totalResearchTime;
     }
-    
+
     if (data.totalSciencePacksConsumed) {
       this.totalSciencePacksConsumed = { ...data.totalSciencePacksConsumed };
     }
-    
+
     if (data.researchedTechs) {
       this.researchedTechs = new Set(data.researchedTechs);
     }
-    
+
     if (data.researchCompletionTimes) {
       this.researchCompletionTimes = new Map(data.researchCompletionTimes);
     }

@@ -11,7 +11,7 @@ export class TechTreeService {
   private techOrder: string[] = []; // 保存科技在JSON中的原始顺序
   private techCategories: TechCategory[] = [];
   private dataLoader: TechDataLoader;
-  
+
   // 依赖关系缓存
   private dependentsCache: Map<string, string[]> = new Map();
   private dependencyChainCache: Map<string, string[]> = new Map();
@@ -26,11 +26,11 @@ export class TechTreeService {
   async initialize(): Promise<void> {
     // 加载科技数据
     const { technologies, techOrder } = await this.dataLoader.loadTechnologiesFromDataJson();
-    
+
     // 构建科技树
     this.techTree.clear();
     this.techOrder = techOrder;
-    
+
     for (const tech of technologies) {
       this.techTree.set(tech.id, tech);
     }
@@ -69,8 +69,7 @@ export class TechTreeService {
    * 获取特定分类的科技
    */
   getTechnologiesByCategory(category: string): Technology[] {
-    return Array.from(this.techTree.values())
-      .filter(tech => tech.category === category);
+    return Array.from(this.techTree.values()).filter(tech => tech.category === category);
   }
 
   /**
@@ -82,9 +81,9 @@ export class TechTreeService {
     // 按名称搜索
     if (filter.query) {
       const searchTerm = filter.query.toLowerCase();
-      results = results.filter(tech => 
-        tech.name.toLowerCase().includes(searchTerm) ||
-        tech.id.toLowerCase().includes(searchTerm)
+      results = results.filter(
+        tech =>
+          tech.name.toLowerCase().includes(searchTerm) || tech.id.toLowerCase().includes(searchTerm)
       );
     }
 
@@ -116,7 +115,7 @@ export class TechTreeService {
     }
 
     const dependents: string[] = [];
-    
+
     for (const [id, tech] of this.techTree) {
       if (tech.prerequisites.includes(techId)) {
         dependents.push(id);
@@ -150,11 +149,11 @@ export class TechTreeService {
     };
 
     dfs(techId);
-    
+
     // 移除自身
     const result = chain.filter(id => id !== techId);
     this.dependencyChainCache.set(techId, result);
-    
+
     return result;
   }
 
@@ -189,7 +188,7 @@ export class TechTreeService {
 
       visiting.add(techId);
       const tech = this.techTree.get(techId);
-      
+
       if (tech) {
         // 先访问所有前置
         tech.prerequisites.forEach((prereqId: string) => visit(prereqId));
@@ -231,7 +230,7 @@ export class TechTreeService {
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -280,7 +279,7 @@ export class TechTreeService {
       totalCount: this.techTree.size,
       categoryCounts,
       maxDependencyDepth: maxDepth,
-      orphanTechs
+      orphanTechs,
     };
   }
 }

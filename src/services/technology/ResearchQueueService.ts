@@ -6,20 +6,16 @@
 import type { ResearchQueueItem, QueueResult } from '@/types/technology';
 import { ResearchPriority } from '@/types/technology';
 import type { TechTreeService } from '@/services/technology/TechTreeService';
-import { 
-  TechEventEmitter, 
-  TechEventType, 
-  type QueueUpdatedEvent 
-} from './events';
+import { TechEventEmitter, TechEventType, type QueueUpdatedEvent } from './events';
 
 export class ResearchQueueService {
   // 研究队列
   private researchQueue: ResearchQueueItem[] = [];
-  
+
   // 配置
   private autoResearchEnabled = false;
   private maxQueueSize = 10;
-  
+
   // 服务依赖
   private treeService: TechTreeService | null = null;
   private eventEmitter: TechEventEmitter;
@@ -45,10 +41,7 @@ export class ResearchQueueService {
   /**
    * 添加科技到研究队列
    */
-  addToQueue(
-    techId: string, 
-    priority: ResearchPriority = ResearchPriority.NORMAL
-  ): QueueResult {
+  addToQueue(techId: string, priority: ResearchPriority = ResearchPriority.NORMAL): QueueResult {
     // 检查科技是否存在
     const tech = this.treeService?.getTechnology(techId);
     if (!tech) {
@@ -94,7 +87,7 @@ export class ResearchQueueService {
 
     return {
       success: true,
-      queuePosition: this.getQueuePosition(techId)
+      queuePosition: this.getQueuePosition(techId),
     };
   }
 
@@ -106,13 +99,13 @@ export class ResearchQueueService {
     if (index === -1) return false;
 
     this.researchQueue.splice(index, 1);
-    
+
     // 更新队列
     this.updateQueueDependencies();
-    
+
     // 发送事件
     this.emitQueueUpdatedEvent(['removed'], [techId]);
-    
+
     return true;
   }
 
@@ -133,10 +126,10 @@ export class ResearchQueueService {
 
     // 更新队列
     this.updateQueueDependencies();
-    
+
     // 发送事件
     this.emitQueueUpdatedEvent(['reordered']);
-    
+
     return true;
   }
 
@@ -146,7 +139,7 @@ export class ResearchQueueService {
   clearQueue(): void {
     const clearedIds = this.researchQueue.map(item => item.techId);
     this.researchQueue = [];
-    
+
     if (clearedIds.length > 0) {
       this.emitQueueUpdatedEvent(['removed'], clearedIds);
     }
@@ -169,12 +162,8 @@ export class ResearchQueueService {
   /**
    * 获取下一个可用的研究项
    */
-  getNextAvailable(
-    isAvailable: (techId: string) => boolean
-  ): ResearchQueueItem | undefined {
-    return this.researchQueue.find(item => 
-      item.canStart && isAvailable(item.techId)
-    );
+  getNextAvailable(isAvailable: (techId: string) => boolean): ResearchQueueItem | undefined {
+    return this.researchQueue.find(item => item.canStart && isAvailable(item.techId));
   }
 
   /**
@@ -191,7 +180,7 @@ export class ResearchQueueService {
   private insertQueueItemByPriority(item: ResearchQueueItem): void {
     // 找到合适的插入位置
     let insertIndex = this.researchQueue.length;
-    
+
     for (let i = 0; i < this.researchQueue.length; i++) {
       // 优先级数值越小，优先级越高
       if (item.priority < this.researchQueue[i].priority) {
@@ -199,13 +188,15 @@ export class ResearchQueueService {
         break;
       }
       // 相同优先级，按添加时间排序
-      if (item.priority === this.researchQueue[i].priority && 
-          item.addedTime < this.researchQueue[i].addedTime) {
+      if (
+        item.priority === this.researchQueue[i].priority &&
+        item.addedTime < this.researchQueue[i].addedTime
+      ) {
         insertIndex = i;
         break;
       }
     }
-    
+
     this.researchQueue.splice(insertIndex, 0, item);
   }
 
@@ -215,7 +206,7 @@ export class ResearchQueueService {
   updateQueueDependencies(): void {
     // 收集队列中所有科技的ID
     const queueTechIds = new Set(this.researchQueue.map(item => item.techId));
-    
+
     // 更新每个项目的 canStart 状态
     this.researchQueue.forEach(item => {
       const tech = this.treeService?.getTechnology(item.techId);
@@ -223,11 +214,9 @@ export class ResearchQueueService {
         item.canStart = false;
         return;
       }
-      
+
       // 检查前置科技是否都不在队列中
-      item.canStart = !tech.prerequisites.some((prereqId: string) => 
-        queueTechIds.has(prereqId)
-      );
+      item.canStart = !tech.prerequisites.some((prereqId: string) => queueTechIds.has(prereqId));
     });
 
     // 重新计算预计时间
@@ -239,13 +228,13 @@ export class ResearchQueueService {
    */
   private recalculateQueueTimes(): void {
     let cumulativeTime = 0;
-    
+
     this.researchQueue.forEach(item => {
       const tech = this.treeService?.getTechnology(item.techId);
       if (tech) {
         item.estimatedTime = tech.researchTime;
         item.estimatedStartTime = cumulativeTime;
-        
+
         // 如果可以开始，累加时间
         if (item.canStart) {
           cumulativeTime += tech.researchTime;
@@ -273,7 +262,7 @@ export class ResearchQueueService {
         reordered: changeTypes.includes('reordered'),
       },
     };
-    
+
     this.eventEmitter.emit<QueueUpdatedEvent>(TechEventType.QUEUE_UPDATED, event);
   }
 
@@ -305,11 +294,11 @@ export class ResearchQueueService {
       } else {
         stats.blockedItems++;
       }
-      
+
       if (item.estimatedTime) {
         stats.totalEstimatedTime += item.estimatedTime;
       }
-      
+
       stats.priorityCounts[item.priority]++;
     });
 
@@ -333,21 +322,23 @@ export class ResearchQueueService {
     isAvailable: (techId: string) => boolean
   ): string[] {
     if (!this.treeService) return [];
-    
+
     const recommendations: string[] = [];
     const allTechs = this.treeService.getAllTechnologies();
-    
+
     // 查找可用但未解锁且不在队列中的科技
     for (const tech of allTechs) {
-      if (!isUnlocked(tech.id) && 
-          isAvailable(tech.id) && 
-          !this.researchQueue.some(item => item.techId === tech.id)) {
+      if (
+        !isUnlocked(tech.id) &&
+        isAvailable(tech.id) &&
+        !this.researchQueue.some(item => item.techId === tech.id)
+      ) {
         recommendations.push(tech.id);
       }
-      
+
       if (recommendations.length >= 5) break;
     }
-    
+
     return recommendations;
   }
 }

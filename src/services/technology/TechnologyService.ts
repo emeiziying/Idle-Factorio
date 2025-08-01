@@ -26,11 +26,11 @@ import { ResearchQueueService } from '@/services/technology/ResearchQueueService
 import { TechProgressTracker } from '@/services/technology/TechProgressTracker';
 
 // 事件系统
-import { 
-  TechEventEmitter, 
+import {
+  TechEventEmitter,
   TechEventType,
   type ResearchCompletedEvent,
-  type TechEventHandler
+  type TechEventHandler,
 } from './events';
 
 import Logger from '@/utils/logger';
@@ -41,17 +41,17 @@ import Logger from '@/utils/logger';
  */
 export class TechnologyService {
   private static instance: TechnologyService;
-  
+
   // 子服务
   private treeService: TechTreeService;
   private unlockService: TechUnlockService;
   private researchService: ResearchService;
   private queueService: ResearchQueueService;
   private progressTracker: TechProgressTracker;
-  
+
   // 事件系统
   private eventEmitter: TechEventEmitter;
-  
+
   // 其他
   private logger: Logger;
   private isInitialized = false;
@@ -59,18 +59,18 @@ export class TechnologyService {
   private constructor() {
     // 创建事件发射器
     this.eventEmitter = new TechEventEmitter();
-    
+
     // 创建子服务
     this.treeService = new TechTreeService();
     this.unlockService = new TechUnlockService(this.eventEmitter);
     this.researchService = new ResearchService(this.eventEmitter);
     this.queueService = new ResearchQueueService(this.eventEmitter);
     this.progressTracker = new TechProgressTracker();
-    
+
     // 设置日志
     this.logger = new Logger();
     this.logger.configure({ prefix: '[Game] [Technology]' });
-    
+
     // 设置服务间事件监听
     this.setupEventListeners();
   }
@@ -103,17 +103,17 @@ export class TechnologyService {
 
     try {
       this.logger.info('Initializing technology service...');
-      
+
       // 按顺序初始化各个子服务
       await this.treeService.initialize();
       await this.unlockService.initialize(this.treeService);
       await this.researchService.initialize(this.treeService, this.unlockService);
       await this.queueService.initialize(this.treeService);
       await this.progressTracker.initialize(this.treeService, this.unlockService);
-      
+
       this.isInitialized = true;
       this.logger.info('Technology service initialized successfully');
-      
+
       // 输出初始统计
       const stats = this.getTechStatistics();
       this.logger.info(`Loaded ${stats.totalTechs} technologies`);
@@ -161,7 +161,7 @@ export class TechnologyService {
     // 增强搜索过滤器，添加状态获取函数
     const enhancedFilter = {
       ...filter,
-      status: filter.status
+      status: filter.status,
     };
     return this.treeService.searchTechnologies(enhancedFilter);
   }
@@ -224,21 +224,21 @@ export class TechnologyService {
 
   public async startResearch(techId: string): Promise<ResearchResult> {
     const result = await this.researchService.startResearch(techId);
-    
+
     if (result.success) {
       // 从队列中移除
       this.queueService.removeFromQueue(techId);
-      
+
       // 记录开始时间
       this.progressTracker.recordResearchStart(techId);
     }
-    
+
     return result;
   }
 
   public updateResearchProgress(deltaTime: number): void {
     const completedEvent = this.researchService.updateResearchProgress(deltaTime);
-    
+
     if (completedEvent) {
       this.handleResearchCompleted(completedEvent);
     }
@@ -271,15 +271,13 @@ export class TechnologyService {
   }
 
   public async startNextResearch(): Promise<boolean> {
-    const next = this.queueService.getNextAvailable(
-      techId => this.isTechAvailable(techId)
-    );
-    
+    const next = this.queueService.getNextAvailable(techId => this.isTechAvailable(techId));
+
     if (next) {
       const result = await this.startResearch(next.techId);
       return result.success;
     }
-    
+
     return false;
   }
 
@@ -298,16 +296,16 @@ export class TechnologyService {
     if (this.unlockService.isTechUnlocked(techId)) {
       return 'unlocked';
     }
-    
+
     const currentResearch = this.researchService.getCurrentResearch();
     if (currentResearch?.techId === techId) {
       return 'researching';
     }
-    
+
     if (this.isTechAvailable(techId)) {
       return 'available';
     }
-    
+
     return 'locked';
   }
 
@@ -317,12 +315,12 @@ export class TechnologyService {
   public isTechAvailable(techId: string): boolean {
     const tech = this.treeService.getTechnology(techId);
     if (!tech) return false;
-    
+
     // 检查是否已解锁
     if (this.unlockService.isTechUnlocked(techId)) return false;
-    
+
     // 检查前置科技
-    return tech.prerequisites.every((prereqId: string) => 
+    return tech.prerequisites.every((prereqId: string) =>
       this.unlockService.isTechUnlocked(prereqId)
     );
   }
@@ -333,7 +331,7 @@ export class TechnologyService {
   public getTechTreeState(): TechTreeState {
     const progressData = this.progressTracker.getProgressData();
     const queueStats = this.queueService.getQueueStatistics();
-    
+
     // 计算可用科技
     const availableTechs = new Set<string>();
     this.treeService.getAllTechnologies().forEach(tech => {
@@ -341,7 +339,7 @@ export class TechnologyService {
         availableTechs.add(tech.id);
       }
     });
-    
+
     return {
       unlockedTechs: this.unlockService.getUnlockedTechs(),
       researchedTechs: progressData.researchedTechs,
@@ -365,19 +363,19 @@ export class TechnologyService {
   public completeResearch(techId: string): void {
     const tech = this.treeService.getTechnology(techId);
     if (!tech) return;
-    
+
     // 解锁科技
     this.unlockService.unlockTechnology(techId);
-    
+
     // 记录完成
     this.progressTracker.recordResearchComplete(tech);
-    
+
     // 重新计算可用科技
     this.calculateAvailableTechs();
-    
+
     // 日志
     this.logger.info(`Research completed: ${tech.name}`);
-    
+
     // 如果启用了自动研究，开始下一个
     if (this.queueService.isAutoResearchEnabled()) {
       this.startNextResearch();
@@ -389,13 +387,12 @@ export class TechnologyService {
    */
   private calculateAvailableTechs(): void {
     // 这个方法主要是为了兼容性，实际的可用科技是动态计算的
-    const availableCount = this.treeService.getAllTechnologies()
-      .filter(tech => this.isTechAvailable(tech.id))
-      .length;
-    
+    const availableCount = this.treeService
+      .getAllTechnologies()
+      .filter(tech => this.isTechAvailable(tech.id)).length;
+
     this.logger.info(`Available technologies: ${availableCount}`);
   }
-
 
   // ========== 事件处理 ==========
 
@@ -404,10 +401,8 @@ export class TechnologyService {
    */
   private setupEventListeners(): void {
     // 监听研究完成事件
-    this.eventEmitter.on(TechEventType.RESEARCH_COMPLETED, 
-      this.handleResearchCompleted.bind(this)
-    );
-    
+    this.eventEmitter.on(TechEventType.RESEARCH_COMPLETED, this.handleResearchCompleted.bind(this));
+
     // 监听科技解锁事件
     this.eventEmitter.on(TechEventType.TECH_UNLOCKED, () => {
       this.queueService.updateQueueDependencies();
@@ -419,7 +414,7 @@ export class TechnologyService {
    */
   private handleResearchCompleted(event: ResearchCompletedEvent): void {
     this.completeResearch(event.techId);
-    
+
     // 发送外部事件
     this.eventEmitter.emit(TechEventType.RESEARCH_COMPLETED, event);
   }
@@ -430,12 +425,12 @@ export class TechnologyService {
   public on(event: string, callback: TechEventHandler): void {
     // 映射旧事件名到新事件类型
     const eventMap: Record<string, TechEventType> = {
-      'techUnlocked': TechEventType.TECH_UNLOCKED,
-      'researchStarted': TechEventType.RESEARCH_STARTED,
-      'researchCompleted': TechEventType.RESEARCH_COMPLETED,
-      'queueUpdated': TechEventType.QUEUE_UPDATED,
+      techUnlocked: TechEventType.TECH_UNLOCKED,
+      researchStarted: TechEventType.RESEARCH_STARTED,
+      researchCompleted: TechEventType.RESEARCH_COMPLETED,
+      queueUpdated: TechEventType.QUEUE_UPDATED,
     };
-    
+
     const eventType = eventMap[event] || (event as TechEventType);
     this.eventEmitter.on(eventType, callback);
   }
@@ -458,11 +453,11 @@ export class TechnologyService {
   public static getResearchTriggerInfo(techId: string) {
     const service = TechnologyService.getInstance();
     const tech = service.getTechnology(techId);
-    
+
     if (!tech?.researchTrigger) {
       return { hasResearchTrigger: false };
     }
-    
+
     return {
       hasResearchTrigger: true,
       triggerType: tech.researchTrigger.type,
@@ -471,20 +466,23 @@ export class TechnologyService {
     };
   }
 
-  /** 
+  /**
    * 按状态排序技术
    */
-  public static getTechnologiesSortedByStatus(technologies: Technology[], techStates: Map<string, { status: TechStatus; progress?: number }>): Technology[] {
+  public static getTechnologiesSortedByStatus(
+    technologies: Technology[],
+    techStates: Map<string, { status: TechStatus; progress?: number }>
+  ): Technology[] {
     return technologies.sort((a, b) => {
       const stateA = techStates.get(a.id)?.status || 'locked';
       const stateB = techStates.get(b.id)?.status || 'locked';
-      
+
       // 状态优先级：available > researching > unlocked > locked
       const priority = { available: 3, researching: 2, unlocked: 1, locked: 0 };
       const priorityDiff = (priority[stateB] || 0) - (priority[stateA] || 0);
-      
+
       if (priorityDiff !== 0) return priorityDiff;
-      
+
       // 同状态按名称排序
       return a.name.localeCompare(b.name);
     });
@@ -493,12 +491,14 @@ export class TechnologyService {
   /**
    * 获取显示用的技术列表
    */
-  public static getDisplayTechnologies(technologies: Technology[], techStates: Map<string, { status: TechStatus; progress?: number }>): Technology[] {
+  public static getDisplayTechnologies(
+    technologies: Technology[],
+    techStates: Map<string, { status: TechStatus; progress?: number }>
+  ): Technology[] {
     return technologies.filter(tech => {
       const state = techStates.get(tech.id)?.status || 'locked';
       // 显示可研究、研究中和已解锁的技术
       return ['available', 'researching', 'unlocked'].includes(state);
     });
   }
-
 }

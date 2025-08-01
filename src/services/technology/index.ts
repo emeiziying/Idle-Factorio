@@ -10,7 +10,7 @@ export { TechProgressTracker } from './TechProgressTracker';
 export { TechDataLoader } from './TechDataLoader';
 
 // 事件系统
-export { 
+export {
   TechEventEmitter,
   TechEventType,
   type TechEventHandler,
@@ -19,7 +19,7 @@ export {
   type ResearchProgressEvent,
   type ResearchCompletedEvent,
   type TechUnlockedEvent,
-  type QueueUpdatedEvent
+  type QueueUpdatedEvent,
 } from './events';
 
 // 内部类型

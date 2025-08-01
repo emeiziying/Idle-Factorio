@@ -270,7 +270,7 @@ export class RecipeService {
     canCraft: boolean;
     recipe: Recipe | null;
     allRecipes: Recipe[];
-          validation: import('../interfaces/IManualCraftingValidator').ManualCraftingValidation;
+    validation: import('../interfaces/IManualCraftingValidator').ManualCraftingValidation;
   } {
     const validator = ServiceLocator.has(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
       ? ServiceLocator.get<IManualCraftingValidator>(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
