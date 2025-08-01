@@ -491,6 +491,19 @@ The project uses modern code quality tools:
 - **Path Alias**: `@/` alias configured for `src/` directory (use `@/` instead of relative imports)
 - Import paths and module resolution configured for the project structure
 
+### Import Alias Requirements (Critical)
+**ALWAYS use `@/` alias for all internal imports - never use relative paths:**
+```typescript
+// ✅ Correct - use @/ alias
+import { useGameStore } from '@/store/gameStore';
+import { RecipeService } from '@/services/RecipeService';
+import { FactorioIcon } from '@/components/common/FactorioIcon';
+
+// ❌ Incorrect - avoid relative paths
+import { useGameStore } from '../store/gameStore';
+import { RecipeService } from '../../services/RecipeService';
+```
+
 ### State Persistence Strategy
 Zustand store implements custom serialization for complex types:
 ```typescript
