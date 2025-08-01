@@ -22,6 +22,12 @@ pnpm build
 # Lint code (ESLint with TypeScript support)
 pnpm lint
 
+# Format code (Prettier)
+pnpm format
+
+# Check formatting (Prettier)
+pnpm format:check
+
 # Preview production build
 pnpm preview
 
@@ -38,7 +44,7 @@ pnpm test:coverage
 pnpm install
 ```
 
-**Note**: Always run `pnpm lint` after making code changes to ensure TypeScript and React code quality.
+**Note**: Always run `pnpm lint` and `pnpm format` after making code changes to ensure TypeScript, React code quality, and consistent formatting.
 
 ### Testing Guidelines
 The project uses **Vitest** with comprehensive test coverage:
@@ -84,7 +90,8 @@ src/store/
 │   ├── recipeStore.ts        # Recipe favorites & search
 │   ├── facilityStore.ts      # Facilities & fuel system
 │   ├── technologyStore.ts    # Technology tree & research
-│   └── gameMetaStore.ts      # Save/load & game metadata
+│   ├── gameMetaStore.ts      # Save/load & game metadata
+│   └── gameLoopStore.ts      # Game loop control & performance
 └── utils/mapSetHelpers.ts    # Map/Set serialization utilities
 ```
 
@@ -171,6 +178,7 @@ The application follows a service-oriented architecture with clear separation of
 - **UserProgressService**: Item unlock status management (implemented)
 - **StorageService**: Storage configuration management with capacity and fluid handling
 - **TechnologyService**: Technology tree management and research progression
+- **GameLoopService**: Unified game loop using requestAnimationFrame with task scheduling
 - **GameStorageService**: Unified save/load operations with optimization and compression
 - **GameConfig**: Centralized game constants and configuration management
 - **GameStore (Zustand)**: Reactive state management with localStorage persistence
@@ -185,17 +193,25 @@ Currently implemented core systems:
 - 📋 Technology Module: Planned
 - 📋 Power Module: Planned
 
-### Core Game Loop (Phase 1)
+### Core Game Loop (Unified Architecture)
 ```typescript
-// Simplified production loop - no logistics constraints
-setInterval(() => {
-  facilities.forEach(facility => {
-    if (hasRequiredInputs(facility) && hasPower(facility)) {
-      consumeInputs(facility);
-      addOutputsToInventory(facility);
-    }
-  });
-}, 1000); // Update every second
+// Modern requestAnimationFrame-based game loop via GameLoopService
+const gameLoopService = GameLoopService.getInstance();
+
+// Register tasks with the unified loop system
+gameLoopService.addTask({
+  id: 'production-update',
+  callback: (deltaTime) => {
+    facilities.forEach(facility => {
+      if (hasRequiredInputs(facility) && hasPower(facility)) {
+        consumeInputs(facility);
+        addOutputsToInventory(facility);
+      }
+    });
+  },
+  interval: 1000, // Update every second
+  priority: 'high'
+});
 ```
 
 ### Current Component Structure
@@ -453,12 +469,21 @@ const favoriteRecipes = useGameStore(state => state.favoriteRecipes); // Set<str
 
 ## Critical Development Patterns
 
-### ESLint Configuration
-The project uses ESLint 9 with modern flat config:
-- Config: `eslint.config.js` with TypeScript ESLint v8+ integration
-- Plugins: React hooks, React refresh, TypeScript recommended rules
+### Code Quality Configuration
+The project uses modern code quality tools:
+
+#### ESLint Configuration
+- ESLint 9 with modern flat config: `eslint.config.js`
+- TypeScript ESLint v8+ integration with React hooks, React refresh
 - Target: Browser environment with ES2020
 - **Always run `pnpm lint` before committing changes**
+
+#### Prettier Configuration
+- Code formatting: `.prettierrc` with 100-character line width, single quotes, 2-space indentation
+- Integration: `eslint-config-prettier` prevents ESLint/Prettier conflicts
+- Ignore file: `.prettierignore` excludes data files, build outputs, config directories
+- VSCode integration: `.vscode/settings.json` enables format-on-save
+- **Run `pnpm format` to format code, `pnpm format:check` to verify formatting**
 
 ### TypeScript Configuration
 - Main config: `tsconfig.json` with references to `tsconfig.app.json` and `tsconfig.node.json`
@@ -592,9 +617,10 @@ Specialized debugging support via browser tools (see .cursor/rules/):
 **New Files**:
 - `src/store/index.ts` - Composite store combining all slices
 - `src/store/types/index.ts` - TypeScript interfaces for all slices
-- `src/store/slices/*.ts` - Individual business domain slices
+- `src/store/slices/*.ts` - Individual business domain slices (7 slices including gameLoopStore)
 - `src/store/utils/mapSetHelpers.ts` - Map/Set serialization utilities
 - `src/store/gameStore.ts` - Backward compatibility proxy
+- `src/services/GameLoopService.ts` - Unified game loop with requestAnimationFrame
 
 ### Chain Crafting Inventory Logic (Fixed)
 **Problem**: Chain crafting allowed phantom crafting with insufficient total raw materials.
@@ -613,6 +639,22 @@ Specialized debugging support via browser tools (see .cursor/rules/):
 1. **GameStorageService**: Unified save/load operations with compression and optimization
 2. **GameConfig**: Centralized game constants management
 3. **Better separation of concerns**: Clear boundaries between state management and persistence
+
+### Game Loop System Architecture (Latest)
+**Change**: Replaced scattered setInterval usage with unified requestAnimationFrame-based GameLoopService.
+
+**Improvements**:
+1. **Performance**: requestAnimationFrame provides smoother, browser-optimized timing
+2. **Unified Task Management**: All timed operations go through centralized GameLoopService
+3. **Performance Monitoring**: Built-in FPS tracking, frame time analysis, and performance optimization
+4. **Visibility Handling**: Automatic background throttling when tab is not visible
+5. **Task Scheduling**: Priority-based task execution with configurable intervals
+
+**Architecture**:
+- `GameLoopService`: Singleton service managing the main game loop
+- `GameLoopTaskFactory`: Factory for creating standardized game loop tasks
+- `gameLoopStore`: Zustand slice for loop control and performance metrics
+- Replaces setInterval usage in components like TechnologyModule and ProductionModule
 
 ## Browser Debugging & UI Design Guidelines
 
