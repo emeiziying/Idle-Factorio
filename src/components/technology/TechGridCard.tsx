@@ -350,11 +350,22 @@ const ProgressBar: React.FC<{
 
 // Unlock content component with better hierarchy
 const UnlockContent: React.FC<{
-  unlockedContent: { all: Array<{ id: string; icon: string }> };
+  unlockedContent: {
+    items: Array<{ id: string; name: string }>;
+    recipes: Array<{ id: string; name: string }>;
+    buildings: Array<{ id: string; name: string }>;
+    total: number;
+  };
   unlockCount: number;
 }> = React.memo(({ unlockedContent, unlockCount }) => {
   const maxDisplayItems = 5; // 最多显示5个图标
-  const displayItems = unlockedContent.all.slice(0, maxDisplayItems);
+  // 合并所有解锁内容
+  const allItems = [
+    ...unlockedContent.items.map(item => ({ ...item, type: 'item' })),
+    ...unlockedContent.recipes.map(recipe => ({ ...recipe, type: 'recipe' })),
+    ...unlockedContent.buildings.map(building => ({ ...building, type: 'building' }))
+  ];
+  const displayItems = allItems.slice(0, maxDisplayItems);
   const hasMoreItems = unlockCount > maxDisplayItems;
   const remainingCount = unlockCount - maxDisplayItems;
 
@@ -458,7 +469,7 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(
     const { unlockedContent, prerequisiteNames, researchTriggerInfo } = techData;
 
     const hasResearchTrigger = Boolean(researchTriggerInfo);
-    const unlockCount = unlockedContent.all.length;
+    const unlockCount = unlockedContent.total;
 
     // Memoize status configuration
     const statusConfig = useMemo(() => {

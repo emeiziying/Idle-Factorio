@@ -3,10 +3,10 @@
  * 负责从 data.json 加载和解析科技数据
  */
 
-import type { Technology, TechCategory } from '../../../types/technology';
+import type { Technology, TechCategory } from '../../types/technology';
 import type { TechRecipe, TechItem } from './types';
-import { DataService } from '../../core/DataService';
-import { RecipeService } from '../RecipeService';
+import { DataService } from '../core/DataService';
+import { RecipeService } from '../crafting/RecipeService';
 
 export class TechDataLoader {
   private dataService: DataService;
@@ -26,10 +26,14 @@ export class TechDataLoader {
     const techOrder: string[] = [];
     
     // 获取所有科技配方
-    const techRecipes = this.dataService.getTechRecipes();
+    const techRecipes = this.dataService.getTechnologies();
     
     for (const recipe of techRecipes) {
-      const tech = this.parseTechRecipe(recipe);
+      const techRecipe: TechRecipe = {
+        ...recipe,
+        row: recipe.row || 0
+      };
+      const tech = this.parseTechRecipe(techRecipe);
       technologies.push(tech);
       techOrder.push(tech.id);
     }
@@ -49,7 +53,7 @@ export class TechDataLoader {
     const categoryMap = new Map<string, Set<string>>();
 
     // 从科技配方中收集分类信息
-    const techRecipes = this.dataService.getTechRecipes();
+    const techRecipes = this.dataService.getTechnologies();
     
     for (const recipe of techRecipes) {
       if (!categoryMap.has(recipe.category)) {
@@ -66,6 +70,8 @@ export class TechDataLoader {
         technologies: Array.from(techIds),
         color: this.getCategoryColor(categoryId),
         description: this.getCategoryDescription(categoryId),
+        icon: 'default-tech-icon', // TODO: 从配置获取图标
+        order: 0 // TODO: 从配置获取排序
       });
     }
 
@@ -90,6 +96,10 @@ export class TechDataLoader {
         buildings: [],
       },
       researchTrigger: recipe.researchTrigger,
+      position: {
+        x: 0, // TODO: 从配置或算法计算实际位置
+        y: recipe.row || 0
+      }
     };
 
     return tech;
@@ -185,7 +195,7 @@ export class TechDataLoader {
     
     for (const tech of technologies) {
       // 过滤掉不存在的前置科技
-      tech.prerequisites = tech.prerequisites.filter(prereqId => techIds.has(prereqId));
+      tech.prerequisites = tech.prerequisites.filter((prereqId: string) => techIds.has(prereqId));
     }
   }
 

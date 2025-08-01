@@ -97,12 +97,12 @@ export class TechnologyService {
    */
   public async initialize(): Promise<void> {
     if (this.isInitialized) {
-      this.logger.log('Technology service already initialized');
+      this.logger.info('Technology service already initialized');
       return;
     }
 
     try {
-      this.logger.log('Initializing technology service...');
+      this.logger.info('Initializing technology service...');
       
       // 按顺序初始化各个子服务
       await this.treeService.initialize();
@@ -112,12 +112,12 @@ export class TechnologyService {
       await this.progressTracker.initialize(this.treeService, this.unlockService);
       
       this.isInitialized = true;
-      this.logger.log('Technology service initialized successfully');
+      this.logger.info('Technology service initialized successfully');
       
       // 输出初始统计
       const stats = this.getTechStatistics();
-      this.logger.log(`Loaded ${stats.totalTechnologies} technologies`);
-      this.logger.log(`Unlocked ${stats.unlockedTechnologies} technologies`);
+      this.logger.info(`Loaded ${stats.totalTechs} technologies`);
+      this.logger.info(`Unlocked ${stats.unlockedTechs} technologies`);
     } catch (error) {
       this.logger.error('Failed to initialize technology service:', error);
       throw error;
@@ -161,7 +161,7 @@ export class TechnologyService {
     // 增强搜索过滤器，添加状态获取函数
     const enhancedFilter = {
       ...filter,
-      getStatus: filter.getStatus || ((techId: string) => this.getTechStatus(techId))
+      status: filter.status
     };
     return this.treeService.searchTechnologies(enhancedFilter);
   }
@@ -322,7 +322,7 @@ export class TechnologyService {
     if (this.unlockService.isTechUnlocked(techId)) return false;
     
     // 检查前置科技
-    return tech.prerequisites.every(prereqId => 
+    return tech.prerequisites.every((prereqId: string) => 
       this.unlockService.isTechUnlocked(prereqId)
     );
   }
@@ -343,9 +343,6 @@ export class TechnologyService {
     });
     
     return {
-      technologies: new Map(
-        this.treeService.getAllTechnologies().map(t => [t.id, t])
-      ),
       unlockedTechs: this.unlockService.getUnlockedTechs(),
       researchedTechs: progressData.researchedTechs,
       availableTechs,
@@ -359,13 +356,13 @@ export class TechnologyService {
       queueTotalTime: queueStats.totalEstimatedTime,
       totalResearchTime: progressData.totalResearchTime,
       totalSciencePacksConsumed: progressData.totalSciencePacksConsumed,
-    };
+    } as TechTreeState;
   }
 
   /**
-   * 完成研究（内部方法）
+   * 完成研究
    */
-  private completeResearch(techId: string): void {
+  public completeResearch(techId: string): void {
     const tech = this.treeService.getTechnology(techId);
     if (!tech) return;
     
@@ -379,7 +376,7 @@ export class TechnologyService {
     this.calculateAvailableTechs();
     
     // 日志
-    this.logger.log(`Research completed: ${tech.name}`);
+    this.logger.info(`Research completed: ${tech.name}`);
     
     // 如果启用了自动研究，开始下一个
     if (this.queueService.isAutoResearchEnabled()) {
@@ -396,17 +393,17 @@ export class TechnologyService {
       .filter(tech => this.isTechAvailable(tech.id))
       .length;
     
-    this.logger.log(`Available technologies: ${availableCount}`);
+    this.logger.info(`Available technologies: ${availableCount}`);
   }
 
   /**
    * 获取阻塞科技的前置
    */
-  private getBlockingTechs(techId: string): string[] {
+  private _getBlockingTechs(techId: string): string[] {
     const tech = this.treeService.getTechnology(techId);
     if (!tech) return [];
     
-    return tech.prerequisites.filter(prereqId => 
+    return tech.prerequisites.filter((prereqId: string) => 
       !this.unlockService.isTechUnlocked(prereqId)
     );
   }
@@ -488,7 +485,7 @@ export class TechnologyService {
   /**
    * 计算有效研究时间（向后兼容）
    */
-  private calculateEffectiveResearchTime(
+  private _calculateEffectiveResearchTime(
     tech: Technology,
     labCount: number,
     labEfficiency: number
