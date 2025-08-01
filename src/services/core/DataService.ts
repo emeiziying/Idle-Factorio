@@ -19,7 +19,6 @@ interface I18nData {
 }
 
 export class DataService {
-  private static instance: DataService | null = null;
   private gameData: GameData | null = null;
   private i18nData: I18nData | null = null;
   private i18nLoadingPromise: Promise<I18nData> | null = null;
@@ -30,7 +29,7 @@ export class DataService {
   private itemUnlockedCache = new Map<string, boolean>();
   private cacheVersion = 0; // 用于缓存失效
 
-  private constructor() {
+  constructor() {
     // 不再在构造函数中获取其他服务，避免循环依赖
   }
 
@@ -61,17 +60,6 @@ export class DataService {
     return result;
   }
 
-  static getInstance(): DataService {
-    if (!DataService.instance) {
-      DataService.instance = new DataService();
-    }
-    return DataService.instance;
-  }
-
-  // 重置实例（用于测试）
-  static resetInstance(): void {
-    DataService.instance = null;
-  }
 
   // 加载游戏数据 - 改为异步import
   async loadGameData(): Promise<GameData> {
@@ -285,7 +273,8 @@ export class DataService {
   // 获取配方（保留常用方法，其他通过RecipeService直接调用）
   getRecipe(recipeId: string): Recipe | undefined {
     if (ServiceLocator.has(SERVICE_NAMES.RECIPE)) {
-      return RecipeService.getRecipeById(recipeId);
+      const recipeService = ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE);
+      return recipeService.getRecipeById(recipeId);
     }
     // 如果 RecipeService 不可用，直接从游戏数据中查找
     if (this.gameData) {
@@ -357,7 +346,7 @@ export class DataService {
       const recipeService = ServiceLocator.has(SERVICE_NAMES.RECIPE)
         ? ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE)
         : null;
-      const recipes = recipeService ? RecipeService.getRecipesThatProduce(itemId) : [];
+      const recipes = recipeService ? recipeService.getRecipesThatProduce(itemId) : [];
       if (recipes.length === 0) {
         // 对于无配方的物品，检查是否有科技要求
         if (techService?.isItemUnlocked && techService?.isServiceInitialized?.()) {
@@ -562,7 +551,10 @@ export class DataService {
     // 优先从配方获取iconText和icon
     let recipe: Recipe | undefined;
     if (ServiceLocator.has(SERVICE_NAMES.RECIPE)) {
-      recipe = RecipeService.getRecipeById(itemId);
+      const recipeService = ServiceLocator.has(SERVICE_NAMES.RECIPE)
+        ? ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE)
+        : null;
+      recipe = recipeService ? recipeService.getRecipeById(itemId) : undefined;
     }
 
     if (recipe?.iconText) {
@@ -617,12 +609,12 @@ export class DataService {
 
     return {
       item,
-      recipes: recipeService ? RecipeService.getRecipesThatProduce(itemId) : [],
-      usedInRecipes: recipeService ? RecipeService.getRecipesThatUse(itemId) : [],
+      recipes: recipeService ? recipeService.getRecipesThatProduce(itemId) : [],
+      usedInRecipes: recipeService ? recipeService.getRecipesThatUse(itemId) : [],
       // 新增：配方统计信息
-      recipeStats: recipeService ? RecipeService.getRecipeStats(itemId) : null,
+      recipeStats: recipeService ? recipeService.getRecipeStats(itemId) : null,
       // 新增：推荐配方
-      recommendedRecipe: recipeService ? RecipeService.getMostEfficientRecipe(itemId) : undefined,
+      recommendedRecipe: recipeService ? recipeService.getMostEfficientRecipe(itemId) : undefined,
     };
   }
 
@@ -658,5 +650,3 @@ export class DataService {
   }
 }
 
-// 导出单例实例以保持向后兼容
-export const dataService = DataService.getInstance();

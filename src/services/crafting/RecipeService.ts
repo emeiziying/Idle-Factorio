@@ -9,26 +9,19 @@ import type { IManualCraftingValidator } from '@/services/interfaces/IManualCraf
  * 统一管理所有配方的获取和查询逻辑
  */
 export class RecipeService {
-  private static instance: RecipeService;
-  private static allRecipes: Recipe[] = [];
-  private static recipesByItem: Map<string, Recipe[]> = new Map();
+  private allRecipes: Recipe[] = [];
+  private recipesByItem: Map<string, Recipe[]> = new Map();
 
-  private constructor() {
-    // 私有构造函数，确保单例
+  constructor() {
+    // 公开构造函数，支持依赖注入
   }
 
-  static getInstance(): RecipeService {
-    if (!RecipeService.instance) {
-      RecipeService.instance = new RecipeService();
-    }
-    return RecipeService.instance;
-  }
 
   /**
    * 初始化配方数据
    * @param dataJsonRecipes 从 data.json 加载的配方
    */
-  static initializeRecipes(dataJsonRecipes: Recipe[]): void {
+  initializeRecipes(dataJsonRecipes: Recipe[]): void {
     // 合并 data.json 配方和自定义配方
     this.allRecipes = [...dataJsonRecipes, ...CUSTOM_RECIPES];
 
@@ -39,7 +32,7 @@ export class RecipeService {
   /**
    * 构建配方索引，用于快速查找
    */
-  private static buildRecipeIndex(): void {
+  private buildRecipeIndex(): void {
     this.recipesByItem.clear();
 
     for (const recipe of this.allRecipes) {
@@ -68,7 +61,7 @@ export class RecipeService {
   /**
    * 获取所有配方
    */
-  static getAllRecipes(): Recipe[] {
+  getAllRecipes(): Recipe[] {
     return [...this.allRecipes];
   }
 
@@ -76,7 +69,7 @@ export class RecipeService {
    * 根据物品ID获取所有相关配方
    * @param itemId 物品ID
    */
-  static getRecipesByItem(itemId: string): Recipe[] {
+  getRecipesByItem(itemId: string): Recipe[] {
     return this.recipesByItem.get(itemId) || [];
   }
 
@@ -84,7 +77,7 @@ export class RecipeService {
    * 获取生产指定物品的配方
    * @param itemId 物品ID
    */
-  static getRecipesThatProduce(itemId: string): Recipe[] {
+  getRecipesThatProduce(itemId: string): Recipe[] {
     return this.allRecipes.filter(recipe => recipe.out && recipe.out[itemId] !== undefined);
   }
 
@@ -92,7 +85,7 @@ export class RecipeService {
    * 获取使用指定物品的配方
    * @param itemId 物品ID
    */
-  static getRecipesThatUse(itemId: string): Recipe[] {
+  getRecipesThatUse(itemId: string): Recipe[] {
     return this.allRecipes.filter(recipe => recipe.in && recipe.in[itemId] !== undefined);
   }
 
@@ -100,7 +93,7 @@ export class RecipeService {
    * 获取手动采集配方
    * @param itemId 物品ID（可选，不指定则获取所有手动采集配方）
    */
-  static getManualRecipes(itemId?: string): Recipe[] {
+  getManualRecipes(itemId?: string): Recipe[] {
     let recipes = this.allRecipes.filter(recipe => recipe.flags?.includes('manual'));
 
     if (itemId) {
@@ -114,7 +107,7 @@ export class RecipeService {
    * 获取自动化配方
    * @param itemId 物品ID（可选，不指定则获取所有自动化配方）
    */
-  static getAutomatedRecipes(itemId?: string): Recipe[] {
+  getAutomatedRecipes(itemId?: string): Recipe[] {
     let recipes = this.allRecipes.filter(recipe => !recipe.flags?.includes('manual'));
 
     if (itemId) {
@@ -128,7 +121,7 @@ export class RecipeService {
    * 获取采矿配方
    * @param itemId 物品ID（可选，不指定则获取所有采矿配方）
    */
-  static getMiningRecipes(itemId?: string): Recipe[] {
+  getMiningRecipes(itemId?: string): Recipe[] {
     let recipes = this.allRecipes.filter(recipe => recipe.flags?.includes('mining'));
 
     if (itemId) {
@@ -142,7 +135,7 @@ export class RecipeService {
    * 获取回收配方
    * @param itemId 物品ID（可选，不指定则获取所有回收配方）
    */
-  static getRecyclingRecipes(itemId?: string): Recipe[] {
+  getRecyclingRecipes(itemId?: string): Recipe[] {
     let recipes = this.allRecipes.filter(recipe => recipe.flags?.includes('recycling'));
 
     if (itemId) {
@@ -158,7 +151,7 @@ export class RecipeService {
    * @param itemId 物品ID
    * @returns 手动制作配方，如果不能手动制作则返回 null
    */
-  static getManualCraftingRecipe(itemId: string): Recipe | null {
+  getManualCraftingRecipe(itemId: string): Recipe | null {
     const validator = ServiceLocator.has(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
       ? ServiceLocator.get<IManualCraftingValidator>(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
       : null;
@@ -205,7 +198,7 @@ export class RecipeService {
    * @param itemId 物品ID
    * @returns 所有可手动制作的配方列表
    */
-  static getAllManualCraftingRecipes(itemId: string): Recipe[] {
+  getAllManualCraftingRecipes(itemId: string): Recipe[] {
     const validator = ServiceLocator.has(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
       ? ServiceLocator.get<IManualCraftingValidator>(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
       : null;
@@ -248,7 +241,7 @@ export class RecipeService {
    * @param itemId 物品ID
    * @returns 是否可以手动制作
    */
-  static canCraftManually(itemId: string): boolean {
+  canCraftManually(itemId: string): boolean {
     const validator = ServiceLocator.has(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
       ? ServiceLocator.get<IManualCraftingValidator>(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
       : null;
@@ -266,7 +259,7 @@ export class RecipeService {
    * @param itemId 物品ID
    * @returns 手动制作的详细信息
    */
-  static getManualCraftingInfo(itemId: string): {
+  getManualCraftingInfo(itemId: string): {
     canCraft: boolean;
     recipe: Recipe | null;
     allRecipes: Recipe[];
@@ -305,7 +298,7 @@ export class RecipeService {
    * 根据配方ID获取配方
    * @param recipeId 配方ID
    */
-  static getRecipeById(recipeId: string): Recipe | undefined {
+  getRecipeById(recipeId: string): Recipe | undefined {
     return this.allRecipes.find(recipe => recipe.id === recipeId);
   }
 
@@ -313,7 +306,7 @@ export class RecipeService {
    * 根据分类获取配方
    * @param category 配方分类
    */
-  static getRecipesByCategory(category: string): Recipe[] {
+  getRecipesByCategory(category: string): Recipe[] {
     return this.allRecipes.filter(recipe => recipe.category === category);
   }
 
@@ -321,7 +314,7 @@ export class RecipeService {
    * 搜索配方
    * @param query 搜索关键词
    */
-  static searchRecipes(query: string): Recipe[] {
+  searchRecipes(query: string): Recipe[] {
     const lowerQuery = query.toLowerCase();
     return this.allRecipes.filter(
       recipe =>
@@ -335,7 +328,7 @@ export class RecipeService {
    * @param recipe 配方
    * @param itemId 物品ID（可选，不指定则计算主要产出）
    */
-  static getRecipeEfficiency(recipe: Recipe, itemId?: string): number {
+  getRecipeEfficiency(recipe: Recipe, itemId?: string): number {
     if (!recipe.time || recipe.time === 0) return 0;
 
     if (itemId) {
@@ -353,7 +346,7 @@ export class RecipeService {
    * 获取最高效率的配方
    * @param itemId 物品ID
    */
-  static getMostEfficientRecipe(itemId: string): Recipe | undefined {
+  getMostEfficientRecipe(itemId: string): Recipe | undefined {
     const recipes = this.getRecipesThatProduce(itemId);
     if (recipes.length === 0) return undefined;
 
@@ -375,7 +368,7 @@ export class RecipeService {
    * 获取配方统计信息
    * @param itemId 物品ID
    */
-  static getRecipeStats(itemId: string): {
+  getRecipeStats(itemId: string): {
     totalRecipes: number;
     manualRecipes: number;
     automatedRecipes: number;
@@ -407,7 +400,7 @@ export class RecipeService {
    * @param recipe 配方
    * @param maxDepth 最大深度（防止无限递归）
    */
-  static getRecipeDependencyChain(
+  getRecipeDependencyChain(
     recipe: Recipe,
     maxDepth: number = 5
   ): {
@@ -435,7 +428,7 @@ export class RecipeService {
    * @param currentDepth 当前深度
    * @param maxDepth 最大深度
    */
-  private static calculateDependencies(
+  private calculateDependencies(
     recipe: Recipe,
     dependencies: Map<string, number>,
     totalCost: Map<string, number>,
@@ -477,7 +470,7 @@ export class RecipeService {
    * @param recipe 配方
    * @param includeRawMaterials 是否包含原材料成本
    */
-  static calculateRecipeCost(
+  calculateRecipeCost(
     recipe: Recipe,
     includeRawMaterials: boolean = true
   ): {
@@ -538,7 +531,7 @@ export class RecipeService {
    * @param quantity 目标数量
    * @param unlockedItems 已解锁的物品列表
    */
-  static getOptimalProductionPath(
+  getOptimalProductionPath(
     targetItemId: string,
     quantity: number = 1,
     unlockedItems: string[] = []
@@ -592,7 +585,7 @@ export class RecipeService {
    * @param unlockedItems 已解锁的物品列表
    * @param preferences 用户偏好（'efficiency' | 'speed' | 'cost' | 'manual'）
    */
-  static getRecipeRecommendations(
+  getRecipeRecommendations(
     itemId: string,
     unlockedItems: string[] = [],
     preferences: 'efficiency' | 'speed' | 'cost' | 'manual' = 'efficiency'
@@ -648,7 +641,7 @@ export class RecipeService {
    * @param itemId 物品ID
    * @param unlockedItems 已解锁的物品列表
    */
-  static getEnhancedRecipeStats(
+  getEnhancedRecipeStats(
     itemId: string,
     unlockedItems: string[] = []
   ): {
@@ -721,7 +714,7 @@ export class RecipeService {
    * 获取配方复杂度评分
    * @param recipe 配方
    */
-  static getRecipeComplexityScore(recipe: Recipe): number {
+  getRecipeComplexityScore(recipe: Recipe): number {
     let score = 0;
 
     // 基于输入材料数量
@@ -756,7 +749,7 @@ export class RecipeService {
   /**
    * 获取配方分类统计
    */
-  static getRecipeCategoryStats(): Map<string, number> {
+  getRecipeCategoryStats(): Map<string, number> {
     const categoryStats = new Map<string, number>();
 
     for (const recipe of this.allRecipes) {

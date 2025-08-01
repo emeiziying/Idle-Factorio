@@ -55,14 +55,13 @@ export interface FuelStatus {
 }
 
 export class FuelService {
-  private static instance: FuelService;
   private dataService: DataService;
   private gameConfig: GameConfig;
   private customFuelPriority: string[] | null = null;
 
-  private constructor() {
-    this.dataService = DataService.getInstance();
-    this.gameConfig = GameConfig.getInstance();
+  constructor(dataService: DataService, gameConfig: GameConfig) {
+    this.dataService = dataService;
+    this.gameConfig = gameConfig;
     // 从本地存储加载自定义优先级
     const stored = localStorage.getItem('fuelPriority');
     if (stored) {
@@ -74,12 +73,6 @@ export class FuelService {
     }
   }
 
-  static getInstance(): FuelService {
-    if (!FuelService.instance) {
-      FuelService.instance = new FuelService();
-    }
-    return FuelService.instance;
-  }
 
   /**
    * 设置自定义燃料优先级
@@ -522,7 +515,7 @@ export class FuelService {
     const needsFuel = facilities
       .filter(f => {
         // 只考虑burner类型的设施
-        const itemData = DataService.getInstance().getItem(f.facilityId);
+        const itemData = this.dataService.getItem(f.facilityId);
         return (
           f.fuelBuffer &&
           f.status !== FacilityStatus.STOPPED &&

@@ -40,7 +40,6 @@ import Logger from '@/utils/logger';
  * 负责协调各个子服务，提供统一的对外接口
  */
 export class TechnologyService {
-  private static instance: TechnologyService;
 
   // 子服务
   private treeService: TechTreeService;
@@ -56,7 +55,7 @@ export class TechnologyService {
   private logger: Logger;
   private isInitialized = false;
 
-  private constructor() {
+  constructor() {
     // 创建事件发射器
     this.eventEmitter = new TechEventEmitter();
 
@@ -75,15 +74,6 @@ export class TechnologyService {
     this.setupEventListeners();
   }
 
-  /**
-   * 获取单例实例
-   */
-  public static getInstance(): TechnologyService {
-    if (!TechnologyService.instance) {
-      TechnologyService.instance = new TechnologyService();
-    }
-    return TechnologyService.instance;
-  }
 
   /**
    * 设置库存操作接口
@@ -437,22 +427,19 @@ export class TechnologyService {
 
   // ========== 静态辅助方法（向后兼容）==========
 
-  public static getUnlockedContentInfo(technology: Technology) {
-    const service = TechnologyService.getInstance();
-    return service.unlockService.getUnlockedContentInfo(technology);
+  public getUnlockedContentInfo(technology: Technology) {
+    return this.unlockService.getUnlockedContentInfo(technology);
   }
 
-  public static getPrerequisiteNames(prerequisites: string[]): string[] {
-    const service = TechnologyService.getInstance();
+  public getPrerequisiteNames(prerequisites: string[]): string[] {
     return prerequisites.map(id => {
-      const tech = service.getTechnology(id);
+      const tech = this.getTechnology(id);
       return tech?.name || id;
     });
   }
 
-  public static getResearchTriggerInfo(techId: string) {
-    const service = TechnologyService.getInstance();
-    const tech = service.getTechnology(techId);
+  public getResearchTriggerInfo(techId: string) {
+    const tech = this.getTechnology(techId);
 
     if (!tech?.researchTrigger) {
       return { hasResearchTrigger: false };
@@ -469,7 +456,7 @@ export class TechnologyService {
   /**
    * 按状态排序技术
    */
-  public static getTechnologiesSortedByStatus(
+  public getTechnologiesSortedByStatus(
     technologies: Technology[],
     techStates: Map<string, { status: TechStatus; progress?: number }>
   ): Technology[] {
@@ -491,7 +478,7 @@ export class TechnologyService {
   /**
    * 获取显示用的技术列表
    */
-  public static getDisplayTechnologies(
+  public getDisplayTechnologies(
     technologies: Technology[],
     techStates: Map<string, { status: TechStatus; progress?: number }>
   ): Technology[] {

@@ -12,14 +12,11 @@ describe('UserProgressService', () => {
   const STORAGE_KEY = 'factorio_user_progress';
 
   beforeEach(() => {
-    // 清除实例
-    (UserProgressService as unknown as { instance: UserProgressService | null }).instance = null;
-
     // 清空 localStorage
     localStorage.clear();
 
-    // 获取新实例
-    service = UserProgressService.getInstance();
+    // 创建新实例
+    service = new UserProgressService();
   });
 
   afterEach(() => {
@@ -27,13 +24,13 @@ describe('UserProgressService', () => {
     localStorage.clear();
   });
 
-  // 单例模式测试
-  describe('getInstance', () => {
-    // 测试：应该返回单例实例
-    it('should return singleton instance', () => {
-      const instance1 = UserProgressService.getInstance();
-      const instance2 = UserProgressService.getInstance();
-      expect(instance1).toBe(instance2);
+  // 实例创建测试
+  describe('instance creation', () => {
+    // 测试：应该能创建多个独立实例
+    it('should create independent instances', () => {
+      const instance1 = new UserProgressService();
+      const instance2 = new UserProgressService();
+      expect(instance1).not.toBe(instance2);
     });
   });
 
@@ -238,7 +235,7 @@ describe('UserProgressService', () => {
             instance: UserProgressService | null;
           }
         ).instance = null;
-        const newService = UserProgressService.getInstance();
+        const newService = new UserProgressService();
 
         // Check loaded data
         // 检查加载的数据
@@ -259,9 +256,9 @@ describe('UserProgressService', () => {
             instance: UserProgressService | null;
           }
         ).instance = null;
-        expect(() => UserProgressService.getInstance()).not.toThrow();
+        expect(() => new UserProgressService()).not.toThrow();
 
-        const newService = UserProgressService.getInstance();
+        const newService = new UserProgressService();
         expect(newService.getUnlockedItems()).toEqual([]);
         expect(newService.getUnlockedTechs()).toEqual([]);
       });

@@ -16,85 +16,84 @@ import { UserProgressService } from '@/services/game/UserProgressService';
 /**
  * 获取 DataService 实例
  */
-export const useDataService = (): DataService => {
+export const useDataService = (): DataService | null => {
   return useMemo(() => {
     if (ServiceLocator.has(SERVICE_NAMES.DATA)) {
       return ServiceLocator.get<DataService>(SERVICE_NAMES.DATA);
     }
-    // 如果服务未注册，返回单例实例（向后兼容）
-    return DataService.getInstance();
+    return null;
   }, []);
 };
 
 /**
  * 获取 RecipeService 实例
  */
-export const useRecipeService = (): RecipeService => {
+export const useRecipeService = (): RecipeService | null => {
   return useMemo(() => {
     if (ServiceLocator.has(SERVICE_NAMES.RECIPE)) {
       return ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE);
     }
-    return RecipeService.getInstance();
+    return null;
   }, []);
 };
 
 /**
  * 获取 TechnologyService 实例
  */
-export const useTechnologyService = (): TechnologyService => {
+export const useTechnologyService = (): TechnologyService | null => {
   return useMemo(() => {
     if (ServiceLocator.has(SERVICE_NAMES.TECHNOLOGY)) {
       return ServiceLocator.get<TechnologyService>(SERVICE_NAMES.TECHNOLOGY);
     }
-    return TechnologyService.getInstance();
+    return null;
   }, []);
 };
 
 /**
  * 获取 FuelService 实例
  */
-export const useFuelService = (): FuelService => {
+export const useFuelService = (): FuelService | null => {
   return useMemo(() => {
     if (ServiceLocator.has(SERVICE_NAMES.FUEL)) {
       return ServiceLocator.get<FuelService>(SERVICE_NAMES.FUEL);
     }
-    return FuelService.getInstance();
+    return null;
   }, []);
 };
 
 /**
  * 获取 PowerService 实例
  */
-export const usePowerService = (): PowerService => {
+export const usePowerService = (): PowerService | null => {
   return useMemo(() => {
     if (ServiceLocator.has(SERVICE_NAMES.POWER)) {
       return ServiceLocator.get<PowerService>(SERVICE_NAMES.POWER);
     }
-    return PowerService.getInstance();
+    return null;
   }, []);
 };
 
 /**
  * 获取 StorageService 实例
  */
-export const useStorageService = (): StorageService => {
+export const useStorageService = (): StorageService | null => {
   return useMemo(() => {
     if (ServiceLocator.has(SERVICE_NAMES.STORAGE)) {
       return ServiceLocator.get<StorageService>(SERVICE_NAMES.STORAGE);
     }
-    return StorageService.getInstance();
+    return null;
   }, []);
 };
 
 /**
  * 获取 UserProgressService 实例
  */
-export const useUserProgressService = (): UserProgressService => {
+export const useUserProgressService = (): UserProgressService | null => {
   return useMemo(() => {
     if (ServiceLocator.has(SERVICE_NAMES.USER_PROGRESS)) {
       return ServiceLocator.get<UserProgressService>(SERVICE_NAMES.USER_PROGRESS);
     }
-    return UserProgressService.getInstance();
+    return null;
   }, []);
 };
 

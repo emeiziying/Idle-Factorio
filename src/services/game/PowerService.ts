@@ -29,7 +29,6 @@ export interface FacilityPowerInfo {
 }
 
 export class PowerService {
-  private static instance: PowerService;
   private dataService: DataService;
   private gameConfig: GameConfig;
 
@@ -49,17 +48,11 @@ export class PowerService {
     'accumulator',
   ];
 
-  private constructor() {
-    this.dataService = DataService.getInstance();
-    this.gameConfig = GameConfig.getInstance();
+  constructor(dataService: DataService, gameConfig: GameConfig) {
+    this.dataService = dataService;
+    this.gameConfig = gameConfig;
   }
 
-  static getInstance(): PowerService {
-    if (!PowerService.instance) {
-      PowerService.instance = new PowerService();
-    }
-    return PowerService.instance;
-  }
 
   /**
    * 计算电力平衡

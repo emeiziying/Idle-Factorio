@@ -17,11 +17,19 @@ export class TechUnlockService {
   private unlockedRecipes: Set<string> = new Set();
   private unlockedBuildings: Set<string> = new Set();
 
+  private userProgressService: UserProgressService;
+  private eventEmitter: TechEventEmitter;
+  private treeService?: TechTreeService;
+
   constructor(
-    private userProgressService: UserProgressService,
-    private eventEmitter: TechEventEmitter,
-    private treeService?: TechTreeService
-  ) {}
+    userProgressService: UserProgressService,
+    eventEmitter: TechEventEmitter,
+    treeService?: TechTreeService
+  ) {
+    this.userProgressService = userProgressService;
+    this.eventEmitter = eventEmitter;
+    this.treeService = treeService;
+  }
 
   /**
    * 初始化服务
@@ -168,7 +176,7 @@ export class TechUnlockService {
    * 解锁科技及其所有内容
    */
   unlockTechnology(techId: string): void {
-    if (this.unlockedTechs.has(techId)) {
+    if (this.userProgressService.isTechUnlocked(techId)) {
       return; // 已经解锁
     }
 

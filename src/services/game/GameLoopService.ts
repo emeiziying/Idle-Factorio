@@ -71,7 +71,6 @@ class TaskScheduler {
 }
 
 export class GameLoopService {
-  private static instance: GameLoopService;
   private animationFrameId: number | null = null;
   private lastFrameTime: number = 0;
   private tasks: Map<string, GameLoopTask> = new Map();
@@ -113,17 +112,11 @@ export class GameLoopService {
   private readonly FRAME_TIME_BUFFER_SIZE = 60;
   private slowFrameThreshold: number = 16.67; // 60fps = 16.67ms per frame
 
-  private constructor() {
+  constructor() {
     this.setupVisibilityHandling();
     this.setupPerformanceMonitoring();
   }
 
-  static getInstance(): GameLoopService {
-    if (!GameLoopService.instance) {
-      GameLoopService.instance = new GameLoopService();
-    }
-    return GameLoopService.instance;
-  }
 
   // 启动游戏循环
   start(): void {

@@ -51,7 +51,6 @@ export interface ManualCraftingValidation {
 }
 
 export class ManualCraftingValidator implements IManualCraftingValidator {
-  private static instance: ManualCraftingValidator;
   private dataService!: DataService;
 
   // 缓存机制 - 提升性能
@@ -69,7 +68,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
     'crusher',
   ];
 
-  private constructor() {
+  constructor() {
     // 延迟初始化，避免循环依赖
     // dataService 将在需要时从 ServiceLocator 获取
     // 清除缓存，确保新的验证逻辑生效
@@ -90,12 +89,6 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
     return null;
   }
 
-  static getInstance(): ManualCraftingValidator {
-    if (!ManualCraftingValidator.instance) {
-      ManualCraftingValidator.instance = new ManualCraftingValidator();
-    }
-    return ManualCraftingValidator.instance;
-  }
 
   /**
    * 清除缓存 - 当数据更新时调用
@@ -148,7 +141,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
 
     // 获取物品的所有配方
     const recipeService = this.getRecipeService();
-    const recipes = recipeService ? RecipeService.getRecipesThatProduce(itemId) : [];
+    const recipes = recipeService ? recipeService.getRecipesThatProduce(itemId) : [];
 
     // 1. 检查是否为原材料（没有配方）
     if (recipes.length === 0) {
@@ -515,7 +508,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
   getRawMaterials(): string[] {
     return this.filterItemsByCondition(item => {
       const recipeService = this.getRecipeService();
-      const recipes = recipeService ? RecipeService.getRecipesThatProduce(item.id) : [];
+      const recipes = recipeService ? recipeService.getRecipesThatProduce(item.id) : [];
       return recipes.length === 0;
     });
   }
@@ -547,7 +540,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
    */
   getMiningItems(): string[] {
     const recipeService = this.getRecipeService();
-    const allRecipes = recipeService ? RecipeService.getAllRecipes() : [];
+    const allRecipes = recipeService ? recipeService.getAllRecipes() : [];
     const miningItems: string[] = [];
 
     for (const recipe of allRecipes) {

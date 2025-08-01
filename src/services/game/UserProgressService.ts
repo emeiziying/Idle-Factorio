@@ -99,5 +99,4 @@ export class UserProgressService {
   }
 }
 
-// 导出单例实例以保持向后兼容
-export const userProgressService = UserProgressService.getInstance();
+// 注意：移除单例导出以支持依赖注入

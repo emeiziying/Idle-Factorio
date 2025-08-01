@@ -6,9 +6,7 @@ import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
 import type { DataService } from '@/services/core/DataService';
 
 export class StorageService {
-  private static instance: StorageService;
-
-  private constructor() {
+  constructor() {
     // 延迟初始化，避免循环依赖
   }
 
@@ -19,12 +17,6 @@ export class StorageService {
     return null;
   }
 
-  public static getInstance(): StorageService {
-    if (!StorageService.instance) {
-      StorageService.instance = new StorageService();
-    }
-    return StorageService.instance;
-  }
 
   // 获取完整的存储配置（合并data.json和特定配置）
   public getStorageConfig(storageType: string): StorageConfig | undefined {
@@ -93,5 +85,11 @@ export class StorageService {
   }
 }
 
-// 导出单例实例获取函数，避免循环依赖
-export const getStorageService = () => StorageService.getInstance();
+// 兼容性函数 - 从 ServiceLocator 获取 StorageService 实例
+export const getStorageService = (): StorageService | null => {
+  if (ServiceLocator.has(SERVICE_NAMES.STORAGE)) {
+    return ServiceLocator.get<StorageService>(SERVICE_NAMES.STORAGE);
+  }
+  return null;
+};
+
