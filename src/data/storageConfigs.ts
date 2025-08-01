@@ -1,8 +1,8 @@
 // 存储配置辅助函数
 
 import type { StorageConfig } from '../types/index';
-import { ServiceLocator, SERVICE_NAMES } from '../services/ServiceLocator';
-import type { StorageService } from '../services/StorageService';
+import { ServiceLocator, SERVICE_NAMES } from '../services/core/ServiceLocator';
+import type { StorageService } from '../services/storage/StorageService';
 
 // 重新导出存储配置数据
 export { STORAGE_SPECIFIC_CONFIGS } from './storageConfigData';

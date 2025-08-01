@@ -2,8 +2,8 @@
 
 import type { StorageConfig } from '../types/index';
 import { STORAGE_SPECIFIC_CONFIGS } from '../data/storageConfigData';
-import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
-import type { DataService } from './DataService';
+import { ServiceLocator, SERVICE_NAMES } from '../core/ServiceLocator';
+import type { DataService } from '../core/DataService';
 
 export class StorageService {
   private static instance: StorageService;

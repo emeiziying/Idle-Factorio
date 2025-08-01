@@ -4,7 +4,7 @@ import useGameStore from '../store/gameStore';
 import DependencyService, {
   type CraftingChainAnalysis,
   type CraftingDependency,
-} from '../services/DependencyService';
+} from '../services/crafting/DependencyService';
 
 export const useCrafting = () => {
   const [showMessage, setShowMessage] = useState({

@@ -5,7 +5,7 @@ import { Box, Typography, useTheme } from '@mui/material';
 import TechGridCard from './TechGridCard';
 import TechVirtualizedGridWithAutoSizer from './TechVirtualizedGridWithAutoSizer';
 import type { Technology, TechStatus } from '../../types/technology';
-import { TechnologyService } from '../../services/TechnologyService';
+import { TechnologyService } from '../../services/crafting/TechnologyService';
 
 interface TechSimpleGridProps {
   /** 要显示的科技列表 */

@@ -4,14 +4,14 @@
  */
 
 import { useMemo } from 'react';
-import { ServiceLocator, SERVICE_NAMES } from '../services/ServiceLocator';
-import { DataService } from '../services/DataService';
-import { RecipeService } from '../services/RecipeService';
-import { TechnologyService } from '../services/TechnologyService';
-import { FuelService } from '../services/FuelService';
-import { PowerService } from '../services/PowerService';
-import { StorageService } from '../services/StorageService';
-import { UserProgressService } from '../services/UserProgressService';
+import { ServiceLocator, SERVICE_NAMES } from '../services/core/ServiceLocator';
+import { DataService } from '../services/core/DataService';
+import { RecipeService } from '../services/crafting/RecipeService';
+import { TechnologyService } from '../services/crafting/TechnologyService';
+import { FuelService } from '../services/crafting/FuelService';
+import { PowerService } from '../services/game/PowerService';
+import { StorageService } from '../services/storage/StorageService';
+import { UserProgressService } from '../services/game/UserProgressService';
 import type { GameStateProvider } from '../services/interfaces';
 
 /**

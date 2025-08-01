@@ -17,9 +17,9 @@ import { Close as CloseIcon, Add as AddIcon, Remove as RemoveIcon } from '@mui/i
 import type { Item } from '../../types/index';
 import useGameStore from '../../store/gameStore';
 import FactorioIcon from '../common/FactorioIcon';
-import { DataService } from '../../services/DataService';
+import { DataService } from '../../services/core/DataService';
 import { getAvailableChestTypes } from '../../data/storageConfigs';
-import { getStorageService } from '../../services/StorageService';
+import { getStorageService } from '../../services/storage/StorageService';
 
 interface StorageExpansionDialogProps {
   open: boolean;

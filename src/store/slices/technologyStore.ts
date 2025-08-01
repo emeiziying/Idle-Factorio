@@ -2,9 +2,9 @@
 import type { SliceCreator, TechnologySlice } from '../types';
 import type { ResearchPriority } from '../../types/technology';
 import type { InventoryOperations } from '../../types/inventory';
-import { TechnologyService } from '../../services/TechnologyService';
-import { DataService } from '../../services/DataService';
-import { RecipeService } from '../../services/RecipeService';
+import { TechnologyService } from '../../services/crafting/TechnologyService';
+import { DataService } from '../../services/core/DataService';
+import { RecipeService } from '../../services/crafting/RecipeService';
 import { ensureMap, ensureUnlockedTechsSet } from '../utils/mapSetHelpers';
 import { error as logError } from '../../utils/logger';
 

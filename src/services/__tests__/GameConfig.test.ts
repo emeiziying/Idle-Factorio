@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { GameConfig } from '../GameConfig';
-import { DataService } from '../DataService';
+import { GameConfig } from '../core/GameConfig';
+import { DataService } from '../core/DataService';
 import type { Item } from '../../types';
 
 // 模拟 DataService
