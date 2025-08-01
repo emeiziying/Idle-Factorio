@@ -3,23 +3,15 @@
 import { warn as logWarn } from '@/utils/logger';
 
 export class UserProgressService {
-  private static instance: UserProgressService;
   private unlockedItems: Set<string>;
   private unlockedTechs: Set<string>;
   private readonly STORAGE_KEY = 'factorio_user_progress';
 
-  private constructor() {
+  constructor() {
     this.unlockedItems = new Set();
     this.unlockedTechs = new Set();
     this.loadProgress();
     // 移除硬编码的基础解锁，改为完全基于科技系统
-  }
-
-  static getInstance(): UserProgressService {
-    if (!UserProgressService.instance) {
-      UserProgressService.instance = new UserProgressService();
-    }
-    return UserProgressService.instance;
   }
 
   // ========== 物品解锁管理 ==========

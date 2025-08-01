@@ -16,8 +16,7 @@ import {
   type ResearchProgressEvent,
   type ResearchCompletedEvent,
 } from './events';
-import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
-import type { GameStateProvider } from '@/services/interfaces';
+import useGameStore from '@/store/gameStore';
 import type { ResearchCalculation } from '@/services/technology/types';
 
 export class ResearchService {
@@ -297,13 +296,9 @@ export class ResearchService {
    * 获取研究室统计
    */
   private getLabStatistics(): { count: number; avgEfficiency: number } {
-    // 获取游戏状态提供者
-    const gameStateProvider = ServiceLocator.get<GameStateProvider>(SERVICE_NAMES.GAME_STATE);
-    if (!gameStateProvider) {
-      return { count: 0, avgEfficiency: 0 };
-    }
-
-    const facilities = gameStateProvider.getFacilities();
+    // 直接从游戏状态获取设施信息
+    const gameState = useGameStore.getState();
+    const facilities = gameState.facilities || [];
     const labs = facilities.filter(
       f => f.facilityId === 'lab' && f.status === FacilityStatus.RUNNING
     );

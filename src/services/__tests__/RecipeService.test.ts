@@ -117,7 +117,6 @@ describe('RecipeService 配方服务测试', () => {
     // Register services
     ServiceLocator.register(SERVICE_NAMES.DATA, mockDataService);
     ServiceLocator.register(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR, mockCraftingValidator);
-    ServiceLocator.register(SERVICE_NAMES.GAME_STATE, mockGameStore);
 
     // Initialize testRecipes with real data
     RecipeService.initializeRecipes(testRecipes);

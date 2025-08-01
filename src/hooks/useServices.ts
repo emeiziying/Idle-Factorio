@@ -12,7 +12,6 @@ import { FuelService } from '@/services/crafting/FuelService';
 import { PowerService } from '@/services/game/PowerService';
 import { StorageService } from '@/services/storage/StorageService';
 import { UserProgressService } from '@/services/game/UserProgressService';
-import type { GameStateProvider } from '@/services/interfaces';
 
 /**
  * 获取 DataService 实例
@@ -99,17 +98,6 @@ export const useUserProgressService = (): UserProgressService => {
   }, []);
 };
 
-/**
- * 获取 GameStateProvider 实例
- */
-export const useGameStateProvider = (): GameStateProvider | null => {
-  return useMemo(() => {
-    if (ServiceLocator.has(SERVICE_NAMES.GAME_STATE)) {
-      return ServiceLocator.get<GameStateProvider>(SERVICE_NAMES.GAME_STATE);
-    }
-    return null;
-  }, []);
-};
 
 /**
  * 通用的服务获取 Hook

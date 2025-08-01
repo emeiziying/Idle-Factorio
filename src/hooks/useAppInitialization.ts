@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ServiceInitializer } from '@/services/core/ServiceInitializer';
+import { DIServiceInitializer } from '@/services/core/DIServiceInitializer';
 
 interface UseAppInitializationResult {
   isAppReady: boolean;
@@ -15,7 +15,7 @@ export const useAppInitialization = (): UseAppInitializationResult => {
 
     const initializeApp = async () => {
       try {
-        await ServiceInitializer.initialize();
+        await DIServiceInitializer.initialize();
         if (mounted) {
           setIsAppReady(true);
           setInitError(null);
@@ -32,7 +32,7 @@ export const useAppInitialization = (): UseAppInitializationResult => {
 
     return () => {
       mounted = false;
-      ServiceInitializer.cleanup();
+      DIServiceInitializer.cleanup();
     };
   }, []);
 

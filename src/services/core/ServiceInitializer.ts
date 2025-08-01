@@ -6,7 +6,6 @@ import { UserProgressService } from '@/services/game/UserProgressService';
 import { FuelService } from '@/services/crafting/FuelService';
 import { PowerService } from '@/services/game/PowerService';
 import { StorageService } from '@/services/storage/StorageService';
-import { GameStateAdapter } from '@/services/storage/GameStateAdapter';
 import { GameLoopService } from '@/services/game/GameLoopService';
 import { GameLoopTaskFactory } from '@/services/game/GameLoopTaskFactory';
 import ManualCraftingValidator from '@/utils/manualCraftingValidator';
@@ -19,7 +18,7 @@ import useGameStore from '@/store/gameStore';
  * 确保系统的各个组件能够正确协同工作。
  *
  * 初始化顺序：
- * 1. 基础服务（UserProgress、Storage、GameState等）
+ * 1. 基础服务（UserProgress、Storage、ManualCraftingValidator等）
  * 2. 数据服务（DataService）
  * 3. 游戏数据加载
  * 4. 配方服务（RecipeService）
@@ -74,9 +73,6 @@ export class ServiceInitializer {
     const storageService = StorageService.getInstance();
     ServiceLocator.register(SERVICE_NAMES.STORAGE, storageService);
 
-    // 注册游戏状态适配器 - 负责状态转换和持久化
-    const gameStateAdapter = GameStateAdapter.getInstance();
-    ServiceLocator.register(SERVICE_NAMES.GAME_STATE, gameStateAdapter);
 
     // 注册手动制作验证器 - 负责制作逻辑验证
     const manualCraftingValidator = ManualCraftingValidator.getInstance();
