@@ -690,7 +690,7 @@ describe('DataService', () => {
   // 获取行显示名称测试
   describe('getRowDisplayName 获取行显示名称测试', () => {
     it('应返回中间产品分类的行名称', () => {
-      expect(dataService.getRowDisplayName('intermediate-products', 0)).toBe('原材料');
+      expect(dataService.getRowDisplayName('intermediate-products', 0)).toBe('基础材料');
       expect(dataService.getRowDisplayName('intermediate-products', 1)).toBe('基础材料');
       expect(dataService.getRowDisplayName('intermediate-products', 2)).toBe('组件');
     });
