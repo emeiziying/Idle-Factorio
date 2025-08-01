@@ -58,14 +58,17 @@ The project uses **Husky** for pre-commit hooks:
 
 ## Critical Architecture Patterns
 
-### Service Locator Pattern
-The application uses a service locator pattern for dependency injection:
+### Dependency Injection Container Pattern
+The application uses a modern dependency injection container pattern:
 ```typescript
-// Register services at startup via ServiceInitializer
-ServiceInitializer.initialize()
+// Register services at startup via DIServiceInitializer
+DIServiceInitializer.initialize()
 
-// Access services through ServiceLocator
-const dataService = ServiceLocator.get<DataService>(SERVICE_NAMES.DATA);
+// Access services through DI container
+const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+
+// Or in React components via hooks
+const dataService = useDataService();
 ```
 
 ### Modular Zustand Store Architecture

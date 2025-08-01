@@ -14,8 +14,9 @@ services/
 ├── core/                    # 核心基础服务
 │   ├── DataService.ts
 │   ├── GameConfig.ts
-│   ├── ServiceInitializer.ts
-│   ├── ServiceLocator.ts
+│   ├── DIServiceInitializer.ts
+│   ├── DIContainer.ts
+│   ├── ServiceTokens.ts
 │   └── index.ts
 │
 ├── game/                    # 游戏逻辑服务

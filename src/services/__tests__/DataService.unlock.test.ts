@@ -1,15 +1,10 @@
 // DataService.unlock.test.ts - 专门测试物品解锁逻辑的修复
-import { describe, it, expect, beforeEach, vi, type MockedFunction } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { DataService } from '@/services/core/DataService';
-import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
+import { container } from '@/services/core/DIContainer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
+import { DIServiceInitializer } from '@/services/core/DIServiceInitializer';
 import type { TechnologyService } from '@/services/technology/TechnologyService';
-
-// Mock ServiceLocator
-vi.mock('@/services/core/ServiceLocator');
-const mockServiceLocator = ServiceLocator as unknown as {
-  has: MockedFunction<typeof ServiceLocator.has>;
-  get: MockedFunction<typeof ServiceLocator.get>;
-};
 
 // Mock TechnologyService
 const mockTechnologyService = {
@@ -23,15 +18,16 @@ describe('DataService isItemUnlockedInternal 逻辑修复测试', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    container.clear();
+    DIServiceInitializer.reset();
     DataService.resetInstance();
     dataService = DataService.getInstance();
   });
 
   describe('TechnologyService 一致性修复', () => {
     it('应该在两个检查点使用相同的 techService 实例', async () => {
-      // 设置 mock
-      mockServiceLocator.has.mockReturnValue(true);
-      mockServiceLocator.get.mockReturnValue(mockTechnologyService as TechnologyService);
+      // 注册 mock 到容器
+      container.registerInstance(SERVICE_TOKENS.TECHNOLOGY_SERVICE, mockTechnologyService as TechnologyService);
       mockTechnologyService.isItemUnlocked = vi.fn().mockReturnValue(true);
 
       // 加载测试数据
@@ -41,15 +37,12 @@ describe('DataService isItemUnlockedInternal 逻辑修复测试', () => {
       const result = dataService.isItemUnlocked('iron-ore');
 
       // 验证 TechnologyService 被正确调用
-      expect(mockServiceLocator.has).toHaveBeenCalledWith(SERVICE_NAMES.TECHNOLOGY);
-      expect(mockServiceLocator.get).toHaveBeenCalledWith(SERVICE_NAMES.TECHNOLOGY);
       expect(mockTechnologyService.isItemUnlocked).toHaveBeenCalledWith('iron-ore');
       expect(result).toBe(true);
     });
 
     it('应该正确处理 TechnologyService 不存在的情况', async () => {
-      // 设置 TechnologyService 不存在
-      mockServiceLocator.has.mockReturnValue(false);
+      // 不注册 TechnologyService，让容器中没有该服务
 
       await dataService.loadGameData();
 
@@ -62,13 +55,12 @@ describe('DataService isItemUnlockedInternal 逻辑修复测试', () => {
     });
 
     it('应该正确处理 TechnologyService 存在但没有 isItemUnlocked 方法的情况', async () => {
-      // 设置 TechnologyService 存在但没有 isItemUnlocked 方法
-      mockServiceLocator.has.mockReturnValue(true);
+      // 注册一个没有 isItemUnlocked 方法的 TechnologyService
       const limitedTechService = {
         isRecipeUnlocked: vi.fn().mockReturnValue(false),
         isServiceInitialized: vi.fn().mockReturnValue(true),
       } as Partial<TechnologyService>;
-      mockServiceLocator.get.mockReturnValue(limitedTechService as TechnologyService);
+      container.registerInstance(SERVICE_TOKENS.TECHNOLOGY_SERVICE, limitedTechService as TechnologyService);
 
       await dataService.loadGameData();
 
@@ -79,14 +71,13 @@ describe('DataService isItemUnlockedInternal 逻辑修复测试', () => {
     });
 
     it('应该正确处理 TechnologyService 存在但未初始化的情况', async () => {
-      // 设置 TechnologyService 存在但未初始化
-      mockServiceLocator.has.mockReturnValue(true);
+      // 注册一个未初始化的 TechnologyService
       const uninitializedTechService = {
         isItemUnlocked: vi.fn().mockReturnValue(false),
         isRecipeUnlocked: vi.fn().mockReturnValue(false),
         isServiceInitialized: vi.fn().mockReturnValue(false), // 未初始化
       } as Partial<TechnologyService>;
-      mockServiceLocator.get.mockReturnValue(uninitializedTechService as TechnologyService);
+      container.registerInstance(SERVICE_TOKENS.TECHNOLOGY_SERVICE, uninitializedTechService as TechnologyService);
 
       await dataService.loadGameData();
 
@@ -100,8 +91,7 @@ describe('DataService isItemUnlockedInternal 逻辑修复测试', () => {
 
   describe('原材料检查修复', () => {
     it('无配方物品应该检查科技要求', async () => {
-      mockServiceLocator.has.mockReturnValue(true);
-      mockServiceLocator.get.mockReturnValue(mockTechnologyService as TechnologyService);
+      container.registerInstance(SERVICE_TOKENS.TECHNOLOGY_SERVICE, mockTechnologyService as TechnologyService);
       mockTechnologyService.isItemUnlocked = vi.fn().mockReturnValue(false);
 
       await dataService.loadGameData();
@@ -114,7 +104,7 @@ describe('DataService isItemUnlockedInternal 逻辑修复测试', () => {
     });
 
     it('在没有科技服务时，原材料应该默认可用', async () => {
-      mockServiceLocator.has.mockReturnValue(false);
+      // 不注册 TechnologyService
 
       await dataService.loadGameData();
 
@@ -126,8 +116,7 @@ describe('DataService isItemUnlockedInternal 逻辑修复测试', () => {
 
   describe('缓存机制测试', () => {
     it('应该正确缓存解锁状态', async () => {
-      mockServiceLocator.has.mockReturnValue(true);
-      mockServiceLocator.get.mockReturnValue(mockTechnologyService as TechnologyService);
+      container.registerInstance(SERVICE_TOKENS.TECHNOLOGY_SERVICE, mockTechnologyService as TechnologyService);
       mockTechnologyService.isItemUnlocked = vi.fn().mockReturnValue(true);
 
       await dataService.loadGameData();
@@ -144,8 +133,7 @@ describe('DataService isItemUnlockedInternal 逻辑修复测试', () => {
     });
 
     it('清理缓存后应该重新检查', async () => {
-      mockServiceLocator.has.mockReturnValue(true);
-      mockServiceLocator.get.mockReturnValue(mockTechnologyService as TechnologyService);
+      container.registerInstance(SERVICE_TOKENS.TECHNOLOGY_SERVICE, mockTechnologyService as TechnologyService);
       mockTechnologyService.isItemUnlocked = vi.fn().mockReturnValue(true);
 
       await dataService.loadGameData();

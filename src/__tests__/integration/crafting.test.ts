@@ -3,7 +3,9 @@ import { act } from '@testing-library/react';
 import useGameStore from '@/store/gameStore';
 import { RecipeService } from '@/services/crafting/RecipeService';
 import { DataService } from '@/services/core/DataService';
-import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
+import { DIServiceInitializer } from '@/services/core/DIServiceInitializer';
+import { container } from '@/services/core/DIContainer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 
 // 模拟服务
 vi.mock('../../services/GameStorageService');
@@ -15,7 +17,8 @@ describe('Crafting Integration Tests', () => {
 
   beforeEach(() => {
     // 清除服务
-    ServiceLocator.clear();
+    container.clear();
+    DIServiceInitializer.reset();
 
     // 设置模拟服务
     mockDataService = {
@@ -48,8 +51,8 @@ describe('Crafting Integration Tests', () => {
     };
 
     // 注册服务
-    ServiceLocator.register(SERVICE_NAMES.DATA, mockDataService);
-    ServiceLocator.register(SERVICE_NAMES.RECIPE, mockRecipeService);
+    container.registerInstance(SERVICE_TOKENS.DATA_SERVICE, mockDataService);
+    container.registerInstance(SERVICE_TOKENS.RECIPE_SERVICE, mockRecipeService);
 
     // 重置游戏 store
     act(() => {

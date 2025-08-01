@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { StorageService } from '@/services/storage/StorageService';
-import { ServiceLocator } from '@/services/core/ServiceLocator';
+import { container } from '@/services/core/DIContainer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type { DataService } from '@/services/core/DataService';
 import type { Item, Recipe } from '@/types';
 
@@ -58,11 +59,10 @@ describe('StorageService', () => {
       getLocalizedItemName: vi.fn(),
     };
 
-    // 设置 ServiceLocator 模拟
-    vi.spyOn(ServiceLocator, 'has').mockReturnValue(true);
-    vi.spyOn(ServiceLocator, 'get').mockReturnValue(mockDataService as unknown as DataService);
+    // 注册 mock DataService 到容器
+    container.registerInstance(SERVICE_TOKENS.DATA_SERVICE, mockDataService as unknown as DataService);
 
-    storageService = StorageService.getInstance();
+    storageService = new StorageService();
   });
 
   afterEach(() => {
@@ -122,7 +122,7 @@ describe('StorageService', () => {
 
     // 测试：DataService 不可用时应返回 undefined
     it('should return undefined when DataService is not available', () => {
-      vi.mocked(ServiceLocator.has).mockReturnValue(false);
+      container.clear(); // 清除容器中的服务
 
       const config = storageService.getStorageConfig('wooden-chest');
       expect(config).toBeUndefined();

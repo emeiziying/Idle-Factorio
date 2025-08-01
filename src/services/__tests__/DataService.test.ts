@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { DataService } from '@/services/core/DataService';
-import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
+import { container } from '@/services/core/DIContainer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
+import { DIServiceInitializer } from '@/services/core/DIServiceInitializer';
 import type { GameData } from '@/types/index';
 import type { ServiceInstance } from '@/types/test-utils';
 
@@ -168,7 +170,8 @@ describe('DataService', () => {
   beforeEach(() => {
     // 清除实例
     (DataService as unknown as ServiceInstance<DataService>).instance = null;
-    ServiceLocator.clear();
+    container.clear();
+    DIServiceInitializer.reset();
 
     // 模拟服务
     mockUserProgressService = {
@@ -183,8 +186,8 @@ describe('DataService', () => {
       isServiceInitialized: vi.fn(() => true),
     };
 
-    ServiceLocator.register(SERVICE_NAMES.USER_PROGRESS, mockUserProgressService);
-    ServiceLocator.register(SERVICE_NAMES.TECHNOLOGY, mockTechnologyService);
+    container.registerInstance(SERVICE_TOKENS.USER_PROGRESS_SERVICE, mockUserProgressService);
+    container.registerInstance(SERVICE_TOKENS.TECHNOLOGY_SERVICE, mockTechnologyService);
 
     // 不注册 RecipeService，让 DataService 使用回退逻辑（直接从游戏数据查找）
 
@@ -662,7 +665,7 @@ describe('DataService', () => {
         isItemInAnyMilestone: vi.fn(() => false),
       };
 
-      ServiceLocator.register(SERVICE_NAMES.USER_PROGRESS, mockUserProgress);
+      container.registerInstance(SERVICE_TOKENS.USER_PROGRESS_SERVICE, mockUserProgress);
 
       // 调用解锁物品
       dataService.unlockItem('iron-plate');
@@ -673,7 +676,7 @@ describe('DataService', () => {
 
     // 测试：用户进度服务不存在时应正常处理
     it('用户进度服务不存在时应正常处理', () => {
-      ServiceLocator.clear();
+      container.clear();
 
       // 应该不抛出错误
       expect(() => dataService.unlockItem('iron-plate')).not.toThrow();

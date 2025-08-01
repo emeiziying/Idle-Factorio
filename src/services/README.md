@@ -9,8 +9,9 @@ services/
 ├── core/               # 核心基础服务
 │   ├── DataService.ts       # 数据管理服务
 │   ├── GameConfig.ts        # 游戏配置服务
-│   ├── ServiceInitializer.ts # 服务初始化器
-│   ├── ServiceLocator.ts    # 服务定位器
+│   ├── DIServiceInitializer.ts # DI服务初始化器
+│   ├── DIContainer.ts       # 依赖注入容器
+│   ├── ServiceTokens.ts     # 服务令牌定义
 │   └── index.ts
 │
 ├── game/               # 游戏逻辑服务
@@ -48,8 +49,9 @@ services/
 ## 模块说明
 
 ### Core（核心服务）
-- **ServiceLocator**: 服务定位器，避免循环依赖
-- **ServiceInitializer**: 服务初始化器，管理服务启动顺序
+- **DIContainer**: 依赖注入容器，支持自动依赖解析和生命周期管理
+- **DIServiceInitializer**: DI服务初始化器，管理服务注册和启动
+- **ServiceTokens**: 服务令牌定义，统一管理服务标识符
 - **DataService**: 游戏数据管理，加载和缓存游戏资源
 - **GameConfig**: 游戏配置管理
 
@@ -84,7 +86,7 @@ import { RecipeService } from '@/services/crafting/RecipeService';
 
 ### 2. 从模块索引导入
 ```typescript
-import { DataService, ServiceLocator } from '@/services/core';
+import { DataService, DIServiceInitializer } from '@/services/core';
 import { RecipeService, FuelService } from '@/services/crafting';
 ```
 
@@ -93,9 +95,20 @@ import { RecipeService, FuelService } from '@/services/crafting';
 import { 
   DataService, 
   RecipeService, 
-  ServiceLocator,
-  SERVICE_NAMES 
+  getService,
+  SERVICE_TOKENS 
 } from '@/services';
+```
+
+### 4. 在 React 组件中使用 Hooks
+```typescript
+import { useDataService, useRecipeService } from '@/hooks/useDIServices';
+
+const MyComponent = () => {
+  const dataService = useDataService();
+  const recipeService = useRecipeService();
+  // ...
+};
 ```
 
 ## 待优化事项
