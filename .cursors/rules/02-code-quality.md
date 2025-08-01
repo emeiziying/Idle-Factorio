@@ -1,11 +1,13 @@
 # Code Quality Rule - 代码质量规则
 
 ## 规则概述
+
 确保代码质量和一致性，遵循 TypeScript 严格模式和 React 最佳实践。
 
 ## 规则详情
 
 ### 1. TypeScript 严格模式
+
 - 所有代码必须通过 TypeScript 严格模式检查
 - 不允许使用 `any` 类型，除非有充分理由并添加注释说明
 - 优先使用 `type` 而非 `interface`，除非需要继承或声明合并
@@ -13,6 +15,7 @@
 ### 2. React 最佳实践
 
 #### 组件定义
+
 ```typescript
 // ✅ 正确 - 使用函数组件和明确的类型定义
 import type { FC } from 'react'
@@ -38,9 +41,11 @@ export default React.FC<any> = (props) => {
 ```
 
 #### Hooks 使用规范
+
 ```typescript
 // ✅ 正确 - 自定义 Hook 以 use 开头，有明确的返回类型
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+
 import type { User } from '@/types/user'
 
 export function useUser(userId: string): {
@@ -51,11 +56,11 @@ export function useUser(userId: string): {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
-  
+
   useEffect(() => {
     // 实现逻辑
   }, [userId])
-  
+
   return { user, loading, error }
 }
 
@@ -69,9 +74,11 @@ export function getUser(id) {
 ### 3. Redux Toolkit 使用规范
 
 #### Slice 定义
+
 ```typescript
 // ✅ 正确 - 使用 Redux Toolkit 的标准模式
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { PayloadAction, createSlice } from '@reduxjs/toolkit'
+
 import type { RootState } from '@/store'
 
 interface CounterState {
@@ -101,14 +108,15 @@ export default counterSlice.reducer
 ```
 
 ### 4. 导入顺序规范
+
 ```typescript
 // 1. React 相关导入
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import type { FC } from 'react'
+import { useDispatch } from 'react-redux'
 
 // 2. 第三方库导入
 import { Box, Button } from '@mui/material'
-import { useDispatch } from 'react-redux'
 
 // 3. 本地导入 - 使用 @/ 别名
 import { useAuth } from '@/hooks/useAuth'
@@ -120,6 +128,7 @@ import styles from './Component.module.css'
 ```
 
 ### 5. 文件命名规范
+
 - 组件文件：PascalCase，如 `UserProfile.tsx`
 - Hook 文件：camelCase，如 `useAuth.ts`
 - 工具文件：camelCase，如 `dateFormatter.ts`
@@ -127,6 +136,7 @@ import styles from './Component.module.css'
 - 测试文件：与源文件同名 + `.test`，如 `UserProfile.test.tsx`
 
 ### 6. 注释规范
+
 ```typescript
 /**
  * 计算物品的实际产出率
@@ -144,6 +154,7 @@ export function calculateProductionRate(baseRate: number, efficiency: number): n
 ```
 
 ### 7. 错误处理
+
 ```typescript
 // ✅ 正确 - 明确的错误处理
 try {
@@ -167,10 +178,12 @@ try {
 ```
 
 ### 8. 性能优化
+
 - 使用 `React.memo` 优化组件渲染
 - 使用 `useMemo` 和 `useCallback` 优化计算和函数引用
 - 避免在渲染过程中创建新对象或函数
 - 使用虚拟化处理长列表
 
 ## 执行优先级
+
 **高优先级** - 代码质量直接影响项目的可维护性和稳定性。

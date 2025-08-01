@@ -1,5 +1,5 @@
-import type { Item } from '../../types';
-import { ItemCategory } from '../../types';
+import type { Item } from '../../types'
+import { ItemCategory } from '../../types'
 
 export const resources: Item[] = [
   {
@@ -8,7 +8,7 @@ export const resources: Item[] = [
     category: ItemCategory.RESOURCES,
     stackSize: 50,
     icon: '/icons/iron-ore.png',
-    description: '基础资源，用于冶炼铁板'
+    description: '基础资源，用于冶炼铁板',
   },
   {
     id: 'copper_ore',
@@ -16,7 +16,7 @@ export const resources: Item[] = [
     category: ItemCategory.RESOURCES,
     stackSize: 50,
     icon: '/icons/copper-ore.png',
-    description: '基础资源，用于冶炼铜板'
+    description: '基础资源，用于冶炼铜板',
   },
   {
     id: 'coal',
@@ -24,7 +24,7 @@ export const resources: Item[] = [
     category: ItemCategory.RESOURCES,
     stackSize: 50,
     icon: '/icons/coal.png',
-    description: '燃料和化工原料'
+    description: '燃料和化工原料',
   },
   {
     id: 'stone',
@@ -32,7 +32,7 @@ export const resources: Item[] = [
     category: ItemCategory.RESOURCES,
     stackSize: 50,
     icon: '/icons/stone.png',
-    description: '用于制作石砖和混凝土'
+    description: '用于制作石砖和混凝土',
   },
   {
     id: 'wood',
@@ -40,6 +40,6 @@ export const resources: Item[] = [
     category: ItemCategory.RESOURCES,
     stackSize: 100,
     icon: '/icons/wood.png',
-    description: '基础建筑材料'
-  }
-];
+    description: '基础建筑材料',
+  },
+]

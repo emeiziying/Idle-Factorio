@@ -1,5 +1,5 @@
-import type { Recipe } from '../../types';
-import { RecipeCategory, MachineType } from '../../types';
+import type { Recipe } from '../../types'
+import { MachineType, RecipeCategory } from '../../types'
 
 export const smeltingRecipes: Recipe[] = [
   {
@@ -10,7 +10,7 @@ export const smeltingRecipes: Recipe[] = [
     time: 3.2,
     category: RecipeCategory.SMELTING,
     allowedMachines: [MachineType.FURNACE],
-    handCraftable: false  // 只能在熔炉中制作
+    handCraftable: false, // 只能在熔炉中制作
   },
   {
     id: 'copper_plate',
@@ -20,7 +20,7 @@ export const smeltingRecipes: Recipe[] = [
     time: 3.2,
     category: RecipeCategory.SMELTING,
     allowedMachines: [MachineType.FURNACE],
-    handCraftable: false
+    handCraftable: false,
   },
   {
     id: 'steel_plate',
@@ -30,7 +30,7 @@ export const smeltingRecipes: Recipe[] = [
     time: 16,
     category: RecipeCategory.SMELTING,
     allowedMachines: [MachineType.FURNACE],
-    handCraftable: false
+    handCraftable: false,
   },
   {
     id: 'stone_brick',
@@ -40,6 +40,6 @@ export const smeltingRecipes: Recipe[] = [
     time: 3.2,
     category: RecipeCategory.SMELTING,
     allowedMachines: [MachineType.FURNACE],
-    handCraftable: false
-  }
-];
+    handCraftable: false,
+  },
+]

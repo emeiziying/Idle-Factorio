@@ -1,5 +1,5 @@
-import type { Item } from '../../types';
-import { ItemCategory } from '../../types';
+import type { Item } from '../../types'
+import { ItemCategory } from '../../types'
 
 export const components: Item[] = [
   {
@@ -8,7 +8,7 @@ export const components: Item[] = [
     category: ItemCategory.COMPONENTS,
     stackSize: 100,
     icon: '/icons/iron-gear-wheel.png',
-    description: '基础机械部件'
+    description: '基础机械部件',
   },
   {
     id: 'copper_cable',
@@ -16,7 +16,7 @@ export const components: Item[] = [
     category: ItemCategory.COMPONENTS,
     stackSize: 200,
     icon: '/icons/copper-cable.png',
-    description: '电子元件的基础材料'
+    description: '电子元件的基础材料',
   },
   {
     id: 'electronic_circuit',
@@ -24,7 +24,7 @@ export const components: Item[] = [
     category: ItemCategory.COMPONENTS,
     stackSize: 200,
     icon: '/icons/electronic-circuit.png',
-    description: '基础电子元件'
+    description: '基础电子元件',
   },
   {
     id: 'advanced_circuit',
@@ -32,7 +32,7 @@ export const components: Item[] = [
     category: ItemCategory.COMPONENTS,
     stackSize: 200,
     icon: '/icons/advanced-circuit.png',
-    description: '高级电子元件'
+    description: '高级电子元件',
   },
   {
     id: 'processing_unit',
@@ -40,7 +40,7 @@ export const components: Item[] = [
     category: ItemCategory.COMPONENTS,
     stackSize: 100,
     icon: '/icons/processing-unit.png',
-    description: '顶级电子元件'
+    description: '顶级电子元件',
   },
   {
     id: 'engine_unit',
@@ -48,7 +48,7 @@ export const components: Item[] = [
     category: ItemCategory.COMPONENTS,
     stackSize: 50,
     icon: '/icons/engine-unit.png',
-    description: '动力装置'
+    description: '动力装置',
   },
   {
     id: 'pipe',
@@ -56,6 +56,6 @@ export const components: Item[] = [
     category: ItemCategory.COMPONENTS,
     stackSize: 100,
     icon: '/icons/pipe.png',
-    description: '流体传输部件'
-  }
-];
+    description: '流体传输部件',
+  },
+]

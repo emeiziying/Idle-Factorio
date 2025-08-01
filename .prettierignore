@@ -1,0 +1,39 @@
+# 依赖目录
+node_modules/
+.pnp.*
+.yarn/
+
+# 构建输出
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# 环境和配置
+.env*
+.vscode/
+.idea/
+
+# 日志
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 包管理器锁文件
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# 其他
+*.min.js
+*.min.css
+
+# 数据文件
+src/data/spa/
+*.json

@@ -1,5 +1,5 @@
-import type { Recipe } from '../../types';
-import { RecipeCategory, MachineType } from '../../types';
+import type { Recipe } from '../../types'
+import { MachineType, RecipeCategory } from '../../types'
 
 export const craftingRecipes: Recipe[] = [
   {
@@ -10,7 +10,7 @@ export const craftingRecipes: Recipe[] = [
     time: 0.5,
     category: RecipeCategory.CRAFTING,
     allowedMachines: [MachineType.ASSEMBLING_MACHINE],
-    handCraftable: true
+    handCraftable: true,
   },
   {
     id: 'copper_cable',
@@ -20,20 +20,20 @@ export const craftingRecipes: Recipe[] = [
     time: 0.5,
     category: RecipeCategory.CRAFTING,
     allowedMachines: [MachineType.ASSEMBLING_MACHINE],
-    handCraftable: true
+    handCraftable: true,
   },
   {
     id: 'electronic_circuit',
     name: '电路板',
     ingredients: [
       { itemId: 'iron_plate', amount: 1 },
-      { itemId: 'copper_cable', amount: 3 }
+      { itemId: 'copper_cable', amount: 3 },
     ],
     products: [{ itemId: 'electronic_circuit', amount: 1 }],
     time: 0.5,
     category: RecipeCategory.CRAFTING,
     allowedMachines: [MachineType.ASSEMBLING_MACHINE],
-    handCraftable: true
+    handCraftable: true,
   },
   {
     id: 'pipe',
@@ -43,7 +43,7 @@ export const craftingRecipes: Recipe[] = [
     time: 0.5,
     category: RecipeCategory.CRAFTING,
     allowedMachines: [MachineType.ASSEMBLING_MACHINE],
-    handCraftable: true
+    handCraftable: true,
   },
   {
     id: 'engine_unit',
@@ -51,12 +51,12 @@ export const craftingRecipes: Recipe[] = [
     ingredients: [
       { itemId: 'steel_plate', amount: 1 },
       { itemId: 'iron_gear_wheel', amount: 1 },
-      { itemId: 'pipe', amount: 2 }
+      { itemId: 'pipe', amount: 2 },
     ],
     products: [{ itemId: 'engine_unit', amount: 1 }],
     time: 10,
     category: RecipeCategory.CRAFTING,
     allowedMachines: [MachineType.ASSEMBLING_MACHINE],
-    handCraftable: true
-  }
-];
+    handCraftable: true,
+  },
+]

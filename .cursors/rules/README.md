@@ -21,6 +21,12 @@
    - UI/UX 规范
    - 数据持久化
 
+4. **[04-code-formatting.md](./04-code-formatting.md)** - 代码格式化规则
+   - Prettier 配置说明
+   - 自动格式化设置
+   - 导入语句排序
+   - 格式化最佳实践
+
 ## 使用方式
 
 这些规则会被 Cursor IDE 自动加载和执行。当你：
@@ -32,16 +38,26 @@
 ## 配置说明
 
 ### TypeScript 配置
+
 - `tsconfig.app.json` 已配置 `@/*` 路径映射到 `src/*`
 - 启用了 TypeScript 严格模式
 
 ### Vite 配置
+
 - `vite.config.ts` 已配置 resolve.alias
 - `@` 映射到 `./src` 目录
 
+### Prettier 配置
+
+- `.prettierrc.json` 定义了代码格式规则
+- 配置了自动导入排序
+- 与 ESLint 完全集成
+
 ### IDE 支持
+
 - Cursor/VSCode 会自动识别路径别名
 - 提供智能代码补全和导入建议
+- 保存时自动格式化代码
 
 ## 规则优先级
 
@@ -49,6 +65,7 @@
    - 导入别名规则（影响所有代码）
    - TypeScript 类型安全
    - 游戏核心逻辑正确性
+   - 代码格式一致性
 
 2. **中优先级**
    - 代码风格一致性
@@ -75,3 +92,5 @@
 - [ ] 使用服务层处理业务逻辑
 - [ ] 性能敏感的组件使用了优化
 - [ ] 代码有适当的错误处理
+- [ ] 代码已通过 Prettier 格式化（运行 `npm run format`）
+- [ ] 代码已通过 ESLint 检查（运行 `npm run lint`）
