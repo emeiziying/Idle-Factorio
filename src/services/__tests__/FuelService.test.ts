@@ -2,8 +2,8 @@
 // @ts-nocheck
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { FuelService } from '../FuelService';
-import { DataService } from '../DataService';
-import { GameConfig } from '../GameConfig';
+import { DataService } from '../core/DataService';
+import { GameConfig } from '../core/GameConfig';
 import type { FacilityInstance } from '../../types/facilities';
 import { FacilityStatus } from '../../types/facilities';
 import type { ServiceInstance, MockObject } from '../../types/test-utils';

@@ -2,8 +2,8 @@
 
 import type { FacilityInstance } from '../types/facilities';
 import { FacilityStatus } from '../types/facilities';
-import { DataService } from './DataService';
-import { GameConfig } from './GameConfig';
+import { DataService } from '../core/DataService';
+import { GameConfig } from '../core/GameConfig';
 
 export interface PowerBalance {
   // 发电能力

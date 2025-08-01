@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ServiceLocator, SERVICE_NAMES } from '../ServiceLocator';
+import { ServiceLocator, SERVICE_NAMES } from '../core/ServiceLocator';
 
 // ServiceLocator 测试套件 - 服务定位器模式
 describe('ServiceLocator', () => {

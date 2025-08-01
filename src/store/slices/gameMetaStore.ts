@@ -1,6 +1,6 @@
 // 游戏元数据切片
 import type { SliceCreator, GameMetaSlice } from '../types';
-import { gameStorageService } from '../../services/GameStorageService';
+import { gameStorageService } from '../../services/storage/GameStorageService';
 
 export const createGameMetaSlice: SliceCreator<GameMetaSlice> = (set, get) => ({
   // 初始状态

@@ -1,7 +1,7 @@
 // 游戏循环状态管理切片
 import type { SliceCreator } from '@/store/types';
 import type { GameLoopStats, GameLoopConfig, PerformanceLevel } from '@/types/gameLoop';
-import { GameLoopService } from '@/services/GameLoopService';
+import { GameLoopService } from '@/services/game/GameLoopService';
 
 // 游戏循环切片状态接口
 export interface GameLoopSlice {

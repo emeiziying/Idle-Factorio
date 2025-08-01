@@ -2,9 +2,9 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 import useGameStore from '../store/gameStore';
-import { FuelService } from '../services/FuelService';
-import { RecipeService } from '../services/RecipeService';
-import { PowerService } from '../services/PowerService';
+import { FuelService } from '../services/crafting/FuelService';
+import { RecipeService } from '../services/crafting/RecipeService';
+import { PowerService } from '../services/game/PowerService';
 import type { FacilityInstance } from '../types/facilities';
 import { msToSeconds } from '../utils/common';
 
