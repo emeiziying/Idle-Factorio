@@ -9,7 +9,7 @@ import CraftingQueue from './CraftingQueue';
 import { DataService } from '../../services/DataService';
 import { useLocalStorageState } from 'ahooks';
 import { useIsMobile } from '../../hooks/useIsMobile';
-import { useProductionLoop } from '../../hooks/useProductionLoop';
+// useProductionLoop已被GameLoopService替代
 import useGameStore from '../../store/gameStore';
 import type { Category, Item } from '../../types/index';
 
@@ -40,8 +40,7 @@ const ProductionModule: React.FC = React.memo(() => {
   const craftingQueue = useGameStore((state) => state.craftingQueue);
   const isMobile = useIsMobile();
   
-  // 启动生产循环
-  useProductionLoop({ enabled: true });
+  // 生产循环现在由GameLoopService统一管理
   
   // Keep refs in sync with state
   useEffect(() => {

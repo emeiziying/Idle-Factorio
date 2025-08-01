@@ -37,7 +37,7 @@ const TechnologyModule: React.FC = React.memo(() => {
     addToResearchQueue,
     removeFromResearchQueue,
     setAutoResearch,
-    updateResearchProgress
+    // updateResearchProgress // 现在由GameLoopService管理
   } = useGameStore();
 
   // 本地状态 - 智能初始化loading状态
@@ -73,16 +73,7 @@ const TechnologyModule: React.FC = React.memo(() => {
     initializeTech();
   }, [initializeTechnologyService, technologies.size]);
 
-  // 研究进度更新定时器
-  useEffect(() => {
-    if (!researchState) return;
-
-    const interval = setInterval(() => {
-      updateResearchProgress(1); // 每秒更新1秒
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [researchState, updateResearchProgress]);
+  // 研究进度更新现在由GameLoopService统一管理，无需单独的定时器
 
   // 处理科技点击
   const handleTechClick = (techId: string) => {

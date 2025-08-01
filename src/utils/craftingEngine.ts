@@ -233,8 +233,8 @@ class CraftingEngine {
     return Math.max(totalTime, constants.crafting.minCraftingTime); // 使用配置的最小制作时间
   }
 
-  // 更新制作队列
-  private updateCraftingQueue(): void {
+  // 公开的更新制作队列方法（供GameLoop调用）
+  public updateCraftingQueue(): void {
     const gameStore = useGameStore.getState();
     const { craftingQueue, updateCraftingProgress } = gameStore;
 

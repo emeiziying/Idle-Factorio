@@ -31,7 +31,8 @@ import ManualCraftingTestPage from './components/test/ManualCraftingTestPage';
 import { useGameLoop } from './hooks/useGameLoop';
 
 import { ServiceInitializer } from './services/ServiceInitializer';
-import CraftingEngine from './utils/craftingEngine';
+import { GameLoopService } from './services/GameLoopService';
+import { GameLoopTaskFactory } from './services/GameLoopTaskFactory';
 import useGameStore from './store/gameStore';
 import { useIsMobile } from './hooks/useIsMobile';
 import { useLocalStorageState } from 'ahooks';
@@ -111,8 +112,19 @@ const App: React.FC = () => {
           const { initializeTechnologyService } = useGameStore.getState();
           await initializeTechnologyService();
 
-          // 启动制作引擎
-          CraftingEngine.getInstance().start();
+          // 启动游戏循环系统
+          const gameLoopService = GameLoopService.getInstance();
+          
+          // 添加所有游戏系统任务
+          const defaultTasks = GameLoopTaskFactory.createAllDefaultTasks();
+          defaultTasks.forEach(task => gameLoopService.addTask(task));
+          
+          // 启动游戏循环
+          gameLoopService.start();
+          
+          // 同时启动gameStore的游戏循环状态管理
+          const { startGameLoop } = useGameStore.getState();
+          startGameLoop();
 
           // App initialized successfully
           
@@ -133,9 +145,13 @@ const App: React.FC = () => {
 
     initializeApp();
 
-    // 清理函数：组件卸载时停止制作引擎
+    // 清理函数：组件卸载时停止游戏循环
     return () => {
-      CraftingEngine.getInstance().stop();
+      const gameLoopService = GameLoopService.getInstance();
+      gameLoopService.stop();
+      
+      const { stopGameLoop } = useGameStore.getState();
+      stopGameLoop();
     };
   }, []);
 
