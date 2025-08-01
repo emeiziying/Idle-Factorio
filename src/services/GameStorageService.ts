@@ -74,7 +74,7 @@ interface PendingSave {
 export class GameStorageService {
   private static instance: GameStorageService;
   private dataService: DataService;
-  
+
   // 防抖相关
   private pendingSave: PendingSave | null = null;
   private saveTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -83,7 +83,7 @@ export class GameStorageService {
 
   private constructor() {
     this.dataService = DataService.getInstance();
-    
+
     // 页面卸载时立即保存
     if (typeof window !== 'undefined') {
       window.addEventListener('beforeunload', () => {
@@ -106,10 +106,10 @@ export class GameStorageService {
     return new Promise((resolve, reject) => {
       // 取消之前的保存任务
       this.cancelPendingSave();
-      
+
       // 设置新的待保存任务
       this.pendingSave = { resolve, reject };
-      
+
       // 设置防抖计时器
       this.saveTimeout = setTimeout(async () => {
         try {
@@ -143,7 +143,8 @@ export class GameStorageService {
 
       // 检测并解压数据
       let decompressedData = rawData;
-      if (rawData.startsWith('ᯡ')) { // LZString压缩标识
+      if (rawData.startsWith('ᯡ')) {
+        // LZString压缩标识
         const decompressed = LZString.decompressFromUTF16(rawData);
         if (decompressed) {
           decompressedData = decompressed;
@@ -180,15 +181,15 @@ export class GameStorageService {
     // 数据优化
     const optimized = this.optimizeState(state);
     const jsonString = JSON.stringify(optimized);
-    
+
     // 数据压缩
     let finalData = jsonString;
     let sizeInfo = '';
-    
+
     const originalSize = jsonString.length;
     const compressed = LZString.compressToUTF16(jsonString);
     const compressedSize = compressed.length * 2; // UTF-16每字符2字节
-    
+
     if (compressedSize < originalSize) {
       finalData = compressed;
       const reduction = Math.round((1 - compressedSize / originalSize) * 100);
@@ -215,18 +216,18 @@ export class GameStorageService {
         total: state.totalItemsProduced || 0,
         crafted: Array.from(state.craftedItemCounts?.entries() || []),
         built: Array.from(state.builtEntityCounts?.entries() || []),
-        mined: Array.from(state.minedEntityCounts?.entries() || [])
+        mined: Array.from(state.minedEntityCounts?.entries() || []),
       },
       research: {
         state: state.researchState || null,
         queue: state.researchQueue || [],
         unlocked: Array.from(state.unlockedTechs || []),
-        auto: state.autoResearch ?? true
+        auto: state.autoResearch ?? true,
       },
       favorites: Array.from(state.favoriteRecipes || []),
       recent: state.recentRecipes || [],
       containers: state.deployedContainers || [],
-      time: Date.now()
+      time: Date.now(),
     };
 
     // 优化库存：只存储物品ID和数量
@@ -249,7 +250,7 @@ export class GameStorageService {
           progress: Math.round((facility.production?.progress || 0) * 100) / 100,
           fuel: fuel ? { [fuel.itemId]: Math.round(fuel.remainingEnergy * 100) / 100 } : {},
           status: facility.status,
-          efficiency: facility.efficiency
+          efficiency: facility.efficiency,
         };
       });
     }
@@ -278,7 +279,7 @@ export class GameStorageService {
       builtEntityCounts: new Map(optimized.stats.built),
       minedEntityCounts: new Map(optimized.stats.mined),
       lastSaveTime: optimized.time,
-      saveKey: `restored_${optimized.time}`
+      saveKey: `restored_${optimized.time}`,
     };
 
     // 恢复库存
@@ -294,7 +295,7 @@ export class GameStorageService {
           maxCapacity: this.getItemStackSize(itemId),
           productionRate: 0,
           consumptionRate: 0,
-          status: 'normal'
+          status: 'normal',
         });
       }
     }
@@ -306,9 +307,9 @@ export class GameStorageService {
         const slots = fuelItems.map(([itemId, energy]) => ({
           itemId,
           quantity: Math.ceil(energy / (this.dataService.getItem(itemId)?.fuel?.value || 1)),
-          remainingEnergy: energy
+          remainingEnergy: energy,
         }));
-        
+
         return {
           id: facility.id,
           facilityId: facility.type,
@@ -320,7 +321,7 @@ export class GameStorageService {
             currentRecipeId: facility.recipe,
             progress: facility.progress,
             inputBuffer: [],
-            outputBuffer: []
+            outputBuffer: [],
           },
           fuelBuffer: {
             slots,
@@ -328,8 +329,8 @@ export class GameStorageService {
             totalEnergy: Object.values(facility.fuel).reduce((sum, energy) => sum + energy, 0),
             maxEnergy: this.getFacilityMaxEnergy(facility.type),
             consumptionRate: this.getFacilityConsumptionRate(facility.type),
-            lastUpdate: optimized.time
-          }
+            lastUpdate: optimized.time,
+          },
         };
       });
     }
@@ -350,7 +351,7 @@ export class GameStorageService {
       unlockedTechs: new Set((legacyData.unlockedTechs as string[]) || []),
       craftedItemCounts: this.ensureMap(legacyData.craftedItemCounts),
       builtEntityCounts: this.ensureMap(legacyData.builtEntityCounts),
-      minedEntityCounts: this.ensureMap(legacyData.minedEntityCounts)
+      minedEntityCounts: this.ensureMap(legacyData.minedEntityCounts),
     };
   }
 
@@ -359,11 +360,13 @@ export class GameStorageService {
    */
   private isOptimizedFormat(data: unknown): data is OptimizedSaveData {
     const obj = data as Record<string, unknown>;
-    return !!(obj && 
-             obj.inventory && 
-             typeof obj.inventory === 'object' && 
-             !Array.isArray(obj.inventory) && 
-             !('entries' in obj.inventory));
+    return !!(
+      obj &&
+      obj.inventory &&
+      typeof obj.inventory === 'object' &&
+      !Array.isArray(obj.inventory) &&
+      !('entries' in obj.inventory)
+    );
   }
 
   /**

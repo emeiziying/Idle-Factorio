@@ -19,7 +19,7 @@ import {
   ToggleButtonGroup,
   Paper,
   Grid,
-  LinearProgress
+  LinearProgress,
 } from '@mui/material';
 import {
   Search,
@@ -28,7 +28,7 @@ import {
   Warning,
   CheckCircle,
   ViewList,
-  ViewModule
+  ViewModule,
 } from '@mui/icons-material';
 import { FacilityStatus } from '../../types/facilities';
 import type { FacilityInstance } from '../../types/facilities';
@@ -47,12 +47,12 @@ const ProductionMonitor: React.FC = () => {
   const groupedFacilities = useMemo(() => {
     const filtered = facilities.filter(facility => {
       const name = dataService.getItemName(facility.facilityId);
-      
+
       // 搜索过滤
       if (searchTerm && !name.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
       }
-      
+
       return true;
     });
 
@@ -76,38 +76,59 @@ const ProductionMonitor: React.FC = () => {
     if (facilityId.includes('assembling-machine')) return 'crafting';
     if (facilityId.includes('chemical') || facilityId.includes('refinery')) return 'chemical';
     if (facilityId.includes('lab')) return 'research';
-    if (facilityId.includes('engine') || facilityId.includes('turbine') || facilityId.includes('solar')) return 'power';
+    if (
+      facilityId.includes('engine') ||
+      facilityId.includes('turbine') ||
+      facilityId.includes('solar')
+    )
+      return 'power';
     return 'other';
   };
 
   // 获取状态标签
   const getStatusChip = (status: FacilityStatus) => {
     const config = {
-      [FacilityStatus.RUNNING]: { label: '运行中', color: 'success' as const, icon: <CheckCircle fontSize="small" /> },
-      [FacilityStatus.STOPPED]: { label: '已停止', color: 'default' as const, icon: <PowerSettingsNew fontSize="small" /> },
-      [FacilityStatus.NO_POWER]: { label: '缺电', color: 'error' as const, icon: <Warning fontSize="small" /> },
-      [FacilityStatus.NO_FUEL]: { label: '缺燃料', color: 'warning' as const, icon: <LocalFireDepartment fontSize="small" /> },
-      [FacilityStatus.NO_RESOURCE]: { label: '缺原料', color: 'warning' as const, icon: <Warning fontSize="small" /> },
-      [FacilityStatus.OUTPUT_FULL]: { label: '输出满', color: 'warning' as const, icon: <Warning fontSize="small" /> }
+      [FacilityStatus.RUNNING]: {
+        label: '运行中',
+        color: 'success' as const,
+        icon: <CheckCircle fontSize="small" />,
+      },
+      [FacilityStatus.STOPPED]: {
+        label: '已停止',
+        color: 'default' as const,
+        icon: <PowerSettingsNew fontSize="small" />,
+      },
+      [FacilityStatus.NO_POWER]: {
+        label: '缺电',
+        color: 'error' as const,
+        icon: <Warning fontSize="small" />,
+      },
+      [FacilityStatus.NO_FUEL]: {
+        label: '缺燃料',
+        color: 'warning' as const,
+        icon: <LocalFireDepartment fontSize="small" />,
+      },
+      [FacilityStatus.NO_RESOURCE]: {
+        label: '缺原料',
+        color: 'warning' as const,
+        icon: <Warning fontSize="small" />,
+      },
+      [FacilityStatus.OUTPUT_FULL]: {
+        label: '输出满',
+        color: 'warning' as const,
+        icon: <Warning fontSize="small" />,
+      },
     };
 
     const { label, color, icon } = config[status] || config[FacilityStatus.STOPPED];
 
-    return (
-      <Chip
-        label={label}
-        color={color}
-        size="small"
-        icon={icon}
-      />
-    );
+    return <Chip label={label} color={color} size="small" icon={icon} />;
   };
 
   // 切换设施状态
   const toggleFacilityStatus = (facilityId: string, currentStatus: FacilityStatus) => {
-    const newStatus = currentStatus === FacilityStatus.RUNNING 
-      ? FacilityStatus.STOPPED 
-      : FacilityStatus.RUNNING;
+    const newStatus =
+      currentStatus === FacilityStatus.RUNNING ? FacilityStatus.STOPPED : FacilityStatus.RUNNING;
     updateFacility(facilityId, { status: newStatus });
   };
 
@@ -133,7 +154,7 @@ const ProductionMonitor: React.FC = () => {
                   {getCategoryName(category)} ({facilityList.length})
                 </TableCell>
               </TableRow>
-              {facilityList.map((facility) => {
+              {facilityList.map(facility => {
                 const name = dataService.getItemName(facility.facilityId);
                 return (
                   <TableRow key={facility.id}>
@@ -153,9 +174,9 @@ const ProductionMonitor: React.FC = () => {
                     <TableCell>
                       {facility.production?.currentRecipeId ? (
                         <Box display="flex" alignItems="center" gap={1}>
-                          <FactorioIcon 
-                            itemId={facility.production.currentRecipeId.replace('-recipe', '')} 
-                            size={20} 
+                          <FactorioIcon
+                            itemId={facility.production.currentRecipeId.replace('-recipe', '')}
+                            size={20}
                           />
                           <Typography variant="caption">
                             {(facility.production.progress * 100).toFixed(0)}%
@@ -197,10 +218,13 @@ const ProductionMonitor: React.FC = () => {
             {getCategoryName(category)} ({facilityList.length})
           </Typography>
           <Grid container spacing={2}>
-            {facilityList.map((facility) => {
+            {facilityList.map(facility => {
               const name = dataService.getItemName(facility.facilityId);
               return (
-                <Box key={facility.id} sx={{ gridColumn: { xs: 'span 1', sm: 'span 1', md: 'span 1' } }}>
+                <Box
+                  key={facility.id}
+                  sx={{ gridColumn: { xs: 'span 1', sm: 'span 1', md: 'span 1' } }}
+                >
                   <Card>
                     <CardContent>
                       <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
@@ -221,7 +245,7 @@ const ProductionMonitor: React.FC = () => {
                           <PowerSettingsNew />
                         </IconButton>
                       </Box>
-                      
+
                       <Box display="flex" alignItems="center" gap={1} mb={1}>
                         {getStatusChip(facility.status)}
                         <Chip
@@ -232,10 +256,7 @@ const ProductionMonitor: React.FC = () => {
                       </Box>
 
                       {facility.fuelBuffer && (
-                        <FuelStatusDisplay
-                          fuelBuffer={facility.fuelBuffer}
-                          compact
-                        />
+                        <FuelStatusDisplay fuelBuffer={facility.fuelBuffer} compact />
                       )}
 
                       {facility.production?.currentRecipeId && (
@@ -244,9 +265,9 @@ const ProductionMonitor: React.FC = () => {
                             生产中:
                           </Typography>
                           <Box display="flex" alignItems="center" gap={1}>
-                            <FactorioIcon 
-                              itemId={facility.production.currentRecipeId.replace('-recipe', '')} 
-                              size={20} 
+                            <FactorioIcon
+                              itemId={facility.production.currentRecipeId.replace('-recipe', '')}
+                              size={20}
                             />
                             <LinearProgress
                               variant="determinate"
@@ -276,7 +297,7 @@ const ProductionMonitor: React.FC = () => {
       chemical: '化工设施',
       research: '研究设施',
       power: '发电设施',
-      other: '其他设施'
+      other: '其他设施',
     };
     return names[category] || category;
   };
@@ -289,7 +310,7 @@ const ProductionMonitor: React.FC = () => {
           size="small"
           placeholder="搜索设施..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={e => setSearchTerm(e.target.value)}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -299,7 +320,7 @@ const ProductionMonitor: React.FC = () => {
           }}
           sx={{ flex: 1, maxWidth: 300 }}
         />
-        
+
         <ToggleButtonGroup
           value={viewMode}
           exclusive
@@ -318,11 +339,21 @@ const ProductionMonitor: React.FC = () => {
       {/* 统计信息 */}
       <Box display="flex" gap={2} mb={2}>
         <Chip label={`总设施: ${facilities.length}`} />
-        <Chip label={`运行中: ${facilities.filter(f => f.status === FacilityStatus.RUNNING).length}`} color="success" />
-        <Chip label={`停止: ${facilities.filter(f => f.status === FacilityStatus.STOPPED).length}`} />
-        <Chip label={`异常: ${facilities.filter(f => 
-          f.status !== FacilityStatus.RUNNING && f.status !== FacilityStatus.STOPPED
-        ).length}`} color="warning" />
+        <Chip
+          label={`运行中: ${facilities.filter(f => f.status === FacilityStatus.RUNNING).length}`}
+          color="success"
+        />
+        <Chip
+          label={`停止: ${facilities.filter(f => f.status === FacilityStatus.STOPPED).length}`}
+        />
+        <Chip
+          label={`异常: ${
+            facilities.filter(
+              f => f.status !== FacilityStatus.RUNNING && f.status !== FacilityStatus.STOPPED
+            ).length
+          }`}
+          color="warning"
+        />
       </Box>
 
       {/* 设施列表 */}

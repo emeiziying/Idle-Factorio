@@ -8,46 +8,46 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
   facilities: [],
 
   // 设施管理
-  addFacility: (facility) => {
+  addFacility: facility => {
     const fuelService = FuelService.getInstance();
-    
+
     // 检查是否需要燃料缓存
     const fuelBuffer = fuelService.initializeFuelBuffer(facility.facilityId);
     if (fuelBuffer) {
       facility.fuelBuffer = fuelBuffer;
     }
-    
-    set((state) => ({
-      facilities: [...state.facilities, facility]
+
+    set(state => ({
+      facilities: [...state.facilities, facility],
     }));
-    
+
     // 追踪建造的实体（用于研究触发器）
     get().trackBuiltEntity(facility.facilityId, 1);
   },
 
   updateFacility: (facilityId: string, updates) => {
-    set((state) => ({
+    set(state => ({
       facilities: state.facilities.map(facility =>
         facility.id === facilityId ? { ...facility, ...updates } : facility
-      )
+      ),
     }));
   },
 
   removeFacility: (facilityId: string) => {
-    set((state) => ({
-      facilities: state.facilities.filter(facility => facility.id !== facilityId)
+    set(state => ({
+      facilities: state.facilities.filter(facility => facility.id !== facilityId),
     }));
   },
 
   _repairFacilityState: () => {
     const facilities = get().facilities;
     const dataService = DataService.getInstance();
-    const needsRepair = facilities.filter(facility => 
-      !facility.targetItemId && facility.production?.currentRecipeId
+    const needsRepair = facilities.filter(
+      facility => !facility.targetItemId && facility.production?.currentRecipeId
     );
-    
+
     if (needsRepair.length > 0) {
-      set((state) => ({
+      set(state => ({
         facilities: state.facilities.map(facility => {
           if (!facility.targetItemId && facility.production?.currentRecipeId) {
             const recipe = dataService.getRecipe(facility.production.currentRecipeId);
@@ -59,7 +59,7 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
             }
           }
           return facility;
-        })
+        }),
       }));
     }
   },
@@ -68,34 +68,35 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
   refuelFacility: (facilityId: string, fuelItemId: string, quantity: number) => {
     const facility = get().facilities.find(f => f.id === facilityId);
     if (!facility?.fuelBuffer) return false;
-    
+
     const fuelService = FuelService.getInstance();
-    const result = fuelService.addFuel(facility.fuelBuffer, fuelItemId, quantity, facility.facilityId);
-    
+    const result = fuelService.addFuel(
+      facility.fuelBuffer,
+      fuelItemId,
+      quantity,
+      facility.facilityId
+    );
+
     if (result.success && result.quantityAdded) {
       // 从库存扣除
       get().updateInventory(fuelItemId, -result.quantityAdded);
-      
+
       // 更新设施
       get().updateFacility(facilityId, { fuelBuffer: facility.fuelBuffer });
-      
+
       return true;
     }
-    
+
     return false;
   },
-  
+
   autoRefuelFacilities: () => {
     const fuelService = FuelService.getInstance();
     const facilities = get().facilities;
-    
+
     // 使用智能燃料分配
-    fuelService.smartFuelDistribution(
-      facilities,
-      get().getInventoryItem,
-      get().updateInventory
-    );
-    
+    fuelService.smartFuelDistribution(facilities, get().getInventoryItem, get().updateInventory);
+
     // 更新设施状态
     facilities.forEach(facility => {
       if (facility.fuelBuffer) {
@@ -103,23 +104,29 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
       }
     });
   },
-  
+
   updateFuelConsumption: (deltaTime: number) => {
     const fuelService = FuelService.getInstance();
     const facilities = get().facilities;
-    
+
     facilities.forEach(facility => {
       if (facility.fuelBuffer) {
-        const isProducing = facility.status === 'running' && facility.production?.progress !== undefined;
-        const result = fuelService.updateFuelConsumption(facility, deltaTime, isProducing, get().getInventoryItem);
-        
+        const isProducing =
+          facility.status === 'running' && facility.production?.progress !== undefined;
+        const result = fuelService.updateFuelConsumption(
+          facility,
+          deltaTime,
+          isProducing,
+          get().getInventoryItem
+        );
+
         if (!result.success && facility.status === 'running') {
           // 燃料耗尽，更新状态
-          get().updateFacility(facility.id, { 
+          get().updateFacility(facility.id, {
             status: 'no_fuel',
-            fuelBuffer: facility.fuelBuffer
+            fuelBuffer: facility.fuelBuffer,
           });
-          
+
           // 尝试自动补充
           const refuelResult = fuelService.autoRefuel(facility, get().getInventoryItem);
           if (refuelResult.success) {
@@ -127,11 +134,11 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
             Object.entries(refuelResult.itemsConsumed).forEach(([itemId, amount]) => {
               get().updateInventory(itemId, -amount);
             });
-            
+
             // 恢复运行
-            get().updateFacility(facility.id, { 
+            get().updateFacility(facility.id, {
               status: 'running',
-              fuelBuffer: facility.fuelBuffer
+              fuelBuffer: facility.fuelBuffer,
             });
           }
         } else if (result.success) {

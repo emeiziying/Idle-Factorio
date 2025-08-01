@@ -1,11 +1,11 @@
-import '@testing-library/jest-dom'
-import { cleanup } from '@testing-library/react'
-import { afterEach, vi } from 'vitest'
+import '@testing-library/jest-dom';
+import { cleanup } from '@testing-library/react';
+import { afterEach, vi } from 'vitest';
 
 // 每个测试后清理
 afterEach(() => {
-  cleanup()
-})
+  cleanup();
+});
 
 // 模拟 window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -20,4 +20,4 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   })),
-})
+});

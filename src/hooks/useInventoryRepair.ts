@@ -22,4 +22,4 @@ export const useInventoryRepair = () => {
   }, [_repairInventoryState]);
 
   return { repairInventory: _repairInventoryState };
-}; 
+};

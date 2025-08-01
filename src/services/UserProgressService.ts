@@ -98,7 +98,7 @@ export class UserProgressService {
       const data = {
         unlockedItems: Array.from(this.unlockedItems),
         unlockedTechs: Array.from(this.unlockedTechs),
-        lastUpdated: Date.now()
+        lastUpdated: Date.now(),
       };
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
     } catch (error) {

@@ -30,10 +30,7 @@ export class RecipeService {
    */
   static initializeRecipes(dataJsonRecipes: Recipe[]): void {
     // 合并 data.json 配方和自定义配方
-    this.allRecipes = [
-      ...dataJsonRecipes,
-      ...CUSTOM_RECIPES
-    ];
+    this.allRecipes = [...dataJsonRecipes, ...CUSTOM_RECIPES];
 
     // 构建物品到配方的映射
     this.buildRecipeIndex();
@@ -88,9 +85,7 @@ export class RecipeService {
    * @param itemId 物品ID
    */
   static getRecipesThatProduce(itemId: string): Recipe[] {
-    return this.allRecipes.filter(recipe => 
-      recipe.out && recipe.out[itemId] !== undefined
-    );
+    return this.allRecipes.filter(recipe => recipe.out && recipe.out[itemId] !== undefined);
   }
 
   /**
@@ -98,9 +93,7 @@ export class RecipeService {
    * @param itemId 物品ID
    */
   static getRecipesThatUse(itemId: string): Recipe[] {
-    return this.allRecipes.filter(recipe => 
-      recipe.in && recipe.in[itemId] !== undefined
-    );
+    return this.allRecipes.filter(recipe => recipe.in && recipe.in[itemId] !== undefined);
   }
 
   /**
@@ -108,14 +101,10 @@ export class RecipeService {
    * @param itemId 物品ID（可选，不指定则获取所有手动采集配方）
    */
   static getManualRecipes(itemId?: string): Recipe[] {
-    let recipes = this.allRecipes.filter(recipe => 
-      recipe.flags?.includes("manual")
-    );
+    let recipes = this.allRecipes.filter(recipe => recipe.flags?.includes('manual'));
 
     if (itemId) {
-      recipes = recipes.filter(recipe => 
-        recipe.out && recipe.out[itemId] !== undefined
-      );
+      recipes = recipes.filter(recipe => recipe.out && recipe.out[itemId] !== undefined);
     }
 
     return recipes;
@@ -126,14 +115,10 @@ export class RecipeService {
    * @param itemId 物品ID（可选，不指定则获取所有自动化配方）
    */
   static getAutomatedRecipes(itemId?: string): Recipe[] {
-    let recipes = this.allRecipes.filter(recipe => 
-      !recipe.flags?.includes("manual")
-    );
+    let recipes = this.allRecipes.filter(recipe => !recipe.flags?.includes('manual'));
 
     if (itemId) {
-      recipes = recipes.filter(recipe => 
-        recipe.out && recipe.out[itemId] !== undefined
-      );
+      recipes = recipes.filter(recipe => recipe.out && recipe.out[itemId] !== undefined);
     }
 
     return recipes;
@@ -144,14 +129,10 @@ export class RecipeService {
    * @param itemId 物品ID（可选，不指定则获取所有采矿配方）
    */
   static getMiningRecipes(itemId?: string): Recipe[] {
-    let recipes = this.allRecipes.filter(recipe => 
-      recipe.flags?.includes("mining")
-    );
+    let recipes = this.allRecipes.filter(recipe => recipe.flags?.includes('mining'));
 
     if (itemId) {
-      recipes = recipes.filter(recipe => 
-        recipe.out && recipe.out[itemId] !== undefined
-      );
+      recipes = recipes.filter(recipe => recipe.out && recipe.out[itemId] !== undefined);
     }
 
     return recipes;
@@ -162,14 +143,10 @@ export class RecipeService {
    * @param itemId 物品ID（可选，不指定则获取所有回收配方）
    */
   static getRecyclingRecipes(itemId?: string): Recipe[] {
-    let recipes = this.allRecipes.filter(recipe => 
-      recipe.flags?.includes("recycling")
-    );
+    let recipes = this.allRecipes.filter(recipe => recipe.flags?.includes('recycling'));
 
     if (itemId) {
-      recipes = recipes.filter(recipe => 
-        recipe.out && recipe.out[itemId] !== undefined
-      );
+      recipes = recipes.filter(recipe => recipe.out && recipe.out[itemId] !== undefined);
     }
 
     return recipes;
@@ -185,41 +162,41 @@ export class RecipeService {
     const validator = ServiceLocator.has(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
       ? ServiceLocator.get<IManualCraftingValidator>(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
       : null;
-    
+
     if (!validator) {
       return null;
     }
-    
-    const dataService = ServiceLocator.has(SERVICE_NAMES.DATA) 
-      ? ServiceLocator.get<DataService>(SERVICE_NAMES.DATA) 
+
+    const dataService = ServiceLocator.has(SERVICE_NAMES.DATA)
+      ? ServiceLocator.get<DataService>(SERVICE_NAMES.DATA)
       : null;
-    
+
     // 1. 先判断物品是否可以手动制作
     const validation = validator.validateManualCrafting(itemId);
     if (!validation.canCraftManually) {
       return null;
     }
-    
+
     // 2. 如果是原材料（无配方），返回 null
     if (validation.reason === 'raw_material') {
       return null; // 原材料不需要配方
     }
-    
+
     // 3. 获取所有配方并找到可手动制作的
     const allRecipes = this.getRecipesThatProduce(itemId);
-    
+
     for (const recipe of allRecipes) {
       // 检查配方是否被解锁
       if (dataService && !dataService.isItemUnlocked(recipe.id)) {
         continue; // 跳过未解锁的配方
       }
-      
+
       const recipeValidation = validator.validateRecipe(recipe);
       if (recipeValidation.canCraftManually) {
         return recipe; // 返回第一个可手动制作的配方
       }
     }
-    
+
     return null;
   }
 
@@ -232,35 +209,35 @@ export class RecipeService {
     const validator = ServiceLocator.has(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
       ? ServiceLocator.get<IManualCraftingValidator>(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
       : null;
-    
+
     if (!validator) {
       return [];
     }
-    
-    const dataService = ServiceLocator.has(SERVICE_NAMES.DATA) 
-      ? ServiceLocator.get<DataService>(SERVICE_NAMES.DATA) 
+
+    const dataService = ServiceLocator.has(SERVICE_NAMES.DATA)
+      ? ServiceLocator.get<DataService>(SERVICE_NAMES.DATA)
       : null;
-    
+
     // 1. 先判断物品是否可以手动制作
     const validation = validator.validateManualCrafting(itemId);
     if (!validation.canCraftManually) {
       return [];
     }
-    
+
     // 2. 如果是原材料（无配方），返回空数组
     if (validation.reason === 'raw_material') {
       return []; // 原材料不需要配方
     }
-    
+
     // 3. 获取所有配方并筛选可手动制作的
     const allRecipes = this.getRecipesThatProduce(itemId);
-    
+
     return allRecipes.filter(recipe => {
       // 检查配方是否被解锁
       if (dataService && !dataService.isItemUnlocked(recipe.id)) {
         return false; // 跳过未解锁的配方
       }
-      
+
       const recipeValidation = validator.validateRecipe(recipe);
       return recipeValidation.canCraftManually;
     });
@@ -275,11 +252,11 @@ export class RecipeService {
     const validator = ServiceLocator.has(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
       ? ServiceLocator.get<IManualCraftingValidator>(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
       : null;
-    
+
     if (!validator) {
       return false;
     }
-    
+
     const validation = validator.validateManualCrafting(itemId);
     return validation.canCraftManually;
   }
@@ -298,7 +275,7 @@ export class RecipeService {
     const validator = ServiceLocator.has(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
       ? ServiceLocator.get<IManualCraftingValidator>(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
       : null;
-    
+
     if (!validator) {
       return {
         canCraft: false,
@@ -307,20 +284,20 @@ export class RecipeService {
         validation: {
           canCraftManually: false,
           category: 'error',
-          reason: 'validator_unavailable'
-        }
+          reason: 'validator_unavailable',
+        },
       };
     }
-    
+
     const validation = validator.validateManualCrafting(itemId);
     const recipe = this.getManualCraftingRecipe(itemId);
     const allRecipes = this.getAllManualCraftingRecipes(itemId);
-    
+
     return {
       canCraft: validation.canCraftManually,
       recipe,
       allRecipes,
-      validation
+      validation,
     };
   }
 
@@ -346,9 +323,10 @@ export class RecipeService {
    */
   static searchRecipes(query: string): Recipe[] {
     const lowerQuery = query.toLowerCase();
-    return this.allRecipes.filter(recipe => 
-      recipe.name.toLowerCase().includes(lowerQuery) ||
-      recipe.id.toLowerCase().includes(lowerQuery)
+    return this.allRecipes.filter(
+      recipe =>
+        recipe.name.toLowerCase().includes(lowerQuery) ||
+        recipe.id.toLowerCase().includes(lowerQuery)
     );
   }
 
@@ -418,7 +396,7 @@ export class RecipeService {
       automatedRecipes: automatedRecipes.length,
       miningRecipes: miningRecipes.length,
       recyclingRecipes: recyclingRecipes.length,
-      mostEfficientRecipe
+      mostEfficientRecipe,
     };
   }
 
@@ -429,20 +407,23 @@ export class RecipeService {
    * @param recipe 配方
    * @param maxDepth 最大深度（防止无限递归）
    */
-  static getRecipeDependencyChain(recipe: Recipe, maxDepth: number = 5): {
+  static getRecipeDependencyChain(
+    recipe: Recipe,
+    maxDepth: number = 5
+  ): {
     dependencies: Map<string, number>;
     totalCost: Map<string, number>;
     depth: number;
   } {
     const dependencies = new Map<string, number>();
     const totalCost = new Map<string, number>();
-    
+
     this.calculateDependencies(recipe, dependencies, totalCost, 0, maxDepth);
-    
+
     return {
       dependencies,
       totalCost,
-      depth: Math.max(...Array.from(dependencies.values()))
+      depth: Math.max(...Array.from(dependencies.values())),
     };
   }
 
@@ -479,7 +460,13 @@ export class RecipeService {
       if (itemRecipes.length > 0) {
         const bestRecipe = this.getMostEfficientRecipe(itemId);
         if (bestRecipe) {
-          this.calculateDependencies(bestRecipe, dependencies, totalCost, currentDepth + 1, maxDepth);
+          this.calculateDependencies(
+            bestRecipe,
+            dependencies,
+            totalCost,
+            currentDepth + 1,
+            maxDepth
+          );
         }
       }
     }
@@ -490,7 +477,10 @@ export class RecipeService {
    * @param recipe 配方
    * @param includeRawMaterials 是否包含原材料成本
    */
-  static calculateRecipeCost(recipe: Recipe, includeRawMaterials: boolean = true): {
+  static calculateRecipeCost(
+    recipe: Recipe,
+    includeRawMaterials: boolean = true
+  ): {
     directCost: Map<string, number>;
     totalCost: Map<string, number>;
     rawMaterials: Map<string, number>;
@@ -526,7 +516,7 @@ export class RecipeService {
               const totalAmount = subAmount * amount;
               const existing = totalCost.get(subItemId) || 0;
               totalCost.set(subItemId, existing + totalAmount);
-              
+
               // 检查是否为原材料
               const subItemRecipes = this.getRecipesThatProduce(subItemId);
               if (subItemRecipes.length === 0) {
@@ -578,7 +568,7 @@ export class RecipeService {
     const path = [bestRecipe];
     const totalTime = bestRecipe.time * quantity;
     const totalCost = new Map<string, number>();
-    
+
     // 计算总成本
     if (bestRecipe.in) {
       for (const [itemId, amount] of Object.entries(bestRecipe.in)) {
@@ -592,7 +582,7 @@ export class RecipeService {
       path,
       totalTime,
       totalCost,
-      efficiency
+      efficiency,
     };
   }
 
@@ -608,7 +598,7 @@ export class RecipeService {
     preferences: 'efficiency' | 'speed' | 'cost' | 'manual' = 'efficiency'
   ): Recipe[] {
     const allRecipes = this.getRecipesThatProduce(itemId);
-    
+
     // 过滤已解锁的配方
     const availableRecipes = allRecipes.filter(recipe => {
       if (!recipe.producers || recipe.producers.length === 0) return true;
@@ -676,7 +666,7 @@ export class RecipeService {
   } {
     const stats = this.getRecipeStats(itemId);
     const allRecipes = this.getRecipesThatProduce(itemId);
-    
+
     // 过滤可用配方
     const availableRecipes = allRecipes.filter(recipe => {
       if (!recipe.producers || recipe.producers.length === 0) return true;
@@ -684,24 +674,31 @@ export class RecipeService {
     });
 
     // 找到最快配方
-    const fastestRecipe = availableRecipes.reduce((fastest, current) => {
-      const timeA = fastest?.time || Infinity;
-      const timeB = current.time || Infinity;
-      return timeB < timeA ? current : fastest;
-    }, undefined as Recipe | undefined);
+    const fastestRecipe = availableRecipes.reduce(
+      (fastest, current) => {
+        const timeA = fastest?.time || Infinity;
+        const timeB = current.time || Infinity;
+        return timeB < timeA ? current : fastest;
+      },
+      undefined as Recipe | undefined
+    );
 
     // 找到最便宜配方
-    const cheapestRecipe = availableRecipes.reduce((cheapest, current) => {
-      const costA = cheapest ? this.calculateRecipeCost(cheapest, true).totalCost.size : Infinity;
-      const costB = this.calculateRecipeCost(current, true).totalCost.size;
-      return costB < costA ? current : cheapest;
-    }, undefined as Recipe | undefined);
+    const cheapestRecipe = availableRecipes.reduce(
+      (cheapest, current) => {
+        const costA = cheapest ? this.calculateRecipeCost(cheapest, true).totalCost.size : Infinity;
+        const costB = this.calculateRecipeCost(current, true).totalCost.size;
+        return costB < costA ? current : cheapest;
+      },
+      undefined as Recipe | undefined
+    );
 
     // 计算平均效率
     const efficiencies = availableRecipes.map(r => this.getRecipeEfficiency(r, itemId));
-    const averageEfficiency = efficiencies.length > 0 
-      ? efficiencies.reduce((sum, eff) => sum + eff, 0) / efficiencies.length 
-      : 0;
+    const averageEfficiency =
+      efficiencies.length > 0
+        ? efficiencies.reduce((sum, eff) => sum + eff, 0) / efficiencies.length
+        : 0;
 
     // 计算最大依赖深度
     let maxDepth = 0;
@@ -716,7 +713,7 @@ export class RecipeService {
       fastestRecipe,
       cheapestRecipe,
       dependencyDepth: maxDepth,
-      averageEfficiency
+      averageEfficiency,
     };
   }
 
@@ -761,7 +758,7 @@ export class RecipeService {
    */
   static getRecipeCategoryStats(): Map<string, number> {
     const categoryStats = new Map<string, number>();
-    
+
     for (const recipe of this.allRecipes) {
       const category = recipe.category || 'unknown';
       const count = categoryStats.get(category) || 0;
@@ -770,4 +767,4 @@ export class RecipeService {
 
     return categoryStats;
   }
-} 
+}

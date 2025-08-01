@@ -50,7 +50,7 @@ export class StorageService {
       craftingTime: recipe.time,
       description: specificConfig.description || '',
       dimensions: specificConfig.dimensions,
-      requiredTechnology: specificConfig.requiredTechnology
+      requiredTechnology: specificConfig.requiredTechnology,
     };
   }
 
@@ -94,4 +94,4 @@ export class StorageService {
 }
 
 // 导出单例实例获取函数，避免循环依赖
-export const getStorageService = () => StorageService.getInstance(); 
+export const getStorageService = () => StorageService.getInstance();

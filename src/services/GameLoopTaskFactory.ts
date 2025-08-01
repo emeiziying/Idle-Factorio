@@ -16,13 +16,15 @@ export class GameLoopTaskFactory {
       update: () => {
         // 制作系统使用CraftingEngine的现有逻辑
         // 直接导入并调用更新方法
-        import('../utils/craftingEngine').then(({ default: CraftingEngine }) => {
-          const engine = CraftingEngine.getInstance();
-          engine.updateCraftingQueue();
-        }).catch(error => {
-          console.error('制作系统更新失败:', error);
-        });
-      }
+        import('../utils/craftingEngine')
+          .then(({ default: CraftingEngine }) => {
+            const engine = CraftingEngine.getInstance();
+            engine.updateCraftingQueue();
+          })
+          .catch(error => {
+            console.error('制作系统更新失败:', error);
+          });
+      },
     };
   }
 
@@ -54,8 +56,8 @@ export class GameLoopTaskFactory {
           updateFacility(facility.id, {
             production: {
               ...production,
-              progress: newProgress
-            }
+              progress: newProgress,
+            },
           });
 
           // 完成生产
@@ -69,12 +71,12 @@ export class GameLoopTaskFactory {
             updateFacility(facility.id, {
               production: {
                 ...production,
-                progress: 0
-              }
+                progress: 0,
+              },
             });
           }
         });
-      }
+      },
     };
   }
 
@@ -90,7 +92,7 @@ export class GameLoopTaskFactory {
       update: (deltaTime: number) => {
         const store = useGameStore.getState();
         store.updateFuelConsumption(deltaTime);
-      }
+      },
     };
   }
 
@@ -106,7 +108,7 @@ export class GameLoopTaskFactory {
       update: (deltaTime: number) => {
         const store = useGameStore.getState();
         store.updateResearchProgress(deltaTime);
-      }
+      },
     };
   }
 
@@ -121,7 +123,7 @@ export class GameLoopTaskFactory {
       enabled: true,
       update: () => {
         const store = useGameStore.getState();
-        
+
         // 更新游戏循环状态统计
         if (store._updateGameLoopState) {
           store._updateGameLoopState();
@@ -129,7 +131,7 @@ export class GameLoopTaskFactory {
 
         // 可以在这里添加其他统计更新逻辑
         // 比如计算生产效率、资源消耗率等
-      }
+      },
     };
   }
 
@@ -144,10 +146,10 @@ export class GameLoopTaskFactory {
       enabled: true,
       update: () => {
         const store = useGameStore.getState();
-        
+
         // 使用普通存档，不是强制存档
         store.saveGame();
-      }
+      },
     };
   }
 
@@ -163,10 +165,9 @@ export class GameLoopTaskFactory {
       update: () => {
         // 可以在这里更新需要实时更新的 UI 元素
         // 比如进度条动画、数值滚动等
-        
         // 由于使用了 Zustand，大部分 UI 更新是响应式的
         // 这个任务主要用于一些特殊的动画效果
-      }
+      },
     };
   }
 
@@ -179,7 +180,7 @@ export class GameLoopTaskFactory {
       this.createResearchTask(),
       this.createStatisticsTask(),
       this.createAutoSaveTask(),
-      this.createUIUpdatesTask()
+      this.createUIUpdatesTask(),
     ];
   }
 

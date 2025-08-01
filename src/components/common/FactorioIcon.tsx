@@ -23,9 +23,9 @@ interface FactorioIconProps {
 const ICON_UNIT = 66; // 单个图标标准尺寸
 const SPRITE_URL = iconSprite; // 使用导入的图标路径
 
-const FactorioIcon: React.FC<FactorioIconProps> = ({ 
-  itemId, 
-  size = 32, 
+const FactorioIcon: React.FC<FactorioIconProps> = ({
+  itemId,
+  size = 32,
   className,
   alt,
   quantity,
@@ -34,7 +34,7 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
   shortage,
   selected = false,
   selectedBgColor = '#e39827',
-  displayText
+  displayText,
 }) => {
   const [iconData, setIconData] = useState<IconData | null>(null);
   const [spriteSize, setSpriteSize] = useState<{ width: number; height: number } | null>(null);
@@ -52,29 +52,29 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
       setDataLoaded(loaded);
       return loaded;
     };
-    
+
     // 立即检查
     if (checkData()) {
       return;
     }
-    
+
     // 如果数据未加载，定期检查
     const interval = setInterval(() => {
       if (checkData()) {
         clearInterval(interval);
       }
     }, 100);
-    
+
     return () => clearInterval(interval);
   }, []);
 
   // 获取图标信息
   useEffect(() => {
     if (!itemId || !dataLoaded) return;
-    
+
     const dataService = DataService.getInstance();
     const iconInfo = dataService.getIconInfo(itemId);
-    
+
     setEffectiveIconId(iconInfo.iconId);
     setRecipeIconText(iconInfo.iconText);
   }, [itemId, dataLoaded]);
@@ -106,10 +106,10 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
     // 目标显示尺寸
     const displaySize = size;
     return {
-      backgroundPosition: `${x * displaySize / ICON_UNIT}px ${y * displaySize / ICON_UNIT}px`,
-      backgroundSize: `${spriteSize.width * displaySize / ICON_UNIT}px ${spriteSize.height * displaySize / ICON_UNIT}px`,
+      backgroundPosition: `${(x * displaySize) / ICON_UNIT}px ${(y * displaySize) / ICON_UNIT}px`,
+      backgroundSize: `${(spriteSize.width * displaySize) / ICON_UNIT}px ${(spriteSize.height * displaySize) / ICON_UNIT}px`,
       width: displaySize,
-      height: displaySize
+      height: displaySize,
     };
   };
 
@@ -119,7 +119,7 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
   const getBackgroundColor = () => {
     if (shortage) return 'error.main';
     if (selected) return selectedBgColor;
-    return (customImage || (iconData?.position) ? '#313131' : '#999');
+    return customImage || iconData?.position ? '#313131' : '#999';
   };
 
   // 公共容器样式
@@ -136,20 +136,20 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
     }),
     display: 'inline-block',
     flexShrink: 0,
-    position: 'relative'
+    position: 'relative',
   };
 
   // 公共数量显示样式
   const quantityStyles = {
     position: 'absolute' as const,
-    bottom:  '0px',
+    bottom: '0px',
     right: showBorder ? '2px' : '0px',
     color: '#fff',
     fontSize: `${Math.max(10, Math.floor(size * 0.4))}px`, // 根据图标大小计算字体大小
     fontWeight: 'bold',
     textShadow: '0px 1px 1px #000, 0px -1px 1px #000, 1px 0px 1px #000, -1px 0px 1px #000',
     lineHeight: 1,
-    pointerEvents: 'none' as const
+    pointerEvents: 'none' as const,
   };
 
   // 格式化数量显示
@@ -169,42 +169,39 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
 
   // 如果数据未加载完成，显示占位符
   const isLoading = !customImage && (!iconData || !spriteSize) && itemId;
-  
+
   return (
-    <Box
-      className={className}
-      sx={containerStyles}
-      title={alt || itemId}
-    >
+    <Box className={className} sx={containerStyles} title={alt || itemId}>
       <Box
         sx={{
           width: size,
           height: size,
-          ...(customImage ? {
-            backgroundImage: `url(${customImage})`,
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            backgroundSize: 'contain',
-          } : iconData?.position && spriteSize ? {
-            backgroundImage: `url(${SPRITE_URL})`,
-            backgroundRepeat: 'no-repeat',
-            ...getSpritePosition(iconData.position)
-          } : isLoading ? {
-            // 加载中状态 - 显示透明背景避免闪烁
-            backgroundColor: 'transparent',
-          } : {
-            bgcolor: 'grey.300',
-          })
+          ...(customImage
+            ? {
+                backgroundImage: `url(${customImage})`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                backgroundSize: 'contain',
+              }
+            : iconData?.position && spriteSize
+              ? {
+                  backgroundImage: `url(${SPRITE_URL})`,
+                  backgroundRepeat: 'no-repeat',
+                  ...getSpritePosition(iconData.position),
+                }
+              : isLoading
+                ? {
+                    // 加载中状态 - 显示透明背景避免闪烁
+                    backgroundColor: 'transparent',
+                  }
+                : {
+                    bgcolor: 'grey.300',
+                  }),
         }}
       />
-      {textToDisplay !== undefined && !isLoading && (
-        <Box sx={quantityStyles}>
-          {textToDisplay}
-        </Box>
-      )}
+      {textToDisplay !== undefined && !isLoading && <Box sx={quantityStyles}>{textToDisplay}</Box>}
     </Box>
   );
 };
 
 export default FactorioIcon;
-

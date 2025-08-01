@@ -50,8 +50,8 @@ export class DependencyService {
    * @returns 制作链分析结果
    */
   analyzeCraftingChain(
-    itemId: string, 
-    quantity: number, 
+    itemId: string,
+    quantity: number,
     inventory: Map<string, { currentAmount: number }>
   ): CraftingChainAnalysis | null {
     // 获取主要制作配方
@@ -86,7 +86,8 @@ export class DependencyService {
       if (shortage > 0) {
         // 查找材料的制作配方
         const materialRecipe = this.getBestManualCraftingRecipe(inputItemId);
-        const canCraftManually = this.validator.validateManualCrafting(inputItemId).canCraftManually;
+        const canCraftManually =
+          this.validator.validateManualCrafting(inputItemId).canCraftManually;
 
         const dependency: CraftingDependency = {
           itemId: inputItemId,
@@ -94,7 +95,7 @@ export class DependencyService {
           available,
           shortage,
           recipe: materialRecipe || undefined,
-          canCraftManually
+          canCraftManually,
         };
 
         dependencies.push(dependency);
@@ -102,7 +103,7 @@ export class DependencyService {
         // 如果可以手动制作，创建制作任务
         if (canCraftManually && materialRecipe) {
           const craftQuantity = Math.ceil(shortage / Object.values(materialRecipe.out)[0]);
-          
+
           tasks.push({
             id: `chain_${taskIdCounter++}`,
             recipeId: `manual_${inputItemId}`,
@@ -111,7 +112,7 @@ export class DependencyService {
             progress: 0,
             startTime: 0,
             craftingTime: materialRecipe.time,
-            status: 'pending'
+            status: 'pending',
           });
         }
       }
@@ -126,19 +127,19 @@ export class DependencyService {
       progress: 0,
       startTime: 0,
       craftingTime: mainRecipe.time,
-      status: 'pending'
+      status: 'pending',
     });
 
     return {
       mainTask: {
         itemId,
         quantity,
-        recipe: mainRecipe
+        recipe: mainRecipe,
       },
       dependencies,
       tasks,
       totalItems: dependencies.length + 1,
-      totalRawMaterialNeeds // 添加总原材料需求信息
+      totalRawMaterialNeeds, // 添加总原材料需求信息
     };
   }
 
@@ -149,20 +150,29 @@ export class DependencyService {
    * @param totalNeeds 总需求映射
    */
   private calculateTotalRawMaterialNeeds(
-    recipe: Recipe, 
-    quantity: number, 
+    recipe: Recipe,
+    quantity: number,
     totalNeeds: Map<string, number>
   ): void {
     for (const [inputItemId, requiredPerCraft] of Object.entries(recipe.in)) {
       const totalRequired = requiredPerCraft * quantity;
-      
+
       // 检查这个材料是否可以进一步制作
       const inputRecipe = this.getBestManualCraftingRecipe(inputItemId);
-      
+
       // 采矿配方不需要材料，不应计入原材料需求
-      if (inputRecipe && inputRecipe.in && Object.keys(inputRecipe.in).length > 0 && !inputRecipe.flags?.includes('mining')) {
+      if (
+        inputRecipe &&
+        inputRecipe.in &&
+        Object.keys(inputRecipe.in).length > 0 &&
+        !inputRecipe.flags?.includes('mining')
+      ) {
         // 这是一个中间产物，需要递归计算其原材料需求
-        this.calculateTotalRawMaterialNeeds(inputRecipe, Math.ceil(totalRequired / Object.values(inputRecipe.out)[0]), totalNeeds);
+        this.calculateTotalRawMaterialNeeds(
+          inputRecipe,
+          Math.ceil(totalRequired / Object.values(inputRecipe.out)[0]),
+          totalNeeds
+        );
       } else {
         // 这是原材料或可采矿物品，不计入原材料需求
         // 采矿物品可以无限制获取，所以不需要验证库存
@@ -193,7 +203,7 @@ export class DependencyService {
     for (const [inputItemId, requiredPerCraft] of Object.entries(recipe.in)) {
       const totalRequired = requiredPerCraft * quantity;
       const available = inventory.get(inputItemId)?.currentAmount || 0;
-      
+
       if (available < totalRequired) {
         return true;
       }
@@ -209,7 +219,7 @@ export class DependencyService {
    */
   private getBestManualCraftingRecipe(itemId: string): Recipe | null {
     const recipes = RecipeService.getRecipesThatProduce(itemId);
-    
+
     // 过滤出可手动制作的配方
     const manualRecipes = recipes.filter(recipe => {
       const validation = this.validator.validateRecipe(recipe);

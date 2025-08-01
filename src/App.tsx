@@ -13,7 +13,7 @@ import {
   Snackbar,
   Alert,
   Fab,
-  Typography
+  Typography,
 } from '@mui/material';
 import {
   Build as BuildIcon,
@@ -21,7 +21,7 @@ import {
   Science as ScienceIcon,
   BugReport as TestIcon,
   Delete as DeleteIcon,
-  Compress as CompressIcon
+  Compress as CompressIcon,
 } from '@mui/icons-material';
 
 import ProductionModule from './components/production/ProductionModule';
@@ -43,31 +43,33 @@ import theme from './theme';
 import { error as logError } from './utils/logger';
 
 const App: React.FC = () => {
-  const [currentModule, setCurrentModule] = useLocalStorageState('app-current-module', { defaultValue: 0 });
+  const [currentModule, setCurrentModule] = useLocalStorageState('app-current-module', {
+    defaultValue: 0,
+  });
   const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const isMobile = useIsMobile();
   const { clearGameData } = useGameStore();
-  
+
   // 启动游戏循环
   useGameLoop();
-  
+
   // 安全修复inventory状态
   useInventoryRepair();
-  
+
   // 安全修复unlockedTechs状态
   useUnlockedTechsRepair();
-  
+
   // 安全修复设施状态
   useFacilityRepair();
-  
+
   // 使用ref来跟踪初始化状态，避免重复初始化
   const initializationRef = useRef<{
     isInitialized: boolean;
     initPromise: Promise<void> | null;
   }>({
     isInitialized: false,
-    initPromise: null
+    initPromise: null,
   });
 
   // 页面卸载时强制存档
@@ -83,7 +85,7 @@ const App: React.FC = () => {
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-    
+
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
@@ -114,20 +116,20 @@ const App: React.FC = () => {
 
           // 启动游戏循环系统
           const gameLoopService = GameLoopService.getInstance();
-          
+
           // 添加所有游戏系统任务
           const defaultTasks = GameLoopTaskFactory.createAllDefaultTasks();
           defaultTasks.forEach(task => gameLoopService.addTask(task));
-          
+
           // 启动游戏循环
           gameLoopService.start();
-          
+
           // 同时启动gameStore的游戏循环状态管理
           const { startGameLoop } = useGameStore.getState();
           startGameLoop();
 
           // App initialized successfully
-          
+
           // 标记为已初始化
           initializationRef.current.isInitialized = true;
         } catch (error) {
@@ -149,7 +151,7 @@ const App: React.FC = () => {
     return () => {
       const gameLoopService = GameLoopService.getInstance();
       gameLoopService.stop();
-      
+
       const { stopGameLoop } = useGameStore.getState();
       stopGameLoop();
     };
@@ -167,22 +169,26 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
-        width: '100vw',
-        bgcolor: 'background.default'
-      }}>
-        {/* 主内容区域 */}
-        <Box sx={{
-          flex: 1,
-          overflowY: 'auto',
+      <Box
+        sx={{
           display: 'flex',
           flexDirection: 'column',
-          boxSizing: 'border-box',
-          paddingBottom: { xs: '56px', sm: '0px' } // 移动端为底部导航留空间，桌面端不需要
-        }}>
+          height: '100vh',
+          width: '100vw',
+          bgcolor: 'background.default',
+        }}
+      >
+        {/* 主内容区域 */}
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            boxSizing: 'border-box',
+            paddingBottom: { xs: '56px', sm: '0px' }, // 移动端为底部导航留空间，桌面端不需要
+          }}
+        >
           {currentModule === 0 && <ProductionModule />}
           {currentModule === 1 && <FacilitiesModule />}
           {currentModule === 2 && <TechnologyModule />}
@@ -290,18 +296,12 @@ const App: React.FC = () => {
           maxWidth="xs"
           fullWidth
         >
-          <DialogTitle sx={{ color: 'error.main' }}>
-            确认清空存档
-          </DialogTitle>
+          <DialogTitle sx={{ color: 'error.main' }}>确认清空存档</DialogTitle>
           <DialogContent>
-            <Typography>
-              您确定要清空所有游戏数据吗？这将删除所有已保存的进度和设置。
-            </Typography>
+            <Typography>您确定要清空所有游戏数据吗？这将删除所有已保存的进度和设置。</Typography>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setIsClearDialogOpen(false)}>
-              取消
-            </Button>
+            <Button onClick={() => setIsClearDialogOpen(false)}>取消</Button>
             <Button onClick={handleClearGame} color="error" variant="contained">
               清空存档
             </Button>
@@ -318,7 +318,7 @@ const App: React.FC = () => {
             '& .MuiSnackbarContent-root': {
               bgcolor: 'success.main',
               color: 'white',
-            }
+            },
           }}
         >
           <Alert
@@ -330,7 +330,7 @@ const App: React.FC = () => {
               color: 'white',
               '& .MuiAlert-icon': {
                 color: 'white',
-              }
+              },
             }}
           >
             存档已清空！页面将在3秒后重新加载...
@@ -339,6 +339,6 @@ const App: React.FC = () => {
       </Box>
     </ThemeProvider>
   );
-}
+};
 
 export default App;

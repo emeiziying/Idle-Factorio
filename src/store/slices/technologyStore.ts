@@ -16,7 +16,7 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
   unlockedTechs: new Set(),
   autoResearch: true,
   techCategories: [],
-  
+
   // 研究触发器追踪初始状态
   craftedItemCounts: new Map(),
   builtEntityCounts: new Map(),
@@ -28,12 +28,12 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
   initializeTechnologyService: async () => {
     try {
       const techService = TechnologyService.getInstance();
-      
+
       // 如果服务未初始化，先初始化
       if (!techService.isServiceInitialized()) {
         await techService.initialize();
       }
-      
+
       // 创建库存操作实现并注入到科技服务
       const inventoryOps: InventoryOperations = {
         getItemAmount: (itemId: string) => {
@@ -54,34 +54,34 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
             const available = get().getInventoryItem(itemId).currentAmount;
             return available >= required;
           });
-          
+
           if (!hasEnough) {
             return false;
           }
-          
+
           // 消耗物品
           Object.entries(requirements).forEach(([itemId, required]) => {
             get().updateInventory(itemId, -required);
           });
-          
+
           return true;
-        }
+        },
       };
-      
+
       // 注入库存操作到科技服务
       techService.setInventoryOperations(inventoryOps);
-      
+
       // 总是同步科技状态到store（无论服务是否已初始化）
       const allTechs = techService.getAllTechnologies();
       const techMap = new Map(allTechs.map(tech => [tech.id, tech]));
       const techTreeState = techService.getTechTreeState();
       const unlockedTechs = new Set(techTreeState.unlockedTechs);
       const techCategories = techService.getTechCategories();
-      
+
       set(() => ({
         technologies: techMap,
         unlockedTechs,
-        techCategories
+        techCategories,
       }));
     } catch (error) {
       logError('Failed to initialize TechnologyService:', error);
@@ -92,17 +92,17 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
   startResearch: async (techId: string) => {
     const techService = TechnologyService.getInstance();
     const result = await techService.startResearch(techId);
-    
+
     if (result.success) {
       const currentResearch = techService.getCurrentResearch();
       const queue = techService.getResearchQueue();
-      
+
       set(() => ({
         researchState: currentResearch || null,
-        researchQueue: queue
+        researchQueue: queue,
       }));
     }
-    
+
     return result.success;
   },
 
@@ -110,18 +110,18 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
   completeResearch: (techId: string) => {
     const techService = TechnologyService.getInstance();
     techService.completeResearch(techId);
-    
+
     // 更新store状态
     const unlockedTechs = new Set([...get().unlockedTechs, techId]);
     const currentResearch = techService.getCurrentResearch();
     const queue = techService.getResearchQueue();
-    
+
     set(() => ({
       unlockedTechs,
       researchState: currentResearch || null,
-      researchQueue: queue
+      researchQueue: queue,
     }));
-    
+
     // 清理DataService的解锁缓存，使新解锁的配方生效
     const dataService = DataService.getInstance();
     dataService.clearUnlockCache();
@@ -131,14 +131,14 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
   addToResearchQueue: (techId: string, priority?: ResearchPriority) => {
     const techService = TechnologyService.getInstance();
     const result = techService.addToResearchQueue(techId, priority);
-    
+
     if (result.success) {
       const queue = techService.getResearchQueue();
       set(() => ({
-        researchQueue: queue
+        researchQueue: queue,
       }));
     }
-    
+
     return result.success;
   },
 
@@ -146,11 +146,11 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
   removeFromResearchQueue: (techId: string) => {
     const techService = TechnologyService.getInstance();
     const success = techService.removeFromResearchQueue(techId);
-    
+
     if (success) {
       const queue = techService.getResearchQueue();
       set(() => ({
-        researchQueue: queue
+        researchQueue: queue,
       }));
     }
   },
@@ -159,14 +159,14 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
   reorderResearchQueue: (techId: string, newPosition: number) => {
     const techService = TechnologyService.getInstance();
     const success = techService.reorderResearchQueue(techId, newPosition);
-    
+
     if (success) {
       const queue = techService.getResearchQueue();
       set(() => ({
-        researchQueue: queue
+        researchQueue: queue,
       }));
     }
-    
+
     return success;
   },
 
@@ -174,9 +174,9 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
   setAutoResearch: (enabled: boolean) => {
     const techService = TechnologyService.getInstance();
     techService.setAutoResearch(enabled);
-    
+
     set(() => ({
-      autoResearch: enabled
+      autoResearch: enabled,
     }));
   },
 
@@ -201,12 +201,12 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
   updateResearchProgress: (deltaTime: number) => {
     const techService = TechnologyService.getInstance();
     techService.updateResearchProgress(deltaTime);
-    
+
     // 更新store中的研究状态
     const currentResearch = techService.getCurrentResearch();
     if (currentResearch) {
       set(() => ({
-        researchState: currentResearch
+        researchState: currentResearch,
       }));
     }
   },
@@ -222,111 +222,130 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
 
   // 研究触发器相关方法
   trackCraftedItem: (itemId: string, count: number) => {
-    set((state) => {
-      const safeCraftedItemCounts = ensureMap<string, number>(state.craftedItemCounts, 'craftedItemCounts');
+    set(state => {
+      const safeCraftedItemCounts = ensureMap<string, number>(
+        state.craftedItemCounts,
+        'craftedItemCounts'
+      );
       const newCraftedItemCounts = new Map(safeCraftedItemCounts);
       const currentCount = newCraftedItemCounts.get(itemId) || 0;
       newCraftedItemCounts.set(itemId, currentCount + count);
       return { craftedItemCounts: newCraftedItemCounts };
     });
-    
+
     // 检查研究触发器
     get().checkResearchTriggers();
   },
 
   trackBuiltEntity: (entityId: string, count: number) => {
-    set((state) => {
-      const safeBuiltEntityCounts = ensureMap<string, number>(state.builtEntityCounts, 'builtEntityCounts');
+    set(state => {
+      const safeBuiltEntityCounts = ensureMap<string, number>(
+        state.builtEntityCounts,
+        'builtEntityCounts'
+      );
       const newBuiltEntityCounts = new Map(safeBuiltEntityCounts);
       const currentCount = newBuiltEntityCounts.get(entityId) || 0;
       newBuiltEntityCounts.set(entityId, currentCount + count);
       return { builtEntityCounts: newBuiltEntityCounts };
     });
-    
+
     // 检查研究触发器
     get().checkResearchTriggers();
   },
 
   trackMinedEntity: (entityId: string, count: number) => {
-    set((state) => {
-      const safeMinedEntityCounts = ensureMap<string, number>(state.minedEntityCounts, 'minedEntityCounts');
+    set(state => {
+      const safeMinedEntityCounts = ensureMap<string, number>(
+        state.minedEntityCounts,
+        'minedEntityCounts'
+      );
       const newMinedEntityCounts = new Map(safeMinedEntityCounts);
       const currentCount = newMinedEntityCounts.get(entityId) || 0;
       newMinedEntityCounts.set(entityId, currentCount + count);
       return { minedEntityCounts: newMinedEntityCounts };
     });
-    
+
     // 检查研究触发器
     get().checkResearchTriggers();
   },
 
   checkResearchTriggers: async () => {
     const state = get();
-    
+
     try {
       // 获取所有配方数据
       const allRecipes = RecipeService.getAllRecipes();
-      
+
       // 查找科技类配方
-      const techRecipes = allRecipes.filter(recipe => 
-        recipe.category === 'technology' && 
-        recipe.researchTrigger &&
-        !state.unlockedTechs.has(recipe.id)
+      const techRecipes = allRecipes.filter(
+        recipe =>
+          recipe.category === 'technology' &&
+          recipe.researchTrigger &&
+          !state.unlockedTechs.has(recipe.id)
       );
-      
+
       for (const recipe of techRecipes) {
         const trigger = recipe.researchTrigger!;
         let shouldUnlock = false;
-        
+
         switch (trigger.type) {
           case 'craft-item':
             if (trigger.item) {
-              const safeCraftedItemCounts = ensureMap<string, number>(state.craftedItemCounts, 'craftedItemCounts');
+              const safeCraftedItemCounts = ensureMap<string, number>(
+                state.craftedItemCounts,
+                'craftedItemCounts'
+              );
               const craftedCount = safeCraftedItemCounts.get(trigger.item) || 0;
               const requiredCount = trigger.count || 1;
               shouldUnlock = craftedCount >= requiredCount;
             }
             break;
-            
+
           case 'build-entity':
             if (trigger.entity) {
-              const safeBuiltEntityCounts = ensureMap<string, number>(state.builtEntityCounts, 'builtEntityCounts');
+              const safeBuiltEntityCounts = ensureMap<string, number>(
+                state.builtEntityCounts,
+                'builtEntityCounts'
+              );
               const builtCount = safeBuiltEntityCounts.get(trigger.entity) || 0;
               const requiredCount = trigger.count || 1;
               shouldUnlock = builtCount >= requiredCount;
             }
             break;
-            
+
           case 'mine-entity':
             if (trigger.entity) {
-              const safeMinedEntityCounts = ensureMap<string, number>(state.minedEntityCounts, 'minedEntityCounts');
+              const safeMinedEntityCounts = ensureMap<string, number>(
+                state.minedEntityCounts,
+                'minedEntityCounts'
+              );
               const minedCount = safeMinedEntityCounts.get(trigger.entity) || 0;
               const requiredCount = trigger.count || 1;
               shouldUnlock = minedCount >= requiredCount;
             }
             break;
-            
+
           case 'create-space-platform':
             // TODO: 实现太空平台创建逻辑
             break;
-            
+
           case 'capture-spawner':
             // TODO: 实现虫巢捕获逻辑
             break;
         }
-        
+
         if (shouldUnlock) {
           // 解锁科技
-          set((state) => ({
-            unlockedTechs: new Set([...state.unlockedTechs, recipe.id])
+          set(state => ({
+            unlockedTechs: new Set([...state.unlockedTechs, recipe.id]),
           }));
-          
+
           // 清理DataService的解锁缓存，使新解锁的配方生效
           const dataService = DataService.getInstance();
           dataService.clearUnlockCache();
-          
+
           // Research unlocked by trigger
-          
+
           // 可以在这里添加通知系统
           // TODO: 添加科技解锁通知
         }

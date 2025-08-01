@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  Box,
-  Typography,
-  Button,
-  Alert
-} from '@mui/material';
+import { Box, Typography, Button, Alert } from '@mui/material';
 import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import type { Item } from '../../types/index';
 import type { FacilityInstance } from '../../types/facilities';
@@ -42,7 +37,11 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
     const validation = validator.validateRecipe(recipe);
     // 允许采矿配方显示在设施列表中，即使它们被认为是手动可制作的
     const isMiningRecipe = recipe.flags && recipe.flags.includes('mining');
-    return (isMiningRecipe || !validation.canCraftManually) && recipe.producers && recipe.producers.length > 0;
+    return (
+      (isMiningRecipe || !validation.canCraftManually) &&
+      recipe.producers &&
+      recipe.producers.length > 0
+    );
   });
 
   // 获取所有可用且已解锁的设施类型
@@ -65,28 +64,28 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
 
   // 获取已部署的设施数量（只计算当前物品的设施）
   const getDeployedFacilityCount = (facilityType: string): number => {
-    return facilities.filter(f => 
-      f.facilityId === facilityType && f.targetItemId === item.id
-    ).length;
+    return facilities.filter(f => f.facilityId === facilityType && f.targetItemId === item.id)
+      .length;
   };
 
   // 计算设施的生产效率
   const calculateProductionRate = (facilityType: string): number => {
     // 查找该设施能生产的当前物品的配方
-    const relevantRecipe = facilityRecipes.find(recipe => 
-      recipe.producers?.includes(facilityType) && recipe.out && recipe.out[item.id] !== undefined
+    const relevantRecipe = facilityRecipes.find(
+      recipe =>
+        recipe.producers?.includes(facilityType) && recipe.out && recipe.out[item.id] !== undefined
     );
-    
+
     if (!relevantRecipe || !relevantRecipe.time) {
       return 0;
     }
 
     // 假设设施的制作速度为1.0（可以从设施数据中获取）
     const facilitySpeed = 1.0;
-    
+
     // 计算该配方中当前物品的输出量
     const outputQuantity = relevantRecipe.out[item.id] || 0;
-    
+
     // 产能 = 输出量 / 制作时间 * 设施速度
     return (outputQuantity / relevantRecipe.time) * facilitySpeed;
   };
@@ -99,8 +98,9 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
     }
 
     // 找到该设施能生产的当前物品的配方
-    const relevantRecipe = facilityRecipes.find(recipe => 
-      recipe.producers?.includes(facilityType) && recipe.out && recipe.out[item.id] !== undefined
+    const relevantRecipe = facilityRecipes.find(
+      recipe =>
+        recipe.producers?.includes(facilityType) && recipe.out && recipe.out[item.id] !== undefined
     );
 
     // 初始化燃料缓存区（如果需要）
@@ -116,30 +116,32 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
       status: 'running',
       efficiency: 1.0,
       // 自动设置生产配方
-      production: relevantRecipe ? {
-        currentRecipeId: relevantRecipe.id,
-        progress: 0,
-        inputBuffer: [],
-        outputBuffer: []
-      } : undefined,
+      production: relevantRecipe
+        ? {
+            currentRecipeId: relevantRecipe.id,
+            progress: 0,
+            inputBuffer: [],
+            outputBuffer: [],
+          }
+        : undefined,
       // 设置燃料缓存区（如果设施需要燃料）
-      fuelBuffer: fuelBuffer || undefined
+      fuelBuffer: fuelBuffer || undefined,
     };
 
     addFacility(newFacility);
-    
+
     // 扣除库存中的设施
     useGameStore.getState().updateInventory(facilityType, -1);
   };
 
   // 移除设施（只移除当前物品的设施）
   const handleRemoveFacility = (facilityType: string) => {
-    const facilityToRemove = facilities.find(f => 
-      f.facilityId === facilityType && f.targetItemId === item.id
+    const facilityToRemove = facilities.find(
+      f => f.facilityId === facilityType && f.targetItemId === item.id
     );
     if (facilityToRemove) {
       removeFacility(facilityToRemove.id);
-      
+
       // 将设施返回到库存
       useGameStore.getState().updateInventory(facilityType, 1);
     }
@@ -151,70 +153,78 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
 
   return (
     <Box sx={{ mb: 2 }}>
-      <Typography variant="subtitle2" gutterBottom sx={{ 
-        fontSize: '0.9rem',
-        fontWeight: 600,
-        color: 'text.primary',
-        mb: 1.5
-      }}>
+      <Typography
+        variant="subtitle2"
+        gutterBottom
+        sx={{
+          fontSize: '0.9rem',
+          fontWeight: 600,
+          color: 'text.primary',
+          mb: 1.5,
+        }}
+      >
         生产设施
       </Typography>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-          {facilityTypes.map((facilityType) => {
-            const facilityInventory = getInventoryItem(facilityType);
-            const deployedCount = getDeployedFacilityCount(facilityType);
-            const canAdd = facilityInventory.currentAmount > 0;
-            const canRemove = deployedCount > 0;
-            const productionRate = calculateProductionRate(facilityType);
-            const totalProductionRate = productionRate * deployedCount;
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        {facilityTypes.map(facilityType => {
+          const facilityInventory = getInventoryItem(facilityType);
+          const deployedCount = getDeployedFacilityCount(facilityType);
+          const canAdd = facilityInventory.currentAmount > 0;
+          const canRemove = deployedCount > 0;
+          const productionRate = calculateProductionRate(facilityType);
+          const totalProductionRate = productionRate * deployedCount;
 
-            // 获取已部署的此类型设施实例（只显示当前物品的设施）
-            const deployedFacilities = facilities.filter(f => 
-              f.facilityId === facilityType && f.targetItemId === item.id
-            );
-            
-            return (
+          // 获取已部署的此类型设施实例（只显示当前物品的设施）
+          const deployedFacilities = facilities.filter(
+            f => f.facilityId === facilityType && f.targetItemId === item.id
+          );
+
+          return (
+            <Box
+              key={facilityType}
+              sx={{
+                p: 1,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+              }}
+            >
               <Box
-                key={facilityType}
                 sx={{
-                  p: 1,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 1
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                 }}
               >
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                >
-                  {/* 左侧：设施图标和产能信息 */}
-                  <Box display="flex" alignItems="center" gap={1}>
-                  <Box 
+                {/* 左侧：设施图标和产能信息 */}
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Box
                     onClick={() => handleFacilityClick(facilityType)}
-                    sx={{ 
+                    sx={{
                       cursor: 'pointer',
-                      '&:hover': { opacity: 0.8 }
+                      '&:hover': { opacity: 0.8 },
                     }}
                   >
-                    <FactorioIcon
-                      itemId={facilityType}
-                      size={40}
-                      quantity={deployedCount}
-                    />
+                    <FactorioIcon itemId={facilityType} size={40} quantity={deployedCount} />
                   </Box>
-                  
+
                   {/* 产能信息 */}
                   {deployedCount > 0 && (
                     <Box>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontSize: '0.7rem' }}
+                      >
                         产能: {totalProductionRate.toFixed(1)}/s
                       </Typography>
                       <br />
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontSize: '0.7rem' }}
+                      >
                         单机: {productionRate.toFixed(2)}/s
                       </Typography>
                     </Box>
@@ -229,9 +239,9 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
                     startIcon={<AddIcon />}
                     onClick={() => handleAddFacility(facilityType)}
                     disabled={!canAdd}
-                    sx={{ 
+                    sx={{
                       minWidth: 60,
-                      fontSize: '0.75rem'
+                      fontSize: '0.75rem',
                     }}
                   >
                     添加
@@ -243,29 +253,31 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
                     startIcon={<RemoveIcon />}
                     onClick={() => handleRemoveFacility(facilityType)}
                     disabled={!canRemove}
-                    sx={{ 
+                    sx={{
                       minWidth: 60,
-                      fontSize: '0.75rem'
+                      fontSize: '0.75rem',
                     }}
                   >
                     移除
                   </Button>
                 </Box>
               </Box>
-              
+
               {/* 燃料状态显示 */}
-              {deployedCount > 0 && deployedFacilities.length > 0 && deployedFacilities[0].fuelBuffer && (
-                <Box sx={{ mt: 1, bgcolor: 'background.default', borderRadius: 1 }}>
-                  <FuelStatusDisplay
-                    fuelBuffer={deployedFacilities[0].fuelBuffer}
-                    compact={false}
-                  />
-                </Box>
-              )}
+              {deployedCount > 0 &&
+                deployedFacilities.length > 0 &&
+                deployedFacilities[0].fuelBuffer && (
+                  <Box sx={{ mt: 1, bgcolor: 'background.default', borderRadius: 1 }}>
+                    <FuelStatusDisplay
+                      fuelBuffer={deployedFacilities[0].fuelBuffer}
+                      compact={false}
+                    />
+                  </Box>
+                )}
             </Box>
           );
         })}
-        </Box>
+      </Box>
 
       {facilityTypes.some(type => getInventoryItem(type).currentAmount === 0) && (
         <Alert severity="info" sx={{ mt: 2, fontSize: '0.8rem' }}>
@@ -278,4 +290,4 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
   );
 };
 
-export default RecipeFacilitiesCard; 
+export default RecipeFacilitiesCard;

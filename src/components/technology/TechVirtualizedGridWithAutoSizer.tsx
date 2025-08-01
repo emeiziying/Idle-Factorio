@@ -6,13 +6,13 @@ import type { Technology, TechStatus } from '../../types/technology';
 interface TechVirtualizedGridWithAutoSizerProps {
   /** 要显示的科技列表 */
   technologies: Technology[];
-  
+
   /** 科技状态映射 */
   techStates: Map<string, { status: TechStatus; progress?: number }>;
-  
+
   /** 研究队列中的科技ID */
   queuedTechIds: Set<string>;
-  
+
   /** 点击科技卡片的回调 */
   onTechClick?: (techId: string) => void;
 }
@@ -21,7 +21,7 @@ const TechVirtualizedGridWithAutoSizer: React.FC<TechVirtualizedGridWithAutoSize
   technologies,
   techStates,
   queuedTechIds,
-  onTechClick
+  onTechClick,
 }) => {
   return (
     <div style={{ height: '100vh', width: '100%' }}>
@@ -41,4 +41,4 @@ const TechVirtualizedGridWithAutoSizer: React.FC<TechVirtualizedGridWithAutoSize
   );
 };
 
-export default TechVirtualizedGridWithAutoSizer; 
+export default TechVirtualizedGridWithAutoSizer;

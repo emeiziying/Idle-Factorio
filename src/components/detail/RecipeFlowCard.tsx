@@ -9,11 +9,11 @@ interface RecipeFlowCardProps {
   variant?: 'contained' | 'outlined';
 }
 
-const RecipeFlowCard: React.FC<RecipeFlowCardProps> = ({ 
-  recipe, 
-  title, 
-  onCraft, 
-  variant = 'contained' 
+const RecipeFlowCard: React.FC<RecipeFlowCardProps> = ({
+  recipe,
+  title,
+  onCraft,
+  variant = 'contained',
 }) => {
   return (
     <UnifiedRecipeCard
@@ -26,4 +26,4 @@ const RecipeFlowCard: React.FC<RecipeFlowCardProps> = ({
   );
 };
 
-export default RecipeFlowCard; 
+export default RecipeFlowCard;

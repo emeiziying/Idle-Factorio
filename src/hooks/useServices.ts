@@ -133,10 +133,13 @@ export const useCommonServices = () => {
   const dataService = useDataService();
   const recipeService = useRecipeService();
   const technologyService = useTechnologyService();
-  
-  return useMemo(() => ({
-    dataService,
-    recipeService,
-    technologyService
-  }), [dataService, recipeService, technologyService]);
+
+  return useMemo(
+    () => ({
+      dataService,
+      recipeService,
+      technologyService,
+    }),
+    [dataService, recipeService, technologyService]
+  );
 };

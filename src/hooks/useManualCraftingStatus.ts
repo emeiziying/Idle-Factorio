@@ -21,21 +21,23 @@ export const useManualCraftingStatus = (item: Item): ManualCraftingStatus => {
         title: '手动合成',
         color: 'text.primary',
         canCraft: true,
-        hasRecipes: false
+        hasRecipes: false,
       };
     }
 
     // 检查配方验证状态
     const recipeValidations = itemRecipes.map(recipe => ({
       recipe,
-      validation: validator.validateRecipe(recipe)
+      validation: validator.validateRecipe(recipe),
     }));
 
-    const manualCraftableRecipes = recipeValidations
-      .filter(({ validation }) => validation.canCraftManually);
+    const manualCraftableRecipes = recipeValidations.filter(
+      ({ validation }) => validation.canCraftManually
+    );
 
-    const restrictedRecipes = recipeValidations
-      .filter(({ validation }) => !validation.canCraftManually && validation.category === 'restricted');
+    const restrictedRecipes = recipeValidations.filter(
+      ({ validation }) => !validation.canCraftManually && validation.category === 'restricted'
+    );
 
     // 如果有可手动制作的配方
     if (manualCraftableRecipes.length > 0) {
@@ -43,7 +45,7 @@ export const useManualCraftingStatus = (item: Item): ManualCraftingStatus => {
         title: '手动合成',
         color: 'text.primary',
         canCraft: true,
-        hasRecipes: true
+        hasRecipes: true,
       };
     }
 
@@ -53,7 +55,7 @@ export const useManualCraftingStatus = (item: Item): ManualCraftingStatus => {
         title: '需要生产设备',
         color: 'warning.main',
         canCraft: false,
-        hasRecipes: true
+        hasRecipes: true,
       };
     }
 
@@ -62,7 +64,7 @@ export const useManualCraftingStatus = (item: Item): ManualCraftingStatus => {
       title: '手动合成',
       color: 'text.primary',
       canCraft: false,
-      hasRecipes: false
+      hasRecipes: false,
     };
   }, [item.id]);
-}; 
+};

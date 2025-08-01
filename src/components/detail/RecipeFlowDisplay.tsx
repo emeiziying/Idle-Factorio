@@ -1,7 +1,5 @@
 import React from 'react';
-import {
-  Box
-} from '@mui/material';
+import { Box } from '@mui/material';
 import { Add as AddIcon, ArrowForward as ArrowIcon } from '@mui/icons-material';
 import type { Recipe } from '../../types/index';
 import FactorioIcon from '../common/FactorioIcon';
@@ -18,13 +16,13 @@ interface RecipeFlowDisplayProps {
   customTime?: number; // 自定义时间，用于手动制作时显示实际时间
 }
 
-const RecipeFlowDisplay: React.FC<RecipeFlowDisplayProps> = ({ 
-  recipe, 
+const RecipeFlowDisplay: React.FC<RecipeFlowDisplayProps> = ({
+  recipe,
   themeColor = 'text.primary',
   showTime = true,
   iconSize = 24,
   onItemSelect,
-  customTime
+  customTime,
 }) => {
   const { getInventoryItem } = useGameStore();
   const dataService = DataService.getInstance();
@@ -44,22 +42,22 @@ const RecipeFlowDisplay: React.FC<RecipeFlowDisplayProps> = ({
     return Object.entries(items).map(([itemId, quantity], index) => {
       const available = isInput ? getInventoryItem(itemId).currentAmount : 0;
       const isShortage = isInput && available < quantity;
-      
+
       return (
         <React.Fragment key={itemId}>
-          <Box 
+          <Box
             onClick={() => handleItemClick(itemId)}
-            sx={{ 
+            sx={{
               cursor: onItemSelect ? 'pointer' : 'default',
               '&:hover': onItemSelect ? { opacity: 0.8 } : {},
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
             }}
           >
-            <FactorioIcon 
-              itemId={itemId} 
-              size={iconSize} 
+            <FactorioIcon
+              itemId={itemId}
+              size={iconSize}
               quantity={quantity}
               shortage={isShortage}
             />
@@ -73,12 +71,12 @@ const RecipeFlowDisplay: React.FC<RecipeFlowDisplayProps> = ({
   };
 
   return (
-    <Box 
-      display="flex" 
-      alignItems="center" 
-      justifyContent="center" 
+    <Box
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
       gap={0.25}
-      sx={{ 
+      sx={{
         p: 1.5,
         bgcolor: 'background.default',
         borderRadius: 1,
@@ -86,22 +84,22 @@ const RecipeFlowDisplay: React.FC<RecipeFlowDisplayProps> = ({
         borderColor: 'divider',
         minHeight: 'fit-content',
         width: '100%',
-        textAlign: 'center'
+        textAlign: 'center',
       }}
     >
       {/* 时间图标 */}
       {showTime && (
         <>
-          <Box 
-            sx={{ 
+          <Box
+            sx={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
             }}
           >
-            <FactorioIcon 
+            <FactorioIcon
               customImage={TimeIcon}
-              size={iconSize} 
+              size={iconSize}
               quantity={customTime !== undefined ? customTime : recipe.time}
             />
           </Box>
@@ -124,4 +122,4 @@ const RecipeFlowDisplay: React.FC<RecipeFlowDisplayProps> = ({
   );
 };
 
-export default RecipeFlowDisplay; 
+export default RecipeFlowDisplay;

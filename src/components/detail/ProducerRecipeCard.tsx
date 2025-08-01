@@ -18,4 +18,4 @@ const ProducerRecipeCard: React.FC<ProducerRecipeCardProps> = ({ recipe, onCraft
   );
 };
 
-export default ProducerRecipeCard; 
+export default ProducerRecipeCard;

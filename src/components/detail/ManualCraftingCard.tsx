@@ -1,15 +1,13 @@
 import React from 'react';
-import {
-  Box,
-  Typography,
-  Alert,
-  Chip
-} from '@mui/material';
+import { Box, Typography, Alert, Chip } from '@mui/material';
 import type { Item, Recipe } from '../../types/index';
 import { RecipeService } from '../../services/RecipeService';
 import { DataService } from '../../services/DataService';
 import useGameStore from '../../store/gameStore';
-import { getValidationReasonText, type ValidationReasonType } from '../../utils/manualCraftingValidator';
+import {
+  getValidationReasonText,
+  type ValidationReasonType,
+} from '../../utils/manualCraftingValidator';
 import CraftingButtons from './CraftingButtons';
 import RecipeFlowDisplay from './RecipeFlowDisplay';
 import FactorioIcon from '../common/FactorioIcon';
@@ -21,20 +19,27 @@ interface ManualCraftingCardProps {
   onItemSelect?: (item: Item) => void;
 }
 
-const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualCraft, onItemSelect }) => {
+const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({
+  item,
+  onManualCraft,
+  onItemSelect,
+}) => {
   const { getInventoryItem } = useGameStore();
   const dataService = DataService.getInstance();
-  
+
   // 使用 RecipeService 的新方法获取手动制作信息
   const manualCraftingInfo = RecipeService.getManualCraftingInfo(item.id);
-  
+
   // 如果不能手动制作，显示受限提示
   if (!manualCraftingInfo.canCraft) {
     return (
       <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
         <Alert severity="info" sx={{ mb: 2 }}>
           <Typography variant="body2">
-            {getValidationReasonText(manualCraftingInfo.validation.reason as ValidationReasonType, 'zh')}
+            {getValidationReasonText(
+              manualCraftingInfo.validation.reason as ValidationReasonType,
+              'zh'
+            )}
           </Typography>
         </Alert>
         <Typography variant="body2" color="text.secondary">
@@ -49,18 +54,20 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
     return (
       <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
         {/* 简单显示：无需材料的配方 */}
-        <Box sx={{ 
-          p: 1.5,
-          bgcolor: 'background.default',
-          borderRadius: 1,
-          border: '1px solid',
-          borderColor: 'divider',
-          mb: 1.5,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 1
-        }}>
+        <Box
+          sx={{
+            p: 1.5,
+            bgcolor: 'background.default',
+            borderRadius: 1,
+            border: '1px solid',
+            borderColor: 'divider',
+            mb: 1.5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 1,
+          }}
+        >
           <Typography variant="body2" color="text.secondary">
             无需材料
           </Typography>
@@ -68,51 +75,50 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
             →
           </Typography>
           <FactorioIcon itemId={item.id} size={32} />
-          <Typography variant="body2">
-            {dataService.getLocalizedItemName(item.id)} x1
-          </Typography>
+          <Typography variant="body2">{dataService.getLocalizedItemName(item.id)} x1</Typography>
         </Box>
 
         {/* 制作按钮 */}
-        <CraftingButtons 
-          onCraft={(quantity) => onManualCraft(item.id, quantity)}
-        />
+        <CraftingButtons onCraft={quantity => onManualCraft(item.id, quantity)} />
       </Box>
     );
   }
-  
+
   // 如果有可手动制作的配方，显示第一个
   if (manualCraftingInfo.recipe) {
     const recipe = manualCraftingInfo.recipe;
     const isMiningRecipe = recipe.flags && recipe.flags.includes('mining');
     const hasInputMaterials = Object.keys(recipe.in).length > 0;
-    
+
     // 计算手动制作的实际时间
     const manualEfficiency = 0.5; // 手动效率 50%
     const actualTime = recipe.time / manualEfficiency;
-    
+
     // 检查材料可用性
-    const materialStatus = hasInputMaterials ? Object.entries(recipe.in).map(([itemId, required]) => {
-      const available = getInventoryItem(itemId).currentAmount;
-      return {
-        itemId,
-        required,
-        available,
-        sufficient: available >= required
-      };
-    }) : [];
-    
+    const materialStatus = hasInputMaterials
+      ? Object.entries(recipe.in).map(([itemId, required]) => {
+          const available = getInventoryItem(itemId).currentAmount;
+          return {
+            itemId,
+            required,
+            available,
+            sufficient: available >= required,
+          };
+        })
+      : [];
+
     // 采矿配方或无输入材料的配方总是可以制作
-    const canCraft = !hasInputMaterials || isMiningRecipe || materialStatus.every(m => m.sufficient);
-    
+    const canCraft =
+      !hasInputMaterials || isMiningRecipe || materialStatus.every(m => m.sufficient);
+
     // 查找缺少的材料
     const missingMaterials = materialStatus.filter(m => !m.sufficient);
-    
+
     return (
       <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
         {/* 配方流程显示 */}
         <Box sx={{ mb: 1.5 }}>
-          <RecipeFlowDisplay 
+          <RecipeFlowDisplay
             recipe={recipe}
             themeColor="primary.main"
             showTime={true}
@@ -148,10 +154,10 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
         )}
 
         {/* 制作按钮 */}
-        <CraftingButtons 
-          onCraft={(quantity) => onManualCraft(item.id, quantity, recipe)}
-          disabled={!canCraft && missingMaterials.length === 0}  // 只有在无材料需求或其他错误时才禁用
-          variant={!canCraft && missingMaterials.length > 0 ? 'outlined' : 'contained'}  // 材料不足时使用轮廓样式
+        <CraftingButtons
+          onCraft={quantity => onManualCraft(item.id, quantity, recipe)}
+          disabled={!canCraft && missingMaterials.length === 0} // 只有在无材料需求或其他错误时才禁用
+          variant={!canCraft && missingMaterials.length > 0 ? 'outlined' : 'contained'} // 材料不足时使用轮廓样式
         />
       </Box>
     );
@@ -167,4 +173,4 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onManualC
   );
 };
 
-export default ManualCraftingCard; 
+export default ManualCraftingCard;

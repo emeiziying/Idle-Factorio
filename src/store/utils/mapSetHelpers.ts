@@ -6,14 +6,12 @@ export const ensureMap = <K, V>(map: unknown, typeName: string): Map<K, V> => {
   if (map instanceof Map) {
     return map;
   }
-  
+
   if (Array.isArray(map)) {
     try {
       // 验证数组格式是否正确
-      const isValidArray = map.every(entry => 
-        Array.isArray(entry) && entry.length === 2
-      );
-      
+      const isValidArray = map.every(entry => Array.isArray(entry) && entry.length === 2);
+
       if (isValidArray) {
         return new Map(map as [K, V][]);
       }
@@ -21,7 +19,7 @@ export const ensureMap = <K, V>(map: unknown, typeName: string): Map<K, V> => {
       console.error(`Failed to convert ${typeName} array to Map:`, error);
     }
   }
-  
+
   console.warn(`Invalid ${typeName} format, creating empty Map`);
   return new Map();
 };

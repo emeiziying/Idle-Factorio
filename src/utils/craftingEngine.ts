@@ -9,17 +9,17 @@ import { secondsToMs } from '../utils/common';
 
 // 设备效率配置 - 基于Factorio的采矿机设计
 interface DeviceEfficiency {
-  speed: number;        // 基础速度
-  coverage: number;     // 覆盖范围
-  power: number;        // 功率消耗
-  pollution: number;    // 污染产生
+  speed: number; // 基础速度
+  coverage: number; // 覆盖范围
+  power: number; // 功率消耗
+  pollution: number; // 污染产生
 }
 
 // 资源特性配置 - 基于Factorio的资源硬度
 interface ResourceProperties {
-  miningTime: number;   // 采矿时间（硬度）
-  category: string;     // 资源类别
-  rarity: number;       // 稀有度
+  miningTime: number; // 采矿时间（硬度）
+  category: string; // 资源类别
+  rarity: number; // 稀有度
 }
 
 class CraftingEngine {
@@ -83,28 +83,29 @@ class CraftingEngine {
     }
 
     // 查找该物品的mining配方
-    const miningRecipes = RecipeService.getRecipesThatProduce(itemId)
-      .filter(recipe => recipe.flags?.includes('mining'));
-    
+    const miningRecipes = RecipeService.getRecipesThatProduce(itemId).filter(recipe =>
+      recipe.flags?.includes('mining')
+    );
+
     let resourceProps: ResourceProperties;
-    
+
     if (miningRecipes.length > 0) {
       const miningRecipe = miningRecipes[0];
-      
+
       // 从mining配方获取真实数据
       const miningTime = miningRecipe.time || 1;
       const hasInputs = Object.keys(miningRecipe.in || {}).length > 0;
-      
+
       // 根据mining配方特征判断资源类别和稀有度
       let category = 'basic';
       let rarity = 1;
-      
+
       if (hasInputs) {
         // 需要输入材料的资源（如uranium-ore需要硫酸）
         category = 'advanced';
         rarity = 2;
       }
-      
+
       // 根据mining时间进一步调整稀有度
       if (miningTime >= 5) {
         category = 'advanced';
@@ -113,17 +114,17 @@ class CraftingEngine {
         category = 'advanced';
         rarity = Math.max(rarity, 3);
       }
-      
+
       resourceProps = {
         miningTime,
         category,
-        rarity
+        rarity,
       };
     } else {
       // 没有mining配方的物品，使用默认值
       resourceProps = { miningTime: 1, category: 'basic', rarity: 1 };
     }
-    
+
     // 缓存结果
     this.resourcePropertiesCache.set(itemId, resourceProps);
     return resourceProps;
@@ -137,9 +138,10 @@ class CraftingEngine {
     }
 
     // 选择机器：优先使用指定机器，否则使用第一个生产者
-    const machineId = preferredMachineId && recipe.producers.includes(preferredMachineId) 
-      ? preferredMachineId 
-      : recipe.producers[0];
+    const machineId =
+      preferredMachineId && recipe.producers.includes(preferredMachineId)
+        ? preferredMachineId
+        : recipe.producers[0];
 
     // 检查缓存
     if (this.deviceEfficiencyCache.has(machineId)) {
@@ -148,18 +150,18 @@ class CraftingEngine {
 
     const dataService = DataService.getInstance();
     const machineItem = dataService.getItem(machineId);
-    
+
     let deviceEfficiency: DeviceEfficiency;
-    
+
     if (machineItem?.machine) {
       const machine = machineItem.machine;
-      
+
       // 从data.json获取真实机器数据
       deviceEfficiency = {
         speed: machine.speed || 1,
         coverage: machine.size ? machine.size[0] * machine.size[1] : 9, // 默认3x3
         power: machine.usage || 0,
-        pollution: machine.pollution || 0
+        pollution: machine.pollution || 0,
       };
     } else {
       // 回退到默认值
@@ -174,20 +176,22 @@ class CraftingEngine {
   // 计算设备效率 - 基于Factorio的采矿速度公式
   private calculateDeviceEfficiency(recipe: Recipe, preferredMachineId?: string): number {
     const device = this.getDeviceEfficiency(recipe, preferredMachineId);
-    
+
     // 获取主要输入资源的特性（动态从data.json获取）
     const mainInput = Object.keys(recipe.in || {})[0];
-    const resourceProps = mainInput ? this.getResourceProperties(mainInput) : { miningTime: 1, category: 'basic', rarity: 1 };
-    
+    const resourceProps = mainInput
+      ? this.getResourceProperties(mainInput)
+      : { miningTime: 1, category: 'basic', rarity: 1 };
+
     // 基于Factorio公式：采矿速度 / 采矿时间 = 生产速率
     const baseEfficiency = device.speed / resourceProps.miningTime;
-    
+
     // 考虑资源稀有度的影响
     const rarityMultiplier = 1 / resourceProps.rarity;
-    
+
     // 考虑设备覆盖范围的影响（简化为基于面积的加成）
     const coverageMultiplier = Math.min(device.coverage / 9, 2); // 基于3x3=9的面积，最大2倍效率
-    
+
     return baseEfficiency * rarityMultiplier * coverageMultiplier;
   }
 
@@ -195,40 +199,44 @@ class CraftingEngine {
   private calculateProductivityBonus(recipe: Recipe): number {
     // 基础生产力加成
     let productivityBonus = 0;
-    
+
     // 根据配方类别给予不同加成
     if (recipe.category === 'smelting') {
       productivityBonus += 0.1; // 冶炼配方 +10%
     } else if (recipe.category === 'advanced-crafting') {
       productivityBonus += 0.2; // 高级配方 +20%
     }
-    
+
     // 根据输出物品数量给予加成
     const outputCount = Object.keys(recipe.out).length;
     if (outputCount > 1) {
       productivityBonus += 0.05 * (outputCount - 1); // 每多一个输出 +5%
     }
-    
+
     const constants = this.gameConfig.getConstants();
     return Math.min(productivityBonus, constants.crafting.maxProductivityBonus); // 使用配置的最大加成
   }
 
   // 计算最终制作时间 - 基于Factorio的效率公式
-  private calculateCraftingTime(recipe: Recipe, quantity: number, preferredMachineId?: string): number {
+  private calculateCraftingTime(
+    recipe: Recipe,
+    quantity: number,
+    preferredMachineId?: string
+  ): number {
     // 基础制作时间
     const baseTime = recipe.time;
-    
+
     // 设备效率影响
     const deviceEfficiency = this.calculateDeviceEfficiency(recipe, preferredMachineId);
     const efficiencyTime = baseTime / deviceEfficiency;
-    
+
     // 生产力加成影响
     const productivityBonus = this.calculateProductivityBonus(recipe);
     const productivityTime = efficiencyTime / (1 + productivityBonus);
-    
+
     // 数量影响
     const totalTime = productivityTime * quantity;
-    
+
     const constants = this.gameConfig.getConstants();
     return Math.max(totalTime, constants.crafting.minCraftingTime); // 使用配置的最小制作时间
   }
@@ -251,10 +259,10 @@ class CraftingEngine {
     if (currentTask.recipeId.startsWith('manual_')) {
       // 手动合成任务需要时间计算
       const itemId = currentTask.itemId;
-      
+
       // 获取物品的配方数据（用于时间计算）
       const recipes = RecipeService.getRecipesThatProduce(itemId);
-      
+
       // 优先选择mining类型的配方，而不是recycling配方
       let selectedRecipe = null;
       if (recipes.length > 0) {
@@ -268,25 +276,25 @@ class CraftingEngine {
           selectedRecipe = nonRecyclingRecipe || recipes[0];
         }
       }
-      
+
       if (selectedRecipe) {
         // 使用手动合成效率计算时间
         const manualEfficiency = 0.5; // 玩家默认效率
         const baseTime = selectedRecipe.time || 1; // 基础时间
-                  const craftingTime = secondsToMs((baseTime / manualEfficiency) * currentTask.quantity);
-        
+        const craftingTime = secondsToMs((baseTime / manualEfficiency) * currentTask.quantity);
+
         // 确保有开始时间 - 只在第一次执行时设定
         if (!currentTask.startTime || currentTask.startTime === 0) {
           currentTask.startTime = now;
           updateCraftingProgress(currentTask.id, 0);
         }
-        
+
         // 计算进度
         const elapsed = now - currentTask.startTime;
         const progress = Math.min((elapsed / craftingTime) * 100, 100);
-                
+
         updateCraftingProgress(currentTask.id, progress);
-        
+
         // 检查是否完成
         if (progress >= 100) {
           this.completeManualCraft(currentTask);
@@ -323,7 +331,6 @@ class CraftingEngine {
     }
   }
 
-
   // 完成制作
   private completeCraft(task: CraftingTask, recipe: Recipe): void {
     const { updateInventory, completeCraftingTask, trackMinedEntity } = useGameStore.getState();
@@ -346,7 +353,7 @@ class CraftingEngine {
       const baseQuantity = (quantity as number) * task.quantity;
       const bonusQuantity = Math.floor(baseQuantity * bonusMultiplier);
       updateInventory(itemId, bonusQuantity);
-      
+
       // 4. 如果是采矿配方，追踪挖掘的实体（用于研究触发器）
       if (recipe.flags?.includes('mining')) {
         trackMinedEntity(itemId, bonusQuantity);
@@ -366,7 +373,7 @@ class CraftingEngine {
     // 获取手动合成的配方信息
     const itemId = task.itemId;
     const recipes = RecipeService.getRecipesThatProduce(itemId);
-    
+
     // 找到合适的配方（优先mining配方）
     let selectedRecipe = null;
     if (recipes.length > 0) {

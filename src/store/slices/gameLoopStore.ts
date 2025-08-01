@@ -11,7 +11,7 @@ export interface GameLoopSlice {
   gameLoopStats: GameLoopStats;
   gameLoopConfig: GameLoopConfig;
   performanceLevel: PerformanceLevel;
-  
+
   // Actions
   startGameLoop: () => void;
   stopGameLoop: () => void;
@@ -20,14 +20,14 @@ export interface GameLoopSlice {
   updateGameLoopConfig: (config: Partial<GameLoopConfig>) => void;
   setPerformanceLevel: (level: PerformanceLevel) => void;
   getGameLoopStats: () => GameLoopStats;
-  
+
   // 内部更新方法（由 GameLoopService 调用）
   _updateGameLoopState: () => void;
 }
 
-export const createGameLoopSlice: SliceCreator<GameLoopSlice> = (set) => {
+export const createGameLoopSlice: SliceCreator<GameLoopSlice> = set => {
   const gameLoopService = GameLoopService.getInstance();
-  
+
   return {
     // 初始状态
     isGameLoopRunning: false,
@@ -42,15 +42,15 @@ export const createGameLoopSlice: SliceCreator<GameLoopSlice> = (set) => {
       performance: {
         frameTime: 0,
         averageFrameTime: 0,
-        slowFrames: 0
-      }
+        slowFrames: 0,
+      },
     },
     gameLoopConfig: {
       targetFPS: 60,
       maxDeltaTime: 100,
       enableStats: true,
       enablePerformanceMode: true,
-      backgroundThrottleRatio: 0.1
+      backgroundThrottleRatio: 0.1,
     },
     performanceLevel: 'high' as PerformanceLevel,
 
@@ -59,7 +59,7 @@ export const createGameLoopSlice: SliceCreator<GameLoopSlice> = (set) => {
       gameLoopService.start();
       set(() => ({
         isGameLoopRunning: true,
-        isGameLoopPaused: false
+        isGameLoopPaused: false,
       }));
     },
 
@@ -67,35 +67,35 @@ export const createGameLoopSlice: SliceCreator<GameLoopSlice> = (set) => {
       gameLoopService.stop();
       set(() => ({
         isGameLoopRunning: false,
-        isGameLoopPaused: false
+        isGameLoopPaused: false,
       }));
     },
 
     pauseGameLoop: () => {
       gameLoopService.pause();
       set(() => ({
-        isGameLoopPaused: true
+        isGameLoopPaused: true,
       }));
     },
 
     resumeGameLoop: () => {
       gameLoopService.resume();
       set(() => ({
-        isGameLoopPaused: false
+        isGameLoopPaused: false,
       }));
     },
 
     updateGameLoopConfig: (newConfig: Partial<GameLoopConfig>) => {
       gameLoopService.updateConfig(newConfig);
-      set((state) => ({
-        gameLoopConfig: { ...state.gameLoopConfig, ...newConfig }
+      set(state => ({
+        gameLoopConfig: { ...state.gameLoopConfig, ...newConfig },
       }));
     },
 
     setPerformanceLevel: (level: PerformanceLevel) => {
       gameLoopService.setPerformanceLevel(level);
       set(() => ({
-        performanceLevel: level
+        performanceLevel: level,
       }));
     },
 
@@ -114,8 +114,8 @@ export const createGameLoopSlice: SliceCreator<GameLoopSlice> = (set) => {
         isGameLoopRunning: isRunning,
         isGameLoopPaused: isPaused,
         gameLoopStats: stats,
-        gameLoopConfig: config
+        gameLoopConfig: config,
       }));
-    }
+    },
   };
 };

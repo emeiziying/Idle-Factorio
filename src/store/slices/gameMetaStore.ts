@@ -12,7 +12,7 @@ export const createGameMetaSlice: SliceCreator<GameMetaSlice> = (set, get) => ({
   clearGameData: async () => {
     // 清除游戏存档
     await gameStorageService.clearGameData();
-    
+
     // 重置状态
     set(() => ({
       inventory: new Map(),
@@ -36,7 +36,7 @@ export const createGameMetaSlice: SliceCreator<GameMetaSlice> = (set, get) => ({
       builtEntityCounts: new Map(),
       minedEntityCounts: new Map(),
     }));
-    
+
     // 立即重载页面以确保完全重置
     window.location.reload();
   },
@@ -72,5 +72,5 @@ export const createGameMetaSlice: SliceCreator<GameMetaSlice> = (set, get) => ({
       console.error('[ForceSave] 强制存档失败:', error);
       throw error;
     }
-  }
+  },
 });

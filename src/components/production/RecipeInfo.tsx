@@ -10,14 +10,14 @@ interface RecipeInfoProps {
 
 const RecipeInfo: React.FC<RecipeInfoProps> = ({ itemId, onRecipeSelect }) => {
   const [selectedRecipeId, setSelectedRecipeId] = useState<string>('');
-  
+
   const {
     getRecommendedRecipes,
     getRecipeStats,
     addFavoriteRecipe,
     removeFavoriteRecipe,
     isFavoriteRecipe,
-    addRecentRecipe
+    addRecentRecipe,
   } = useGameStore();
 
   const dataService = DataService.getInstance();
@@ -82,7 +82,7 @@ const RecipeInfo: React.FC<RecipeInfoProps> = ({ itemId, onRecipeSelect }) => {
         {recipes.length === 0 ? (
           <p className="text-sm text-gray-500">暂无配方</p>
         ) : (
-          recipes.map((recipe) => (
+          recipes.map(recipe => (
             <div
               key={recipe.id}
               className={`p-3 border rounded cursor-pointer transition-colors ${
@@ -103,12 +103,12 @@ const RecipeInfo: React.FC<RecipeInfoProps> = ({ itemId, onRecipeSelect }) => {
                     </span>
                   </div>
                   <div className="text-xs text-gray-600 mt-1">
-                    产出: {recipe.out?.[itemId] || 0} {itemId} / {recipe.time}秒
-                    (效率: {getEfficiency(recipe)} {itemId}/秒)
+                    产出: {recipe.out?.[itemId] || 0} {itemId} / {recipe.time}秒 (效率:{' '}
+                    {getEfficiency(recipe)} {itemId}/秒)
                   </div>
                 </div>
                 <button
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation();
                     handleFavoriteToggle(recipe.id);
                   }}
@@ -156,4 +156,4 @@ const RecipeInfo: React.FC<RecipeInfoProps> = ({ itemId, onRecipeSelect }) => {
   );
 };
 
-export default RecipeInfo; 
+export default RecipeInfo;

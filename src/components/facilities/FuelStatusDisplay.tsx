@@ -14,42 +14,42 @@ interface FuelStatusDisplayProps {
 
 export const FuelStatusDisplay: React.FC<FuelStatusDisplayProps> = ({
   fuelBuffer,
-  compact = false
+  compact = false,
 }) => {
   const fuelService = FuelService.getInstance();
   const status = fuelService.getFuelStatus(fuelBuffer);
-  
+
   const formatTime = (seconds: number): string => {
     if (seconds === Infinity) return '∞';
     if (seconds < 60) return `${Math.floor(seconds)}秒`;
     if (seconds < 3600) return `${Math.floor(seconds / 60)}分`;
     return `${Math.floor(seconds / 3600)}时`;
   };
-  
+
   const getProgressColor = (percentage: number): 'error' | 'warning' | 'success' => {
     if (percentage < 20) return 'error';
     if (percentage < 50) return 'warning';
     return 'success';
   };
-  
+
   if (compact) {
     return (
       <Box display="flex" alignItems="center" gap={1}>
-        <LocalFireDepartment 
-          fontSize="small" 
-          sx={{ 
-            color: status.isEmpty ? 'error.main' : 'action.active' 
-          }} 
+        <LocalFireDepartment
+          fontSize="small"
+          sx={{
+            color: status.isEmpty ? 'error.main' : 'action.active',
+          }}
         />
         <LinearProgress
           variant="determinate"
           value={status.burnProgress}
           color={getProgressColor(status.burnProgress)}
-          sx={{ 
-            width: 60, 
+          sx={{
+            width: 60,
             height: 6,
             borderRadius: 1,
-            backgroundColor: 'action.disabledBackground'
+            backgroundColor: 'action.disabledBackground',
           }}
         />
         <Typography variant="caption" color="text.secondary">
@@ -58,7 +58,7 @@ export const FuelStatusDisplay: React.FC<FuelStatusDisplayProps> = ({
       </Box>
     );
   }
-  
+
   return (
     <Box sx={{ p: 1 }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
@@ -74,19 +74,19 @@ export const FuelStatusDisplay: React.FC<FuelStatusDisplayProps> = ({
           variant={status.isEmpty ? 'filled' : 'outlined'}
         />
       </Box>
-      
+
       <LinearProgress
         variant="determinate"
         value={status.burnProgress}
         color={getProgressColor(status.burnProgress)}
-        sx={{ 
-          height: 8, 
-          borderRadius: 1, 
+        sx={{
+          height: 8,
+          borderRadius: 1,
           mb: 1,
-          backgroundColor: 'action.disabledBackground'
+          backgroundColor: 'action.disabledBackground',
         }}
       />
-      
+
       <Box display="flex" gap={1} flexWrap="wrap" mb={1}>
         {fuelBuffer.slots?.map((slot, index) => (
           <Tooltip
@@ -103,11 +103,7 @@ export const FuelStatusDisplay: React.FC<FuelStatusDisplayProps> = ({
             }
           >
             <Box position="relative">
-              <FactorioIcon
-                itemId={slot.itemId}
-                size={32}
-                quantity={slot.quantity}
-              />
+              <FactorioIcon itemId={slot.itemId} size={32} quantity={slot.quantity} />
               {/* 当前燃烧中的标记 */}
               {index === 0 && slot.remainingEnergy < (slot.quantity > 0 ? 4 : 0) && (
                 <Box
@@ -120,35 +116,37 @@ export const FuelStatusDisplay: React.FC<FuelStatusDisplayProps> = ({
                     borderRadius: '50%',
                     backgroundColor: 'warning.main',
                     border: '1px solid',
-                    borderColor: 'background.paper'
+                    borderColor: 'background.paper',
                   }}
                 />
               )}
             </Box>
           </Tooltip>
         ))}
-        
+
         {/* 空槽位 */}
-        {Array.from({ length: (fuelBuffer.maxSlots || 0) - (fuelBuffer.slots?.length || 0) }).map((_, i) => (
-          <Box
-            key={`empty-${i}`}
-            sx={{
-              width: 32,
-              height: 32,
-              border: '2px dashed',
-              borderColor: 'divider',
-              borderRadius: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: 0.5
-            }}
-          >
-            <LocalFireDepartment fontSize="small" color="disabled" />
-          </Box>
-        ))}
+        {Array.from({ length: (fuelBuffer.maxSlots || 0) - (fuelBuffer.slots?.length || 0) }).map(
+          (_, i) => (
+            <Box
+              key={`empty-${i}`}
+              sx={{
+                width: 32,
+                height: 32,
+                border: '2px dashed',
+                borderColor: 'divider',
+                borderRadius: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: 0.5,
+              }}
+            >
+              <LocalFireDepartment fontSize="small" color="disabled" />
+            </Box>
+          )
+        )}
       </Box>
-      
+
       <Typography variant="caption" color="text.secondary">
         能量: {status.totalEnergy.toFixed(1)} / {status.maxEnergy.toFixed(0)} MJ
         {(fuelBuffer.consumptionRate || 0) > 0 && (

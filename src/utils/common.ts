@@ -45,14 +45,10 @@ export const formatNumber = (num: number, decimals: number = 2): string => {
 /**
  * 安全地获取对象属性值
  */
-export const safeGet = <T>(
-  obj: Record<string, unknown>,
-  path: string,
-  defaultValue: T
-): T => {
+export const safeGet = <T>(obj: Record<string, unknown>, path: string, defaultValue: T): T => {
   const keys = path.split('.');
   let result: unknown = obj;
-  
+
   for (const key of keys) {
     if (result && typeof result === 'object' && key in result) {
       result = (result as Record<string, unknown>)[key];
@@ -60,7 +56,7 @@ export const safeGet = <T>(
       return defaultValue;
     }
   }
-  
+
   return result as T;
 };
 
@@ -72,7 +68,7 @@ export const debounce = <T extends (...args: unknown[]) => unknown>(
   delay: number
 ): ((...args: Parameters<T>) => void) => {
   let timeoutId: ReturnType<typeof setTimeout>;
-  
+
   return (...args: Parameters<T>) => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => fn(...args), delay);
@@ -87,7 +83,7 @@ export const throttle = <T extends (...args: unknown[]) => unknown>(
   limit: number
 ): ((...args: Parameters<T>) => void) => {
   let inThrottle = false;
-  
+
   return (...args: Parameters<T>) => {
     if (!inThrottle) {
       fn(...args);
@@ -106,22 +102,22 @@ export const deepClone = <T>(obj: T): T => {
   if (obj === null || typeof obj !== 'object') {
     return obj;
   }
-  
+
   if (obj instanceof Date) {
     return new Date(obj.getTime()) as T;
   }
-  
+
   if (obj instanceof Array) {
     return obj.map(item => deepClone(item)) as T;
   }
-  
+
   const clonedObj = {} as T;
   for (const key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
       clonedObj[key] = deepClone(obj[key]);
     }
   }
-  
+
   return clonedObj;
 };
 
@@ -130,22 +126,20 @@ export const deepClone = <T>(obj: T): T => {
  */
 export const arraysEqual = <T>(a: T[], b: T[]): boolean => {
   if (a.length !== b.length) return false;
-  
+
   for (let i = 0; i < a.length; i++) {
     if (a[i] !== b[i]) return false;
   }
-  
+
   return true;
 };
 
 /**
  * 创建单例类的辅助函数
  */
-export function createSingleton<T>(
-  ClassConstructor: new () => T
-): () => T {
+export function createSingleton<T>(ClassConstructor: new () => T): () => T {
   let instance: T | null = null;
-  
+
   return () => {
     if (!instance) {
       instance = new ClassConstructor();

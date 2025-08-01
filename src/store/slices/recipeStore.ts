@@ -11,7 +11,7 @@ export const createRecipeSlice: SliceCreator<RecipeSlice> = (set, get) => ({
 
   // 配方相关 Actions
   addFavoriteRecipe: (recipeId: string) => {
-    set((state) => {
+    set(state => {
       const newFavorites = new Set(state.favoriteRecipes);
       newFavorites.add(recipeId);
       return { favoriteRecipes: newFavorites };
@@ -19,7 +19,7 @@ export const createRecipeSlice: SliceCreator<RecipeSlice> = (set, get) => ({
   },
 
   removeFavoriteRecipe: (recipeId: string) => {
-    set((state) => {
+    set(state => {
       const newFavorites = new Set(state.favoriteRecipes);
       newFavorites.delete(recipeId);
       return { favoriteRecipes: newFavorites };
@@ -31,10 +31,10 @@ export const createRecipeSlice: SliceCreator<RecipeSlice> = (set, get) => ({
   },
 
   addRecentRecipe: (recipeId: string) => {
-    set((state) => {
+    set(state => {
       const newRecent = [recipeId, ...state.recentRecipes.filter(id => id !== recipeId)];
       return {
-        recentRecipes: newRecent.slice(0, state.maxRecentRecipes)
+        recentRecipes: newRecent.slice(0, state.maxRecentRecipes),
       };
     });
   },
@@ -56,15 +56,12 @@ export const createRecipeSlice: SliceCreator<RecipeSlice> = (set, get) => ({
   getRecommendedRecipes: (itemId: string) => {
     const recipes = RecipeService.getRecipesThatProduce(itemId);
     const mostEfficient = RecipeService.getMostEfficientRecipe(itemId);
-    
+
     if (mostEfficient) {
       // 将最高效率配方放在第一位
-      return [
-        mostEfficient,
-        ...recipes.filter(r => r.id !== mostEfficient.id)
-      ];
+      return [mostEfficient, ...recipes.filter(r => r.id !== mostEfficient.id)];
     }
-    
+
     return recipes;
   },
 

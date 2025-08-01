@@ -17,7 +17,7 @@ import {
   List,
   ListItem,
   ListItemText,
-  Divider
+  Divider,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -25,7 +25,7 @@ import {
   Assignment as AssignmentIcon,
   Build as BuildIcon,
   Block as BlockIcon,
-  Info as InfoIcon
+  Info as InfoIcon,
 } from '@mui/icons-material';
 import { DataService } from '../../services/DataService';
 import { RecipeService } from '../../services/RecipeService';
@@ -81,11 +81,13 @@ const ManualCraftingTestPage: React.FC = () => {
   const [tabValue, setTabValue] = useLocalStorageState('test-tab-value', { defaultValue: 0 });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useLocalStorageState('test-selected-category', { defaultValue: 'all' });
+  const [selectedCategory, setSelectedCategory] = useLocalStorageState('test-selected-category', {
+    defaultValue: 'all',
+  });
   const [itemsData, setItemsData] = useState<ItemsData>({
     craftable: {},
     notCraftable: {},
-    statistics: { total: 0, craftable: 0, notCraftable: 0, categories: {} }
+    statistics: { total: 0, craftable: 0, notCraftable: 0, categories: {} },
   });
 
   const dataService = DataService.getInstance();
@@ -103,11 +105,11 @@ const ManualCraftingTestPage: React.FC = () => {
     allItems.forEach(item => {
       const validation = validator.validateManualCrafting(item.id);
       const recipes = RecipeService.getRecipesThatProduce(item.id);
-      
+
       const itemData: ItemWithValidation = {
         item,
         validation,
-        recipes
+        recipes,
       };
 
       // 统计分类
@@ -156,8 +158,8 @@ const ManualCraftingTestPage: React.FC = () => {
         total: allItems.length,
         craftable: craftableCount,
         notCraftable: notCraftableCount,
-        categories: categoryStats
-      }
+        categories: categoryStats,
+      },
     });
   }, [dataService, validator]);
 
@@ -194,15 +196,16 @@ const ManualCraftingTestPage: React.FC = () => {
   const filteredData = useMemo(() => {
     const filterItems = (items: CategoryGroup) => {
       const filtered: CategoryGroup = {};
-      
+
       Object.entries(items).forEach(([category, categoryItems]) => {
         if (selectedCategory !== 'all' && category !== selectedCategory) {
           return;
         }
 
-        const filteredItems = categoryItems.filter(item =>
-          item.item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.item.id.toLowerCase().includes(searchTerm.toLowerCase())
+        const filteredItems = categoryItems.filter(
+          item =>
+            item.item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.item.id.toLowerCase().includes(searchTerm.toLowerCase())
         );
 
         if (filteredItems.length > 0) {
@@ -215,7 +218,7 @@ const ManualCraftingTestPage: React.FC = () => {
 
     return {
       craftable: filterItems(itemsData.craftable),
-      notCraftable: filterItems(itemsData.notCraftable)
+      notCraftable: filterItems(itemsData.notCraftable),
     };
   }, [itemsData, searchTerm, selectedCategory]);
 
@@ -231,8 +234,8 @@ const ManualCraftingTestPage: React.FC = () => {
   };
 
   const renderCategorySection = (data: CategoryGroup) => {
-    const categoryEntries = Object.entries(data).sort(([,a], [,b]) => b.length - a.length);
-    
+    const categoryEntries = Object.entries(data).sort(([, a], [, b]) => b.length - a.length);
+
     if (categoryEntries.length === 0) {
       return (
         <Alert severity="info" sx={{ mt: 2 }}>
@@ -246,11 +249,11 @@ const ManualCraftingTestPage: React.FC = () => {
         {categoryEntries.map(([category, items]) => (
           <Box key={category} sx={{ mb: 4 }}>
             {/* 分类小标题 */}
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: 2, 
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
                 mb: 3,
                 pb: 1,
                 borderBottom: '2px solid',
@@ -260,33 +263,31 @@ const ManualCraftingTestPage: React.FC = () => {
                   width: '4px',
                   height: '20px',
                   backgroundColor: 'primary.main',
-                  borderRadius: '2px'
-                }
+                  borderRadius: '2px',
+                },
               }}
             >
               <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
                 {dataService.getLocalizedCategoryName(category)}
               </Typography>
-              <Chip
-                size="small"
-                label={`${items.length}个`}
-                variant="outlined"
-                color="primary"
-              />
+              <Chip size="small" label={`${items.length}个`} variant="outlined" color="primary" />
             </Box>
-            
+
             {/* 物品网格 - 按row分组 */}
             <Box>
               {(() => {
                 // 按row分组
-                const groupedByRow = items.reduce((groups, itemData) => {
-                  const row = itemData.item.row || 0;
-                  if (!groups[row]) {
-                    groups[row] = [];
-                  }
-                  groups[row].push(itemData);
-                  return groups;
-                }, {} as { [row: number]: ItemWithValidation[] });
+                const groupedByRow = items.reduce(
+                  (groups, itemData) => {
+                    const row = itemData.item.row || 0;
+                    if (!groups[row]) {
+                      groups[row] = [];
+                    }
+                    groups[row].push(itemData);
+                    return groups;
+                  },
+                  {} as { [row: number]: ItemWithValidation[] }
+                );
 
                 // 按row排序
                 const sortedRows = Object.keys(groupedByRow)
@@ -296,17 +297,15 @@ const ManualCraftingTestPage: React.FC = () => {
                 return sortedRows.map(row => (
                   <Box key={row} sx={{ mb: 2 }}>
                     {/* 该行的物品网格 */}
-                    <Box 
-                      sx={{ 
+                    <Box
+                      sx={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fill, minmax(44px, 1fr))',
-                        gap: 1
+                        gap: 1,
                       }}
                     >
                       {groupedByRow[row].map(itemData => (
-                        <Box key={itemData.item.id}>
-                          {renderItemCard(itemData)}
-                        </Box>
+                        <Box key={itemData.item.id}>{renderItemCard(itemData)}</Box>
                       ))}
                     </Box>
                   </Box>
@@ -335,7 +334,7 @@ const ManualCraftingTestPage: React.FC = () => {
       <Typography variant="h3" component="h1" gutterBottom align="center">
         物品制作验证
       </Typography>
-      
+
       <Typography variant="subtitle1" align="center" color="text.secondary" sx={{ mb: 4 }}>
         基于官方Wiki规则和配方属性的自动判断逻辑
       </Typography>
@@ -346,12 +345,7 @@ const ManualCraftingTestPage: React.FC = () => {
           <AssignmentIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
           统计信息
         </Typography>
-        <Box
-          display="flex"
-          flexWrap="wrap"
-          gap={3}
-          justifyContent="space-around"
-        >
+        <Box display="flex" flexWrap="wrap" gap={3} justifyContent="space-around">
           <Box textAlign="center">
             <Typography variant="h4" color="primary">
               {itemsData.statistics.total}
@@ -365,7 +359,8 @@ const ManualCraftingTestPage: React.FC = () => {
               {itemsData.statistics.craftable}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              可制作 ({((itemsData.statistics.craftable / itemsData.statistics.total) * 100).toFixed(1)}%)
+              可制作 (
+              {((itemsData.statistics.craftable / itemsData.statistics.total) * 100).toFixed(1)}%)
             </Typography>
           </Box>
           <Box textAlign="center">
@@ -373,7 +368,9 @@ const ManualCraftingTestPage: React.FC = () => {
               {itemsData.statistics.notCraftable}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              不可制作 ({((itemsData.statistics.notCraftable / itemsData.statistics.total) * 100).toFixed(1)}%)
+              不可制作 (
+              {((itemsData.statistics.notCraftable / itemsData.statistics.total) * 100).toFixed(1)}
+              %)
             </Typography>
           </Box>
           <Box textAlign="center">
@@ -396,9 +393,9 @@ const ManualCraftingTestPage: React.FC = () => {
               variant="outlined"
               label="搜索物品"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               InputProps={{
-                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
               }}
             />
           </Box>
@@ -408,7 +405,7 @@ const ManualCraftingTestPage: React.FC = () => {
               <Select
                 value={selectedCategory}
                 label="分类筛选"
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                onChange={e => setSelectedCategory(e.target.value)}
                 startAdornment={<FilterIcon sx={{ mr: 1, color: 'text.secondary' }} />}
               >
                 <MenuItem value="all">所有分类</MenuItem>
@@ -463,23 +460,17 @@ const ManualCraftingTestPage: React.FC = () => {
           <Typography variant="h5" gutterBottom>
             规则说明
           </Typography>
-          
+
           <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>
             🟢 可以制作的物品类型
           </Typography>
-          
+
           <List>
             <ListItem>
-              <ListItemText
-                primary="原材料类物品"
-                secondary="没有制作配方的物品，如矿石、木材等"
-              />
+              <ListItemText primary="原材料类物品" secondary="没有制作配方的物品，如矿石、木材等" />
             </ListItem>
             <ListItem>
-              <ListItemText
-                primary="采矿类物品"
-                secondary="配方包含 'mining' 标志的物品"
-              />
+              <ListItemText primary="采矿类物品" secondary="配方包含 'mining' 标志的物品" />
             </ListItem>
             <ListItem>
               <ListItemText
@@ -494,25 +485,16 @@ const ManualCraftingTestPage: React.FC = () => {
           <Typography variant="h6" sx={{ mb: 2 }}>
             🔴 不可以制作的物品类型
           </Typography>
-          
+
           <List>
             <ListItem>
-              <ListItemText
-                primary="冶炼配方"
-                secondary="需要熔炉设备的配方，如铁板、铜板等"
-              />
+              <ListItemText primary="冶炼配方" secondary="需要熔炉设备的配方，如铁板、铜板等" />
             </ListItem>
             <ListItem>
-              <ListItemText
-                primary="涉及流体的配方"
-                secondary="输入或输出包含液体的配方"
-              />
+              <ListItemText primary="涉及流体的配方" secondary="输入或输出包含液体的配方" />
             </ListItem>
             <ListItem>
-              <ListItemText
-                primary="化工配方"
-                secondary="需要化工设备、石油精炼厂等特殊设备"
-              />
+              <ListItemText primary="化工配方" secondary="需要化工设备、石油精炼厂等特殊设备" />
             </ListItem>
             <ListItem>
               <ListItemText
@@ -521,16 +503,10 @@ const ManualCraftingTestPage: React.FC = () => {
               />
             </ListItem>
             <ListItem>
-              <ListItemText
-                primary="研究配方"
-                secondary="配方包含 'technology' 标志，需要实验室"
-              />
+              <ListItemText primary="研究配方" secondary="配方包含 'technology' 标志，需要实验室" />
             </ListItem>
             <ListItem>
-              <ListItemText
-                primary="农业配方"
-                secondary="配方包含 'grow' 标志，需要农业设备"
-              />
+              <ListItemText primary="农业配方" secondary="配方包含 'grow' 标志，需要农业设备" />
             </ListItem>
           </List>
 
@@ -546,7 +522,6 @@ const ManualCraftingTestPage: React.FC = () => {
           </Alert>
         </Paper>
       </TabPanel>
-
     </Container>
   );
 };

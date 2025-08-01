@@ -12,10 +12,10 @@ export const ValidationCategory = {
   RAW_MATERIAL: 'raw_material',
   CRAFTABLE: 'craftable',
   RESTRICTED: 'restricted',
-  DATA_ERROR: 'data_error'
+  DATA_ERROR: 'data_error',
 } as const;
 
-export type ValidationCategoryType = typeof ValidationCategory[keyof typeof ValidationCategory];
+export type ValidationCategoryType = (typeof ValidationCategory)[keyof typeof ValidationCategory];
 
 // 验证原因常量 - 支持国际化
 export const ValidationReason = {
@@ -38,10 +38,10 @@ export const ValidationReason = {
   LAB_REQUIRED: 'lab_required',
   COLLECTION_RECIPE: 'collection_recipe',
   BASIC_CRAFTING: 'basic_crafting',
-  SPECIAL_EQUIPMENT: 'special_equipment'
+  SPECIAL_EQUIPMENT: 'special_equipment',
 } as const;
 
-export type ValidationReasonType = typeof ValidationReason[keyof typeof ValidationReason];
+export type ValidationReasonType = (typeof ValidationReason)[keyof typeof ValidationReason];
 
 export interface ManualCraftingValidation {
   canCraftManually: boolean;
@@ -53,7 +53,7 @@ export interface ManualCraftingValidation {
 export class ManualCraftingValidator implements IManualCraftingValidator {
   private static instance: ManualCraftingValidator;
   private dataService!: DataService;
-  
+
   // 缓存机制 - 提升性能
   private validationCache: Map<string, ManualCraftingValidation> = new Map();
   private recipeValidationCache: Map<string, ManualCraftingValidation> = new Map();
@@ -63,10 +63,10 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
   private readonly MANUAL_CRAFTING_BLACKLIST = [
     // 官方Wiki明确：必须使用装配机，不能手动制作
     'engine-unit',
-    // 官方Wiki明确：需要火箭发射井，不能手动制作     
+    // 官方Wiki明确：需要火箭发射井，不能手动制作
     'rocket-part',
     // 破碎机
-    'crusher'   
+    'crusher',
   ];
 
   private constructor() {
@@ -121,7 +121,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
       return {
         canCraftManually: false,
         category: ValidationCategory.DATA_ERROR,
-        reason: ValidationReason.DATA_SERVICE_UNAVAILABLE
+        reason: ValidationReason.DATA_SERVICE_UNAVAILABLE,
       };
     }
     const item = dataService.getItem(itemId);
@@ -129,7 +129,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
       const result = {
         canCraftManually: false,
         reason: ValidationReason.ITEM_NOT_FOUND,
-        category: ValidationCategory.RESTRICTED
+        category: ValidationCategory.RESTRICTED,
       };
       this.validationCache.set(itemId, result);
       return result;
@@ -140,7 +140,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
       const result = {
         canCraftManually: false,
         reason: ValidationReason.TECHNOLOGY_RECIPE,
-        category: ValidationCategory.RESTRICTED
+        category: ValidationCategory.RESTRICTED,
       };
       this.validationCache.set(itemId, result);
       return result;
@@ -155,7 +155,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
       const result = {
         canCraftManually: true,
         reason: ValidationReason.RAW_MATERIAL,
-        category: ValidationCategory.RAW_MATERIAL
+        category: ValidationCategory.RAW_MATERIAL,
       };
       this.validationCache.set(itemId, result);
       return result;
@@ -168,7 +168,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
         const result = {
           canCraftManually: true,
           reason: ValidationReason.RECIPE_AVAILABLE,
-          category: ValidationCategory.CRAFTABLE
+          category: ValidationCategory.CRAFTABLE,
         };
         this.validationCache.set(itemId, result);
         return result;
@@ -178,7 +178,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
     const result = {
       canCraftManually: false,
       reason: ValidationReason.SPECIAL_EQUIPMENT,
-      category: ValidationCategory.RESTRICTED
+      category: ValidationCategory.RESTRICTED,
     };
     this.validationCache.set(itemId, result);
     return result;
@@ -202,7 +202,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
       const result = {
         canCraftManually: false,
         reason: ValidationReason.FLUID_INVOLVED,
-        category: ValidationCategory.RESTRICTED
+        category: ValidationCategory.RESTRICTED,
       };
       this.recipeValidationCache.set(cacheKey, result);
       return result;
@@ -216,7 +216,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
           const result = {
             canCraftManually: false,
             reason: ValidationReason.BLACKLISTED_ITEM,
-            category: ValidationCategory.RESTRICTED
+            category: ValidationCategory.RESTRICTED,
           };
           this.recipeValidationCache.set(cacheKey, result);
           return result;
@@ -240,7 +240,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
         const result = {
           canCraftManually: true,
           reason: ValidationReason.MINING_RECIPE,
-          category: ValidationCategory.RAW_MATERIAL
+          category: ValidationCategory.RAW_MATERIAL,
         };
         this.recipeValidationCache.set(cacheKey, result);
         return result;
@@ -251,7 +251,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
         const result = {
           canCraftManually: false,
           reason: ValidationReason.RECYCLING_RECIPE,
-          category: ValidationCategory.RESTRICTED
+          category: ValidationCategory.RESTRICTED,
         };
         this.recipeValidationCache.set(cacheKey, result);
         return result;
@@ -262,7 +262,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
         const result = {
           canCraftManually: false,
           reason: ValidationReason.TECHNOLOGY_RECIPE,
-          category: ValidationCategory.RESTRICTED
+          category: ValidationCategory.RESTRICTED,
         };
         this.recipeValidationCache.set(cacheKey, result);
         return result;
@@ -273,7 +273,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
         const result = {
           canCraftManually: false,
           reason: ValidationReason.AGRICULTURE_RECIPE,
-          category: ValidationCategory.RESTRICTED
+          category: ValidationCategory.RESTRICTED,
         };
         this.recipeValidationCache.set(cacheKey, result);
         return result;
@@ -285,7 +285,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
       const result = {
         canCraftManually: true,
         reason: ValidationReason.COLLECTION_RECIPE,
-        category: ValidationCategory.RAW_MATERIAL
+        category: ValidationCategory.RAW_MATERIAL,
       };
       this.recipeValidationCache.set(cacheKey, result);
       return result;
@@ -295,7 +295,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
     const result = {
       canCraftManually: true,
       reason: ValidationReason.BASIC_CRAFTING,
-      category: ValidationCategory.CRAFTABLE
+      category: ValidationCategory.CRAFTABLE,
     };
     this.recipeValidationCache.set(cacheKey, result);
     return result;
@@ -344,58 +344,58 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
       return {
         canCraftManually: false,
         reason: ValidationReason.SPECIAL_EQUIPMENT,
-        category: ValidationCategory.RESTRICTED
+        category: ValidationCategory.RESTRICTED,
       };
     }
-    
+
     // 装配机类设备 - 这些设备通常表示物品可以手动制作或自动制作
-    const assemblingMachines = producers.filter(p => 
-      p.includes('assembling-machine') || p.includes('foundry')
+    const assemblingMachines = producers.filter(
+      p => p.includes('assembling-machine') || p.includes('foundry')
     );
-    
+
     // 如果只有装配机类设备，通常表示可以手动制作
     // 这符合Factorio中基础物品（传送带、插入机等）的制作规则
     if (assemblingMachines.length > 0 && assemblingMachines.length === producers.length) {
       return {
         canCraftManually: true,
         reason: ValidationReason.BASIC_CRAFTING,
-        category: ValidationCategory.CRAFTABLE
+        category: ValidationCategory.CRAFTABLE,
       };
     }
-    
+
     // 冶炼设备 - 官方Wiki明确：矿石必须在熔炉中冶炼
-    const smeltingProducers = producers.filter(p => 
-      p.includes('furnace') && !p.includes('foundry') // foundry已经在装配机类中处理
+    const smeltingProducers = producers.filter(
+      p => p.includes('furnace') && !p.includes('foundry') // foundry已经在装配机类中处理
     );
     if (smeltingProducers.length > 0) {
       return {
         canCraftManually: false,
         reason: ValidationReason.SMELTING_REQUIRED,
-        category: ValidationCategory.RESTRICTED
+        category: ValidationCategory.RESTRICTED,
       };
     }
 
     // 特殊化工设备 - 不能手动制作
-    const chemicalProducers = producers.filter(p => 
+    const chemicalProducers = producers.filter(p =>
       ['chemical-plant', 'oil-refinery', 'centrifuge', 'cryogenic-plant'].includes(p)
     );
     if (chemicalProducers.length > 0) {
       return {
         canCraftManually: false,
         reason: ValidationReason.CHEMICAL_EQUIPMENT,
-        category: ValidationCategory.RESTRICTED
+        category: ValidationCategory.RESTRICTED,
       };
     }
 
     // 流体提取设备 - 不能手动制作
-    const fluidProducers = producers.filter(p => 
+    const fluidProducers = producers.filter(p =>
       ['offshore-pump', 'pumpjack', 'water-pump'].includes(p)
     );
     if (fluidProducers.length > 0) {
       return {
         canCraftManually: false,
         reason: ValidationReason.FLUID_EXTRACTION,
-        category: ValidationCategory.RESTRICTED
+        category: ValidationCategory.RESTRICTED,
       };
     }
 
@@ -404,7 +404,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
       return {
         canCraftManually: false,
         reason: ValidationReason.RECYCLER_REQUIRED,
-        category: ValidationCategory.RESTRICTED
+        category: ValidationCategory.RESTRICTED,
       };
     }
 
@@ -413,7 +413,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
       return {
         canCraftManually: false,
         reason: ValidationReason.AGRICULTURE_EQUIPMENT,
-        category: ValidationCategory.RESTRICTED
+        category: ValidationCategory.RESTRICTED,
       };
     }
 
@@ -422,7 +422,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
       return {
         canCraftManually: false,
         reason: ValidationReason.LAB_REQUIRED,
-        category: ValidationCategory.RESTRICTED
+        category: ValidationCategory.RESTRICTED,
       };
     }
 
@@ -431,7 +431,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
       return {
         canCraftManually: false,
         reason: ValidationReason.SPECIAL_EQUIPMENT,
-        category: ValidationCategory.RESTRICTED
+        category: ValidationCategory.RESTRICTED,
       };
     }
 
@@ -440,7 +440,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
       return {
         canCraftManually: false,
         reason: ValidationReason.SPECIAL_EQUIPMENT,
-        category: ValidationCategory.RESTRICTED
+        category: ValidationCategory.RESTRICTED,
       };
     }
 
@@ -449,7 +449,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
       return {
         canCraftManually: false,
         reason: ValidationReason.SPECIAL_EQUIPMENT,
-        category: ValidationCategory.RESTRICTED
+        category: ValidationCategory.RESTRICTED,
       };
     }
 
@@ -458,7 +458,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
       return {
         canCraftManually: false,
         reason: ValidationReason.SPECIAL_EQUIPMENT,
-        category: ValidationCategory.RESTRICTED
+        category: ValidationCategory.RESTRICTED,
       };
     }
 
@@ -467,7 +467,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
       return {
         canCraftManually: false,
         reason: ValidationReason.SPECIAL_EQUIPMENT,
-        category: ValidationCategory.RESTRICTED
+        category: ValidationCategory.RESTRICTED,
       };
     }
 
@@ -476,11 +476,9 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
     return {
       canCraftManually: true,
       reason: ValidationReason.BASIC_CRAFTING,
-      category: ValidationCategory.CRAFTABLE
+      category: ValidationCategory.CRAFTABLE,
     };
   }
-
-
 
   /**
    * 判断物品是否为流体
@@ -491,10 +489,10 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
   private isFluidItem(itemId: string): boolean {
     const dataService = this.getDataService();
     if (!dataService) return false;
-    
+
     const item = dataService.getItem(itemId);
     if (!item) return false;
-    
+
     // 基于分类判断 - 这是最准确的方法
     return item.category === 'fluids';
   }
@@ -517,7 +515,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
   getRawMaterials(): string[] {
     return this.filterItemsByCondition(item => {
       const recipeService = this.getRecipeService();
-    const recipes = recipeService ? RecipeService.getRecipesThatProduce(item.id) : [];
+      const recipes = recipeService ? RecipeService.getRecipesThatProduce(item.id) : [];
       return recipes.length === 0;
     });
   }
@@ -530,7 +528,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
   private filterItemsByCondition(condition: (item: import('../types').Item) => boolean): string[] {
     const dataService = this.getDataService();
     if (!dataService) return [];
-    
+
     const allItems = dataService.getAllItems();
     const filteredItems: string[] = [];
 
@@ -577,7 +575,10 @@ export default ManualCraftingValidator;
  * @param locale 语言代码，默认为 'zh'
  * @returns 本地化文本
  */
-export function getValidationReasonText(reason: ValidationReasonType, locale: string = 'zh'): string {
+export function getValidationReasonText(
+  reason: ValidationReasonType,
+  locale: string = 'zh'
+): string {
   const reasonTexts: Record<string, Record<ValidationReasonType, string>> = {
     zh: {
       [ValidationReason.ITEM_NOT_FOUND]: '物品不存在',
@@ -599,7 +600,7 @@ export function getValidationReasonText(reason: ValidationReasonType, locale: st
       [ValidationReason.COLLECTION_RECIPE]: '采集类配方，可手动操作',
       [ValidationReason.BASIC_CRAFTING]: '基础制作配方，可手动制作',
       [ValidationReason.SPECIAL_EQUIPMENT]: '需要特殊设备制作',
-      [ValidationReason.DATA_SERVICE_UNAVAILABLE]: '数据服务不可用'
+      [ValidationReason.DATA_SERVICE_UNAVAILABLE]: '数据服务不可用',
     },
     en: {
       [ValidationReason.ITEM_NOT_FOUND]: 'Item not found',
@@ -616,13 +617,14 @@ export function getValidationReasonText(reason: ValidationReasonType, locale: st
       [ValidationReason.CHEMICAL_EQUIPMENT]: 'Chemical recipe, requires special equipment',
       [ValidationReason.FLUID_EXTRACTION]: 'Fluid extraction, requires dedicated equipment',
       [ValidationReason.RECYCLER_REQUIRED]: 'Recycling recipe, requires recycling equipment',
-      [ValidationReason.AGRICULTURE_EQUIPMENT]: 'Agriculture recipe, requires agriculture equipment',
+      [ValidationReason.AGRICULTURE_EQUIPMENT]:
+        'Agriculture recipe, requires agriculture equipment',
       [ValidationReason.LAB_REQUIRED]: 'Research recipe, requires laboratory',
       [ValidationReason.COLLECTION_RECIPE]: 'Collection recipe, can be operated manually',
       [ValidationReason.BASIC_CRAFTING]: 'Basic crafting recipe, can be crafted manually',
       [ValidationReason.SPECIAL_EQUIPMENT]: 'Requires special equipment to craft',
-      [ValidationReason.DATA_SERVICE_UNAVAILABLE]: 'Data service unavailable'
-    }
+      [ValidationReason.DATA_SERVICE_UNAVAILABLE]: 'Data service unavailable',
+    },
   };
 
   return reasonTexts[locale]?.[reason] || reasonTexts.zh[reason] || reason;
@@ -634,21 +636,24 @@ export function getValidationReasonText(reason: ValidationReasonType, locale: st
  * @param locale 语言代码，默认为 'zh'
  * @returns 本地化文本
  */
-export function getValidationCategoryText(category: ValidationCategoryType, locale: string = 'zh'): string {
+export function getValidationCategoryText(
+  category: ValidationCategoryType,
+  locale: string = 'zh'
+): string {
   const categoryTexts: Record<string, Record<ValidationCategoryType, string>> = {
     zh: {
       [ValidationCategory.RAW_MATERIAL]: '原材料',
       [ValidationCategory.CRAFTABLE]: '可制作',
       [ValidationCategory.RESTRICTED]: '受限制',
-      [ValidationCategory.DATA_ERROR]: '数据错误'
+      [ValidationCategory.DATA_ERROR]: '数据错误',
     },
     en: {
       [ValidationCategory.RAW_MATERIAL]: 'Raw Material',
       [ValidationCategory.CRAFTABLE]: 'Craftable',
       [ValidationCategory.RESTRICTED]: 'Restricted',
-      [ValidationCategory.DATA_ERROR]: 'Data Error'
-    }
+      [ValidationCategory.DATA_ERROR]: 'Data Error',
+    },
   };
 
   return categoryTexts[locale]?.[category] || categoryTexts.zh[category] || category;
-} 
+}

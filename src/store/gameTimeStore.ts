@@ -7,10 +7,11 @@ interface GameTimeState {
   incrementGameTime: (deltaTime: number) => void;
 }
 
-const useGameTimeStore = create<GameTimeState>((set) => ({
+const useGameTimeStore = create<GameTimeState>(set => ({
   gameTime: 0,
   setGameTime: (time: number) => set({ gameTime: time }),
-  incrementGameTime: (deltaTime: number) => set(state => ({ gameTime: state.gameTime + deltaTime }))
+  incrementGameTime: (deltaTime: number) =>
+    set(state => ({ gameTime: state.gameTime + deltaTime })),
 }));
 
 export default useGameTimeStore;

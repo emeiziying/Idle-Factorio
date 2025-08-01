@@ -79,7 +79,7 @@ export interface Recipe {
   disallowedEffects?: string[]; // 不允许的效果
   icon?: string; // 图标ID
   iconText?: string; // 图标文本（如温度标识 "500°"）
-  
+
   // 科技相关新字段
   row?: number; // 科技树中的行位置
   count?: number; // 研究单位数量（配合time字段计算总时间）
@@ -90,14 +90,14 @@ export interface Recipe {
 export interface InventoryItem {
   itemId: string;
   currentAmount: number;
-  
+
   // 堆叠系统
-  stackSize: number;           // 单堆叠大小（来自物品数据）
-  baseStacks: number;          // 基础堆叠数（默认1）
-  additionalStacks: number;    // 箱子提供的额外堆叠
-  totalStacks: number;         // 总堆叠数 = base + additional
-  maxCapacity: number;         // 总容量 = totalStacks × stackSize
-  
+  stackSize: number; // 单堆叠大小（来自物品数据）
+  baseStacks: number; // 基础堆叠数（默认1）
+  additionalStacks: number; // 箱子提供的额外堆叠
+  totalStacks: number; // 总堆叠数 = base + additional
+  maxCapacity: number; // 总容量 = totalStacks × stackSize
+
   productionRate: number;
   consumptionRate: number;
   status: 'producing' | 'stopped' | 'insufficient' | 'inventory_full' | 'researching' | 'normal';
@@ -114,22 +114,23 @@ export interface CraftingTask {
   craftingTime: number;
   status?: 'pending' | 'crafting' | 'completed';
   // 链式任务相关字段
-  chainId?: string;           // 所属任务链ID
+  chainId?: string; // 所属任务链ID
   isIntermediateProduct?: boolean; // 是否为中间产物（不显示在库存中）
-  dependsOnTasks?: string[];  // 依赖的任务ID列表
+  dependsOnTasks?: string[]; // 依赖的任务ID列表
 }
 
 // 任务链接口
 export interface CraftingChain {
   id: string;
-  name: string;               // 链式任务的显示名称（如"制作石炉(含依赖)"）
-  tasks: CraftingTask[];      // 任务列表，按执行顺序排列
-  finalProduct: {            // 最终产物信息
+  name: string; // 链式任务的显示名称（如"制作石炉(含依赖)"）
+  tasks: CraftingTask[]; // 任务列表，按执行顺序排列
+  finalProduct: {
+    // 最终产物信息
     itemId: string;
     quantity: number;
   };
   status: 'pending' | 'crafting' | 'completed';
-  totalProgress: number;      // 整个链的总进度 (0-1)
+  totalProgress: number; // 整个链的总进度 (0-1)
   rawMaterialsConsumed?: Map<string, number>; // 已预先消耗的原材料
 }
 
@@ -144,9 +145,9 @@ export interface IconData {
 export interface GameData {
   version: {
     base: string;
-    "elevated-rails": string;
+    'elevated-rails': string;
     quality: string;
-    "space-age": string;
+    'space-age': string;
   };
   categories: Category[];
   items: Item[];
@@ -164,16 +165,16 @@ export interface ItemDetails {
 
 // 存储配置接口 - 支持固体和液体存储
 export interface StorageConfig {
-  itemId: string;              // 存储设备作为物品的ID
+  itemId: string; // 存储设备作为物品的ID
   name: string;
   category: 'solid' | 'liquid'; // 存储类型：固体或液体
-  additionalStacks?: number;    // 固体存储：提供的额外堆叠数
-  fluidCapacity?: number;       // 液体存储：液体容量（单位）
+  additionalStacks?: number; // 固体存储：提供的额外堆叠数
+  fluidCapacity?: number; // 液体存储：液体容量（单位）
   recipe: { [itemId: string]: number }; // 制造配方
-  craftingTime: number;        // 制造时间（秒）
+  craftingTime: number; // 制造时间（秒）
   description: string;
-  dimensions?: string;          // 尺寸（如 "3×3"）
-  requiredTechnology?: string;  // 需要的科技
+  dimensions?: string; // 尺寸（如 "3×3"）
+  requiredTechnology?: string; // 需要的科技
 }
 
 // 向后兼容的别名
@@ -182,11 +183,11 @@ export type ChestConfig = StorageConfig;
 // 已部署的存储容器
 export interface DeployedContainer {
   id: string;
-  chestType: string;           // 箱子类型
-  chestItemId: string;         // 箱子物品ID
-  targetItemId: string;        // 为哪个物品提供存储
-  additionalStacks: number;    // 提供的堆叠数
-  deployedAt: number;          // 部署时间
+  chestType: string; // 箱子类型
+  chestItemId: string; // 箱子物品ID
+  targetItemId: string; // 为哪个物品提供存储
+  additionalStacks: number; // 提供的堆叠数
+  deployedAt: number; // 部署时间
 }
 
 // 操作结果接口

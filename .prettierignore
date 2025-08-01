@@ -1,0 +1,61 @@
+# 依赖
+node_modules/
+pnpm-lock.yaml
+
+# 构建输出
+dist/
+build/
+
+# 公共文件
+public/
+
+# 配置文件
+vite.config.ts
+vitest.config.ts
+eslint.config.js
+
+# 数据文件 
+src/data/spa/**/*.json
+public/**/*.json
+*.md
+*.webp
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.ico
+
+# GitHub Actions 和其他配置目录
+.github/
+.claude/
+.promptx/
+audit-ci.json
+
+# 保留主要配置文件可以被格式化
+!.prettierrc
+!package.json
+!tsconfig*.json
+
+# 测试快照
+**/__snapshots__/
+
+# 环境文件
+.env
+.env.local
+.env.production
+.env.development
+
+# 日志文件
+*.log
+
+# IDE文件
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# 临时文件
+*.tmp
+*.temp

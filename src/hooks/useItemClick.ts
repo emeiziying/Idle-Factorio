@@ -17,44 +17,44 @@ logger.configure({ prefix: '[Game] [UI]' });
  * @param onItemSelect 物品选择回调函数
  * @returns 处理物品点击的函数
  */
-export const useItemClick = (
-  componentName: string,
-  onItemSelect?: (item: Item) => void
-) => {
+export const useItemClick = (componentName: string, onItemSelect?: (item: Item) => void) => {
   const dataService = useDataService();
 
-  return useCallback((itemId: string) => {
-    if (!itemId) {
-      logger.warn(`${componentName}: No itemId provided`);
-      return;
-    }
-
-    if (onItemSelect) {
-      const clickedItem = dataService.getItem(itemId);
-      if (clickedItem) {
-        onItemSelect(clickedItem);
-      } else {
-        logger.warn(`${componentName}: Item not found:`, itemId);
+  return useCallback(
+    (itemId: string) => {
+      if (!itemId) {
+        logger.warn(`${componentName}: No itemId provided`);
+        return;
       }
-    } else {
-      logger.debug(`${componentName}: onItemSelect callback not provided`);
-    }
-  }, [componentName, onItemSelect, dataService]);
+
+      if (onItemSelect) {
+        const clickedItem = dataService.getItem(itemId);
+        if (clickedItem) {
+          onItemSelect(clickedItem);
+        } else {
+          logger.warn(`${componentName}: Item not found:`, itemId);
+        }
+      } else {
+        logger.debug(`${componentName}: onItemSelect callback not provided`);
+      }
+    },
+    [componentName, onItemSelect, dataService]
+  );
 };
 
 /**
  * 批量物品点击处理 Hook
  * 处理多个物品的点击事件
  */
-export const useItemsClick = (
-  componentName: string,
-  onItemSelect?: (item: Item) => void
-) => {
+export const useItemsClick = (componentName: string, onItemSelect?: (item: Item) => void) => {
   const handleItemClick = useItemClick(componentName, onItemSelect);
 
-  return useCallback((itemIds: string[]) => {
-    itemIds.forEach(itemId => handleItemClick(itemId));
-  }, [handleItemClick]);
+  return useCallback(
+    (itemIds: string[]) => {
+      itemIds.forEach(itemId => handleItemClick(itemId));
+    },
+    [handleItemClick]
+  );
 };
 
 /**
@@ -67,23 +67,26 @@ export const useItemClickWithContext = <T = unknown>(
 ) => {
   const dataService = useDataService();
 
-  return useCallback((itemId: string, context?: T) => {
-    if (!itemId) {
-      logger.warn(`${componentName}: No itemId provided`);
-      return;
-    }
-
-    if (onItemSelect) {
-      const clickedItem = dataService.getItem(itemId);
-      if (clickedItem) {
-        onItemSelect(clickedItem, context);
-      } else {
-        logger.warn(`${componentName}: Item not found:`, itemId);
+  return useCallback(
+    (itemId: string, context?: T) => {
+      if (!itemId) {
+        logger.warn(`${componentName}: No itemId provided`);
+        return;
       }
-    } else {
-      logger.debug(`${componentName}: onItemSelect callback not provided`);
-    }
-  }, [componentName, onItemSelect, dataService]);
+
+      if (onItemSelect) {
+        const clickedItem = dataService.getItem(itemId);
+        if (clickedItem) {
+          onItemSelect(clickedItem, context);
+        } else {
+          logger.warn(`${componentName}: Item not found:`, itemId);
+        }
+      } else {
+        logger.debug(`${componentName}: onItemSelect callback not provided`);
+      }
+    },
+    [componentName, onItemSelect, dataService]
+  );
 };
 
 /**
@@ -97,26 +100,29 @@ export const useSafeItemClick = (
 ) => {
   const dataService = useDataService();
 
-  return useCallback(async (itemId: string) => {
-    try {
-      if (!itemId) {
-        throw new Error('No itemId provided');
-      }
+  return useCallback(
+    async (itemId: string) => {
+      try {
+        if (!itemId) {
+          throw new Error('No itemId provided');
+        }
 
-      if (!onItemSelect) {
-        logger.debug(`${componentName}: onItemSelect callback not provided`);
-        return;
-      }
+        if (!onItemSelect) {
+          logger.debug(`${componentName}: onItemSelect callback not provided`);
+          return;
+        }
 
-      const clickedItem = dataService.getItem(itemId);
-      if (!clickedItem) {
-        throw new Error(`Item not found: ${itemId}`);
-      }
+        const clickedItem = dataService.getItem(itemId);
+        if (!clickedItem) {
+          throw new Error(`Item not found: ${itemId}`);
+        }
 
-      onItemSelect(clickedItem);
-    } catch (error) {
-      logger.error(`${componentName}: Error handling item click:`, error);
-      onError?.(error as Error);
-    }
-  }, [componentName, onItemSelect, onError, dataService]);
+        onItemSelect(clickedItem);
+      } catch (error) {
+        logger.error(`${componentName}: Error handling item click:`, error);
+        onError?.(error as Error);
+      }
+    },
+    [componentName, onItemSelect, onError, dataService]
+  );
 };

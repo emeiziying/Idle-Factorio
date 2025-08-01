@@ -15,12 +15,9 @@ const ItemGrid: React.FC<ItemGridProps> = ({ items, onItemClick }) => {
   return (
     <Box>
       <Grid container spacing={isMobile ? 1 : 1.5}>
-        {items.map((item) => (
+        {items.map(item => (
           <Grid size={{ xs: 6, sm: 4, md: 3, lg: 2 }} key={item.id}>
-            <ItemCard
-              item={item}
-              onClick={() => onItemClick?.(item)}
-            />
+            <ItemCard item={item} onClick={() => onItemClick?.(item)} />
           </Grid>
         ))}
       </Grid>

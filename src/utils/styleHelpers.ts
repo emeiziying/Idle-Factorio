@@ -17,12 +17,16 @@ export const getClickableStyles = (
 ): SxProps<Theme> => ({
   cursor: isClickable ? 'pointer' : 'default',
   transition: 'opacity 0.2s',
-  '&:hover': isClickable ? { 
-    opacity: hoverOpacity 
-  } : {},
-  '&:active': isClickable ? {
-    opacity: hoverOpacity - 0.1
-  } : {},
+  '&:hover': isClickable
+    ? {
+        opacity: hoverOpacity,
+      }
+    : {},
+  '&:active': isClickable
+    ? {
+        opacity: hoverOpacity - 0.1,
+      }
+    : {},
 });
 
 /**
@@ -43,18 +47,20 @@ export const getDisabledStyles = (isDisabled: boolean): SxProps<Theme> => ({
  */
 export const getLoadingStyles = (isLoading: boolean): SxProps<Theme> => ({
   position: 'relative',
-  '&::after': isLoading ? {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  } : {},
+  '&::after': isLoading
+    ? {
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }
+    : {},
 });
 
 /**
@@ -134,12 +140,14 @@ export const getCardStyles = (
   boxShadow: elevation,
   borderRadius: 1,
   transition: 'all 0.3s ease',
-  ...(isHoverable ? {
-    '&:hover': {
-      boxShadow: elevation + 2,
-      transform: 'translateY(-2px)',
-    }
-  } : {}),
+  ...(isHoverable
+    ? {
+        '&:hover': {
+          boxShadow: elevation + 2,
+          transform: 'translateY(-2px)',
+        },
+      }
+    : {}),
 });
 
 /**
@@ -164,8 +172,11 @@ export const getCenterStyles = (
  */
 export const mergeStyles = (...styles: (SxProps<Theme> | undefined)[]): SxProps<Theme> => {
   const filteredStyles = styles.filter(Boolean) as SxProps<Theme>[];
-  return filteredStyles.reduce((acc, style) => ({
-    ...acc,
-    ...style
-  }), {} as SxProps<Theme>);
+  return filteredStyles.reduce(
+    (acc, style) => ({
+      ...acc,
+      ...style,
+    }),
+    {} as SxProps<Theme>
+  );
 };

@@ -1,14 +1,14 @@
-import React from "react";
-import { Box, Tooltip } from "@mui/material";
-import type { Item, Recipe } from "../../types/index";
-import type { ManualCraftingValidation } from "../../utils/manualCraftingValidator";
+import React from 'react';
+import { Box, Tooltip } from '@mui/material';
+import type { Item, Recipe } from '../../types/index';
+import type { ManualCraftingValidation } from '../../utils/manualCraftingValidator';
 import {
   getValidationReasonText,
   getValidationCategoryText,
-} from "../../utils/manualCraftingValidator";
-import FactorioIcon from "../common/FactorioIcon";
-import { DataService } from "../../services/DataService";
-import { useIsMobile } from "../../hooks/useIsMobile";
+} from '../../utils/manualCraftingValidator';
+import FactorioIcon from '../common/FactorioIcon';
+import { DataService } from '../../services/DataService';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 interface ItemCardProps {
   item: Item;
@@ -46,23 +46,21 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, validation }) => {
         sx={{
           width: isMobile ? 44 : 52,
           height: isMobile ? 44 : 52,
-          position: "relative",
-          bgcolor: "background.paper",
-          border: "1px solid",
-          borderColor: validation.canCraftManually
-            ? "success.main"
-            : "error.main",
+          position: 'relative',
+          bgcolor: 'background.paper',
+          border: '1px solid',
+          borderColor: validation.canCraftManually ? 'success.main' : 'error.main',
           borderRadius: 1,
-          transition: "all 0.15s ease",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          transition: 'all 0.15s ease',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           padding: 0,
-          "&:hover": {
-            bgcolor: "action.hover",
-            borderColor: "primary.main",
+          '&:hover': {
+            bgcolor: 'action.hover',
+            borderColor: 'primary.main',
             zIndex: 10,
-            boxShadow: "0 2px 8px rgba(33, 150, 243, 0.2)",
+            boxShadow: '0 2px 8px rgba(33, 150, 243, 0.2)',
           },
         }}
       >

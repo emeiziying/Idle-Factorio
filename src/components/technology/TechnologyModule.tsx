@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  CircularProgress,
-  Alert,
-  useTheme,
-  useMediaQuery
-} from '@mui/material';
+import { Box, Typography, CircularProgress, Alert, useTheme, useMediaQuery } from '@mui/material';
 import TechSimpleGrid from './TechSimpleGrid';
 import TechDetailPanel from './TechDetailPanel';
 import ResearchQueue from './ResearchQueue';
@@ -21,10 +14,10 @@ import { useUnlockedTechsRepair } from '../../hooks/useUnlockedTechsRepair';
 const TechnologyModule: React.FC = React.memo(() => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
+
   // 安全修复unlockedTechs状态
   useUnlockedTechsRepair();
-  
+
   // 从store获取状态
   const {
     technologies,
@@ -43,7 +36,10 @@ const TechnologyModule: React.FC = React.memo(() => {
   // 本地状态 - 智能初始化loading状态
   const [loading, setLoading] = useState(() => technologies.size === 0);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTechId, setSelectedTechId] = useLocalStorageState<string | null>('technology-selected-tech', { defaultValue: null });
+  const [selectedTechId, setSelectedTechId] = useLocalStorageState<string | null>(
+    'technology-selected-tech',
+    { defaultValue: null }
+  );
 
   // 初始化科技服务 - 优化版本，避免不必要的loading
   useEffect(() => {
@@ -56,11 +52,11 @@ const TechnologyModule: React.FC = React.memo(() => {
           setLoading(false);
           return;
         }
-        
+
         // 只有数据不存在时才显示loading并加载数据
         setLoading(true);
         await initializeTechnologyService();
-        
+
         setError(null);
       } catch (err) {
         console.error('Failed to initialize technology service:', err);
@@ -112,17 +108,17 @@ const TechnologyModule: React.FC = React.memo(() => {
   // 构建科技状态映射
   const techStates = React.useMemo(() => {
     const states = new Map<string, { status: TechStatus; progress?: number }>();
-    
+
     // 安全检查unlockedTechs是否为Set
     const safeUnlockedTechs = unlockedTechs instanceof Set ? unlockedTechs : new Set();
-    
+
     // 只有当有科技数据时才计算状态
     if (technologies.size === 0) {
       return states;
     }
-    
+
     const techService = TechnologyService.getInstance();
-    
+
     Array.from(technologies.values()).forEach(tech => {
       let status: TechStatus = 'locked';
       let progress: number | undefined;
@@ -153,10 +149,10 @@ const TechnologyModule: React.FC = React.memo(() => {
     if (technologies.size === 0) {
       return [];
     }
-    
+
     // 直接使用store中的科技数据，避免重复调用service
     const allTechs = Array.from(technologies.values());
-    
+
     // 按row属性排序（如果需要特定排序逻辑）
     return allTechs.sort((a, b) => (a.row || 0) - (b.row || 0));
   }, [technologies]);
@@ -171,7 +167,7 @@ const TechnologyModule: React.FC = React.memo(() => {
           alignItems: 'center',
           justifyContent: 'center',
           height: '60vh',
-          gap: 2
+          gap: 2,
         }}
       >
         <CircularProgress size={48} />
@@ -206,7 +202,7 @@ const TechnologyModule: React.FC = React.memo(() => {
           alignItems: 'center',
           justifyContent: 'center',
           height: '60vh',
-          gap: 2
+          gap: 2,
         }}
       >
         <Typography variant="h6" color="text.secondary">
@@ -221,10 +217,15 @@ const TechnologyModule: React.FC = React.memo(() => {
 
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-
-
       {/* 主体内容 */}
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', overflow: 'hidden' }}>
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          overflow: 'hidden',
+        }}
+      >
         {/* 科技网格主体 */}
         <Box sx={{ flex: 1, overflow: 'auto' }}>
           <TechSimpleGrid
@@ -237,15 +238,15 @@ const TechnologyModule: React.FC = React.memo(() => {
         </Box>
 
         {/* 研究队列面板 */}
-        <Box 
-          sx={{ 
+        <Box
+          sx={{
             width: isMobile ? '100%' : 350,
             height: isMobile ? 'auto' : '100%',
             overflow: 'auto',
             borderLeft: isMobile ? 'none' : `1px solid ${theme.palette.divider}`,
             borderTop: isMobile ? `1px solid ${theme.palette.divider}` : 'none',
             p: 2,
-            bgcolor: theme.palette.background.paper
+            bgcolor: theme.palette.background.paper,
           }}
         >
           <ResearchQueue

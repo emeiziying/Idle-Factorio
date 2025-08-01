@@ -1,9 +1,5 @@
 // 游戏循环服务 - 基于 requestAnimationFrame 的统一循环管理
-import type { 
-  GameLoopTask, 
-  GameLoopStats, 
-  GameLoopConfig 
-} from '@/types/gameLoop';
+import type { GameLoopTask, GameLoopStats, GameLoopConfig } from '@/types/gameLoop';
 import { PerformanceLevel } from '@/types/gameLoop';
 
 export class GameLoopService {
@@ -11,7 +7,7 @@ export class GameLoopService {
   private animationFrameId: number | null = null;
   private lastFrameTime: number = 0;
   private tasks: Map<string, GameLoopTask> = new Map();
-  
+
   // 性能统计
   private stats: GameLoopStats = {
     fps: 0,
@@ -23,8 +19,8 @@ export class GameLoopService {
     performance: {
       frameTime: 0,
       averageFrameTime: 0,
-      slowFrames: 0
-    }
+      slowFrames: 0,
+    },
   };
 
   // 配置
@@ -33,7 +29,7 @@ export class GameLoopService {
     maxDeltaTime: 100, // 最大 100ms delta，防止大跳跃
     enableStats: true,
     enablePerformanceMode: false,
-    backgroundThrottleRatio: 0.1 // 后台时降到 10% 频率
+    backgroundThrottleRatio: 0.1, // 后台时降到 10% 频率
   };
 
   // 状态
@@ -41,7 +37,7 @@ export class GameLoopService {
   private isPaused: boolean = false;
   private isVisible: boolean = true;
   private performanceLevel: PerformanceLevel = PerformanceLevel.HIGH;
-  
+
   // 性能监控
   private frameTimeBuffer: number[] = [];
   private readonly FRAME_TIME_BUFFER_SIZE = 60;
@@ -62,12 +58,12 @@ export class GameLoopService {
   // 启动游戏循环
   start(): void {
     if (this.isRunning) return;
-    
+
     this.isRunning = true;
     this.isPaused = false;
     this.lastFrameTime = performance.now();
     this.stats.frameCount = 0;
-    
+
     console.log('[GameLoop] 启动游戏循环');
     this.loop();
   }
@@ -75,13 +71,13 @@ export class GameLoopService {
   // 停止游戏循环
   stop(): void {
     if (!this.isRunning) return;
-    
+
     this.isRunning = false;
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
-    
+
     console.log('[GameLoop] 停止游戏循环');
   }
 
@@ -105,7 +101,7 @@ export class GameLoopService {
 
     const frameStartTime = performance.now();
     const deltaTime = Math.min(frameStartTime - this.lastFrameTime, this.config.maxDeltaTime);
-    
+
     this.lastFrameTime = frameStartTime;
     this.stats.totalTime += deltaTime;
     this.stats.deltaTime = deltaTime;
@@ -159,9 +155,9 @@ export class GameLoopService {
   private updateStats(frameStartTime: number): void {
     const frameEndTime = performance.now();
     const frameTime = frameEndTime - frameStartTime;
-    
+
     this.stats.performance.frameTime = frameTime;
-    
+
     // 维护帧时间缓冲区
     this.frameTimeBuffer.push(frameTime);
     if (this.frameTimeBuffer.length > this.FRAME_TIME_BUFFER_SIZE) {
@@ -200,7 +196,7 @@ export class GameLoopService {
     // 根据页面可见性和性能等级决定调度方式
     if (!this.isVisible) {
       // 页面不可见时，使用 setTimeout 降低频率
-      const throttledInterval = (1000 / this.config.targetFPS) / this.config.backgroundThrottleRatio;
+      const throttledInterval = 1000 / this.config.targetFPS / this.config.backgroundThrottleRatio;
       setTimeout(() => this.loop(), throttledInterval);
     } else if (this.performanceLevel === PerformanceLevel.LOW) {
       // 低性能模式，降低到 15 FPS
@@ -243,7 +239,7 @@ export class GameLoopService {
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', () => {
         this.isVisible = !document.hidden;
-        
+
         if (this.isVisible) {
           // 页面变为可见时，重置时间避免大跳跃
           this.lastFrameTime = performance.now();
@@ -321,7 +317,7 @@ export class GameLoopService {
       performanceLevel: this.performanceLevel,
       tasksCount: this.tasks.size,
       stats: this.stats,
-      config: this.config
+      config: this.config,
     });
   }
 }

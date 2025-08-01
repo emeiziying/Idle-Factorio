@@ -49,7 +49,7 @@ export class ServiceInitializer {
     // 4. 初始化配方服务
     const recipeService = RecipeService.getInstance();
     ServiceLocator.register(SERVICE_NAMES.RECIPE, recipeService);
-    
+
     // 使用游戏数据初始化配方
     if (gameData.recipes) {
       RecipeService.initializeRecipes(gameData.recipes);

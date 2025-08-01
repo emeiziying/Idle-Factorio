@@ -44,22 +44,22 @@ export interface GameLoopState {
 // 任务类型常量
 export const GameLoopTaskType = {
   CRAFTING: 'crafting',
-  FACILITIES: 'facilities', 
+  FACILITIES: 'facilities',
   FUEL_CONSUMPTION: 'fuel-consumption',
   RESEARCH: 'research',
   STATISTICS: 'statistics',
   AUTO_SAVE: 'auto-save',
-  UI_UPDATES: 'ui-updates'
+  UI_UPDATES: 'ui-updates',
 } as const;
 
-export type GameLoopTaskType = typeof GameLoopTaskType[keyof typeof GameLoopTaskType];
+export type GameLoopTaskType = (typeof GameLoopTaskType)[keyof typeof GameLoopTaskType];
 
 // 性能等级常量
 export const PerformanceLevel = {
-  HIGH: 'high',      // 60 FPS
-  MEDIUM: 'medium',  // 30 FPS
-  LOW: 'low',        // 15 FPS
-  BACKGROUND: 'background' // 1 FPS
+  HIGH: 'high', // 60 FPS
+  MEDIUM: 'medium', // 30 FPS
+  LOW: 'low', // 15 FPS
+  BACKGROUND: 'background', // 1 FPS
 } as const;
 
-export type PerformanceLevel = typeof PerformanceLevel[keyof typeof PerformanceLevel];
+export type PerformanceLevel = (typeof PerformanceLevel)[keyof typeof PerformanceLevel];
