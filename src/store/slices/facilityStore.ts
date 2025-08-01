@@ -1,7 +1,9 @@
 // 设施管理切片
 import type { SliceCreator, FacilitySlice } from '@/store/types';
-import { FuelService } from '@/services/crafting/FuelService';
-import { DataService } from '@/services/core/DataService';
+import type { FuelService } from '@/services/crafting/FuelService';
+import type { DataService } from '@/services/core/DataService';
+import { getService } from '@/services/core/DIServiceInitializer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 
 export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
   // 初始状态
@@ -9,7 +11,7 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
 
   // 设施管理
   addFacility: facility => {
-    const fuelService = FuelService.getInstance();
+    const fuelService = getService<FuelService>(SERVICE_TOKENS.FUEL_SERVICE);
 
     // 检查是否需要燃料缓存
     const fuelBuffer = fuelService.initializeFuelBuffer(facility.facilityId);
@@ -41,7 +43,7 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
 
   _repairFacilityState: () => {
     const facilities = get().facilities;
-    const dataService = DataService.getInstance();
+    const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
     const needsRepair = facilities.filter(
       facility => !facility.targetItemId && facility.production?.currentRecipeId
     );
@@ -69,7 +71,7 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
     const facility = get().facilities.find(f => f.id === facilityId);
     if (!facility?.fuelBuffer) return false;
 
-    const fuelService = FuelService.getInstance();
+    const fuelService = getService<FuelService>(SERVICE_TOKENS.FUEL_SERVICE);
     const result = fuelService.addFuel(
       facility.fuelBuffer,
       fuelItemId,
@@ -91,7 +93,7 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
   },
 
   autoRefuelFacilities: () => {
-    const fuelService = FuelService.getInstance();
+    const fuelService = getService<FuelService>(SERVICE_TOKENS.FUEL_SERVICE);
     const facilities = get().facilities;
 
     // 使用智能燃料分配
@@ -106,7 +108,7 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
   },
 
   updateFuelConsumption: (deltaTime: number) => {
-    const fuelService = FuelService.getInstance();
+    const fuelService = getService<FuelService>(SERVICE_TOKENS.FUEL_SERVICE);
     const facilities = get().facilities;
 
     facilities.forEach(facility => {

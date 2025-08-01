@@ -1,7 +1,9 @@
 // 游戏循环状态管理切片
 import type { SliceCreator } from '@/store/types';
 import type { GameLoopStats, GameLoopConfig, PerformanceLevel } from '@/types/gameLoop';
-import { GameLoopService } from '@/services/game/GameLoopService';
+import type { GameLoopService } from '@/services/game/GameLoopService';
+import { getService } from '@/services/core/DIServiceInitializer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 
 // 游戏循环切片状态接口
 export interface GameLoopSlice {
@@ -26,7 +28,8 @@ export interface GameLoopSlice {
 }
 
 export const createGameLoopSlice: SliceCreator<GameLoopSlice> = set => {
-  const gameLoopService = GameLoopService.getInstance();
+  // 延迟获取服务，避免在DI初始化前访问
+  const getGameLoopService = () => getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
 
   return {
     // 初始状态
@@ -56,7 +59,7 @@ export const createGameLoopSlice: SliceCreator<GameLoopSlice> = set => {
 
     // Actions
     startGameLoop: () => {
-      gameLoopService.start();
+      getGameLoopService().start();
       set(() => ({
         isGameLoopRunning: true,
         isGameLoopPaused: false,
@@ -64,7 +67,7 @@ export const createGameLoopSlice: SliceCreator<GameLoopSlice> = set => {
     },
 
     stopGameLoop: () => {
-      gameLoopService.stop();
+      getGameLoopService().stop();
       set(() => ({
         isGameLoopRunning: false,
         isGameLoopPaused: false,
@@ -72,43 +75,43 @@ export const createGameLoopSlice: SliceCreator<GameLoopSlice> = set => {
     },
 
     pauseGameLoop: () => {
-      gameLoopService.pause();
+      getGameLoopService().pause();
       set(() => ({
         isGameLoopPaused: true,
       }));
     },
 
     resumeGameLoop: () => {
-      gameLoopService.resume();
+      getGameLoopService().resume();
       set(() => ({
         isGameLoopPaused: false,
       }));
     },
 
     updateGameLoopConfig: (newConfig: Partial<GameLoopConfig>) => {
-      gameLoopService.updateConfig(newConfig);
+      getGameLoopService().updateConfig(newConfig);
       set(state => ({
         gameLoopConfig: { ...state.gameLoopConfig, ...newConfig },
       }));
     },
 
     setPerformanceLevel: (level: PerformanceLevel) => {
-      gameLoopService.setPerformanceLevel(level);
+      getGameLoopService().setPerformanceLevel(level);
       set(() => ({
         performanceLevel: level,
       }));
     },
 
     getGameLoopStats: () => {
-      return gameLoopService.getStats();
+      return getGameLoopService().getStats();
     },
 
     // 内部更新方法 - 定期同步 GameLoopService 的状态
     _updateGameLoopState: () => {
-      const stats = gameLoopService.getStats();
-      const config = gameLoopService.getConfig();
-      const isRunning = gameLoopService.isRunningState();
-      const isPaused = gameLoopService.isPausedState();
+      const stats = getGameLoopService().getStats();
+      const config = getGameLoopService().getConfig();
+      const isRunning = getGameLoopService().isRunningState();
+      const isPaused = getGameLoopService().isPausedState();
 
       set(() => ({
         isGameLoopRunning: isRunning,

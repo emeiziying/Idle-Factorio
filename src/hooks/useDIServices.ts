@@ -17,6 +17,7 @@ import type { FuelService } from '@/services/crafting/FuelService';
 import type { PowerService } from '@/services/game/PowerService';
 import type { StorageService } from '@/services/storage/StorageService';
 import type { ManualCraftingValidator } from '@/utils/manualCraftingValidator';
+import type { GameLoopService } from '@/services/game/GameLoopService';
 
 /**
  * 获取 DataService 实例
@@ -96,6 +97,15 @@ export const useStorageService = (): StorageService => {
 export const useManualCraftingValidator = (): ManualCraftingValidator => {
   return useMemo(() => {
     return getService<ManualCraftingValidator>(SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR);
+  }, []);
+};
+
+/**
+ * 获取 GameLoopService 实例
+ */
+export const useGameLoopService = (): GameLoopService => {
+  return useMemo(() => {
+    return getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
   }, []);
 };
 

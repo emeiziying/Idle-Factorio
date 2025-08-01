@@ -1,7 +1,9 @@
 // 制作队列切片
 import type { SliceCreator, CraftingSlice } from '@/store/types';
 import type { CraftingTask, CraftingChain } from '@/types/index';
-import { RecipeService } from '@/services/crafting/RecipeService';
+import type { RecipeService } from '@/services/crafting/RecipeService';
+import { getService } from '@/services/core/DIServiceInitializer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 
 export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
   // 初始状态
@@ -103,7 +105,8 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
       // 如果是手动合成任务，不需要归还库存（因为手动合成没有消耗库存）
       if (!task.recipeId.startsWith('manual_')) {
         // 获取配方信息并归还库存
-        const recipe = RecipeService.getRecipeById(task.recipeId);
+        const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+        const recipe = recipeService.getRecipeById(task.recipeId);
         if (recipe) {
           // 归还输入材料
           Object.entries(recipe.in).forEach(([itemId, required]) => {

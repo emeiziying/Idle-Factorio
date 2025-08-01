@@ -2,9 +2,11 @@
 
 import type { CraftingTask, Recipe } from '@/types/index';
 import useGameStore from '@/store/gameStore';
-import { DataService } from '@/services/core/DataService';
-import { RecipeService } from '@/services/crafting/RecipeService';
+import type { DataService } from '@/services/core/DataService';
+import type { RecipeService } from '@/services/crafting/RecipeService';
 import { GameConfig } from '@/services/core/GameConfig';
+import { getService } from '@/services/core/DIServiceInitializer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import { secondsToMs } from '@/utils/common';
 
 // 设备效率配置 - 基于Factorio的采矿机设计
@@ -83,7 +85,8 @@ class CraftingEngine {
     }
 
     // 查找该物品的mining配方
-    const miningRecipes = RecipeService.getRecipesThatProduce(itemId).filter(recipe =>
+    const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+    const miningRecipes = recipeService.getRecipesThatProduce(itemId).filter((recipe: any) =>
       recipe.flags?.includes('mining')
     );
 
@@ -148,7 +151,7 @@ class CraftingEngine {
       return this.deviceEfficiencyCache.get(machineId)!;
     }
 
-    const dataService = DataService.getInstance();
+    const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
     const machineItem = dataService.getItem(machineId);
 
     let deviceEfficiency: DeviceEfficiency;
@@ -249,7 +252,7 @@ class CraftingEngine {
     if (craftingQueue.length === 0) return;
 
     const now = Date.now();
-    const dataService = DataService.getInstance();
+    const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
 
     // 处理队列中的第一个任务（只有第一个任务会进行制作）
     const currentTask = craftingQueue[0];
@@ -261,7 +264,8 @@ class CraftingEngine {
       const itemId = currentTask.itemId;
 
       // 获取物品的配方数据（用于时间计算）
-      const recipes = RecipeService.getRecipesThatProduce(itemId);
+      const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+      const recipes = recipeService.getRecipesThatProduce(itemId);
 
       // 优先选择mining类型的配方，而不是recycling配方
       let selectedRecipe = null;
@@ -372,7 +376,8 @@ class CraftingEngine {
 
     // 获取手动合成的配方信息
     const itemId = task.itemId;
-    const recipes = RecipeService.getRecipesThatProduce(itemId);
+    const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+    const recipes = recipeService.getRecipesThatProduce(itemId);
 
     // 找到合适的配方（优先mining配方）
     let selectedRecipe = null;

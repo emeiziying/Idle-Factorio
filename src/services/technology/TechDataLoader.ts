@@ -5,14 +5,16 @@
 
 import type { Technology, TechCategory } from '@/types/technology';
 import type { TechRecipe, TechItem } from '@/services/technology/types';
-import { DataService } from '@/services/core/DataService';
-import { RecipeService } from '@/services/crafting/RecipeService';
+import type { DataService } from '@/services/core/DataService';
+import type { RecipeService } from '@/services/crafting/RecipeService';
+import { getService } from '@/services/core/DIServiceInitializer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 
 export class TechDataLoader {
   private dataService: DataService;
 
   constructor() {
-    this.dataService = new DataService();
+    this.dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
   }
 
   /**
@@ -172,7 +174,8 @@ export class TechDataLoader {
             // 同时收集解锁的物品（从配方输出推断）
             const unlockedItems = new Set<string>();
             for (const recipeId of item.technology.unlockedRecipes) {
-              const recipe = RecipeService.getRecipeById(recipeId);
+              const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+              const recipe = recipeService.getRecipeById(recipeId);
               if (recipe) {
                 Object.keys(recipe.out).forEach(itemId => unlockedItems.add(itemId));
               }

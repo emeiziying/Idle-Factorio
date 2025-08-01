@@ -33,7 +33,7 @@ export class DependencyService {
 
   private constructor() {
     // 在singleton模式下暂时创建实例，后续可能需要重构为DI
-    this.validator = new (require('@/utils/manualCraftingValidator').default)();
+    this.validator = new ManualCraftingValidator();
   }
 
   static getInstance(): DependencyService {
