@@ -4,7 +4,7 @@ import { DataService } from '../core/DataService';
 import type { Item } from '../../types';
 
 // 模拟 DataService
-vi.mock('../DataService', () => ({
+vi.mock('../core/DataService', () => ({
   DataService: {
     getInstance: vi.fn(),
   },

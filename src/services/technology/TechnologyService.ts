@@ -396,17 +396,6 @@ export class TechnologyService {
     this.logger.info(`Available technologies: ${availableCount}`);
   }
 
-  /**
-   * 获取阻塞科技的前置
-   */
-  private _getBlockingTechs(techId: string): string[] {
-    const tech = this.treeService.getTechnology(techId);
-    if (!tech) return [];
-    
-    return tech.prerequisites.filter((prereqId: string) => 
-      !this.unlockService.isTechUnlocked(prereqId)
-    );
-  }
 
   // ========== 事件处理 ==========
 
@@ -482,23 +471,34 @@ export class TechnologyService {
     };
   }
 
-  /**
-   * 计算有效研究时间（向后兼容）
+  /** 
+   * 按状态排序技术
    */
-  private _calculateEffectiveResearchTime(
-    tech: Technology,
-    labCount: number,
-    labEfficiency: number
-  ): number {
-    const BASE_LAB_SPEED = 1.0;
-    const LAB_EFFICIENCY_MULTIPLIER = 0.5;
-    
-    if (labCount > 0) {
-      const speedMultiplier = BASE_LAB_SPEED + 
-        (labCount - 1) * LAB_EFFICIENCY_MULTIPLIER * labEfficiency;
-      return tech.researchTime / speedMultiplier;
-    }
-    
-    return tech.researchTime;
+  public static getTechnologiesSortedByStatus(technologies: Technology[], techStates: Map<string, { status: TechStatus; progress?: number }>): Technology[] {
+    return technologies.sort((a, b) => {
+      const stateA = techStates.get(a.id)?.status || 'locked';
+      const stateB = techStates.get(b.id)?.status || 'locked';
+      
+      // 状态优先级：available > researching > unlocked > locked
+      const priority = { available: 3, researching: 2, unlocked: 1, locked: 0 };
+      const priorityDiff = (priority[stateB] || 0) - (priority[stateA] || 0);
+      
+      if (priorityDiff !== 0) return priorityDiff;
+      
+      // 同状态按名称排序
+      return a.name.localeCompare(b.name);
+    });
   }
+
+  /**
+   * 获取显示用的技术列表
+   */
+  public static getDisplayTechnologies(technologies: Technology[], techStates: Map<string, { status: TechStatus; progress?: number }>): Technology[] {
+    return technologies.filter(tech => {
+      const state = techStates.get(tech.id)?.status || 'locked';
+      // 显示可研究、研究中和已解锁的技术
+      return ['available', 'researching', 'unlocked'].includes(state);
+    });
+  }
+
 }

@@ -169,7 +169,7 @@ export class ResearchService {
     // 检查是否完成
     if (this.currentResearch.progress >= 1) {
       const completedTechId = this.currentResearch.techId;
-      const totalResearchTime = Date.now() - this.currentResearch.timeStarted;
+      const totalResearchTime = Date.now() - (this.currentResearch.timeStarted || Date.now());
       
       // 清除当前研究
       this.currentResearch = undefined;

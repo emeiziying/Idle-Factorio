@@ -6,11 +6,11 @@ import useGameStore from '../gameStore';
 import type { CraftingTask } from '../../types/index';
 
 // 模拟服务
-vi.mock('../../services/RecipeService');
-vi.mock('../../services/DataService');
-vi.mock('../../services/TechnologyService');
-vi.mock('../../services/FuelService');
-vi.mock('../../services/GameStorageService');
+vi.mock('../../services/crafting/RecipeService');
+vi.mock('../../services/core/DataService');
+vi.mock('../../services/technology/TechnologyService');
+vi.mock('../../services/crafting/FuelService');
+vi.mock('../../services/storage/GameStorageService');
 
 // 模拟 DataService
 const mockDataService = {
@@ -36,9 +36,9 @@ const mockRecipeService = {
 };
 
 // 设置模拟实现
-const { DataService } = await import('../../services/DataService');
-const { FuelService } = await import('../../services/FuelService');
-const { RecipeService } = await import('../../services/RecipeService');
+const { DataService } = await import('../../services/core/DataService');
+const { FuelService } = await import('../../services/crafting/FuelService');
+const { RecipeService } = await import('../../services/crafting/RecipeService');
 
 vi.mocked(DataService.getInstance).mockReturnValue(mockDataService);
 vi.mocked(FuelService.getInstance).mockReturnValue(mockFuelService);

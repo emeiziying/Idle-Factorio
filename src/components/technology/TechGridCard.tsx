@@ -394,7 +394,7 @@ const UnlockContent: React.FC<{
             title={`解锁项目: ${content.id}`}
           >
             <FactorioIcon
-              itemId={content.icon}
+              itemId={content.id}
               size={16} // 从 14 增加到 16
               showBorder={false}
             />
@@ -712,9 +712,9 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(
                                 border: `1px solid ${alpha(theme.palette.info.main, 0.3)}`,
                               }}
                             >
-                              {researchTriggerInfo.item && (
+                              {researchTriggerInfo.hasResearchTrigger && researchTriggerInfo.triggerItem && (
                                 <FactorioIcon
-                                  itemId={researchTriggerInfo.item}
+                                  itemId={researchTriggerInfo.triggerItem}
                                   size={16}
                                   showBorder={false}
                                 />
@@ -727,7 +727,9 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(
                                   fontWeight: 600,
                                 }}
                               >
-                                {researchTriggerInfo.text}
+                                {researchTriggerInfo.hasResearchTrigger 
+                                  ? `${researchTriggerInfo.triggerType} ${researchTriggerInfo.triggerCount || 1}`
+                                  : ''}
                               </Typography>
                             </Box>
                           </Box>

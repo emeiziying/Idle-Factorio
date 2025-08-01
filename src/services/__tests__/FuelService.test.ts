@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { FuelService } from '../FuelService';
+import { FuelService } from '../crafting/FuelService';
 import { DataService } from '../core/DataService';
 import { GameConfig } from '../core/GameConfig';
 import type { FacilityInstance } from '../../types/facilities';
@@ -9,8 +9,8 @@ import { FacilityStatus } from '../../types/facilities';
 import type { ServiceInstance, MockObject } from '../../types/test-utils';
 
 // 模拟依赖项
-vi.mock('../DataService');
-vi.mock('../GameConfig');
+vi.mock('../core/DataService');
+vi.mock('../core/GameConfig');
 vi.mock('../../utils/logger', () => ({
   warn: vi.fn(),
   error: vi.fn(),

@@ -156,52 +156,7 @@ export class TechProgressTracker {
     return progress;
   }
 
-  /**
-   * 计算研究效率
-   */
-  private _calculateResearchEfficiency(): number {
-    // 简化计算：比较实际时间与理论时间
-    if (this.researchedTechs.size === 0) return 1;
-    
-    let theoreticalTime = 0;
-    this.researchedTechs.forEach(techId => {
-      const tech = this.treeService?.getTechnology(techId);
-      if (tech) {
-        theoreticalTime += tech.researchTime;
-      }
-    });
-    
-    return theoreticalTime > 0 ? theoreticalTime / this.totalResearchTime : 1;
-  }
 
-  /**
-   * 获取下一个里程碑
-   */
-  private _getNextMilestone(): { target: string; progress: number; reward?: string } | undefined {
-    const unlockedCount = this.unlockService?.getUnlockedTechs().size || 0;
-    
-    // 定义里程碑
-    const milestones = [
-      { count: 10, name: '初学者', reward: '解锁基础自动化' },
-      { count: 25, name: '学徒', reward: '解锁高级制作' },
-      { count: 50, name: '工程师', reward: '解锁高级物流' },
-      { count: 100, name: '专家', reward: '解锁终极科技' },
-      { count: 150, name: '大师', reward: '完成所有研究' },
-    ];
-    
-    // 找到下一个里程碑
-    for (const milestone of milestones) {
-      if (unlockedCount < milestone.count) {
-        return {
-          target: milestone.name,
-          progress: unlockedCount / milestone.count,
-          reward: milestone.reward,
-        };
-      }
-    }
-    
-    return undefined;
-  }
 
   /**
    * 获取研究速度（科技/小时）

@@ -143,7 +143,7 @@ export class DataService {
   private async doLoadI18nData(locale: string): Promise<I18nData> {
     try {
       // 使用动态import替代fetch
-      const i18nModule = await import(`../data/spa/i18n/${locale}.json`);
+      const i18nModule = await import(`../../data/spa/i18n/${locale}.json`);
       this.i18nData = i18nModule.default as I18nData;
       // I18n data loaded successfully
       return this.i18nData;
@@ -432,7 +432,7 @@ export class DataService {
 
     // 恢复解锁过滤，但使用缓存优化性能
     const items = Object.values(this.gameData.items).filter(
-      (item: any) => item.category === categoryId && this.isItemUnlockedCached(item.id)
+      (item: Item) => item.category === categoryId && this.isItemUnlockedCached(item.id)
     );
 
     const itemsByRow = new Map<number, Item[]>();
