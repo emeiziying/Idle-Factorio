@@ -4,6 +4,8 @@ import { createTheme } from '@mui/material/styles';
 declare module '@mui/material/styles' {
   interface Theme {
     customStyles: {
+      appContainer: React.CSSProperties;
+      pageContainer: React.CSSProperties;
       typography: {
         compact: React.CSSProperties;
         small: React.CSSProperties;
@@ -23,6 +25,8 @@ declare module '@mui/material/styles' {
 
   interface ThemeOptions {
     customStyles?: {
+      appContainer?: React.CSSProperties;
+      pageContainer?: React.CSSProperties;
       typography?: {
         compact?: React.CSSProperties;
         small?: React.CSSProperties;
@@ -58,6 +62,19 @@ const theme = createTheme({
   },
   // 自定义样式变量
   customStyles: {
+    appContainer: {
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      width: '100vw',
+    },
+    pageContainer: {
+      flex: 1,
+      overflowY: 'auto',
+      display: 'flex',
+      flexDirection: 'column',
+      paddingBottom: '56px',
+    },
     typography: {
       compact: {
         fontSize: '0.8rem',
@@ -107,7 +124,25 @@ const theme = createTheme({
         },
       },
     },
-    // 移动端优化
+    // 底部导航组件 - 移动端优化
+    MuiBottomNavigation: {
+      styleOverrides: {
+        root: {
+          width: '100%',
+          position: 'static',
+          borderTop: '1px solid',
+          borderColor: 'rgba(255, 255, 255, 0.12)',
+          minHeight: '56px',
+          '@media (max-width: 600px)': {
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1200,
+          },
+        },
+      },
+    },
     MuiBottomNavigationAction: {
       styleOverrides: {
         root: {
@@ -115,27 +150,17 @@ const theme = createTheme({
           paddingTop: 8,
           paddingBottom: 8,
           outline: 'none',
+          flex: 1,
           '&:focus': {
             outline: 'none',
           },
-          '&.Mui-selected': {
-            fontSize: '0.75rem',
-          },
         },
         label: {
-          fontSize: '0.75rem',
-          // 确保未选中时也显示文字
+          fontSize: '0.65rem',
           opacity: 1,
           '&.Mui-selected': {
-            fontSize: '0.8rem',
+            fontSize: '0.7rem',
             fontWeight: 600,
-          },
-        },
-        // 图标样式
-        iconOnly: {
-          // 确保图标和文字都显示
-          '& .MuiBottomNavigationAction-label': {
-            opacity: 1,
           },
         },
       },

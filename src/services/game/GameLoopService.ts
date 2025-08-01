@@ -1,12 +1,82 @@
-// 游戏循环服务 - 基于 requestAnimationFrame 的统一循环管理
+// 游戏循环服务 - 重新设计的高性能统一循环管理
 import type { GameLoopTask, GameLoopStats, GameLoopConfig } from '@/types/gameLoop';
 import { PerformanceLevel } from '@/types/gameLoop';
+
+// 任务执行结果
+interface TaskExecutionResult {
+  success: boolean;
+  error?: Error;
+  executionTime: number;
+}
+
+// 任务执行统计
+interface TaskExecutionStats {
+  taskId: string;
+  totalExecutions: number;
+  successRate: number;
+  averageExecutionTime: number;
+  adjustedInterval: number;
+}
+
+// 所有任务统计
+type AllTasksStats = Record<string, TaskExecutionStats>;
+
+// 智能调度器
+class TaskScheduler {
+  private adaptiveIntervals = new Map<string, number>();
+  private taskLoadHistory = new Map<string, number[]>();
+  private readonly HISTORY_SIZE = 10;
+
+  // 根据任务历史执行时间调整更新间隔
+  adjustTaskInterval(taskId: string, executionTime: number, baseInterval: number): number {
+    const history = this.taskLoadHistory.get(taskId) || [];
+    history.push(executionTime);
+
+    if (history.length > this.HISTORY_SIZE) {
+      history.shift();
+    }
+
+    this.taskLoadHistory.set(taskId, history);
+
+    // 计算平均执行时间
+    const avgExecutionTime = history.reduce((a, b) => a + b, 0) / history.length;
+
+    // 如果任务执行时间超过间隔的50%，增加间隔
+    if (avgExecutionTime > baseInterval * 0.5) {
+      const adjustedInterval = Math.min(baseInterval * 2, baseInterval * 3);
+      this.adaptiveIntervals.set(taskId, adjustedInterval);
+      return adjustedInterval;
+    }
+
+    // 如果任务执行很快，可以稍微减少间隔
+    if (avgExecutionTime < baseInterval * 0.1) {
+      const adjustedInterval = Math.max(baseInterval * 0.8, baseInterval / 2);
+      this.adaptiveIntervals.set(taskId, adjustedInterval);
+      return adjustedInterval;
+    }
+
+    return this.adaptiveIntervals.get(taskId) || baseInterval;
+  }
+
+  // 获取任务的当前调整间隔
+  getAdjustedInterval(taskId: string, baseInterval: number): number {
+    return this.adaptiveIntervals.get(taskId) || baseInterval;
+  }
+
+  // 重置任务调度数据
+  resetTask(taskId: string): void {
+    this.adaptiveIntervals.delete(taskId);
+    this.taskLoadHistory.delete(taskId);
+  }
+}
 
 export class GameLoopService {
   private static instance: GameLoopService;
   private animationFrameId: number | null = null;
   private lastFrameTime: number = 0;
   private tasks: Map<string, GameLoopTask> = new Map();
+  private scheduler = new TaskScheduler();
+  private taskExecutionResults = new Map<string, TaskExecutionResult[]>();
 
   // 性能统计
   private stats: GameLoopStats = {
@@ -121,9 +191,11 @@ export class GameLoopService {
     this.scheduleNextFrame();
   }
 
-  // 执行所有任务
+  // 执行所有任务 - 改进的任务调度和错误处理
   private executeTasks(deltaTime: number, totalTime: number): void {
     let tasksExecuted = 0;
+    const frameStartTime = performance.now();
+    const maxFrameTime = (1000 / this.config.targetFPS) * 0.8; // 80% of frame budget
 
     // 按优先级排序执行任务
     const sortedTasks = Array.from(this.tasks.values())
@@ -131,20 +203,59 @@ export class GameLoopService {
       .sort((a, b) => a.priority - b.priority);
 
     for (const task of sortedTasks) {
+      const taskStartTime = performance.now();
+
+      // 检查是否还有足够的帧时间预算
+      const elapsedFrameTime = taskStartTime - frameStartTime;
+      if (elapsedFrameTime > maxFrameTime) {
+        console.warn(`[GameLoop] 帧时间预算用尽，跳过剩余任务`);
+        break;
+      }
+
       try {
-        // 检查固定时间步长任务是否需要执行
+        // 使用智能调度器检查任务是否需要执行
         if (task.fixedTimeStep) {
+          const adjustedInterval = this.scheduler.getAdjustedInterval(task.id, task.fixedTimeStep);
           const timeSinceLastExecution = totalTime - task.lastExecutionTime;
-          if (timeSinceLastExecution < task.fixedTimeStep) {
+
+          if (timeSinceLastExecution < adjustedInterval) {
             continue; // 跳过这个任务
           }
           task.lastExecutionTime = totalTime;
         }
 
+        // 执行任务
         task.update(deltaTime, totalTime);
         tasksExecuted++;
+
+        // 记录任务执行时间和结果
+        const taskEndTime = performance.now();
+        const executionTime = taskEndTime - taskStartTime;
+
+        this.recordTaskExecution(task.id, {
+          success: true,
+          executionTime,
+        });
+
+        // 调整任务间隔
+        if (task.fixedTimeStep) {
+          this.scheduler.adjustTaskInterval(task.id, executionTime, task.fixedTimeStep);
+        }
       } catch (error) {
+        const taskEndTime = performance.now();
+        const executionTime = taskEndTime - taskStartTime;
+
+        // 记录任务执行错误
+        this.recordTaskExecution(task.id, {
+          success: false,
+          error: error as Error,
+          executionTime,
+        });
+
         console.error(`[GameLoop] 任务执行错误: ${task.name}`, error);
+
+        // 错误恢复：暂时禁用频繁出错的任务
+        this.handleTaskError(task.id);
       }
     }
 
@@ -259,15 +370,56 @@ export class GameLoopService {
     }, 5000);
   }
 
+  // 记录任务执行结果
+  private recordTaskExecution(taskId: string, result: TaskExecutionResult): void {
+    const results = this.taskExecutionResults.get(taskId) || [];
+    results.push(result);
+
+    // 只保留最近20次执行结果
+    if (results.length > 20) {
+      results.shift();
+    }
+
+    this.taskExecutionResults.set(taskId, results);
+  }
+
+  // 处理任务错误
+  private handleTaskError(taskId: string): void {
+    const results = this.taskExecutionResults.get(taskId) || [];
+    const recentResults = results.slice(-5); // 最近5次执行
+    const errorCount = recentResults.filter(r => !r.success).length;
+
+    // 如果最近5次执行中有3次或以上失败，暂时禁用任务
+    if (errorCount >= 3) {
+      const task = this.tasks.get(taskId);
+      if (task) {
+        task.enabled = false;
+        console.warn(`[GameLoop] 任务 ${task.name} 因频繁错误被暂时禁用`);
+
+        // 30秒后重新启用任务
+        setTimeout(() => {
+          if (this.tasks.has(taskId)) {
+            task.enabled = true;
+            this.scheduler.resetTask(taskId); // 重置调度数据
+            console.log(`[GameLoop] 任务 ${task.name} 已重新启用`);
+          }
+        }, 30000);
+      }
+    }
+  }
+
   // 任务管理方法
   addTask(task: GameLoopTask): void {
     task.lastExecutionTime = 0;
     this.tasks.set(task.id, task);
+    this.scheduler.resetTask(task.id); // 重置调度数据
     console.log(`[GameLoop] 添加任务: ${task.name}`);
   }
 
   removeTask(taskId: string): void {
     if (this.tasks.delete(taskId)) {
+      this.scheduler.resetTask(taskId);
+      this.taskExecutionResults.delete(taskId);
       console.log(`[GameLoop] 移除任务: ${taskId}`);
     }
   }
@@ -308,6 +460,34 @@ export class GameLoopService {
     return this.isPaused;
   }
 
+  // 获取任务执行统计
+  getTaskStats(taskId?: string): TaskExecutionStats | AllTasksStats {
+    if (taskId) {
+      const results = this.taskExecutionResults.get(taskId) || [];
+      const successCount = results.filter(r => r.success).length;
+      const avgExecutionTime =
+        results.length > 0
+          ? results.reduce((sum, r) => sum + r.executionTime, 0) / results.length
+          : 0;
+
+      return {
+        taskId,
+        totalExecutions: results.length,
+        successRate: results.length > 0 ? successCount / results.length : 0,
+        averageExecutionTime: avgExecutionTime,
+        adjustedInterval: this.scheduler.getAdjustedInterval(taskId, 0),
+      };
+    }
+
+    // 返回所有任务的统计
+    const allStats: Record<string, TaskExecutionStats> = {};
+    for (const taskId of this.tasks.keys()) {
+      const taskStats = this.getTaskStats(taskId) as TaskExecutionStats;
+      allStats[taskId] = taskStats;
+    }
+    return allStats;
+  }
+
   // 调试方法
   debugInfo(): void {
     console.log('[GameLoop] 调试信息:', {
@@ -318,6 +498,7 @@ export class GameLoopService {
       tasksCount: this.tasks.size,
       stats: this.stats,
       config: this.config,
+      taskStats: this.getTaskStats(),
     });
   }
 }

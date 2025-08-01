@@ -1,21 +1,117 @@
-// 游戏循环任务工厂 - 创建各种游戏系统的更新任务
+// 重新设计的游戏循环任务工厂 - 高效模块化任务系统
 import type { GameLoopTask } from '@/types/gameLoop';
 import { GameLoopTaskType } from '@/types/gameLoop';
+import type { FacilityInstance } from '@/types/facilities';
 import useGameStore from '@/store/gameStore';
 
+// 任务配置接口
+interface TaskConfig {
+  id: string;
+  name: string;
+  priority: number;
+  baseInterval: number; // 基础更新间隔
+  enabledByDefault: boolean;
+  shouldRun?: () => boolean; // 条件检查函数
+}
+
+// 任务配置表
+const TASK_CONFIGS: Record<string, TaskConfig> = {
+  [GameLoopTaskType.CRAFTING]: {
+    id: GameLoopTaskType.CRAFTING,
+    name: '制作系统更新',
+    priority: 1,
+    baseInterval: 100, // 100ms
+    enabledByDefault: false,
+    shouldRun: () => {
+      const store = useGameStore.getState();
+      return store.craftingQueue.length > 0;
+    },
+  },
+  [GameLoopTaskType.FACILITIES]: {
+    id: GameLoopTaskType.FACILITIES,
+    name: '设施系统更新',
+    priority: 2,
+    baseInterval: 1000, // 1秒
+    enabledByDefault: false,
+    shouldRun: () => {
+      const store = useGameStore.getState();
+      return store.facilities.some(f => f.status === 'running');
+    },
+  },
+  [GameLoopTaskType.FUEL_CONSUMPTION]: {
+    id: GameLoopTaskType.FUEL_CONSUMPTION,
+    name: '燃料消耗更新',
+    priority: 3,
+    baseInterval: 1000,
+    enabledByDefault: false,
+    shouldRun: () => {
+      const store = useGameStore.getState();
+      return store.facilities.some(f => f.fuelBuffer && f.fuelBuffer.slots.length > 0);
+    },
+  },
+  [GameLoopTaskType.RESEARCH]: {
+    id: GameLoopTaskType.RESEARCH,
+    name: '研究系统更新',
+    priority: 4,
+    baseInterval: 1000,
+    enabledByDefault: false,
+    shouldRun: () => {
+      const store = useGameStore.getState();
+      return store.researchState !== null;
+    },
+  },
+  [GameLoopTaskType.STATISTICS]: {
+    id: GameLoopTaskType.STATISTICS,
+    name: '统计数据更新',
+    priority: 5,
+    baseInterval: 5000, // 5秒
+    enabledByDefault: true,
+  },
+  [GameLoopTaskType.AUTO_SAVE]: {
+    id: GameLoopTaskType.AUTO_SAVE,
+    name: '自动存档',
+    priority: 10,
+    baseInterval: 30000, // 30秒
+    enabledByDefault: true,
+  },
+  [GameLoopTaskType.UI_UPDATES]: {
+    id: GameLoopTaskType.UI_UPDATES,
+    name: 'UI 更新',
+    priority: 6,
+    baseInterval: 1000, // 降低到 1秒，因为 UI 更新主要是响应式的
+    enabledByDefault: true,
+  },
+};
+
 export class GameLoopTaskFactory {
-  // 创建制作系统任务
-  static createCraftingTask(): GameLoopTask {
+  // 创建任务的通用方法
+  private static createTask(
+    config: TaskConfig,
+    updateFn: (deltaTime: number, totalTime: number) => void
+  ): GameLoopTask {
     return {
-      id: GameLoopTaskType.CRAFTING,
-      name: '制作系统更新',
-      priority: 1, // 高优先级
-      fixedTimeStep: 100, // 100ms 更新一次，比原来的 setInterval 更精确
+      id: config.id,
+      name: config.name,
+      priority: config.priority,
+      fixedTimeStep: config.baseInterval,
       lastExecutionTime: 0,
-      enabled: true,
-      update: () => {
-        // 制作系统使用CraftingEngine的现有逻辑
-        // 直接导入并调用更新方法
+      enabled: config.enabledByDefault,
+      update: updateFn,
+    };
+  }
+
+  // 创建制作系统任务 - 优化后的版本
+  static createCraftingTask(): GameLoopTask {
+    const config = TASK_CONFIGS[GameLoopTaskType.CRAFTING];
+
+    return this.createTask(config, () => {
+      // 检查是否需要执行
+      if (config.shouldRun && !config.shouldRun()) {
+        return;
+      }
+
+      try {
+        // 使用动态导入并处理异步
         import('../../utils/craftingEngine')
           .then(({ default: CraftingEngine }) => {
             const engine = CraftingEngine.getInstance();
@@ -24,151 +120,141 @@ export class GameLoopTaskFactory {
           .catch(error => {
             console.error('制作系统更新失败:', error);
           });
-      },
-    };
+      } catch (error) {
+        console.error('制作系统初始化失败:', error);
+      }
+    });
   }
 
-  // 创建设施系统任务
+  // 创建设施系统任务 - 优化后的版本
   static createFacilitiesTask(): GameLoopTask {
-    return {
-      id: GameLoopTaskType.FACILITIES,
-      name: '设施系统更新',
-      priority: 2,
-      fixedTimeStep: 1000, // 1秒更新一次
-      lastExecutionTime: 0,
-      enabled: true,
-      update: (deltaTime: number) => {
-        const store = useGameStore.getState();
-        const { facilities, updateFacility, updateInventory } = store;
+    const config = TASK_CONFIGS[GameLoopTaskType.FACILITIES];
 
-        facilities.forEach(facility => {
-          if (facility.status !== 'running' || !facility.production) return;
+    return this.createTask(config, (deltaTime: number) => {
+      // 检查是否需要执行
+      if (config.shouldRun && !config.shouldRun()) {
+        return;
+      }
 
-          const production = facility.production;
-          if (!production.currentRecipeId) return;
+      const store = useGameStore.getState();
+      const { facilities, updateFacility, updateInventory } = store;
 
-          // 更新生产进度 - 使用基础制作时间计算
-          // 默认制作时间1秒，可以根据配方调整
-          const baseCraftingTime = 1000; // 1秒
-          const progressIncrement = deltaTime / baseCraftingTime;
-          const newProgress = Math.min((production.progress || 0) + progressIncrement, 1);
+      // 批量处理设施更新，减少 store 更新次数
+      const facilityUpdates: Array<{ id: string; updates: Partial<FacilityInstance> }> = [];
+      const inventoryUpdates = new Map<string, number>();
 
-          updateFacility(facility.id, {
-            production: {
-              ...production,
-              progress: newProgress,
-            },
-          });
+      facilities.forEach(facility => {
+        if (facility.status !== 'running' || !facility.production) return;
 
-          // 完成生产
-          if (newProgress >= 1) {
-            // 添加产品到库存
-            if (facility.targetItemId) {
-              updateInventory(facility.targetItemId, 1); // 每次生产1个物品
-            }
+        const production = facility.production;
+        if (!production.currentRecipeId) return;
 
-            // 重置进度，开始下一个循环
-            updateFacility(facility.id, {
-              production: {
-                ...production,
-                progress: 0,
-              },
-            });
+        // 更新生产进度
+        const baseCraftingTime = 1000; // 1秒
+        const progressIncrement = deltaTime / baseCraftingTime;
+        const newProgress = Math.min((production.progress || 0) + progressIncrement, 1);
+
+        const updatedProduction = {
+          ...production,
+          progress: newProgress,
+        };
+
+        // 完成生产
+        if (newProgress >= 1) {
+          if (facility.targetItemId) {
+            const currentAmount = inventoryUpdates.get(facility.targetItemId) || 0;
+            inventoryUpdates.set(facility.targetItemId, currentAmount + 1);
           }
+          updatedProduction.progress = 0;
+        }
+
+        facilityUpdates.push({
+          id: facility.id,
+          updates: { production: updatedProduction },
         });
-      },
-    };
+      });
+
+      // 批量更新 store
+      facilityUpdates.forEach(({ id, updates }) => {
+        updateFacility(id, updates);
+      });
+
+      inventoryUpdates.forEach((amount, itemId) => {
+        updateInventory(itemId, amount);
+      });
+    });
   }
 
   // 创建燃料消耗任务
   static createFuelConsumptionTask(): GameLoopTask {
-    return {
-      id: GameLoopTaskType.FUEL_CONSUMPTION,
-      name: '燃料消耗更新',
-      priority: 3,
-      fixedTimeStep: 1000, // 1秒更新一次
-      lastExecutionTime: 0,
-      enabled: true,
-      update: (deltaTime: number) => {
-        const store = useGameStore.getState();
-        store.updateFuelConsumption(deltaTime);
-      },
-    };
+    const config = TASK_CONFIGS[GameLoopTaskType.FUEL_CONSUMPTION];
+
+    return this.createTask(config, (deltaTime: number) => {
+      if (config.shouldRun && !config.shouldRun()) {
+        return;
+      }
+
+      const store = useGameStore.getState();
+      store.updateFuelConsumption(deltaTime);
+    });
   }
 
   // 创建研究系统任务
   static createResearchTask(): GameLoopTask {
-    return {
-      id: GameLoopTaskType.RESEARCH,
-      name: '研究系统更新',
-      priority: 4,
-      fixedTimeStep: 1000, // 1秒更新一次
-      lastExecutionTime: 0,
-      enabled: true,
-      update: (deltaTime: number) => {
-        const store = useGameStore.getState();
-        store.updateResearchProgress(deltaTime);
-      },
-    };
+    const config = TASK_CONFIGS[GameLoopTaskType.RESEARCH];
+
+    return this.createTask(config, (deltaTime: number) => {
+      if (config.shouldRun && !config.shouldRun()) {
+        return;
+      }
+
+      const store = useGameStore.getState();
+      store.updateResearchProgress(deltaTime);
+    });
   }
 
   // 创建统计更新任务
   static createStatisticsTask(): GameLoopTask {
-    return {
-      id: GameLoopTaskType.STATISTICS,
-      name: '统计数据更新',
-      priority: 5,
-      fixedTimeStep: 5000, // 5秒更新一次
-      lastExecutionTime: 0,
-      enabled: true,
-      update: () => {
-        const store = useGameStore.getState();
+    const config = TASK_CONFIGS[GameLoopTaskType.STATISTICS];
 
-        // 更新游戏循环状态统计
-        if (store._updateGameLoopState) {
-          store._updateGameLoopState();
-        }
+    return this.createTask(config, () => {
+      const store = useGameStore.getState();
 
-        // 可以在这里添加其他统计更新逻辑
-        // 比如计算生产效率、资源消耗率等
-      },
-    };
+      // 更新游戏循环状态统计
+      if (store._updateGameLoopState) {
+        store._updateGameLoopState();
+      }
+
+      // 可以在这里添加其他统计更新逻辑
+      // 比如计算生产效率、资源消耗率等
+    });
   }
 
   // 创建自动存档任务
   static createAutoSaveTask(): GameLoopTask {
-    return {
-      id: GameLoopTaskType.AUTO_SAVE,
-      name: '自动存档',
-      priority: 10, // 低优先级
-      fixedTimeStep: 30000, // 30秒存档一次
-      lastExecutionTime: 0,
-      enabled: true,
-      update: () => {
-        const store = useGameStore.getState();
+    const config = TASK_CONFIGS[GameLoopTaskType.AUTO_SAVE];
 
-        // 使用普通存档，不是强制存档
+    return this.createTask(config, () => {
+      try {
+        const store = useGameStore.getState();
         store.saveGame();
-      },
-    };
+      } catch (error) {
+        console.error('自动存档失败:', error);
+        // 不重新抛出错误，因为存档失败不应该影响游戏循环
+      }
+    });
   }
 
-  // 创建UI更新任务
+  // 创建 UI 更新任务 - 优化频率
   static createUIUpdatesTask(): GameLoopTask {
-    return {
-      id: GameLoopTaskType.UI_UPDATES,
-      name: 'UI 更新',
-      priority: 6,
-      fixedTimeStep: 16, // ~60fps for UI updates
-      lastExecutionTime: 0,
-      enabled: true,
-      update: () => {
-        // 可以在这里更新需要实时更新的 UI 元素
-        // 比如进度条动画、数值滚动等
-        // 由于使用了 Zustand，大部分 UI 更新是响应式的
-        // 这个任务主要用于一些特殊的动画效果
-      },
-    };
+    const config = TASK_CONFIGS[GameLoopTaskType.UI_UPDATES];
+
+    return this.createTask(config, () => {
+      // 由于使用了 Zustand，大部分 UI 更新是响应式的
+      // 这里只处理一些需要主动更新的 UI 元素
+      // 比如进度条动画、数值滚动等
+      // TODO: 在这里添加需要的 UI 更新逻辑
+    });
   }
 
   // 创建所有默认任务
@@ -184,32 +270,30 @@ export class GameLoopTaskFactory {
     ];
   }
 
-  // 根据游戏状态动态启用/禁用任务
+  // 智能任务状态管理 - 根据游戏状态动态调整任务
   static updateTasksState(tasks: Map<string, GameLoopTask>): void {
-    const store = useGameStore.getState();
+    // 根据配置自动更新任务状态
+    Object.values(TASK_CONFIGS).forEach(config => {
+      const task = tasks.get(config.id);
+      if (task && config.shouldRun) {
+        const shouldEnable = config.shouldRun();
 
-    // 根据制作队列状态控制制作任务
-    const craftingTask = tasks.get(GameLoopTaskType.CRAFTING);
-    if (craftingTask) {
-      craftingTask.enabled = store.craftingQueue.length > 0;
-    }
+        // 只有在状态发生改变时才更新
+        if (task.enabled !== shouldEnable) {
+          task.enabled = shouldEnable;
+          console.log(`[GameLoop] 任务 ${config.name} ${shouldEnable ? '已启用' : '已禁用'}`);
+        }
+      }
+    });
+  }
 
-    // 根据设施状态控制设施任务
-    const facilitiesTask = tasks.get(GameLoopTaskType.FACILITIES);
-    if (facilitiesTask) {
-      facilitiesTask.enabled = store.facilities.some(f => f.status === 'running');
-    }
+  // 获取任务配置
+  static getTaskConfig(taskId: string): TaskConfig | undefined {
+    return TASK_CONFIGS[taskId];
+  }
 
-    // 根据研究状态控制研究任务
-    const researchTask = tasks.get(GameLoopTaskType.RESEARCH);
-    if (researchTask) {
-      researchTask.enabled = store.researchState !== null;
-    }
-
-    // 燃料消耗任务只在有设施时启用
-    const fuelTask = tasks.get(GameLoopTaskType.FUEL_CONSUMPTION);
-    if (fuelTask) {
-      fuelTask.enabled = store.facilities.length > 0;
-    }
+  // 获取所有任务配置
+  static getAllTaskConfigs(): Record<string, TaskConfig> {
+    return { ...TASK_CONFIGS };
   }
 }
