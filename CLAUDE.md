@@ -340,9 +340,10 @@ const gameData = await dataService.loadGameData();
 
 ### Store Usage Patterns
 ```typescript
-// Import from either location (both work due to proxy)
-import useGameStore from '../store/gameStore';  // Legacy import
-import useGameStore from '../store/index';      // Direct import
+// Import options (all work due to proxy and alias)
+import useGameStore from '../store/gameStore';  // Legacy relative import
+import useGameStore from '../store/index';      // Direct relative import  
+import useGameStore from '@/store/gameStore';   // Alias import (recommended)
 
 // Access store state and actions
 const { inventory, addCraftingTask, updateInventory } = useGameStore();
@@ -462,6 +463,7 @@ The project uses ESLint 9 with modern flat config:
 ### TypeScript Configuration
 - Main config: `tsconfig.json` with references to `tsconfig.app.json` and `tsconfig.node.json`
 - Strict TypeScript checking enabled for type safety
+- **Path Alias**: `@/` alias configured for `src/` directory (use `@/` instead of relative imports)
 - Import paths and module resolution configured for the project structure
 
 ### State Persistence Strategy
