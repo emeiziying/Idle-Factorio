@@ -33,6 +33,7 @@ const mockFuelService = {
 const mockRecipeService = {
   getInstance: vi.fn(() => mockRecipeService),
   getRecipeById: vi.fn(() => null),
+  getAllRecipes: vi.fn(() => []),
 };
 
 // 设置模拟实现
@@ -43,6 +44,7 @@ const { RecipeService } = await import('../../services/crafting/RecipeService');
 vi.mocked(DataService.getInstance).mockReturnValue(mockDataService);
 vi.mocked(FuelService.getInstance).mockReturnValue(mockFuelService);
 vi.mocked(RecipeService.getRecipeById).mockReturnValue(null);
+vi.mocked(RecipeService.getAllRecipes).mockReturnValue([]);
 
 // gameStore 测试套件 - 游戏状态管理
 describe('gameStore', () => {
