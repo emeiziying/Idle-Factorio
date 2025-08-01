@@ -2,7 +2,8 @@
 
 import type { StorageConfig } from '@/types/index';
 import { STORAGE_SPECIFIC_CONFIGS } from '@/data/storageConfigData';
-import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
+import { getService, hasService } from '@/services/core/DIServiceInitializer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type { DataService } from '@/services/core/DataService';
 
 export class StorageService {
@@ -11,10 +12,11 @@ export class StorageService {
   }
 
   private getDataService(): DataService | null {
-    if (ServiceLocator.has(SERVICE_NAMES.DATA)) {
-      return ServiceLocator.get<DataService>(SERVICE_NAMES.DATA);
+    try {
+      return getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+    } catch {
+      return null;
     }
-    return null;
   }
 
   // 获取完整的存储配置（合并data.json和特定配置）
@@ -84,10 +86,11 @@ export class StorageService {
   }
 }
 
-// 兼容性函数 - 从 ServiceLocator 获取 StorageService 实例
+// 兼容性函数 - 从 DI 容器获取 StorageService 实例
 export const getStorageService = (): StorageService | null => {
-  if (ServiceLocator.has(SERVICE_NAMES.STORAGE)) {
-    return ServiceLocator.get<StorageService>(SERVICE_NAMES.STORAGE);
+  try {
+    return getService<StorageService>(SERVICE_TOKENS.STORAGE_SERVICE);
+  } catch {
+    return null;
   }
-  return null;
 };

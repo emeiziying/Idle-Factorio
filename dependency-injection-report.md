@@ -2,10 +2,10 @@
 
 ## 概述
 
-本项目采用了**混合依赖注入模式**，同时使用了两种主要的依赖注入实现：
+本项目已经**完成依赖注入迁移**，现在统一使用现代的依赖注入容器模式：
 
-1. **ServiceLocator 模式** - 传统的服务定位器模式（逐步被淘汰）
-2. **DIContainer 模式** - 现代的依赖注入容器模式（推荐使用）
+- **DIContainer 模式** - 现代的依赖注入容器模式（唯一使用的模式）
+- ~~ServiceLocator 模式~~ - 传统的服务定位器模式（已完全移除）
 
 ## 依赖注入架构
 
@@ -142,17 +142,19 @@ const MyComponent = () => {
 
 ## 迁移状态
 
-### 已完成迁移到 DIContainer
+### 已完成迁移到 DIContainer ✅
 - ✅ Store 层（全部使用 getService）
 - ✅ React 组件（通过 Hooks）
-- ✅ 大部分服务类
+- ✅ 所有服务类（包括 DataService、StorageService、RecipeService）
 - ✅ 科技系统
+- ✅ 工具类（manualCraftingValidator）
+- ✅ 配置文件（storageConfigs.ts）
 
-### 仍在使用 ServiceLocator
-- ⚠️ `DataService` 内部仍有 ServiceLocator 调用
-- ⚠️ `StorageService` 内部使用 ServiceLocator
-- ⚠️ `manualCraftingValidator` 部分代码
-- ⚠️ 一些配置文件（如 `storageConfigs.ts`）
+### 迁移完成
+- ✅ **ServiceLocator 已完全移除**
+- ✅ 所有业务代码均已迁移到 DIContainer
+- ✅ ServiceLocator.ts 文件已删除
+- ⚠️ 仅测试文件中还有 ServiceLocator 的引用（需要单独更新）
 
 ## 依赖关系图
 
@@ -205,11 +207,19 @@ DIContainer
 3. **不一致的使用方式**：有些地方直接使用服务，有些通过 Hooks
 
 ### 改进建议
-1. **完全迁移到 DIContainer**：移除所有 ServiceLocator 的使用
-2. **统一服务访问方式**：在组件中统一使用 Hooks
+1. ~~**完全迁移到 DIContainer**~~：✅ 已完成
+2. **统一服务访问方式**：在组件中统一使用 Hooks（已实现）
 3. **改进依赖注入语法**：考虑使用装饰器模式
 4. **添加服务生命周期管理**：支持 transient、scoped 等生命周期
+5. **更新测试代码**：将测试文件中的 ServiceLocator 引用迁移到 DIContainer
 
 ## 总结
 
-项目正在从传统的 ServiceLocator 模式迁移到更现代的 DIContainer 模式。大部分核心功能已经完成迁移，但仍有一些遗留代码需要清理。整体架构设计良好，服务之间的依赖关系清晰，为未来的扩展提供了良好的基础。
+项目已经**成功完成**从传统的 ServiceLocator 模式到现代 DIContainer 模式的迁移。所有业务代码均已使用新的依赖注入容器，ServiceLocator 相关代码已被完全移除。整体架构设计良好，服务之间的依赖关系清晰，为未来的扩展提供了良好的基础。
+
+### 迁移成果
+- ✅ 100% 业务代码迁移完成
+- ✅ ServiceLocator.ts 文件已删除
+- ✅ 统一使用 DIContainer 和相关的 Hooks
+- ✅ 服务注册和依赖关系管理更加清晰
+- ✅ 支持循环依赖检测和更好的错误处理

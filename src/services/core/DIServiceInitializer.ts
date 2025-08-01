@@ -209,9 +209,21 @@ export class DIServiceInitializer {
   static getService<T>(token: string): T {
     return container.resolve<T>(token);
   }
+
+  /**
+   * 检查服务是否已注册
+   */
+  static hasService(token: string): boolean {
+    return container.has(token);
+  }
 }
 
 // 导出便捷的服务获取函数
 export const getService = <T>(token: string): T => {
   return DIServiceInitializer.getService<T>(token);
+};
+
+// 导出便捷的服务检查函数
+export const hasService = (token: string): boolean => {
+  return DIServiceInitializer.hasService(token);
 };

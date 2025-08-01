@@ -3,7 +3,8 @@ import type { Recipe, CraftingTask } from '@/types/index';
 
 import { RecipeService } from '@/services/crafting/RecipeService';
 import ManualCraftingValidator from '@/utils/manualCraftingValidator';
-import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
+import { getService } from '@/services/core/DIServiceInitializer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 
 export interface CraftingDependency {
   itemId: string;
@@ -219,8 +220,8 @@ export class DependencyService {
    * @returns 配方或null
    */
   private getBestManualCraftingRecipe(itemId: string): Recipe | null {
-    // 临时解决方案：通过ServiceLocator获取RecipeService实例
-    const recipeService = ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE);
+    // 通过DI容器获取RecipeService实例
+    const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
     const recipes = recipeService?.getRecipesThatProduce(itemId) || [];
 
     // 过滤出可手动制作的配方
