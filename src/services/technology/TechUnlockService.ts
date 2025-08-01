@@ -202,7 +202,7 @@ export class TechUnlockService {
 
     // 解锁物品
     if (tech.unlocks.items) {
-      tech.unlocks.items.forEach(itemId => {
+      tech.unlocks.items.forEach((itemId: string) => {
         if (!this.unlockedItems.has(itemId)) {
           this.unlockedItems.add(itemId);
           this.userProgressService.unlockItem(itemId);
@@ -213,7 +213,7 @@ export class TechUnlockService {
 
     // 解锁配方
     if (tech.unlocks.recipes) {
-      tech.unlocks.recipes.forEach(recipeId => {
+      tech.unlocks.recipes.forEach((recipeId: string) => {
         if (!this.unlockedRecipes.has(recipeId)) {
           this.unlockedRecipes.add(recipeId);
           newRecipes.push(recipeId);
@@ -223,7 +223,7 @@ export class TechUnlockService {
 
     // 解锁建筑
     if (tech.unlocks.buildings) {
-      tech.unlocks.buildings.forEach(buildingId => {
+      tech.unlocks.buildings.forEach((buildingId: string) => {
         if (!this.unlockedBuildings.has(buildingId)) {
           this.unlockedBuildings.add(buildingId);
           newBuildings.push(buildingId);

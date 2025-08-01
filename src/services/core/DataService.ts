@@ -1,6 +1,6 @@
 // 游戏数据管理服务
 
-import type { GameData, Item, Recipe, Category, IconData } from '../types/index';
+import type { GameData, Item, Recipe, Category, IconData } from '../../types/index';
 import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
 import type { UserProgressService } from '../game/UserProgressService';
 import { RecipeService } from '../crafting/RecipeService';
@@ -8,7 +8,7 @@ import type { TechnologyService } from '../technology/TechnologyService';
 import { error as logError } from '../../utils/logger';
 
 // 异步导入游戏数据
-import gameData from '../data/spa/data.json';
+import gameData from '../../data/spa/data.json';
 
 interface I18nData {
   categories: Record<string, string>;
@@ -256,7 +256,7 @@ export class DataService {
   getUnlockedItems(): Item[] {
     if (!this.gameData) return [];
 
-    return this.gameData.items.filter(item => this.isItemUnlocked(item.id));
+    return this.gameData.items.filter((item: Item) => this.isItemUnlocked(item.id));
   }
 
   // 按分类获取物品（仅返回已解锁）
@@ -264,7 +264,7 @@ export class DataService {
     if (!this.gameData) return [];
 
     return this.gameData.items.filter(
-      item => item.category === categoryId && (includeUnlocked || this.isItemUnlocked(item.id))
+      (item: Item) => item.category === categoryId && (includeUnlocked || this.isItemUnlocked(item.id))
     );
   }
 
@@ -272,13 +272,13 @@ export class DataService {
   getAllItemsByCategory(categoryId: string): Item[] {
     if (!this.gameData) return [];
 
-    return this.gameData.items.filter(item => item.category === categoryId);
+    return this.gameData.items.filter((item: Item) => item.category === categoryId);
   }
 
   // 获取单个物品
   getItem(itemId: string): Item | undefined {
     if (!this.gameData) return undefined;
-    return this.gameData.items.find(item => item.id === itemId);
+    return this.gameData.items.find((item: Item) => item.id === itemId);
   }
 
   // 获取配方（保留常用方法，其他通过RecipeService直接调用）
@@ -288,7 +288,7 @@ export class DataService {
     }
     // 如果 RecipeService 不可用，直接从游戏数据中查找
     if (this.gameData) {
-      return this.gameData.recipes.find(recipe => recipe.id === recipeId);
+      return this.gameData.recipes.find((recipe: Recipe) => recipe.id === recipeId);
     }
     return undefined;
   }
@@ -304,7 +304,7 @@ export class DataService {
   // 获取分类
   getCategory(categoryId: string): Category | undefined {
     if (!this.gameData) return undefined;
-    return this.gameData.categories.find(cat => cat.id === categoryId);
+    return this.gameData.categories.find((cat: Category) => cat.id === categoryId);
   }
 
   // 检查物品是否解锁 - 基于游戏逻辑判断
@@ -432,12 +432,12 @@ export class DataService {
 
     // 恢复解锁过滤，但使用缓存优化性能
     const items = Object.values(this.gameData.items).filter(
-      item => item.category === categoryId && this.isItemUnlockedCached(item.id)
+      (item: any) => item.category === categoryId && this.isItemUnlockedCached(item.id)
     );
 
     const itemsByRow = new Map<number, Item[]>();
 
-    items.forEach(item => {
+    items.forEach((item: Item) => {
       const row = item.row || 0;
       if (!itemsByRow.has(row)) {
         itemsByRow.set(row, []);
@@ -522,7 +522,7 @@ export class DataService {
   getIconData(itemId: string): IconData | null {
     if (!this.gameData) return null;
 
-    const iconInfo = this.gameData.icons.find(icon => icon.id === itemId);
+    const iconInfo = this.gameData.icons.find((icon: IconData) => icon.id === itemId);
     return iconInfo || null;
   }
 
@@ -606,7 +606,7 @@ export class DataService {
   // 获取科技数据
   getTechnologies(): Recipe[] {
     if (!this.gameData) return [];
-    return this.gameData.recipes.filter(recipe => recipe.category === 'technology');
+    return this.gameData.recipes.filter((recipe: Recipe) => recipe.category === 'technology');
   }
 
   // 获取科技分类数据

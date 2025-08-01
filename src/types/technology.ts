@@ -151,6 +151,9 @@ export interface ResearchQueueItem {
   /** 预计开始研究的时间戳 */
   estimatedStartTime?: number;
 
+  /** 预计研究时间 */
+  estimatedTime?: number;
+
   /** 是否可以开始研究 */
   canStart: boolean;
 
@@ -232,6 +235,9 @@ export interface TechCategory {
 
   /** 排序权重 */
   order: number;
+
+  /** 该分类包含的科技ID数组 */
+  technologies: string[];
 }
 
 /**

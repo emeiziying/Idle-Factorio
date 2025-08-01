@@ -1,7 +1,7 @@
 // 电力系统服务 - 管理电力平衡和设施效率
 
-import type { FacilityInstance } from '../types/facilities';
-import { FacilityStatus } from '../types/facilities';
+import type { FacilityInstance } from '../../types/facilities';
+import { FacilityStatus } from '../../types/facilities';
 import { DataService } from '../core/DataService';
 import { GameConfig } from '../core/GameConfig';
 

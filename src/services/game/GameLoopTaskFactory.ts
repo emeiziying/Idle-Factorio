@@ -16,7 +16,7 @@ export class GameLoopTaskFactory {
       update: () => {
         // 制作系统使用CraftingEngine的现有逻辑
         // 直接导入并调用更新方法
-        import('../utils/craftingEngine')
+        import('../../utils/craftingEngine')
           .then(({ default: CraftingEngine }) => {
             const engine = CraftingEngine.getInstance();
             engine.updateCraftingQueue();

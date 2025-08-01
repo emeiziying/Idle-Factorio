@@ -3,9 +3,9 @@
 import { DataService } from '../core/DataService';
 import { RecipeService } from './RecipeService';
 import { GameConfig } from '../core/GameConfig';
-import type { FacilityInstance } from '../types/facilities';
-import { FacilityStatus } from '../types/facilities';
-import type { InventoryItem } from '../types/index';
+import type { FacilityInstance } from '../../types/facilities';
+import { FacilityStatus } from '../../types/facilities';
+import type { InventoryItem } from '../../types/index';
 import { warn as logWarn, error as logError } from '../../utils/logger';
 import { msToSeconds } from '../../utils/common';
 

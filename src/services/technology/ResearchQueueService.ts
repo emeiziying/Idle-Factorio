@@ -78,8 +78,9 @@ export class ResearchQueueService {
     const queueItem: ResearchQueueItem = {
       techId,
       priority,
-      addedAt: Date.now(),
+      addedTime: Date.now(),
       canStart: false, // 将在更新依赖时计算
+      queuePosition: 0, // 将在插入队列时更新
     };
 
     // 根据优先级插入队列
@@ -93,8 +94,7 @@ export class ResearchQueueService {
 
     return {
       success: true,
-      message: `${tech.name} 已添加到研究队列`,
-      position: this.getQueuePosition(techId),
+      queuePosition: this.getQueuePosition(techId)
     };
   }
 
@@ -200,7 +200,7 @@ export class ResearchQueueService {
       }
       // 相同优先级，按添加时间排序
       if (item.priority === this.researchQueue[i].priority && 
-          item.addedAt < this.researchQueue[i].addedAt) {
+          item.addedTime < this.researchQueue[i].addedTime) {
         insertIndex = i;
         break;
       }
@@ -225,7 +225,7 @@ export class ResearchQueueService {
       }
       
       // 检查前置科技是否都不在队列中
-      item.canStart = !tech.prerequisites.some(prereqId => 
+      item.canStart = !tech.prerequisites.some((prereqId: string) => 
         queueTechIds.has(prereqId)
       );
     });

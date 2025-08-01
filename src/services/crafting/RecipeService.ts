@@ -1,5 +1,5 @@
-import type { Recipe } from '../types';
-import { CUSTOM_RECIPES } from '../data/customRecipes';
+import type { Recipe } from '../../types';
+import { CUSTOM_RECIPES } from '../../data/customRecipes';
 import { ServiceLocator, SERVICE_NAMES } from '../core/ServiceLocator';
 import type { DataService } from '../core/DataService';
 import type { IManualCraftingValidator } from '../interfaces/IManualCraftingValidator';
@@ -270,7 +270,7 @@ export class RecipeService {
     canCraft: boolean;
     recipe: Recipe | null;
     allRecipes: Recipe[];
-    validation: import('./interfaces/IManualCraftingValidator').ManualCraftingValidation;
+          validation: import('../interfaces/IManualCraftingValidator').ManualCraftingValidation;
   } {
     const validator = ServiceLocator.has(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
       ? ServiceLocator.get<IManualCraftingValidator>(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
@@ -345,7 +345,7 @@ export class RecipeService {
 
     // 计算主要产出的效率
     const outputs = Object.values(recipe.out);
-    const totalOutput = outputs.reduce((sum, amount) => sum + amount, 0);
+    const totalOutput = outputs.reduce((sum, amount) => (sum as number) + (amount as number), 0);
     return totalOutput / recipe.time;
   }
 
@@ -453,7 +453,7 @@ export class RecipeService {
 
       // 更新总成本
       const existingCost = totalCost.get(itemId) || 0;
-      totalCost.set(itemId, existingCost + amount);
+      totalCost.set(itemId, existingCost + (amount as number));
 
       // 递归计算该物品的配方依赖
       const itemRecipes = this.getRecipesThatProduce(itemId);
@@ -495,8 +495,8 @@ export class RecipeService {
 
     // 计算直接成本
     for (const [itemId, amount] of Object.entries(recipe.in)) {
-      directCost.set(itemId, amount);
-      totalCost.set(itemId, amount);
+      directCost.set(itemId, amount as number);
+      totalCost.set(itemId, amount as number);
     }
 
     if (includeRawMaterials) {
@@ -506,14 +506,14 @@ export class RecipeService {
         if (itemRecipes.length === 0) {
           // 这是原材料
           const existing = rawMaterials.get(itemId) || 0;
-          rawMaterials.set(itemId, existing + amount);
+          rawMaterials.set(itemId, existing + (amount as number));
         } else {
           // 递归计算该物品的成本
           const bestRecipe = this.getMostEfficientRecipe(itemId);
           if (bestRecipe) {
             const subCost = this.calculateRecipeCost(bestRecipe, true);
             for (const [subItemId, subAmount] of subCost.totalCost) {
-              const totalAmount = subAmount * amount;
+              const totalAmount = subAmount * (amount as number);
               const existing = totalCost.get(subItemId) || 0;
               totalCost.set(subItemId, existing + totalAmount);
 
@@ -556,7 +556,7 @@ export class RecipeService {
     // 过滤已解锁的配方
     const availableRecipes = recipes.filter(recipe => {
       if (!recipe.producers || recipe.producers.length === 0) return true;
-      return recipe.producers.some(producer => unlockedItems.includes(producer));
+      return recipe.producers.some((producer: string) => unlockedItems.includes(producer));
     });
 
     if (availableRecipes.length === 0) {
@@ -572,7 +572,7 @@ export class RecipeService {
     // 计算总成本
     if (bestRecipe.in) {
       for (const [itemId, amount] of Object.entries(bestRecipe.in)) {
-        totalCost.set(itemId, amount * quantity);
+        totalCost.set(itemId, (amount as number) * quantity);
       }
     }
 
@@ -602,7 +602,7 @@ export class RecipeService {
     // 过滤已解锁的配方
     const availableRecipes = allRecipes.filter(recipe => {
       if (!recipe.producers || recipe.producers.length === 0) return true;
-      return recipe.producers.some(producer => unlockedItems.includes(producer));
+      return recipe.producers.some((producer: string) => unlockedItems.includes(producer));
     });
 
     if (availableRecipes.length === 0) {
@@ -670,7 +670,7 @@ export class RecipeService {
     // 过滤可用配方
     const availableRecipes = allRecipes.filter(recipe => {
       if (!recipe.producers || recipe.producers.length === 0) return true;
-      return recipe.producers.some(producer => unlockedItems.includes(producer));
+      return recipe.producers.some((producer: string) => unlockedItems.includes(producer));
     });
 
     // 找到最快配方

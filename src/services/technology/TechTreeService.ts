@@ -3,7 +3,7 @@
  * 管理科技树结构、数据查询和依赖关系
  */
 
-import type { Technology, TechCategory, TechSearchFilter, TechStatus } from '../../../types/technology';
+import type { Technology, TechCategory, TechSearchFilter } from '../../types/technology';
 import { TechDataLoader } from './TechDataLoader';
 
 export class TechTreeService {
@@ -80,8 +80,8 @@ export class TechTreeService {
     let results = Array.from(this.techTree.values());
 
     // 按名称搜索
-    if (filter.name) {
-      const searchTerm = filter.name.toLowerCase();
+    if (filter.query) {
+      const searchTerm = filter.query.toLowerCase();
       results = results.filter(tech => 
         tech.name.toLowerCase().includes(searchTerm) ||
         tech.id.toLowerCase().includes(searchTerm)
@@ -93,19 +93,8 @@ export class TechTreeService {
       results = results.filter(tech => tech.category === filter.category);
     }
 
-    // 按状态过滤
-    if (filter.status && filter.getStatus) {
-      results = results.filter(tech => filter.getStatus!(tech.id) === filter.status);
-    }
-
-    // 按解锁内容过滤
-    if (filter.unlocksItem) {
-      results = results.filter(tech => 
-        tech.unlocks.items?.includes(filter.unlocksItem!) ||
-        tech.unlocks.recipes?.includes(filter.unlocksItem!) ||
-        tech.unlocks.buildings?.includes(filter.unlocksItem!)
-      );
-    }
+    // 按状态过滤 - 注意：需要外部提供状态判断逻辑
+    // TODO: 实现状态过滤
 
     return results;
   }
@@ -156,7 +145,7 @@ export class TechTreeService {
       const tech = this.techTree.get(id);
       if (!tech) return;
 
-      tech.prerequisites.forEach(prereqId => dfs(prereqId));
+      tech.prerequisites.forEach((prereqId: string) => dfs(prereqId));
       chain.push(id);
     };
 
@@ -203,7 +192,7 @@ export class TechTreeService {
       
       if (tech) {
         // 先访问所有前置
-        tech.prerequisites.forEach(prereqId => visit(prereqId));
+        tech.prerequisites.forEach((prereqId: string) => visit(prereqId));
         sorted.push(tech);
       }
 

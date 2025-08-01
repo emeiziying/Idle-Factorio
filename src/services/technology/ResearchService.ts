@@ -209,7 +209,7 @@ export class ResearchService {
     if (!tech) return false;
 
     // 检查前置科技
-    return tech.prerequisites.every(prereqId => 
+    return tech.prerequisites.every((prereqId: string) => 
       this.unlockService?.isTechUnlocked(prereqId) ?? false
     );
   }
@@ -222,8 +222,8 @@ export class ResearchService {
     if (!tech || !this.inventoryOps) return false;
 
     for (const [packId, required] of Object.entries(tech.researchCost)) {
-      const available = await this.inventoryOps.getItemCount(packId);
-      if (available < required) {
+      const available = await this.inventoryOps.getItemAmount(packId);
+      if (available < (required as number)) {
         return false;
       }
     }
@@ -241,7 +241,7 @@ export class ResearchService {
 
     // 检查所有科技包是否充足
     for (const [packId, required] of Object.entries(tech.researchCost)) {
-      const available = await this.inventoryOps.getItemCount(packId);
+      const available = await this.inventoryOps.getItemAmount(packId);
       if (available < required) {
         return { 
           success: false, 
@@ -251,12 +251,9 @@ export class ResearchService {
     }
 
     // 消耗科技包
-    for (const [packId, amount] of Object.entries(tech.researchCost)) {
-      const consumed = await this.inventoryOps.removeItems(packId, amount);
-      if (!consumed) {
-        // 回滚？这里简化处理
-        return { success: false, error: `消耗 ${packId} 失败` };
-      }
+    const consumed = await this.inventoryOps.consumeItems(tech.researchCost);
+    if (!consumed) {
+      return { success: false, error: `消耗科技包失败` };
     }
 
     // 发送消耗事件
@@ -298,15 +295,15 @@ export class ResearchService {
    */
   private getLabStatistics(): { count: number; avgEfficiency: number } {
     // 获取游戏状态提供者
-    const gameStateProvider = ServiceLocator.get<GameStateProvider>(SERVICE_NAMES.GAME_STATE_PROVIDER);
+    const gameStateProvider = ServiceLocator.get<GameStateProvider>(SERVICE_NAMES.GAME_STATE);
     if (!gameStateProvider) {
       return { count: 0, avgEfficiency: 0 };
     }
 
     const facilities = gameStateProvider.getFacilities();
     const labs = facilities.filter(f => 
-      f.name === 'lab' && 
-      f.status === FacilityStatus.WORKING
+      f.facilityId === 'lab' && 
+      f.status === FacilityStatus.RUNNING
     );
 
     if (labs.length === 0) {
@@ -315,10 +312,10 @@ export class ResearchService {
 
     // 计算平均效率
     const totalEfficiency = labs.reduce((sum, lab) => {
-      // 简化：假设效率基于电力和模块
-      const powerEfficiency = lab.power ? (lab.power.usage / lab.power.maxUsage) : 1;
+      // 简化：假设效率基于实验室的效率属性
+      const labEfficiency = lab.efficiency || 1;
       const moduleBonus = this.getModuleBonus(lab);
-      return sum + powerEfficiency * (1 + moduleBonus);
+      return sum + labEfficiency * (1 + moduleBonus);
     }, 0);
 
     return {
@@ -330,8 +327,11 @@ export class ResearchService {
   /**
    * 获取模块加成
    */
-  private getModuleBonus(facility: FacilityInstance): number {
+    private getModuleBonus(facility: FacilityInstance): number {
     // 简化实现，实际应该检查安装的模块
+    // TODO: 实现模块检查逻辑
+    // 暂时不使用facility参数
+    void facility;
     return 0;
   }
 
