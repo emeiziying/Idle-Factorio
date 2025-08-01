@@ -69,11 +69,54 @@ ServiceInitializer.initialize()
 const dataService = ServiceLocator.get<DataService>(SERVICE_NAMES.DATA);
 ```
 
-### Zustand State Management with Unified Storage
-The gameStore.ts implements sophisticated Map/Set serialization with unified storage service:
+### Modular Zustand Store Architecture (Recently Refactored)
+The state management has been refactored from a monolithic gameStore.ts into a modular slice-based architecture:
+
+#### Store Structure
+```
+src/store/
+├── index.ts              # Composite store combining all slices
+├── gameStore.ts          # Backward compatibility proxy
+├── types/index.ts        # TypeScript interfaces for all slices
+├── slices/               # Individual business domain slices
+│   ├── inventoryStore.ts     # Inventory & container management
+│   ├── craftingStore.ts      # Crafting queue & chain crafting
+│   ├── recipeStore.ts        # Recipe favorites & search
+│   ├── facilityStore.ts      # Facilities & fuel system
+│   ├── technologyStore.ts    # Technology tree & research
+│   └── gameMetaStore.ts      # Save/load & game metadata
+└── utils/mapSetHelpers.ts    # Map/Set serialization utilities
+```
+
+#### Slice Pattern
+Each slice follows the Zustand StateCreator pattern:
+```typescript
+export const createInventorySlice: SliceCreator<InventorySlice> = (set, get) => ({
+  // State properties
+  inventory: new Map(),
+  
+  // Actions
+  updateInventory: (itemId: string, amount: number) => { /* ... */ }
+});
+```
+
+#### Composite Store
+All slices are combined into a single store:
+```typescript
+const useGameStore = create<GameState>()(
+  subscribeWithSelector((set, get, api) => ({
+    ...createInventorySlice(set, get, api),
+    ...createCraftingSlice(set, get, api),
+    // ... other slices
+  }))
+);
+```
+
+### State Persistence & Serialization
 - **Map types**: inventory, craftedItemCounts, builtEntityCounts, minedEntityCounts
-- **Set types**: favoriteRecipes, unlockedTechs
+- **Set types**: favoriteRecipes, unlockedTechs  
 - **Unified Storage**: GameStorageService handles optimization, compression, and persistence
+- **Map/Set Repair**: Automatic state repair for corrupted localStorage data
 
 ### Service Layer Business Logic Pattern
 **Critical**: Always use services for business logic, never implement it in components:
@@ -178,7 +221,8 @@ src/
 **Key Implementation Files**:
 - `src/services/DataService.ts` - Singleton game data manager with i18n support
 - `src/services/RecipeService.ts` - Advanced recipe analysis and optimization  
-- `src/store/gameStore.ts` - Zustand store with Map/Set serialization
+- `src/store/index.ts` - Modular Zustand store with slice composition
+- `src/store/gameStore.ts` - Backward compatibility proxy for existing imports
 - `src/components/common/FactorioIcon.tsx` - Sprite sheet icon system
 - `src/utils/craftingEngine.ts` - Core crafting logic and validation
 
@@ -197,10 +241,11 @@ src/
    - Recipe categorization (manual/automated/mining/recycling)
    - Favorites and recent recipes tracking
 
-3. **State Management** (✅ Sophisticated):
-   - Zustand store with Map/Set support
-   - localStorage persistence with custom serialization
-   - Real-time inventory updates and crafting progress
+3. **State Management** (✅ Modular Architecture):
+   - Modular Zustand store with slice-based composition
+   - 6 specialized slices: Inventory, Crafting, Recipe, Facility, Technology, GameMeta
+   - localStorage persistence with Map/Set serialization and repair mechanisms
+   - Backward compatibility proxy maintains existing component imports
 
 ## Game Data Structure
 
@@ -293,14 +338,28 @@ const efficiency = RecipeService.calculateRecipeEfficiency(recipe);
 const gameData = await dataService.loadGameData();
 ```
 
-### State Management Pattern
+### Store Usage Patterns
 ```typescript
-// Zustand store access
+// Import from either location (both work due to proxy)
+import useGameStore from '../store/gameStore';  // Legacy import
+import useGameStore from '../store/index';      // Direct import
+
+// Access store state and actions
 const { inventory, addCraftingTask, updateInventory } = useGameStore();
 
-// Map/Set persistence handled automatically
+// Use selectors for performance optimization
 const favoriteRecipes = useGameStore(state => state.favoriteRecipes);
+const craftingQueue = useGameStore(state => state.craftingQueue);
+
+// Map/Set persistence handled automatically with repair mechanisms
 ```
+
+### Store Development Guidelines
+- **Slice Isolation**: Each slice should only contain related functionality
+- **Cross-Slice Communication**: Use `get()` to access other slice state/actions
+- **Type Safety**: Use `SliceCreator<SliceInterface>` for proper typing
+- **State Repair**: Include repair functions for Map/Set deserialization issues
+- **Backward Compatibility**: Maintain existing component imports via proxy pattern
 
 ## Key Documentation Files
 
@@ -516,12 +575,27 @@ Specialized debugging support via browser tools (see .cursor/rules/):
 - `runPerformanceAudit()` - Performance optimization
 - Production module specific debugging patterns for CategoryTabs, ItemList, ItemDetailPanel, CraftingQueue
 
-## Recent Critical Fixes
+## Recent Critical Updates
+
+### Store Architecture Refactoring (Latest)
+**Change**: Refactored monolithic gameStore.ts (1328 lines) into modular slice-based architecture.
+
+**Improvements**:
+1. **Modular Design**: Split into 6 specialized slices by business domain
+2. **Better Maintainability**: Each slice averages ~150 lines with clear responsibilities
+3. **Type Safety**: Complete TypeScript interfaces for all slices and state creators
+4. **Backward Compatibility**: Proxy pattern ensures existing components work unchanged
+5. **Performance Ready**: Architecture supports future selector-based optimizations
+
+**New Files**:
+- `src/store/index.ts` - Composite store combining all slices
+- `src/store/types/index.ts` - TypeScript interfaces for all slices
+- `src/store/slices/*.ts` - Individual business domain slices
+- `src/store/utils/mapSetHelpers.ts` - Map/Set serialization utilities
+- `src/store/gameStore.ts` - Backward compatibility proxy
 
 ### Chain Crafting Inventory Logic (Fixed)
 **Problem**: Chain crafting allowed phantom crafting with insufficient total raw materials.
-
-**Example**: Crafting 1 burner-mining-drill needs 3 gears + 3 iron-plates. 3 gears need 6 iron-plates. Total: 9 iron-plates required, but system allowed crafting with only 6 iron-plates.
 
 **Solution**: Implemented total raw material pre-calculation and immediate deduction:
 1. `DependencyService.calculateTotalRawMaterialNeeds()` recursively calculates all raw materials
@@ -530,18 +604,13 @@ Specialized debugging support via browser tools (see .cursor/rules/):
 4. `CraftingEngine` skips material deduction for chain tasks (`task.chainId` check)
 5. Chain cancellation properly refunds all pre-deducted raw materials
 
-**Files modified**: `DependencyService.ts`, `useCrafting.ts`, `gameStore.ts`, `craftingEngine.ts`, `types/index.ts`
-
-### Recent Service Architecture Refactoring (Latest)
+### Service Architecture Consolidation
 **Change**: Consolidated storage and configuration management into unified services.
 
 **Improvements**:
-1. **GameStorageService**: Unified save/load operations replacing separate SaveOptimizationService and DebouncedStorage
-2. **GameConfig**: Centralized game constants management replacing scattered configuration
-3. **Simplified gameStore**: Reduced complexity by moving storage logic to dedicated service
-4. **Better separation of concerns**: Clear boundaries between state management and persistence
-
-**Files affected**: `GameStorageService.ts`, `GameConfig.ts`, `gameStore.ts`, service layer refactoring
+1. **GameStorageService**: Unified save/load operations with compression and optimization
+2. **GameConfig**: Centralized game constants management
+3. **Better separation of concerns**: Clear boundaries between state management and persistence
 
 ## Browser Debugging & UI Design Guidelines
 
