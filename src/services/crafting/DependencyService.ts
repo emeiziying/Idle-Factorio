@@ -1,8 +1,8 @@
 // 依赖分析服务 - 用于计算制作链式任务
-import type { Recipe, CraftingTask } from '../../types/index';
+import type { Recipe, CraftingTask } from '@/types/index';
 
-import { RecipeService } from './RecipeService';
-import ManualCraftingValidator from '../../utils/manualCraftingValidator';
+import { RecipeService } from '@/services/crafting/RecipeService';
+import ManualCraftingValidator from '@/utils/manualCraftingValidator';
 
 export interface CraftingDependency {
   itemId: string;

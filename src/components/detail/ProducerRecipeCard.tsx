@@ -1,6 +1,6 @@
 import React from 'react';
-import type { Recipe } from '../../types/index';
-import UnifiedRecipeCard from './UnifiedRecipeCard';
+import type { Recipe } from '@/types/index';
+import UnifiedRecipeCard from '@/components/detail/UnifiedRecipeCard';
 
 interface ProducerRecipeCardProps {
   recipe: Recipe;

@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import useGameTimeStore from '../store/gameTimeStore';
+import useGameTimeStore from '@/store/gameTimeStore';
 
 interface ProductionAccumulator {
   [itemId: string]: number; // 累积的生产量（包含小数）

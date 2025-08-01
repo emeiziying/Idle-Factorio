@@ -27,9 +27,9 @@ import {
   Queue as QueueIcon,
   Science as ResearchIcon,
 } from '@mui/icons-material';
-import FactorioIcon from '../common/FactorioIcon';
-import type { ResearchQueueItem, TechResearchState } from '../../types/technology';
-import { TechnologyService } from '../../services/technology/TechnologyService';
+import FactorioIcon from '@/components/common/FactorioIcon';
+import type { ResearchQueueItem, TechResearchState } from '@/types/technology';
+import { TechnologyService } from '@/services/technology/TechnologyService';
 
 interface ResearchQueueProps {
   /** 研究队列列表 */

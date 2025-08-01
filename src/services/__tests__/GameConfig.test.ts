@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { GameConfig } from '../core/GameConfig';
-import { DataService } from '../core/DataService';
-import type { Item } from '../../types';
+import { GameConfig } from '@/services/core/GameConfig';
+import { DataService } from '@/services/core/DataService';
+import type { Item } from '@/types';
 
 // 模拟 DataService
 vi.mock('../core/DataService', () => ({

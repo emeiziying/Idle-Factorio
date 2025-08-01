@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
-import { DataService } from '../../services/core/DataService';
-import type { IconData } from '../../types/index';
+import { DataService } from '@/services/core/DataService';
+import type { IconData } from '@/types/index';
 
 // 导入图标精灵图
-import iconSprite from '../../data/spa/icons.webp';
+import iconSprite from '@/data/spa/icons.webp';
 
 interface FactorioIconProps {
   itemId?: string; // 当使用customImage时可选

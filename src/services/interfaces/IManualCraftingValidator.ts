@@ -3,7 +3,7 @@
  * 用于解耦 RecipeService 和 ManualCraftingValidator 之间的循环依赖
  */
 
-import type { Recipe } from '../../types/index';
+import type { Recipe } from '@/types/index';
 
 export interface ManualCraftingValidation {
   canCraftManually: boolean;

@@ -1,13 +1,13 @@
-import { ServiceLocator, SERVICE_NAMES } from './ServiceLocator';
-import { DataService } from './DataService';
-import { RecipeService } from '../crafting/RecipeService';
-import { TechnologyService } from '../technology/TechnologyService';
-import { UserProgressService } from '../game/UserProgressService';
-import { FuelService } from '../crafting/FuelService';
-import { PowerService } from '../game/PowerService';
-import { StorageService } from '../storage/StorageService';
-import { GameStateAdapter } from '../storage/GameStateAdapter';
-import ManualCraftingValidator from '../../utils/manualCraftingValidator';
+import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
+import { DataService } from '@/services/core/DataService';
+import { RecipeService } from '@/services/crafting/RecipeService';
+import { TechnologyService } from '@/services/technology/TechnologyService';
+import { UserProgressService } from '@/services/game/UserProgressService';
+import { FuelService } from '@/services/crafting/FuelService';
+import { PowerService } from '@/services/game/PowerService';
+import { StorageService } from '@/services/storage/StorageService';
+import { GameStateAdapter } from '@/services/storage/GameStateAdapter';
+import ManualCraftingValidator from '@/utils/manualCraftingValidator';
 
 /**
  * 服务初始化器

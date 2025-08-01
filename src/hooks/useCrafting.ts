@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { Recipe } from '../types/index';
-import useGameStore from '../store/gameStore';
+import type { Recipe } from '@/types/index';
+import useGameStore from '@/store/gameStore';
 import DependencyService, {
   type CraftingChainAnalysis,
   type CraftingDependency,

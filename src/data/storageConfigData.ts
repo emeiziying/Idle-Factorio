@@ -1,6 +1,6 @@
 // 存储配置数据 - 纯数据文件，不依赖任何服务
 
-import type { StorageConfig } from '../types/index';
+import type { StorageConfig } from '@/types/index';
 
 // 存储特定的配置（data.json中没有的信息）
 export const STORAGE_SPECIFIC_CONFIGS: { [key: string]: Partial<StorageConfig> } = {

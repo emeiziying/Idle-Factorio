@@ -1,16 +1,16 @@
 import React from 'react';
 import { Box, Typography, Alert, Chip } from '@mui/material';
-import type { Item, Recipe } from '../../types/index';
-import { RecipeService } from '../../services/crafting/RecipeService';
-import { DataService } from '../../services/core/DataService';
-import useGameStore from '../../store/gameStore';
+import type { Item, Recipe } from '@/types/index';
+import { RecipeService } from '@/services/crafting/RecipeService';
+import { DataService } from '@/services/core/DataService';
+import useGameStore from '@/store/gameStore';
 import {
   getValidationReasonText,
   type ValidationReasonType,
 } from '../../utils/manualCraftingValidator';
-import CraftingButtons from './CraftingButtons';
-import RecipeFlowDisplay from './RecipeFlowDisplay';
-import FactorioIcon from '../common/FactorioIcon';
+import CraftingButtons from '@/components/detail/CraftingButtons';
+import RecipeFlowDisplay from '@/components/detail/RecipeFlowDisplay';
+import FactorioIcon from '@/components/common/FactorioIcon';
 // import ChainCraftingDialog from '../common/ChainCraftingDialog';
 
 interface ManualCraftingCardProps {

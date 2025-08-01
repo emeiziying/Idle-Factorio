@@ -3,9 +3,9 @@
  * 跟踪研究统计、进度和成就
  */
 
-import type { Technology, TechStatistics } from '../../types/technology';
-import type { TechTreeService } from './TechTreeService';
-import type { TechUnlockService } from './TechUnlockService';
+import type { Technology, TechStatistics } from '@/types/technology';
+import type { TechTreeService } from '@/services/technology/TechTreeService';
+import type { TechUnlockService } from '@/services/technology/TechUnlockService';
 
 export class TechProgressTracker {
   // 统计数据

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { UserProgressService } from '../game/UserProgressService';
+import { UserProgressService } from '@/services/game/UserProgressService';
 
 // 模拟日志记录器
 vi.mock('../../utils/logger', () => ({

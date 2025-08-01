@@ -1,6 +1,6 @@
 // 核心游戏类型定义
 
-import type { Technology } from './technology';
+import type { Technology } from '@/types/technology';
 
 // 分类接口
 export interface Category {

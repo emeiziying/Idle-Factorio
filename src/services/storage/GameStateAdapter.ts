@@ -3,10 +3,10 @@
  * 将 gameStore 适配为 GameStateProvider 接口
  */
 
-import type { GameStateProvider } from '../interfaces';
-import type { FacilityInstance } from '../../types/facilities';
-import type { InventoryItem } from '../../types/index';
-import useGameStore from '../../store/gameStore';
+import type { GameStateProvider } from '@/services/interfaces';
+import type { FacilityInstance } from '@/types/facilities';
+import type { InventoryItem } from '@/types/index';
+import useGameStore from '@/store/gameStore';
 
 export class GameStateAdapter implements GameStateProvider {
   private static instance: GameStateAdapter;

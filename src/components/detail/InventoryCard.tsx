@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Card, CardContent, Typography, Chip, Box, Button, useTheme } from '@mui/material';
 import { AddBox as AddBoxIcon } from '@mui/icons-material';
-import type { Item } from '../../types/index';
-import useGameStore from '../../store/gameStore';
-import StorageExpansionDialog from './StorageExpansionDialog';
+import type { Item } from '@/types/index';
+import useGameStore from '@/store/gameStore';
+import StorageExpansionDialog from '@/components/detail/StorageExpansionDialog';
 
 interface InventoryCardProps {
   item: Item;

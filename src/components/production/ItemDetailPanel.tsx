@@ -1,14 +1,14 @@
 import React from 'react';
 import { Box, Typography, Snackbar, Alert, Divider } from '@mui/material';
-import type { Item } from '../../types/index';
-import { useItemRecipes } from '../../hooks/useItemRecipes';
-import { useCrafting } from '../../hooks/useCrafting';
-import { useManualCraftingStatus } from '../../hooks/useManualCraftingStatus';
-import ItemDetailHeader from '../detail/ItemDetailHeader';
-import ManualCraftingCard from '../detail/ManualCraftingCard';
-import RecipeFacilitiesCard from '../detail/RecipeFacilitiesCard';
-import UsageCard from '../detail/UsageCard';
-import InventoryManagementCard from '../detail/InventoryManagementCard';
+import type { Item } from '@/types/index';
+import { useItemRecipes } from '@/hooks/useItemRecipes';
+import { useCrafting } from '@/hooks/useCrafting';
+import { useManualCraftingStatus } from '@/hooks/useManualCraftingStatus';
+import ItemDetailHeader from '@/components/detail/ItemDetailHeader';
+import ManualCraftingCard from '@/components/detail/ManualCraftingCard';
+import RecipeFacilitiesCard from '@/components/detail/RecipeFacilitiesCard';
+import UsageCard from '@/components/detail/UsageCard';
+import InventoryManagementCard from '@/components/detail/InventoryManagementCard';
 
 interface ItemDetailPanelProps {
   item: Item;

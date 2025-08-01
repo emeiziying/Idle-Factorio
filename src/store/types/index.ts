@@ -8,7 +8,7 @@ import type {
   DeployedContainer,
   OperationResult,
 } from '../../types/index';
-import type { FacilityInstance } from '../../types/facilities';
+import type { FacilityInstance } from '@/types/facilities';
 import type {
   Technology,
   TechResearchState,
@@ -16,7 +16,7 @@ import type {
   TechCategory,
   ResearchPriority,
 } from '../../types/technology';
-import type { GameLoopSlice } from '../slices/gameLoopStore';
+import type { GameLoopSlice } from '@/store/slices/gameLoopStore';
 
 // 库存管理切片状态
 export interface InventorySlice {

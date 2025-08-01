@@ -1,9 +1,9 @@
 // 存储服务 - 合并data.json和特定配置
 
-import type { StorageConfig } from '../../types/index';
-import { STORAGE_SPECIFIC_CONFIGS } from '../../data/storageConfigData';
-import { ServiceLocator, SERVICE_NAMES } from '../core/ServiceLocator';
-import type { DataService } from '../core/DataService';
+import type { StorageConfig } from '@/types/index';
+import { STORAGE_SPECIFIC_CONFIGS } from '@/data/storageConfigData';
+import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
+import type { DataService } from '@/services/core/DataService';
 
 export class StorageService {
   private static instance: StorageService;

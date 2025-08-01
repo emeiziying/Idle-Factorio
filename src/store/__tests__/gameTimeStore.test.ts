@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { act } from '@testing-library/react';
-import useGameTimeStore from '../gameTimeStore';
+import useGameTimeStore from '@/store/gameTimeStore';
 
 // gameTimeStore 测试套件 - 游戏时间管理
 describe('gameTimeStore', () => {

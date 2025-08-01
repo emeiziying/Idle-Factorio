@@ -2,10 +2,10 @@
 
 import React from 'react';
 import { Box, Typography, useTheme } from '@mui/material';
-import TechGridCard from './TechGridCard';
-import TechVirtualizedGridWithAutoSizer from './TechVirtualizedGridWithAutoSizer';
-import type { Technology, TechStatus } from '../../types/technology';
-import { TechnologyService } from '../../services/technology/TechnologyService';
+import TechGridCard from '@/components/technology/TechGridCard';
+import TechVirtualizedGridWithAutoSizer from '@/components/technology/TechVirtualizedGridWithAutoSizer';
+import type { Technology, TechStatus } from '@/types/technology';
+import { TechnologyService } from '@/services/technology/TechnologyService';
 
 interface TechSimpleGridProps {
   /** 要显示的科技列表 */

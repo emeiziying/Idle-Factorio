@@ -1,8 +1,8 @@
-import type { Recipe } from '../../types';
-import { CUSTOM_RECIPES } from '../../data/customRecipes';
-import { ServiceLocator, SERVICE_NAMES } from '../core/ServiceLocator';
-import type { DataService } from '../core/DataService';
-import type { IManualCraftingValidator } from '../interfaces/IManualCraftingValidator';
+import type { Recipe } from '@/types';
+import { CUSTOM_RECIPES } from '@/data/customRecipes';
+import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
+import type { DataService } from '@/services/core/DataService';
+import type { IManualCraftingValidator } from '@/services/interfaces/IManualCraftingValidator';
 
 /**
  * 配方服务
