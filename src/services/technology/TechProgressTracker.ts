@@ -109,11 +109,6 @@ export class TechProgressTracker {
     const unlockedCount = this.unlockService?.getUnlockedTechs().size || 0;
     const researchedCount = this.researchedTechs.size;
     
-    // 计算不同类型科技包的总消耗
-    const packTypes = Object.keys(this.totalSciencePacksConsumed);
-    const totalPacksConsumed = Object.values(this.totalSciencePacksConsumed)
-      .reduce((sum, count) => sum + count, 0);
-
     // 获取分类统计
     const categoryProgress = this.getCategoryProgress();
     

@@ -330,8 +330,10 @@ export class ResearchService {
   /**
    * 获取模块加成
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private getModuleBonus(facility: FacilityInstance): number {
     // 简化实现，实际应该检查安装的模块
+    // TODO: 实现模块检查逻辑
     return 0;
   }
 

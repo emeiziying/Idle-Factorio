@@ -3,7 +3,7 @@
  * 管理科技树结构、数据查询和依赖关系
  */
 
-import type { Technology, TechCategory, TechSearchFilter, TechStatus } from '../../../types/technology';
+import type { Technology, TechCategory, TechSearchFilter } from '../../../types/technology';
 import { TechDataLoader } from './TechDataLoader';
 
 export class TechTreeService {
