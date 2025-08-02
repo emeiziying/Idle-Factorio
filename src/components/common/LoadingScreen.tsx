@@ -16,7 +16,7 @@ interface LoadingScreenProps {
 }
 
 const LoadingContent: React.FC<Omit<LoadingScreenProps, 'withTheme'>> = ({
-  title = '🏭 闲置工厂',
+  title = '异星工厂',
   message = '正在加载...',
   subtitle = '请稍候',
   showSpinner = true,
@@ -28,6 +28,7 @@ const LoadingContent: React.FC<Omit<LoadingScreenProps, 'withTheme'>> = ({
       alignItems: 'center',
       justifyContent: 'center',
       height: '100vh',
+      width: '100vw',
       padding: 2,
       textAlign: 'center',
       bgcolor: 'background.default',

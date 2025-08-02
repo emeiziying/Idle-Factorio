@@ -76,7 +76,8 @@
       "Bash(./node_modules/.bin/prettier:*)",
       "Bash(/dev/null)",
       "Bash(npx ts-unused-exports:*)",
-      "Bash(npx depcheck:*)"
+      "Bash(npx depcheck:*)",
+      "Bash(pnpm list:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
