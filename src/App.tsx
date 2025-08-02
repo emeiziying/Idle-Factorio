@@ -15,7 +15,6 @@ import {
 import ProductionModule from '@/components/production/ProductionModule';
 import FacilitiesModule from '@/components/facilities/FacilitiesModule';
 import TechnologyModule from '@/components/technology/TechnologyModule';
-import ManualCraftingTestPage from '@/components/test/ManualCraftingTestPage';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import ErrorScreen from '@/components/common/ErrorScreen';
 import ClearGameButton from '@/components/common/ClearGameButton';
@@ -65,7 +64,6 @@ const App: React.FC = () => {
           {currentModule === 0 && <ProductionModule />}
           {currentModule === 1 && <FacilitiesModule />}
           {currentModule === 2 && <TechnologyModule />}
-          {currentModule === 3 && <ManualCraftingTestPage />}
         </Box>
 
         <BottomNavigation value={currentModule} onChange={handleTabChange} showLabels>

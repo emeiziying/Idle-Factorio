@@ -74,7 +74,9 @@
       "Bash(pnpm tsc:*)",
       "Bash(./node_modules/.bin/eslint:*)",
       "Bash(./node_modules/.bin/prettier:*)",
-      "Bash(/dev/null)"
+      "Bash(/dev/null)",
+      "Bash(npx ts-unused-exports:*)",
+      "Bash(npx depcheck:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

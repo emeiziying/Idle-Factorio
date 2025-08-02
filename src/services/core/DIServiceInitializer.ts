@@ -60,7 +60,9 @@ export class DIServiceInitializer {
     container.register(SERVICE_TOKENS.TECH_TREE_SERVICE, TechTreeService);
 
     container.registerFactory(SERVICE_TOKENS.TECH_UNLOCK_SERVICE, () => {
-      const userProgressService = container.resolve<UserProgressService>(SERVICE_TOKENS.USER_PROGRESS_SERVICE);
+      const userProgressService = container.resolve<UserProgressService>(
+        SERVICE_TOKENS.USER_PROGRESS_SERVICE
+      );
       const eventEmitter = container.resolve<TechEventEmitter>(SERVICE_TOKENS.TECH_EVENT_EMITTER);
       const treeService = container.resolve<TechTreeService>(SERVICE_TOKENS.TECH_TREE_SERVICE);
       return new TechUnlockService(userProgressService, eventEmitter, treeService);
@@ -114,14 +116,14 @@ export class DIServiceInitializer {
     // 5. 注册其他业务服务
     container.register(SERVICE_TOKENS.RECIPE_SERVICE, RecipeService);
     container.register(SERVICE_TOKENS.DEPENDENCY_SERVICE, DependencyService);
-    
+
     container.registerFactory(SERVICE_TOKENS.FUEL_SERVICE, () => {
       const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
       const gameConfig = container.resolve<GameConfig>(SERVICE_TOKENS.GAME_CONFIG);
       const recipeService = container.resolve<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
       return new FuelService(dataService, gameConfig, recipeService);
     });
-    
+
     container.registerFactory(SERVICE_TOKENS.POWER_SERVICE, () => {
       const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
       const gameConfig = container.resolve<GameConfig>(SERVICE_TOKENS.GAME_CONFIG);
