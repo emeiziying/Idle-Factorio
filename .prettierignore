@@ -9,11 +9,6 @@ build/
 # 公共文件
 public/
 
-# 配置文件
-vite.config.ts
-vitest.config.ts
-eslint.config.js
-
 # 数据文件 
 src/data/spa/**/*.json
 public/**/*.json

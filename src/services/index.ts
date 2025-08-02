@@ -16,5 +16,4 @@ export * from './crafting';
 export * from './technology';
 
 // 接口
-export * from './interfaces';
 export type { IManualCraftingValidator } from './interfaces/IManualCraftingValidator';

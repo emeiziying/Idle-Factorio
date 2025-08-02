@@ -9,9 +9,11 @@ export const SERVICE_TOKENS = {
   USER_PROGRESS_SERVICE: 'UserProgressService',
   STORAGE_SERVICE: 'StorageService',
   MANUAL_CRAFTING_VALIDATOR: 'ManualCraftingValidator',
+  GAME_CONFIG: 'GameConfig',
 
   // 业务服务
   RECIPE_SERVICE: 'RecipeService',
+  DEPENDENCY_SERVICE: 'DependencyService',
   FUEL_SERVICE: 'FuelService',
   POWER_SERVICE: 'PowerService',
 

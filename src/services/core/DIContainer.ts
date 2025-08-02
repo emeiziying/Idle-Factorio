@@ -3,7 +3,7 @@
  * 负责服务的注册、解析和生命周期管理
  */
 
-type Constructor<T = {}> = new (...args: any[]) => T;
+type Constructor<T = Record<string, unknown>> = new (...args: unknown[]) => T;
 type Factory<T> = () => T;
 type AsyncFactory<T> = () => Promise<T>;
 
@@ -15,8 +15,8 @@ interface ServiceDefinition<T> {
 
 export class DIContainer {
   private static instance: DIContainer;
-  private services = new Map<string, ServiceDefinition<any>>();
-  private instances = new Map<string, any>();
+  private services = new Map<string, ServiceDefinition<unknown>>();
+  private instances = new Map<string, unknown>();
   private resolving = new Set<string>(); // 防止循环依赖
 
   static getInstance(): DIContainer {
@@ -79,7 +79,7 @@ export class DIContainer {
   resolve<T>(token: string): T {
     // 检查是否已有实例
     if (this.instances.has(token)) {
-      return this.instances.get(token);
+      return this.instances.get(token) as T;
     }
 
     // 检查循环依赖
@@ -104,7 +104,7 @@ export class DIContainer {
         this.instances.set(token, instance);
       }
 
-      return instance;
+      return instance as T;
     } finally {
       this.resolving.delete(token);
     }
@@ -116,7 +116,7 @@ export class DIContainer {
   async resolveAsync<T>(token: string): Promise<T> {
     // 检查是否已有实例
     if (this.instances.has(token)) {
-      return this.instances.get(token);
+      return this.instances.get(token) as T;
     }
 
     // 检查循环依赖
@@ -141,7 +141,7 @@ export class DIContainer {
         this.instances.set(token, instance);
       }
 
-      return instance;
+      return instance as T;
     } finally {
       this.resolving.delete(token);
     }

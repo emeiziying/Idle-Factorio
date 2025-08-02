@@ -10,10 +10,12 @@ import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import { DataService } from '@/services/core/DataService';
 import { UserProgressService } from '@/services/game/UserProgressService';
 import { StorageService } from '@/services/storage/StorageService';
+import { GameConfig } from '@/services/core/GameConfig';
 import ManualCraftingValidator from '@/utils/manualCraftingValidator';
 
 // 业务服务
 import { RecipeService } from '@/services/crafting/RecipeService';
+import { DependencyService } from '@/services/crafting/DependencyService';
 import { FuelService } from '@/services/crafting/FuelService';
 import { PowerService } from '@/services/game/PowerService';
 
@@ -45,26 +47,33 @@ export class DIServiceInitializer {
     container.register(SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR, ManualCraftingValidator);
     container.register(SERVICE_TOKENS.DATA_SERVICE, DataService);
 
+    // 注册 GameConfig 服务（依赖 DataService）
+    container.registerFactory(SERVICE_TOKENS.GAME_CONFIG, () => {
+      const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+      return new GameConfig(dataService);
+    });
+
     // 2. 注册事件系统
     container.register(SERVICE_TOKENS.TECH_EVENT_EMITTER, TechEventEmitter);
 
     // 3. 注册科技系统子服务
     container.register(SERVICE_TOKENS.TECH_TREE_SERVICE, TechTreeService);
 
-    container.register(SERVICE_TOKENS.TECH_UNLOCK_SERVICE, TechUnlockService, {
-      dependencies: [
-        SERVICE_TOKENS.USER_PROGRESS_SERVICE,
-        SERVICE_TOKENS.TECH_EVENT_EMITTER,
-        SERVICE_TOKENS.TECH_TREE_SERVICE,
-      ],
+    container.registerFactory(SERVICE_TOKENS.TECH_UNLOCK_SERVICE, () => {
+      const userProgressService = container.resolve<UserProgressService>(SERVICE_TOKENS.USER_PROGRESS_SERVICE);
+      const eventEmitter = container.resolve<TechEventEmitter>(SERVICE_TOKENS.TECH_EVENT_EMITTER);
+      const treeService = container.resolve<TechTreeService>(SERVICE_TOKENS.TECH_TREE_SERVICE);
+      return new TechUnlockService(userProgressService, eventEmitter, treeService);
     });
 
-    container.register(SERVICE_TOKENS.RESEARCH_SERVICE, ResearchService, {
-      dependencies: [SERVICE_TOKENS.TECH_EVENT_EMITTER],
+    container.registerFactory(SERVICE_TOKENS.RESEARCH_SERVICE, () => {
+      const eventEmitter = container.resolve<TechEventEmitter>(SERVICE_TOKENS.TECH_EVENT_EMITTER);
+      return new ResearchService(eventEmitter);
     });
 
-    container.register(SERVICE_TOKENS.RESEARCH_QUEUE_SERVICE, ResearchQueueService, {
-      dependencies: [SERVICE_TOKENS.TECH_EVENT_EMITTER],
+    container.registerFactory(SERVICE_TOKENS.RESEARCH_QUEUE_SERVICE, () => {
+      const eventEmitter = container.resolve<TechEventEmitter>(SERVICE_TOKENS.TECH_EVENT_EMITTER);
+      return new ResearchQueueService(eventEmitter);
     });
 
     container.register(SERVICE_TOKENS.TECH_PROGRESS_TRACKER, TechProgressTracker);
@@ -86,11 +95,17 @@ export class DIServiceInitializer {
 
       const technologyService = new TechnologyService();
       // 通过反射设置私有属性（临时方案，后续可以通过构造函数注入）
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (technologyService as any).eventEmitter = eventEmitter;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (technologyService as any).treeService = treeService;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (technologyService as any).unlockService = unlockService;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (technologyService as any).researchService = researchService;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (technologyService as any).queueService = queueService;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (technologyService as any).progressTracker = progressTracker;
 
       return technologyService;
@@ -98,8 +113,20 @@ export class DIServiceInitializer {
 
     // 5. 注册其他业务服务
     container.register(SERVICE_TOKENS.RECIPE_SERVICE, RecipeService);
-    container.register(SERVICE_TOKENS.FUEL_SERVICE, FuelService);
-    container.register(SERVICE_TOKENS.POWER_SERVICE, PowerService);
+    container.register(SERVICE_TOKENS.DEPENDENCY_SERVICE, DependencyService);
+    
+    container.registerFactory(SERVICE_TOKENS.FUEL_SERVICE, () => {
+      const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+      const gameConfig = container.resolve<GameConfig>(SERVICE_TOKENS.GAME_CONFIG);
+      const recipeService = container.resolve<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+      return new FuelService(dataService, gameConfig, recipeService);
+    });
+    
+    container.registerFactory(SERVICE_TOKENS.POWER_SERVICE, () => {
+      const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+      const gameConfig = container.resolve<GameConfig>(SERVICE_TOKENS.GAME_CONFIG);
+      return new PowerService(dataService, gameConfig);
+    });
 
     // 6. 注册游戏循环服务
     container.register(SERVICE_TOKENS.GAME_LOOP_SERVICE, GameLoopService);

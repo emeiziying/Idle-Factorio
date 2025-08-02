@@ -42,11 +42,12 @@ export const useManualCraftingStatus = (item: Item): ManualCraftingStatus => {
     }));
 
     const manualCraftableRecipes = recipeValidations.filter(
-      ({ validation }: { validation: any }) => validation.canCraftManually
+      ({ validation }: { validation: { canCraftManually: boolean; category: string } }) =>
+        validation.canCraftManually
     );
 
     const restrictedRecipes = recipeValidations.filter(
-      ({ validation }: { validation: any }) =>
+      ({ validation }: { validation: { canCraftManually: boolean; category: string } }) =>
         !validation.canCraftManually && validation.category === 'restricted'
     );
 

@@ -5,6 +5,7 @@ import type { InventoryOperations } from '@/types/inventory';
 import type { TechnologyService } from '@/services/technology/TechnologyService';
 import type { DataService } from '@/services/core/DataService';
 import type { RecipeService } from '@/services/crafting/RecipeService';
+import type { Recipe } from '@/types/index';
 import { getService } from '@/services/core/DIServiceInitializer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import { ensureMap, ensureUnlockedTechsSet } from '@/store/utils/mapSetHelpers';
@@ -281,7 +282,11 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
 
       // 查找科技类配方
       const techRecipes = allRecipes.filter(
-        (recipe: any) =>
+        (
+          recipe: Recipe & {
+            researchTrigger?: { type: string; item?: string; entity?: string; count?: number };
+          }
+        ) =>
           recipe.category === 'technology' &&
           recipe.researchTrigger &&
           !state.unlockedTechs.has(recipe.id)

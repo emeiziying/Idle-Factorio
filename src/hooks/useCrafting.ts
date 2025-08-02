@@ -2,10 +2,10 @@ import { useState } from 'react';
 import type { Recipe } from '@/types/index';
 import useGameStore from '@/store/gameStore';
 import {
-  DependencyService,
   type CraftingChainAnalysis,
   type CraftingDependency,
 } from '../services/crafting/DependencyService';
+import { useDependencyService } from '@/hooks/useDIServices';
 
 export const useCrafting = () => {
   const [showMessage, setShowMessage] = useState({
@@ -23,7 +23,7 @@ export const useCrafting = () => {
   });
 
   const { getInventoryItem, addCraftingTask, addCraftingChain, inventory } = useGameStore();
-  const dependencyService = DependencyService.getInstance();
+  const dependencyService = useDependencyService();
 
   const handleCraft = (recipe: Recipe, quantity: number = 1) => {
     // 检查材料是否足够

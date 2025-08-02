@@ -18,6 +18,8 @@ import type { PowerService } from '@/services/game/PowerService';
 import type { StorageService } from '@/services/storage/StorageService';
 import type { ManualCraftingValidator } from '@/utils/manualCraftingValidator';
 import type { GameLoopService } from '@/services/game/GameLoopService';
+import type { GameConfig } from '@/services/core/GameConfig';
+import type { DependencyService } from '@/services/crafting/DependencyService';
 
 /**
  * 获取 DataService 实例
@@ -106,6 +108,24 @@ export const useManualCraftingValidator = (): ManualCraftingValidator => {
 export const useGameLoopService = (): GameLoopService => {
   return useMemo(() => {
     return getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
+  }, []);
+};
+
+/**
+ * 获取 GameConfig 实例
+ */
+export const useGameConfig = (): GameConfig => {
+  return useMemo(() => {
+    return getService<GameConfig>(SERVICE_TOKENS.GAME_CONFIG);
+  }, []);
+};
+
+/**
+ * 获取 DependencyService 实例
+ */
+export const useDependencyService = (): DependencyService => {
+  return useMemo(() => {
+    return getService<DependencyService>(SERVICE_TOKENS.DEPENDENCY_SERVICE);
   }, []);
 };
 

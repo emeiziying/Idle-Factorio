@@ -4,7 +4,7 @@ import type { CraftingTask, Recipe } from '@/types/index';
 import useGameStore from '@/store/gameStore';
 import type { DataService } from '@/services/core/DataService';
 import type { RecipeService } from '@/services/crafting/RecipeService';
-import { GameConfig } from '@/services/core/GameConfig';
+import type { GameConfig } from '@/services/core/GameConfig';
 import { getService } from '@/services/core/DIServiceInitializer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import { secondsToMs } from '@/utils/common';
@@ -37,7 +37,7 @@ class CraftingEngine {
   private resourcePropertiesCache = new Map<string, ResourceProperties>();
 
   private constructor() {
-    this.gameConfig = GameConfig.getInstance();
+    this.gameConfig = getService<GameConfig>(SERVICE_TOKENS.GAME_CONFIG);
   }
 
   static getInstance(): CraftingEngine {
@@ -88,7 +88,7 @@ class CraftingEngine {
     const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
     const miningRecipes = recipeService
       .getRecipesThatProduce(itemId)
-      .filter((recipe: any) => recipe.flags?.includes('mining'));
+      .filter((recipe: Recipe & { flags?: string[] }) => recipe.flags?.includes('mining'));
 
     let resourceProps: ResourceProperties;
 

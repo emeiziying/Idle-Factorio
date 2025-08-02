@@ -28,20 +28,11 @@ export interface CraftingChainAnalysis {
 }
 
 export class DependencyService {
-  private static instance: DependencyService;
-
   private validator: ManualCraftingValidator;
 
-  private constructor() {
-    // 在singleton模式下暂时创建实例，后续可能需要重构为DI
-    this.validator = new ManualCraftingValidator();
-  }
-
-  static getInstance(): DependencyService {
-    if (!DependencyService.instance) {
-      DependencyService.instance = new DependencyService();
-    }
-    return DependencyService.instance;
+  constructor() {
+    // 使用DI容器获取依赖
+    this.validator = getService<ManualCraftingValidator>(SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR);
   }
 
   /**

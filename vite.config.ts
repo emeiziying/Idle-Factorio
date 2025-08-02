@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -8,15 +8,15 @@ export default defineConfig({
   base: '/Idle-Factorio/',
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
-    }
+      '@': path.resolve(__dirname, './src'),
+    },
   },
   build: {
     // 启用代码分割
     rollupOptions: {
       output: {
         // 手动分块策略
-        manualChunks: (id) => {
+        manualChunks: id => {
           // 第三方库分块
           if (id.includes('node_modules')) {
             if (id.includes('react') || id.includes('react-dom')) {
@@ -56,7 +56,7 @@ export default defineConfig({
         // 优化chunk命名
         chunkFileNames: 'js/[name]-[hash].js',
         // 优化资源命名
-        assetFileNames: (assetInfo) => {
+        assetFileNames: assetInfo => {
           const name = assetInfo.name || 'asset';
           const info = name.split('.');
           const ext = info[info.length - 1];
@@ -67,8 +67,8 @@ export default defineConfig({
             return `images/[name]-[hash][extname]`;
           }
           return `assets/[name]-[hash][extname]`;
-        }
-      }
+        },
+      },
     },
     // 设置chunk大小警告限制
     chunkSizeWarningLimit: 1000,
@@ -87,7 +87,7 @@ export default defineConfig({
       '@tanstack/react-virtual',
       'react-virtualized-auto-sizer',
       'zustand',
-      'lz-string'
-    ]
-  }
-})
+      'lz-string',
+    ],
+  },
+});

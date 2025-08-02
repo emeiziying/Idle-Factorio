@@ -25,12 +25,15 @@ const ManualCraftingFlowCard: React.FC<ManualCraftingFlowCardProps> = ({ item, o
   }));
 
   const manualCraftableRecipes = recipeValidations
-    .filter(({ validation }: { validation: any }) => validation.canCraftManually)
+    .filter(
+      ({ validation }: { validation: { canCraftManually: boolean; category: string } }) =>
+        validation.canCraftManually
+    )
     .map(({ recipe }: { recipe: Recipe }) => recipe);
 
   const restrictedRecipes = recipeValidations
     .filter(
-      ({ validation }: { validation: any }) =>
+      ({ validation }: { validation: { canCraftManually: boolean; category: string } }) =>
         !validation.canCraftManually && validation.category === 'restricted'
     )
     .map(({ recipe }: { recipe: Recipe }) => recipe);

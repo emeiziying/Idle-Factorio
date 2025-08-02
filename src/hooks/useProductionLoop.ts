@@ -125,7 +125,14 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
         });
       }
     },
-    [updateFacility, getInventoryItem, batchUpdateInventory, trackCraftedItem, trackMinedEntity]
+    [
+      updateFacility,
+      getInventoryItem,
+      batchUpdateInventory,
+      trackCraftedItem,
+      trackMinedEntity,
+      recipeService,
+    ]
   );
 
   // 主更新循环

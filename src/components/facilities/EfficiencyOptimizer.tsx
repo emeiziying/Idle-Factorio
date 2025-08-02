@@ -67,7 +67,7 @@ const EfficiencyOptimizer: React.FC = () => {
     });
 
     return itemDeficits;
-  }, [facilities]);
+  }, [facilities, recipeService]);
 
   // 计算各种效率指标
   const efficiencyMetrics = useMemo(() => {
@@ -101,7 +101,7 @@ const EfficiencyOptimizer: React.FC = () => {
       avgEfficiency,
       bottlenecks,
     };
-  }, [facilities, identifyBottlenecks, powerService, recipeService]);
+  }, [facilities, identifyBottlenecks, powerService]);
 
   // 生成优化建议
   const suggestions = useMemo((): OptimizationSuggestion[] => {
@@ -180,7 +180,7 @@ const EfficiencyOptimizer: React.FC = () => {
       const priority = { critical: 0, warning: 1, improvement: 2 };
       return priority[a.type] - priority[b.type];
     });
-  }, [efficiencyMetrics, dataService, facilities, recipeService]);
+  }, [efficiencyMetrics, dataService, facilities]);
 
   // 如果服务未初始化，显示加载状态
   if (!powerService || !dataService || !recipeService) {
