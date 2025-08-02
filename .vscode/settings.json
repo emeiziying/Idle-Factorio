@@ -7,7 +7,12 @@
   "typescript.preferences.importModuleSpecifier": "relative",
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
-  "files.eol": "lf",
   "prettier.requireConfig": true,
-  "editor.rulers": [100]
+  "editor.rulers": [100],
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "tsconfig.json": "tsconfig.*.json, env.d.ts",
+    "vite.config.*": "jsconfig*, vitest.config.*, cypress.config.*, playwright.config.*",
+    "package.json": "package-lock.json, pnpm*, .yarnrc*, yarn*, .eslint*, eslint*, .prettier*, prettier*, .editorconfig"
+  }
 }

@@ -44,7 +44,7 @@ audit-ci.json
 *.log
 
 # IDE文件
-.vscode/
+# .vscode/
 .idea/
 
 # Git
