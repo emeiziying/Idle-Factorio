@@ -58,14 +58,17 @@ The project uses **Husky** for pre-commit hooks:
 
 ## Critical Architecture Patterns
 
-### Service Locator Pattern
-The application uses a service locator pattern for dependency injection:
+### Dependency Injection Pattern
+The application uses a modern dependency injection container for service management:
 ```typescript
-// Register services at startup via ServiceInitializer
-ServiceInitializer.initialize()
+// Register and initialize services at startup via DIServiceInitializer
+await DIServiceInitializer.initialize()
 
-// Access services through ServiceLocator
-const dataService = ServiceLocator.get<DataService>(SERVICE_NAMES.DATA);
+// Access services through DI container
+const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+
+// Or use React hooks in components
+const dataService = useDataService();
 ```
 
 ### Modular Zustand Store Architecture
@@ -278,13 +281,19 @@ interface GameState {
 
 ### Service Usage
 ```typescript
-// Always use singleton pattern for DataService
-const gameData = await DataService.loadGameData();
-const item = DataService.getItemById(itemId);
+// Use DI container for service access
+const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+const gameData = await dataService.loadGameData();
+const item = dataService.getItemById(itemId);
 
-// Use static methods for RecipeService
-const recipes = RecipeService.getRecipesThatProduce(itemId);
-const mostEfficient = RecipeService.getMostEfficientRecipe(itemId);
+// Use DI for RecipeService
+const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+const recipes = recipeService.getRecipesThatProduce(itemId);
+const mostEfficient = recipeService.getMostEfficientRecipe(itemId);
+
+// Or use React hooks in components
+const dataService = useDataService();
+const recipeService = useRecipeService();
 ```
 
 ### Store Usage Patterns

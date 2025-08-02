@@ -2,7 +2,8 @@
 
 import type { StorageConfig } from '@/types/index';
 import { STORAGE_SPECIFIC_CONFIGS } from '@/data/storageConfigData';
-import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
+import { getService } from '@/services/core/DIServiceInitializer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type { DataService } from '@/services/core/DataService';
 
 export class StorageService {
@@ -10,11 +11,8 @@ export class StorageService {
     // 延迟初始化，避免循环依赖
   }
 
-  private getDataService(): DataService | null {
-    if (ServiceLocator.has(SERVICE_NAMES.DATA)) {
-      return ServiceLocator.get<DataService>(SERVICE_NAMES.DATA);
-    }
-    return null;
+  private getDataService(): DataService {
+    return getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
   }
 
   // 获取完整的存储配置（合并data.json和特定配置）
@@ -23,7 +21,6 @@ export class StorageService {
     if (!specificConfig) return undefined;
 
     const dataService = this.getDataService();
-    if (!dataService) return undefined;
 
     // 从data.json获取基础信息
     const item = dataService.getItem(storageType);
@@ -33,7 +30,7 @@ export class StorageService {
 
     return {
       itemId: storageType,
-      name: this.getDataService()?.getLocalizedItemName(storageType) || storageType,
+      name: this.getDataService().getLocalizedItemName(storageType) || storageType,
       category: specificConfig.category!,
       additionalStacks: specificConfig.additionalStacks,
       fluidCapacity: specificConfig.fluidCapacity,
@@ -84,10 +81,7 @@ export class StorageService {
   }
 }
 
-// 兼容性函数 - 从 ServiceLocator 获取 StorageService 实例
-export const getStorageService = (): StorageService | null => {
-  if (ServiceLocator.has(SERVICE_NAMES.STORAGE)) {
-    return ServiceLocator.get<StorageService>(SERVICE_NAMES.STORAGE);
-  }
-  return null;
+// 兼容性函数 - 从 DI 容器获取 StorageService 实例
+export const getStorageService = (): StorageService => {
+  return getService<StorageService>(SERVICE_TOKENS.STORAGE_SERVICE);
 };

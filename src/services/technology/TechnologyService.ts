@@ -60,7 +60,8 @@ export class TechnologyService {
 
     // 创建子服务
     this.treeService = new TechTreeService();
-    this.unlockService = new TechUnlockService(this.eventEmitter);
+    // TechUnlockService 需要通过DI初始化
+    this.unlockService = null as any; // 临时占位符，将由DIServiceInitializer设置
     this.researchService = new ResearchService(this.eventEmitter);
     this.queueService = new ResearchQueueService(this.eventEmitter);
     this.progressTracker = new TechProgressTracker();

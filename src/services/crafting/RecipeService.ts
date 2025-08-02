@@ -1,6 +1,7 @@
 import type { Recipe } from '@/types';
 import { CUSTOM_RECIPES } from '@/data/customRecipes';
-import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
+import { getService } from '@/services/core/DIServiceInitializer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type { DataService } from '@/services/core/DataService';
 import type { IManualCraftingValidator } from '@/services/interfaces/IManualCraftingValidator';
 
@@ -151,17 +152,11 @@ export class RecipeService {
    * @returns 手动制作配方，如果不能手动制作则返回 null
    */
   getManualCraftingRecipe(itemId: string): Recipe | null {
-    const validator = ServiceLocator.has(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
-      ? ServiceLocator.get<IManualCraftingValidator>(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
-      : null;
+    const validator = getService<IManualCraftingValidator>(
+      SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR
+    );
 
-    if (!validator) {
-      return null;
-    }
-
-    const dataService = ServiceLocator.has(SERVICE_NAMES.DATA)
-      ? ServiceLocator.get<DataService>(SERVICE_NAMES.DATA)
-      : null;
+    const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
 
     // 1. 先判断物品是否可以手动制作
     const validation = validator.validateManualCrafting(itemId);
@@ -198,17 +193,11 @@ export class RecipeService {
    * @returns 所有可手动制作的配方列表
    */
   getAllManualCraftingRecipes(itemId: string): Recipe[] {
-    const validator = ServiceLocator.has(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
-      ? ServiceLocator.get<IManualCraftingValidator>(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
-      : null;
+    const validator = getService<IManualCraftingValidator>(
+      SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR
+    );
 
-    if (!validator) {
-      return [];
-    }
-
-    const dataService = ServiceLocator.has(SERVICE_NAMES.DATA)
-      ? ServiceLocator.get<DataService>(SERVICE_NAMES.DATA)
-      : null;
+    const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
 
     // 1. 先判断物品是否可以手动制作
     const validation = validator.validateManualCrafting(itemId);
@@ -241,13 +230,9 @@ export class RecipeService {
    * @returns 是否可以手动制作
    */
   canCraftManually(itemId: string): boolean {
-    const validator = ServiceLocator.has(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
-      ? ServiceLocator.get<IManualCraftingValidator>(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
-      : null;
-
-    if (!validator) {
-      return false;
-    }
+    const validator = getService<IManualCraftingValidator>(
+      SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR
+    );
 
     const validation = validator.validateManualCrafting(itemId);
     return validation.canCraftManually;
@@ -264,22 +249,9 @@ export class RecipeService {
     allRecipes: Recipe[];
     validation: import('../interfaces/IManualCraftingValidator').ManualCraftingValidation;
   } {
-    const validator = ServiceLocator.has(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
-      ? ServiceLocator.get<IManualCraftingValidator>(SERVICE_NAMES.MANUAL_CRAFTING_VALIDATOR)
-      : null;
-
-    if (!validator) {
-      return {
-        canCraft: false,
-        recipe: null,
-        allRecipes: [],
-        validation: {
-          canCraftManually: false,
-          category: 'error',
-          reason: 'validator_unavailable',
-        },
-      };
-    }
+    const validator = getService<IManualCraftingValidator>(
+      SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR
+    );
 
     const validation = validator.validateManualCrafting(itemId);
     const recipe = this.getManualCraftingRecipe(itemId);

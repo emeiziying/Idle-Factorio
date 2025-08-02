@@ -1,7 +1,8 @@
 // 游戏数据管理服务
 
 import type { GameData, Item, Recipe, Category, IconData } from '@/types/index';
-import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
+import { getService } from '@/services/core/DIServiceInitializer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type { UserProgressService } from '@/services/game/UserProgressService';
 import { RecipeService } from '@/services/crafting/RecipeService';
 import type { TechnologyService } from '@/services/technology/TechnologyService';
@@ -271,15 +272,16 @@ export class DataService {
 
   // 获取配方（保留常用方法，其他通过RecipeService直接调用）
   getRecipe(recipeId: string): Recipe | undefined {
-    if (ServiceLocator.has(SERVICE_NAMES.RECIPE)) {
-      const recipeService = ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE);
+    try {
+      const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
       return recipeService.getRecipeById(recipeId);
+    } catch {
+      // 如果 RecipeService 不可用，直接从游戏数据中查找
+      if (this.gameData) {
+        return this.gameData.recipes.find((recipe: Recipe) => recipe.id === recipeId);
+      }
+      return undefined;
     }
-    // 如果 RecipeService 不可用，直接从游戏数据中查找
-    if (this.gameData) {
-      return this.gameData.recipes.find((recipe: Recipe) => recipe.id === recipeId);
-    }
-    return undefined;
   }
 
   // 获取所有分类（按原始数据顺序）
@@ -332,19 +334,24 @@ export class DataService {
 
     try {
       // 1. 优先检查 TechnologyService（决定性因素）
-      const techService = ServiceLocator.has(SERVICE_NAMES.TECHNOLOGY)
-        ? ServiceLocator.get<TechnologyService>(SERVICE_NAMES.TECHNOLOGY)
-        : null;
-
-      // 如果有完整的科技服务且已初始化，使用其决定性判断
-      if (techService?.isItemUnlocked && techService?.isServiceInitialized?.()) {
-        return techService.isItemUnlocked(itemId);
+      let techService: TechnologyService | null = null;
+      try {
+        techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
+        // 如果有完整的科技服务且已初始化，使用其决定性判断
+        if (techService?.isItemUnlocked && techService?.isServiceInitialized?.()) {
+          return techService.isItemUnlocked(itemId);
+        }
+      } catch {
+        // TechnologyService 不可用，继续其他检查
       }
 
       // 2. 检查是否为原材料（无配方的物品，可直接采集）
-      const recipeService = ServiceLocator.has(SERVICE_NAMES.RECIPE)
-        ? ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE)
-        : null;
+      let recipeService: RecipeService | null = null;
+      try {
+        recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+      } catch {
+        // RecipeService 不可用
+      }
       const recipes = recipeService ? recipeService.getRecipesThatProduce(itemId) : [];
       if (recipes.length === 0) {
         // 对于无配方的物品，检查是否有科技要求
@@ -428,11 +435,13 @@ export class DataService {
 
   // 解锁物品
   unlockItem(itemId: string): void {
-    if (ServiceLocator.has(SERVICE_NAMES.USER_PROGRESS)) {
-      const userProgressService = ServiceLocator.get<UserProgressService>(
-        SERVICE_NAMES.USER_PROGRESS
+    try {
+      const userProgressService = getService<UserProgressService>(
+        SERVICE_TOKENS.USER_PROGRESS_SERVICE
       );
       userProgressService.unlockItem(itemId);
+    } catch {
+      // UserProgressService 不可用
     }
   }
 
@@ -549,11 +558,11 @@ export class DataService {
   getIconInfo(itemId: string): { iconId: string; iconText?: string } {
     // 优先从配方获取iconText和icon
     let recipe: Recipe | undefined;
-    if (ServiceLocator.has(SERVICE_NAMES.RECIPE)) {
-      const recipeService = ServiceLocator.has(SERVICE_NAMES.RECIPE)
-        ? ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE)
-        : null;
-      recipe = recipeService ? recipeService.getRecipeById(itemId) : undefined;
+    try {
+      const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+      recipe = recipeService.getRecipeById(itemId);
+    } catch {
+      // RecipeService 不可用
     }
 
     if (recipe?.iconText) {
@@ -602,9 +611,12 @@ export class DataService {
     const item = this.getItem(itemId);
     if (!item) return null;
 
-    const recipeService = ServiceLocator.has(SERVICE_NAMES.RECIPE)
-      ? ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE)
-      : null;
+    let recipeService: RecipeService | null = null;
+    try {
+      recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+    } catch {
+      // RecipeService 不可用
+    }
 
     return {
       item,

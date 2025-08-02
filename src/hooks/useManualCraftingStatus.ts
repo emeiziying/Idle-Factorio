@@ -12,7 +12,7 @@ export interface ManualCraftingStatus {
 export const useManualCraftingStatus = (item: Item): ManualCraftingStatus => {
   const recipeService = useRecipeService();
   const validator = useManualCraftingValidator();
-  
+
   return useMemo(() => {
     if (!recipeService || !validator) {
       return {
@@ -46,7 +46,8 @@ export const useManualCraftingStatus = (item: Item): ManualCraftingStatus => {
     );
 
     const restrictedRecipes = recipeValidations.filter(
-      ({ validation }: { validation: any }) => !validation.canCraftManually && validation.category === 'restricted'
+      ({ validation }: { validation: any }) =>
+        !validation.canCraftManually && validation.category === 'restricted'
     );
 
     // 如果有可手动制作的配方

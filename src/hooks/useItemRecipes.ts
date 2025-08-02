@@ -1,6 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { Item, Recipe } from '@/types/index';
-import { useDataService, useRecipeService, useManualCraftingValidator } from '@/hooks/useDIServices';
+import {
+  useDataService,
+  useRecipeService,
+  useManualCraftingValidator,
+} from '@/hooks/useDIServices';
 
 export const useItemRecipes = (item: Item) => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);

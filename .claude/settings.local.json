@@ -73,7 +73,8 @@
       "Bash(true)",
       "Bash(pnpm tsc:*)",
       "Bash(./node_modules/.bin/eslint:*)",
-      "Bash(./node_modules/.bin/prettier:*)"
+      "Bash(./node_modules/.bin/prettier:*)",
+      "Bash(/dev/null)"
     ]
   },
   "enableAllProjectMcpServers": true,

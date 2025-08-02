@@ -1,7 +1,8 @@
 // 手动采集验证工具类
 // 基于 Factorio Wiki 官方规则实现
 
-import { ServiceLocator, SERVICE_NAMES } from '@/services/core/ServiceLocator';
+import { getService } from '@/services/core/DIServiceInitializer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type { DataService } from '@/services/core/DataService';
 import { RecipeService } from '@/services/crafting/RecipeService';
 import type { Recipe } from '@/types/index';
@@ -70,23 +71,28 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
 
   constructor() {
     // 延迟初始化，避免循环依赖
-    // dataService 将在需要时从 ServiceLocator 获取
+    // dataService 将在需要时从 DI 容器获取
     // 清除缓存，确保新的验证逻辑生效
     this.clearCache();
   }
 
   private getDataService(): DataService | null {
-    if (!this.dataService && ServiceLocator.has(SERVICE_NAMES.DATA)) {
-      this.dataService = ServiceLocator.get<DataService>(SERVICE_NAMES.DATA);
+    if (!this.dataService) {
+      try {
+        this.dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+      } catch {
+        return null;
+      }
     }
     return this.dataService;
   }
 
   private getRecipeService(): RecipeService | null {
-    if (ServiceLocator.has(SERVICE_NAMES.RECIPE)) {
-      return ServiceLocator.get<RecipeService>(SERVICE_NAMES.RECIPE);
+    try {
+      return getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+    } catch {
+      return null;
     }
-    return null;
   }
 
   /**
