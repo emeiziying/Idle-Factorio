@@ -1,11 +1,14 @@
-import { useState } from 'react';
-import type { Recipe } from '@/types/index';
-import useGameStore from '@/store/gameStore';
+import { useState, useCallback } from 'react';
+import useGameStore from '../store/gameStore';
+import type { Recipe } from '../types/definitions';
 import {
   DependencyService,
+  type DependencyInfo,
   type CraftingChainAnalysis,
   type CraftingDependency,
 } from '../services/crafting/DependencyService';
+import { getService } from '@/services/core/DIServiceInitializer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 
 export const useCrafting = () => {
   const [showMessage, setShowMessage] = useState({
@@ -23,7 +26,12 @@ export const useCrafting = () => {
   });
 
   const { getInventoryItem, addCraftingTask, addCraftingChain, inventory } = useGameStore();
-  const dependencyService = DependencyService.getInstance();
+
+  // 分析制作依赖
+  const analyzeDependencies = useCallback((itemId: string, quantity: number): DependencyInfo => {
+    const dependencyService = getService<DependencyService>(SERVICE_TOKENS.DEPENDENCY_SERVICE);
+    return dependencyService.analyzeDependencies(itemId, quantity);
+  }, []);
 
   const handleCraft = (recipe: Recipe, quantity: number = 1) => {
     // 检查材料是否足够
@@ -108,6 +116,7 @@ export const useCrafting = () => {
 
       if (!canCraft) {
         // 检查是否可以创建依赖链
+        const dependencyService = getService<DependencyService>(SERVICE_TOKENS.DEPENDENCY_SERVICE);
         const hasDependencies = dependencyService.hasMissingDependencies(
           itemId,
           quantity,
@@ -230,6 +239,7 @@ export const useCrafting = () => {
     const chainId = addCraftingChain(chainData);
 
     if (chainId) {
+      const dependencyService = getService<DependencyService>(SERVICE_TOKENS.DEPENDENCY_SERVICE);
       const duration = dependencyService.calculateChainDuration(chainAnalysis);
       setShowMessage({
         open: true,

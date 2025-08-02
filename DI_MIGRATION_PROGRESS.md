@@ -26,6 +26,11 @@
    - 状态: ✅ 已迁移到DI
    - Token: `SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR`
 
+5. **GameConfig** - 游戏配置
+   - 位置: `/src/services/core/GameConfig.ts`
+   - 状态: ✅ 已迁移到DI
+   - Token: `SERVICE_TOKENS.GAME_CONFIG`
+
 ### 业务服务
 1. **RecipeService** - 配方服务
    - 位置: `/src/services/crafting/RecipeService.ts`
@@ -33,14 +38,25 @@
    - Token: `SERVICE_TOKENS.RECIPE_SERVICE`
 
 2. **FuelService** - 燃料服务
-   - 位置: `/src/services/fuel/FuelService.ts`
+   - 位置: `/src/services/crafting/FuelService.ts`
    - 状态: ✅ 已迁移到DI
    - Token: `SERVICE_TOKENS.FUEL_SERVICE`
 
 3. **PowerService** - 电力服务
-   - 位置: `/src/services/power/PowerService.ts`
+   - 位置: `/src/services/crafting/PowerService.ts`
    - 状态: ✅ 已迁移到DI
    - Token: `SERVICE_TOKENS.POWER_SERVICE`
+
+4. **DependencyService** - 依赖计算服务
+   - 位置: `/src/services/crafting/DependencyService.ts`
+   - 状态: ✅ 已迁移到DI
+   - Token: `SERVICE_TOKENS.DEPENDENCY_SERVICE`
+
+### 工具类
+1. **CraftingEngine** - 制作引擎
+   - 位置: `/src/utils/craftingEngine.ts`
+   - 状态: ✅ 已迁移到DI
+   - Token: `SERVICE_TOKENS.CRAFTING_ENGINE`
 
 ### 科技系统服务
 1. **TechnologyService** - 科技服务（主服务）
@@ -91,26 +107,6 @@
 
 ## 未完成迁移的服务 ❌
 
-### 核心服务
-1. **GameConfig** - 游戏配置
-   - 位置: `/src/services/core/GameConfig.ts`
-   - 状态: ❌ 仍使用 `getInstance()` 单例模式
-   - 依赖于: DataService
-   - 被依赖: CraftingEngine, FuelService等
-
-### 工具类
-1. **CraftingEngine** - 制作引擎
-   - 位置: `/src/utils/craftingEngine.ts`
-   - 状态: ❌ 仍使用 `getInstance()` 单例模式
-   - 依赖于: GameConfig, RecipeService, DataService
-   - 被依赖: GameLoopTaskFactory
-
-2. **DependencyService** - 依赖服务
-   - 位置: `/src/services/crafting/DependencyService.ts`
-   - 状态: ❌ 仍使用 `getInstance()` 单例模式
-   - 依赖于: DataService, RecipeService
-   - 被依赖: useCrafting hook
-
 ### 存储服务
 1. **GameStorageService** - 游戏存储服务
    - 位置: `/src/services/storage/GameStorageService.ts`
@@ -139,18 +135,13 @@ const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
 - `/src/store/slices/inventoryStore.ts`
 - `/src/store/slices/facilityStore.ts`
 - `/src/hooks/useDIServices.ts`
+- `/src/hooks/useCrafting.ts`
+- `/src/services/game/GameLoopTaskFactory.ts`
 
 ## 迁移建议
 
-### 优先级高
-1. **GameConfig** - 被多个服务依赖，应优先迁移
-2. **CraftingEngine** - 核心游戏逻辑，被游戏循环使用
-
-### 优先级中
-1. **DependencyService** - 被UI组件使用，但影响范围较小
-
-### 优先级低
-1. **GameStorageService** - 独立的存储服务，可能适合保持单例模式
+### 可选迁移
+1. **GameStorageService** - 作为独立的存储层，可以保持单例模式，或者根据需要迁移
 
 ## 迁移步骤模板
 
@@ -164,8 +155,17 @@ const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
 
 ## 总结
 
-- **已完成**: 18个服务
-- **未完成**: 4个服务
-- **完成率**: 81.8%
+- **已完成**: 21个服务
+- **未完成**: 1个服务（GameStorageService）
+- **完成率**: 95.5%
 
-主要的核心服务和业务服务已经完成迁移，剩余的主要是一些工具类和配置类。建议优先完成GameConfig和CraftingEngine的迁移，以完全统一项目的依赖管理方式。
+主要的核心服务、业务服务和工具类都已经完成迁移。剩余的 GameStorageService 作为独立的存储层，可以根据项目需要决定是否迁移。当前的DI迁移工作已经基本完成，项目的依赖管理方式已经统一。
+
+## 最新迁移（2024-01-XX）
+
+本次迁移完成了以下服务：
+1. **GameConfig** - 游戏配置服务，提供统一的游戏常量管理
+2. **CraftingEngine** - 制作引擎，核心游戏逻辑组件
+3. **DependencyService** - 依赖计算服务，用于分析制作依赖链
+
+这三个服务的迁移使得项目的DI覆盖率从81.8%提升到95.5%。

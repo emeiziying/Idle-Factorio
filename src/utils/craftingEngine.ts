@@ -25,7 +25,6 @@ interface ResourceProperties {
 }
 
 class CraftingEngine {
-  private static instance: CraftingEngine;
   private intervalId: number | null = null;
   private gameConfig: GameConfig;
   private isStarting: boolean = false; // 防止重复启动
@@ -36,15 +35,8 @@ class CraftingEngine {
   // 资源特性缓存 - 从data.json的mining配方动态获取
   private resourcePropertiesCache = new Map<string, ResourceProperties>();
 
-  private constructor() {
-    this.gameConfig = GameConfig.getInstance();
-  }
-
-  static getInstance(): CraftingEngine {
-    if (!CraftingEngine.instance) {
-      CraftingEngine.instance = new CraftingEngine();
-    }
-    return CraftingEngine.instance;
+  constructor(gameConfig: GameConfig) {
+    this.gameConfig = gameConfig;
   }
 
   // 启动制作引擎
@@ -412,4 +404,4 @@ class CraftingEngine {
   }
 }
 
-export default CraftingEngine;
+export { CraftingEngine };

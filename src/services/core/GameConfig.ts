@@ -41,20 +41,12 @@ export interface GameConstants {
 }
 
 export class GameConfig {
-  private static instance: GameConfig;
   private constants: GameConstants;
   private dataService: DataService;
 
-  constructor(dataService?: DataService) {
-    this.dataService = dataService || ({} as DataService); // 临时处理，在DI容器中会注入正确的实例
+  constructor(dataService: DataService) {
+    this.dataService = dataService;
     this.constants = this.initializeConstants();
-  }
-
-  static getInstance(): GameConfig {
-    if (!GameConfig.instance) {
-      GameConfig.instance = new GameConfig();
-    }
-    return GameConfig.instance;
   }
 
   /**

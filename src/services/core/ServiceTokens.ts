@@ -9,11 +9,14 @@ export const SERVICE_TOKENS = {
   USER_PROGRESS_SERVICE: 'UserProgressService',
   STORAGE_SERVICE: 'StorageService',
   MANUAL_CRAFTING_VALIDATOR: 'ManualCraftingValidator',
+  GAME_CONFIG: 'GameConfig',
 
   // 业务服务
   RECIPE_SERVICE: 'RecipeService',
   FUEL_SERVICE: 'FuelService',
   POWER_SERVICE: 'PowerService',
+  CRAFTING_ENGINE: 'CraftingEngine',
+  DEPENDENCY_SERVICE: 'DependencyService',
 
   // 科技系统服务
   TECHNOLOGY_SERVICE: 'TechnologyService',

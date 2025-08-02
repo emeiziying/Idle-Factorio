@@ -3,6 +3,9 @@ import type { GameLoopTask } from '@/types/gameLoop';
 import { GameLoopTaskType } from '@/types/gameLoop';
 import type { FacilityInstance } from '@/types/facilities';
 import useGameStore from '@/store/gameStore';
+import { getService } from '@/services/core/DIServiceInitializer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
+import type { CraftingEngine } from '@/utils/craftingEngine';
 
 // 任务配置接口
 interface TaskConfig {
@@ -111,17 +114,11 @@ export class GameLoopTaskFactory {
       }
 
       try {
-        // 使用动态导入并处理异步
-        import('../../utils/craftingEngine')
-          .then(({ default: CraftingEngine }) => {
-            const engine = CraftingEngine.getInstance();
-            engine.updateCraftingQueue();
-          })
-          .catch(error => {
-            console.error('制作系统更新失败:', error);
-          });
+        // 从 DI 容器获取 CraftingEngine
+        const engine = getService<CraftingEngine>(SERVICE_TOKENS.CRAFTING_ENGINE);
+        engine.updateCraftingQueue();
       } catch (error) {
-        console.error('制作系统初始化失败:', error);
+        console.error('制作系统更新失败:', error);
       }
     });
   }

@@ -18,6 +18,9 @@ import type { PowerService } from '@/services/game/PowerService';
 import type { StorageService } from '@/services/storage/StorageService';
 import type { ManualCraftingValidator } from '@/utils/manualCraftingValidator';
 import type { GameLoopService } from '@/services/game/GameLoopService';
+import type { GameConfig } from '@/services/core/GameConfig';
+import type { CraftingEngine } from '@/utils/craftingEngine';
+import type { DependencyService } from '@/services/crafting/DependencyService';
 
 /**
  * 获取 DataService 实例
@@ -108,6 +111,50 @@ export const useGameLoopService = (): GameLoopService => {
     return getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
   }, []);
 };
+
+/**
+ * 获取游戏循环服务
+ */
+export function useGameLoopService(): GameLoopService {
+  const { isInitialized } = useServiceInitialization();
+  if (!isInitialized) {
+    throw new Error('Services not initialized');
+  }
+  return getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
+}
+
+/**
+ * 获取游戏配置服务
+ */
+export function useGameConfig(): GameConfig {
+  const { isInitialized } = useServiceInitialization();
+  if (!isInitialized) {
+    throw new Error('Services not initialized');
+  }
+  return getService<GameConfig>(SERVICE_TOKENS.GAME_CONFIG);
+}
+
+/**
+ * 获取制作引擎
+ */
+export function useCraftingEngine(): CraftingEngine {
+  const { isInitialized } = useServiceInitialization();
+  if (!isInitialized) {
+    throw new Error('Services not initialized');
+  }
+  return getService<CraftingEngine>(SERVICE_TOKENS.CRAFTING_ENGINE);
+}
+
+/**
+ * 获取依赖服务
+ */
+export function useDependencyService(): DependencyService {
+  const { isInitialized } = useServiceInitialization();
+  if (!isInitialized) {
+    throw new Error('Services not initialized');
+  }
+  return getService<DependencyService>(SERVICE_TOKENS.DEPENDENCY_SERVICE);
+}
 
 /**
  * 通用的服务获取 Hook

@@ -11,11 +11,16 @@ import { DataService } from '@/services/core/DataService';
 import { UserProgressService } from '@/services/game/UserProgressService';
 import { StorageService } from '@/services/storage/StorageService';
 import ManualCraftingValidator from '@/utils/manualCraftingValidator';
+import { GameConfig } from '@/services/core/GameConfig';
 
 // 业务服务
 import { RecipeService } from '@/services/crafting/RecipeService';
 import { FuelService } from '@/services/crafting/FuelService';
-import { PowerService } from '@/services/game/PowerService';
+import { PowerService } from '@/services/crafting/PowerService';
+import { DependencyService } from '@/services/crafting/DependencyService';
+
+// 工具类
+import { CraftingEngine } from '@/utils/craftingEngine';
 
 // 科技系统服务
 import { TechnologyService } from '@/services/technology/TechnologyService';
@@ -44,6 +49,11 @@ export class DIServiceInitializer {
     container.register(SERVICE_TOKENS.STORAGE_SERVICE, StorageService);
     container.register(SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR, ManualCraftingValidator);
     container.register(SERVICE_TOKENS.DATA_SERVICE, DataService);
+
+    // 注册 GameConfig（依赖 DataService）
+    container.register(SERVICE_TOKENS.GAME_CONFIG, GameConfig, {
+      dependencies: [SERVICE_TOKENS.DATA_SERVICE],
+    });
 
     // 2. 注册事件系统
     container.register(SERVICE_TOKENS.TECH_EVENT_EMITTER, TechEventEmitter);
@@ -98,8 +108,16 @@ export class DIServiceInitializer {
 
     // 5. 注册其他业务服务
     container.register(SERVICE_TOKENS.RECIPE_SERVICE, RecipeService);
-    container.register(SERVICE_TOKENS.FUEL_SERVICE, FuelService);
+    container.register(SERVICE_TOKENS.FUEL_SERVICE, FuelService, {
+      dependencies: [SERVICE_TOKENS.DATA_SERVICE, SERVICE_TOKENS.GAME_CONFIG, SERVICE_TOKENS.RECIPE_SERVICE],
+    });
     container.register(SERVICE_TOKENS.POWER_SERVICE, PowerService);
+    container.register(SERVICE_TOKENS.CRAFTING_ENGINE, CraftingEngine, {
+      dependencies: [SERVICE_TOKENS.GAME_CONFIG],
+    });
+    container.register(SERVICE_TOKENS.DEPENDENCY_SERVICE, DependencyService, {
+      dependencies: [SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR],
+    });
 
     // 6. 注册游戏循环服务
     container.register(SERVICE_TOKENS.GAME_LOOP_SERVICE, GameLoopService);
