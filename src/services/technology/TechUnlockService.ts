@@ -108,7 +108,13 @@ export class TechUnlockService {
       const techUnlockedRecipes = this.getTechUnlockedRecipes(gameData);
 
       // 3. 找到不需要科技解锁的配方（初始可用配方）
-      const initialRecipes = allRecipes.filter(recipe => !techUnlockedRecipes.has(recipe.id));
+      // 同时过滤掉科技研究配方（category为technology的配方）
+      // 以及非Nauvis星球的配方
+      const initialRecipes = allRecipes.filter(recipe => 
+        !techUnlockedRecipes.has(recipe.id) && 
+        recipe.category !== 'technology' &&
+        this.isNauvisRecipe(recipe)
+      );
 
       // 4. 从初始配方中提取物品和建筑
       const initialItems = this.extractItemsFromRecipes(initialRecipes);
@@ -167,6 +173,50 @@ export class TechUnlockService {
     }
 
     return items;
+  }
+
+  /**
+   * 检查配方是否可以在Nauvis星球使用
+   * 通过检查配方的生产者(producers)的locations字段来判断
+   */
+  private isNauvisRecipe(recipe: Recipe): boolean {
+    // 如果配方没有生产者，默认认为可以在Nauvis使用
+    if (!recipe.producers || recipe.producers.length === 0) {
+      return true;
+    }
+
+    // 检查是否有任何生产者支持Nauvis
+    for (const producerId of recipe.producers) {
+      const producer = this.getItemById(producerId);
+      if (producer && producer.machine && producer.machine.locations) {
+        // 如果找到任何一个支持nauvis的生产者，配方就可以在nauvis使用
+        if (producer.machine.locations.includes('nauvis')) {
+          return true;
+        }
+      } else {
+        // 如果生产者没有location限制，认为它在所有地方都可用
+        return true;
+      }
+    }
+
+    // 只有当所有生产者都明确不支持nauvis时，才返回false
+    return false;
+  }
+
+  /**
+   * 从游戏数据中获取物品
+   */
+  private getItemById(itemId: string): any {
+    if (!this.dataService) {
+      return null;
+    }
+    
+    const gameData = this.dataService.getGameData();
+    if (gameData && gameData.items) {
+      return gameData.items.find((item: any) => item.id === itemId);
+    }
+    
+    return null;
   }
 
   /**
