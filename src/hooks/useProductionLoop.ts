@@ -43,7 +43,7 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
       const { currentRecipeId, progress } = facility.production;
       if (!currentRecipeId) return;
 
-      const recipe = recipeService?.getRecipeById(currentRecipeId);
+      const recipe = recipeService.getRecipeById(currentRecipeId);
       if (!recipe) return;
 
       // 检查是否有足够的输入材料
@@ -94,7 +94,7 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
             // 追踪制造的物品（用于研究触发器）
             trackCraftedItem(itemId, quantity as number);
             // 如果是采矿配方，同时追踪挖掘的实体
-            if (recipe.flags?.includes('mining')) {
+            if (recipe.flags && recipe.flags.includes('mining')) {
               trackMinedEntity(itemId, quantity as number);
             }
           }
@@ -137,7 +137,6 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
 
   // 主更新循环
   const updateProduction = useCallback(() => {
-    if (!fuelService || !powerService) return;
 
     const currentTime = Date.now();
     const deltaTime = msToSeconds(currentTime - lastUpdateRef.current);

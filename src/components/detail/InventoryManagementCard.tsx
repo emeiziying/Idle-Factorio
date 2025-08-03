@@ -32,11 +32,11 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({
 
   // 获取可用的存储类型
   const availableStorageTypes = isLiquidItem
-    ? (storageService?.getLiquidStorageTypes() ?? [])
-    : (storageService?.getSolidStorageTypes() ?? []);
+    ? storageService.getLiquidStorageTypes()
+    : storageService.getSolidStorageTypes();
 
   const handleAddStorage = (storageType: string) => {
-    const storageConfig = storageService?.getStorageConfig(storageType);
+    const storageConfig = storageService.getStorageConfig(storageType);
     if (!storageConfig) return;
 
     // 检查是否有该存储设备
@@ -98,12 +98,12 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({
       <Box display="flex" flexDirection="column" gap={1}>
         {availableStorageTypes
           .filter(storageType => {
-            const storageConfig = storageService?.getStorageConfig(storageType);
+            const storageConfig = storageService.getStorageConfig(storageType);
             // 只显示已解锁的存储设备
             return storageConfig && dataService.isItemUnlocked(storageConfig.itemId);
           })
           .map(storageType => {
-            const storageConfig = storageService?.getStorageConfig(storageType);
+            const storageConfig = storageService.getStorageConfig(storageType);
             if (!storageConfig) return null;
 
             const storageInventory = getInventoryItem(storageConfig.itemId);

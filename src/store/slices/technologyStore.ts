@@ -32,10 +32,7 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
     try {
       const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
 
-      // 如果服务未初始化，先初始化
-      if (!techService.isServiceInitialized()) {
-        await techService.initialize();
-      }
+      // 服务已在全局初始化时完成初始化
 
       // 创建库存操作实现并注入到科技服务
       const inventoryOps: InventoryOperations = {

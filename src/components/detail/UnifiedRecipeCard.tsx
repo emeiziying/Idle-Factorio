@@ -28,7 +28,7 @@ const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({
   const dataService = useDataService();
 
   const getLocalizedItemName = (itemId: string): string => {
-    return dataService?.getLocalizedItemName(itemId) || itemId;
+    return dataService.getLocalizedItemName(itemId) || itemId;
   };
 
   const getThemeColor = () => {
@@ -72,7 +72,7 @@ const UnifiedRecipeCard: React.FC<UnifiedRecipeCardProps> = ({
           fontWeight="bold"
           color={title ? 'primary.main' : themeColor}
         >
-          {title || dataService?.getLocalizedRecipeName(recipe.id) || recipe.id}
+          {title || dataService.getLocalizedRecipeName(recipe.id) || recipe.id}
         </Typography>
       </Box>
 

@@ -13,12 +13,12 @@ const ManualCraftingFlowCard: React.FC<ManualCraftingFlowCardProps> = ({ item, o
   const recipeService = useRecipeService();
   const validator = useManualCraftingValidator();
 
-  const itemRecipes = recipeService?.getRecipesThatProduce(item.id) ?? [];
+  const itemRecipes = recipeService.getRecipesThatProduce(item.id) ?? [];
 
   // 使用验证器检查哪些配方可以手动制作
   const recipeValidations = itemRecipes.map((recipe: Recipe) => ({
     recipe,
-    validation: validator?.validateRecipe(recipe) ?? {
+    validation: validator.validateRecipe(recipe) ?? {
       canCraftManually: false,
       category: 'restricted',
     },

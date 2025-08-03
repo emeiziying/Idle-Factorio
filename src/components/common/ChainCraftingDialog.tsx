@@ -88,7 +88,7 @@ const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
           <Typography variant="body2" color="text.secondary">
             制作{' '}
             <strong>
-              {dataService?.getLocalizedItemName(chain.mainTask.itemId) ?? chain.mainTask.itemId} x
+              {dataService.getLocalizedItemName(chain.mainTask.itemId) ?? chain.mainTask.itemId} x
               {chain.mainTask.quantity}
             </strong>{' '}
             需要以下材料：
@@ -110,7 +110,7 @@ const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
                   primary={
                     <Box display="flex" alignItems="center" gap={1}>
                       <Typography variant="body2">
-                        {dataService?.getLocalizedItemName(dep.itemId) ?? dep.itemId}
+                        {dataService.getLocalizedItemName(dep.itemId) ?? dep.itemId}
                       </Typography>
                       <Chip
                         size="small"
@@ -162,7 +162,7 @@ const ChainCraftingDialog: React.FC<ChainCraftingDialogProps> = ({
                             color: isMainTask ? 'primary.main' : 'text.primary',
                           }}
                         >
-                          {dataService?.getLocalizedItemName(task.itemId) ?? task.itemId} x
+                          {dataService.getLocalizedItemName(task.itemId) ?? task.itemId} x
                           {task.quantity}
                         </Typography>
                         {isMainTask && (

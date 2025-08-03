@@ -103,7 +103,7 @@ export class TechTreeService {
    */
   getTechPrerequisites(techId: string): string[] {
     const tech = this.techTree.get(techId);
-    return tech?.prerequisites || [];
+    return tech ? tech.prerequisites : [];
   }
 
   /**

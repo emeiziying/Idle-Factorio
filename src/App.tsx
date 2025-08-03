@@ -1,36 +1,40 @@
-import React from 'react';
-import {
-  Box,
-  ThemeProvider,
-  CssBaseline,
-  BottomNavigation,
-  BottomNavigationAction,
-} from '@mui/material';
 import {
   Build as BuildIcon,
   Factory as FactoryIcon,
   Science as ScienceIcon,
 } from '@mui/icons-material';
+import {
+  BottomNavigation,
+  BottomNavigationAction,
+  Box,
+  CssBaseline,
+  ThemeProvider,
+} from '@mui/material';
+import React from 'react';
 
-import ProductionModule from '@/components/production/ProductionModule';
-import FacilitiesModule from '@/components/facilities/FacilitiesModule';
-import TechnologyModule from '@/components/technology/TechnologyModule';
-import LoadingScreen from '@/components/common/LoadingScreen';
-import ErrorScreen from '@/components/common/ErrorScreen';
 import ClearGameButton from '@/components/common/ClearGameButton';
-import { useLocalStorageState } from 'ahooks';
+import ErrorScreen from '@/components/common/ErrorScreen';
+import LoadingScreen from '@/components/common/LoadingScreen';
+import FacilitiesModule from '@/components/facilities/FacilitiesModule';
+import ProductionModule from '@/components/production/ProductionModule';
+import TechnologyModule from '@/components/technology/TechnologyModule';
 import { APP_STORAGE_KEYS } from '@/constants/storageKeys';
 import { useAppInitialization } from '@/hooks/useAppInitialization';
 import { useAutoSaveBeforeUnload } from '@/hooks/useAutoSaveBeforeUnload';
 import theme from '@/theme';
+import { useLocalStorageState } from 'ahooks';
 
 const App: React.FC = () => {
+  // 当前模块
   const [currentModule, setCurrentModule] = useLocalStorageState(APP_STORAGE_KEYS.CURRENT_MODULE, {
     defaultValue: 0,
   });
+  // 初始化游戏系统
   const { isAppReady, initError } = useAppInitialization();
+  // 自动保存游戏进度
   useAutoSaveBeforeUnload();
 
+  // 切换模块
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setCurrentModule(newValue);
   };

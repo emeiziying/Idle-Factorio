@@ -9,45 +9,41 @@ import type { StorageService } from '@/services/storage/StorageService';
 export { STORAGE_SPECIFIC_CONFIGS } from './storageConfigData';
 
 // 获取StorageService实例
-const getStorageService = (): StorageService | null => {
-  try {
-    return getService<StorageService>(SERVICE_TOKENS.STORAGE_SERVICE);
-  } catch {
-    return null;
-  }
+const getStorageService = (): StorageService => {
+  return getService<StorageService>(SERVICE_TOKENS.STORAGE_SERVICE);
 };
 
 // 获取完整的存储配置（使用StorageService）
 export const getStorageConfig = (storageType: string): StorageConfig | undefined => {
   const service = getStorageService();
-  return service ? service.getStorageConfig(storageType) : undefined;
+  return service.getStorageConfig(storageType);
 };
 
 // 获取所有可用的存储类型
 export const getAvailableStorageTypes = (): string[] => {
   const service = getStorageService();
-  return service ? service.getAvailableStorageTypes() : [];
+  return service.getAvailableStorageTypes();
 };
 
 // 获取固体存储类型
 export const getSolidStorageTypes = (): string[] => {
   const service = getStorageService();
-  return service ? service.getSolidStorageTypes() : [];
+  return service.getSolidStorageTypes();
 };
 
 // 获取液体存储类型
 export const getLiquidStorageTypes = (): string[] => {
   const service = getStorageService();
-  return service ? service.getLiquidStorageTypes() : [];
+  return service.getLiquidStorageTypes();
 };
 
 // 向后兼容的函数
 export const getChestConfig = (chestType: string): StorageConfig | undefined => {
   const service = getStorageService();
-  return service ? service.getChestConfig(chestType) : undefined;
+  return service.getChestConfig(chestType);
 };
 
 export const getAvailableChestTypes = (): string[] => {
   const service = getStorageService();
-  return service ? service.getAvailableChestTypes() : [];
+  return service.getAvailableChestTypes();
 };

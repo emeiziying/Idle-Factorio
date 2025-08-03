@@ -164,10 +164,7 @@ export class RecipeService {
       return null;
     }
 
-    // 2. 如果是原材料（无配方），返回 null
-    if (validation.reason === 'raw_material') {
-      return null; // 原材料不需要配方
-    }
+    // 所有物品都有配方，不需要检查 raw_material
 
     // 3. 获取所有配方并找到可手动制作的
     const allRecipes = this.getRecipesThatProduce(itemId);
@@ -205,10 +202,7 @@ export class RecipeService {
       return [];
     }
 
-    // 2. 如果是原材料（无配方），返回空数组
-    if (validation.reason === 'raw_material') {
-      return []; // 原材料不需要配方
-    }
+    // 所有物品都有配方，不需要检查 raw_material
 
     // 3. 获取所有配方并筛选可手动制作的
     const allRecipes = this.getRecipesThatProduce(itemId);

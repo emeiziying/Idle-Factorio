@@ -163,30 +163,6 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
   const techService = useTechnologyService();
   const dataService = useDataService();
 
-  // 添加加载状态处理
-  if (!techService || !dataService) {
-    return (
-      <Drawer
-        anchor={anchor}
-        open={open}
-        onClose={onClose}
-        PaperProps={{
-          sx: {
-            width: anchor === 'bottom' ? '100%' : 400,
-            maxWidth: '100vw',
-            ...(anchor === 'bottom' && {
-              maxHeight: '70vh',
-            }),
-          },
-        }}
-      >
-        <Box sx={{ p: 2, textAlign: 'center' }}>
-          <Typography>加载中...</Typography>
-        </Box>
-      </Drawer>
-    );
-  }
-
   // 获取科技信息
   const technology = techService.getTechnology(techId);
   const status = techState?.status || (techService.isTechUnlocked(techId) ? 'unlocked' : 'locked');
@@ -236,8 +212,8 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
   // 获取前置科技信息
   const getPrerequisites = () => {
     return technology.prerequisites.map(prereqId => {
-      const prereqTech = techService?.getTechnology(prereqId);
-      const isUnlocked = techService?.isTechUnlocked(prereqId) || false;
+      const prereqTech = techService.getTechnology(prereqId);
+      const isUnlocked = techService.isTechUnlocked(prereqId);
       return {
         id: prereqId,
         name: prereqTech?.name || prereqId,
@@ -255,7 +231,7 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
     };
 
     technology.unlocks.items?.forEach(itemId => {
-      const localizedName = dataService?.getLocalizedItemName(itemId);
+      const localizedName = dataService.getLocalizedItemName(itemId);
       unlocks.items.push({
         id: itemId,
         name: localizedName || itemId,
@@ -263,7 +239,7 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
     });
 
     technology.unlocks.recipes?.forEach(recipeId => {
-      const localizedName = dataService?.getLocalizedRecipeName(recipeId);
+      const localizedName = dataService.getLocalizedRecipeName(recipeId);
       unlocks.recipes.push({
         id: recipeId,
         name: localizedName || recipeId,
@@ -271,7 +247,7 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
     });
 
     technology.unlocks.buildings?.forEach(buildingId => {
-      const localizedName = dataService?.getLocalizedItemName(buildingId);
+      const localizedName = dataService.getLocalizedItemName(buildingId);
       unlocks.buildings.push({
         id: buildingId,
         name: localizedName || buildingId,
@@ -286,7 +262,7 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
 
   // 获取研究触发器信息
   const getResearchTrigger = () => {
-    const techRecipe = dataService?.getRecipe(technology.id);
+    const techRecipe = dataService.getRecipe(technology.id);
     return techRecipe?.researchTrigger;
   };
 
@@ -296,7 +272,7 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
   const formatResearchTrigger = (trigger: ResearchTrigger) => {
     switch (trigger.type) {
       case 'craft-item': {
-        const localizedName = dataService?.getLocalizedItemName(trigger.item!);
+        const localizedName = dataService.getLocalizedItemName(trigger.item!);
         return {
           description: `制造 ${trigger.count || 1} 件物品`,
           itemName: localizedName || trigger.item!,
@@ -305,7 +281,7 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
         };
       }
       case 'build-entity': {
-        const localizedName = dataService?.getLocalizedItemName(trigger.entity!);
+        const localizedName = dataService.getLocalizedItemName(trigger.entity!);
         return {
           description: `建造 ${trigger.count || 1} 个建筑`,
           itemName: localizedName || trigger.entity!,
@@ -314,7 +290,7 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
         };
       }
       case 'mine-entity': {
-        const localizedName = dataService?.getLocalizedItemName(trigger.entity!);
+        const localizedName = dataService.getLocalizedItemName(trigger.entity!);
         return {
           description: `挖掘 ${trigger.count || 1} 个资源`,
           itemName: localizedName || trigger.entity!,

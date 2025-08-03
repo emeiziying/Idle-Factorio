@@ -64,7 +64,7 @@ export class TechUnlockService {
     // 从每个已解锁的科技收集解锁内容
     const unlockedTechs = this.userProgressService.getUnlockedTechs();
     for (const techId of unlockedTechs) {
-      const tech = this.treeService?.getTechnology(techId);
+      const tech = this.treeService ? this.treeService.getTechnology(techId) : undefined;
       if (tech) {
         this.collectUnlocksFromTech(tech);
       }
@@ -180,7 +180,7 @@ export class TechUnlockService {
       return; // 已经解锁
     }
 
-    const tech = this.treeService?.getTechnology(techId);
+    const tech = this.treeService ? this.treeService.getTechnology(techId) : undefined;
     if (!tech) {
       throw new Error(`Technology ${techId} not found`);
     }
@@ -277,7 +277,7 @@ export class TechUnlockService {
     unlockedBuildings: number;
     progress: number;
   } {
-    const totalTechs = this.treeService?.getAllTechnologies().length || 0;
+    const totalTechs = this.treeService ? this.treeService.getAllTechnologies().length : 0;
     const unlockedTechs = this.userProgressService.getUnlockedTechs().length;
 
     return {

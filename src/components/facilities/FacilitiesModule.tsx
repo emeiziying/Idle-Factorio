@@ -17,7 +17,7 @@ const FacilitiesModule: React.FC = React.memo(() => {
 
   const handleFuelPriorityChange = useCallback(
     (newPriority: string[]) => {
-      fuelService?.setFuelPriority(newPriority);
+      fuelService.setFuelPriority(newPriority);
     },
     [fuelService]
   );
@@ -41,14 +41,6 @@ const FacilitiesModule: React.FC = React.memo(() => {
 
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
         {useMemo(() => {
-          // 如果服务未初始化，显示加载状态
-          if (!fuelService) {
-            return (
-              <Box display="flex" justifyContent="center" alignItems="center" p={4}>
-                <Typography>正在加载服务...</Typography>
-              </Box>
-            );
-          }
 
           switch (currentTab) {
             case 0:
@@ -62,7 +54,7 @@ const FacilitiesModule: React.FC = React.memo(() => {
             default:
               return <PowerManagement />;
           }
-        }, [currentTab, handleFuelPriorityChange, fuelService])}
+        }, [currentTab, handleFuelPriorityChange])}
       </Box>
     </Box>
   );

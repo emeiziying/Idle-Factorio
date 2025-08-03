@@ -213,7 +213,7 @@ export class DependencyService {
   private getBestManualCraftingRecipe(itemId: string): Recipe | null {
     // 通过DI获取RecipeService实例
     const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
-    const recipes = recipeService?.getRecipesThatProduce(itemId) || [];
+    const recipes = recipeService.getRecipesThatProduce(itemId) || [];
 
     // 过滤出可手动制作的配方
     const manualRecipes = recipes.filter(recipe => {

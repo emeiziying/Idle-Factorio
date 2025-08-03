@@ -56,7 +56,7 @@ const EfficiencyOptimizer: React.FC = () => {
     // 分析每个设施的输入需求
     facilities.forEach(facility => {
       if (facility.status === FacilityStatus.NO_RESOURCE && facility.production?.currentRecipeId) {
-        const recipe = recipeService?.getRecipeById(facility.production.currentRecipeId);
+        const recipe = recipeService.getRecipeById(facility.production.currentRecipeId);
         if (recipe?.in) {
           Object.entries(recipe.in).forEach(([itemId, amount]) => {
             const current = itemDeficits.get(itemId) || 0;
@@ -71,15 +71,7 @@ const EfficiencyOptimizer: React.FC = () => {
 
   // 计算各种效率指标
   const efficiencyMetrics = useMemo(() => {
-    const powerBalance = powerService?.calculatePowerBalance(facilities) || {
-      status: 'balanced',
-      satisfactionRatio: 1,
-      generationCapacity: 0,
-      actualGeneration: 0,
-      consumptionDemand: 0,
-      actualConsumption: 0,
-      consumptionByCategory: {},
-    };
+    const powerBalance = powerService.calculatePowerBalance(facilities);
 
     // 设施利用率
     const totalFacilities = facilities.length;
@@ -148,7 +140,7 @@ const EfficiencyOptimizer: React.FC = () => {
 
     // 瓶颈物品建议
     efficiencyMetrics.bottlenecks.forEach((_deficit, itemId) => {
-      const itemName = dataService?.getItemName(itemId) || itemId;
+      const itemName = dataService.getItemName(itemId) || itemId;
       suggestions.push({
         id: `bottleneck-${itemId}`,
         type: 'warning',
@@ -181,15 +173,6 @@ const EfficiencyOptimizer: React.FC = () => {
       return priority[a.type] - priority[b.type];
     });
   }, [efficiencyMetrics, dataService, facilities]);
-
-  // 如果服务未初始化，显示加载状态
-  if (!powerService || !dataService || !recipeService) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" p={4}>
-        <Typography>正在加载服务...</Typography>
-      </Box>
-    );
-  }
 
   // 获取建议图标
   const getSuggestionIcon = (suggestion: OptimizationSuggestion) => {
@@ -372,7 +355,7 @@ const EfficiencyOptimizer: React.FC = () => {
                     <FactorioIcon itemId={itemId} size={32} />
                   </ListItemIcon>
                   <ListItemText
-                    primary={dataService?.getItemName(itemId) || itemId}
+                    primary={dataService.getItemName(itemId) || itemId}
                     secondary={`需求缺口：${deficit.toFixed(0)} 个/分钟`}
                   />
                 </ListItem>

@@ -17,7 +17,7 @@ export class ResearchQueueService {
   private maxQueueSize = 10;
 
   // 服务依赖
-  private treeService: TechTreeService | null = null;
+  private treeService!: TechTreeService;
   private eventEmitter: TechEventEmitter;
 
   constructor(eventEmitter: TechEventEmitter) {
@@ -43,7 +43,7 @@ export class ResearchQueueService {
    */
   addToQueue(techId: string, priority: ResearchPriority = ResearchPriority.NORMAL): QueueResult {
     // 检查科技是否存在
-    const tech = this.treeService?.getTechnology(techId);
+    const tech = this.treeService.getTechnology(techId);
     if (!tech) {
       return {
         success: false,
@@ -209,7 +209,7 @@ export class ResearchQueueService {
 
     // 更新每个项目的 canStart 状态
     this.researchQueue.forEach(item => {
-      const tech = this.treeService?.getTechnology(item.techId);
+      const tech = this.treeService.getTechnology(item.techId);
       if (!tech) {
         item.canStart = false;
         return;
@@ -230,7 +230,7 @@ export class ResearchQueueService {
     let cumulativeTime = 0;
 
     this.researchQueue.forEach(item => {
-      const tech = this.treeService?.getTechnology(item.techId);
+      const tech = this.treeService.getTechnology(item.techId);
       if (tech) {
         item.estimatedTime = tech.researchTime;
         item.estimatedStartTime = cumulativeTime;
@@ -321,7 +321,6 @@ export class ResearchQueueService {
     isUnlocked: (techId: string) => boolean,
     isAvailable: (techId: string) => boolean
   ): string[] {
-    if (!this.treeService) return [];
 
     const recommendations: string[] = [];
     const allTechs = this.treeService.getAllTechnologies();

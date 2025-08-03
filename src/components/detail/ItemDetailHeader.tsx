@@ -14,7 +14,7 @@ const ItemDetailHeader: React.FC<ItemDetailHeaderProps> = ({ item }) => {
   const { getInventoryItem } = useGameStore();
 
   const getLocalizedItemName = (itemId: string): string => {
-    return dataService?.getLocalizedItemName(itemId) ?? itemId;
+    return dataService.getLocalizedItemName(itemId) ?? itemId;
   };
 
   const inventoryItem = getInventoryItem(item.id);

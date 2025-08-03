@@ -23,14 +23,10 @@ const RecipeInfo: React.FC<RecipeInfoProps> = ({ itemId, onRecipeSelect }) => {
   // 获取服务实例
   const dataService = useDataService();
 
-  const item = dataService?.getItem(itemId);
+  const item = dataService.getItem(itemId);
   const recipes = getRecommendedRecipes(itemId);
   const stats = getRecipeStats(itemId);
 
-  // 添加加载状态处理
-  if (!dataService) {
-    return <div className="p-4 text-gray-500">加载中...</div>;
-  }
 
   if (!item) {
     return <div className="p-4 text-gray-500">物品不存在</div>;
@@ -61,7 +57,7 @@ const RecipeInfo: React.FC<RecipeInfoProps> = ({ itemId, onRecipeSelect }) => {
       {/* 物品信息 */}
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-800">
-          {dataService?.getLocalizedItemName(itemId) || itemId}
+          {dataService.getLocalizedItemName(itemId) || itemId}
         </h3>
         <p className="text-sm text-gray-600">ID: {itemId}</p>
       </div>
@@ -78,7 +74,7 @@ const RecipeInfo: React.FC<RecipeInfoProps> = ({ itemId, onRecipeSelect }) => {
           {stats.mostEfficientRecipe && (
             <div className="col-span-2 text-green-600">
               最高效率:{' '}
-              {dataService?.getLocalizedRecipeName(stats.mostEfficientRecipe.id) ||
+              {dataService.getLocalizedRecipeName(stats.mostEfficientRecipe.id) ||
                 stats.mostEfficientRecipe.id}
             </div>
           )}
@@ -105,7 +101,7 @@ const RecipeInfo: React.FC<RecipeInfoProps> = ({ itemId, onRecipeSelect }) => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">
-                      {dataService?.getLocalizedRecipeName(recipe.id) || recipe.id}
+                      {dataService.getLocalizedRecipeName(recipe.id) || recipe.id}
                     </span>
                     <span className="text-xs px-2 py-1 bg-gray-100 rounded">
                       {recipe.category || '制造'}

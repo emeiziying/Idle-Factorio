@@ -17,13 +17,7 @@ export const FuelStatusDisplay: React.FC<FuelStatusDisplayProps> = ({
   compact = false,
 }) => {
   const fuelService = useFuelService();
-  const status = fuelService?.getFuelStatus(fuelBuffer) || {
-    isEmpty: true,
-    burnProgress: 0,
-    estimatedRunTime: 0,
-    totalEnergy: 0,
-    maxEnergy: 0,
-  };
+  const status = fuelService.getFuelStatus(fuelBuffer);
 
   const formatTime = (seconds: number): string => {
     if (seconds === Infinity) return '∞';
@@ -37,18 +31,6 @@ export const FuelStatusDisplay: React.FC<FuelStatusDisplayProps> = ({
     if (percentage < 50) return 'warning';
     return 'success';
   };
-
-  // 如果服务未初始化，显示加载状态
-  if (!fuelService) {
-    return (
-      <Box display="flex" alignItems="center" gap={1}>
-        <LocalFireDepartment fontSize="small" color="disabled" />
-        <Typography variant="caption" color="text.secondary">
-          正在加载...
-        </Typography>
-      </Box>
-    );
-  }
 
   if (compact) {
     return (

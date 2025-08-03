@@ -240,15 +240,9 @@ export const createUIStateSlice: SliceCreator<UIStateSlice> = (set, get) => ({
       return null;
     }
 
-    try {
-      const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
-      
-      // 确保数据已加载
-      if (!dataService?.isDataLoaded()) {
-        return null;
-      }
-
-      const itemsByRow = dataService.getItemsByRow(selectedCategory);
+    // 数据已在全局初始化时加载完成
+    const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+    const itemsByRow = dataService.getItemsByRow(selectedCategory);
       const sortedRows = Array.from(itemsByRow.keys()).sort((a, b) => a - b);
 
       for (const row of sortedRows) {
@@ -258,10 +252,6 @@ export const createUIStateSlice: SliceCreator<UIStateSlice> = (set, get) => ({
         }
       }
       return null;
-    } catch (error) {
-      console.error('Error getting first item for category', selectedCategory, ':', error);
-      return null;
-    }
   },
 
   // 清空UI状态

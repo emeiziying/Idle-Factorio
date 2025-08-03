@@ -42,7 +42,7 @@ const FuelPrioritySettings: React.FC<FuelPrioritySettingsProps> = ({ onPriorityC
   };
 
   const getFuelInfo = (fuelId: string) => {
-    const item = dataService?.getItem(fuelId);
+    const item = dataService.getItem(fuelId);
     if (!item?.fuel) return { name: fuelId, energy: 0 };
 
     const energy = item.fuel.value;
@@ -54,23 +54,10 @@ const FuelPrioritySettings: React.FC<FuelPrioritySettingsProps> = ({ onPriorityC
     }
 
     return {
-      name: dataService?.getItemName(fuelId) || fuelId,
+      name: dataService.getItemName(fuelId) || fuelId,
       energy: energyText,
     };
   };
-
-  // 如果服务未初始化，显示加载状态
-  if (!dataService) {
-    return (
-      <Card>
-        <CardContent>
-          <Box display="flex" justifyContent="center" alignItems="center" p={4}>
-            <Typography>正在加载服务...</Typography>
-          </Box>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card>

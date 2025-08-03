@@ -25,17 +25,7 @@ const PowerManagement: React.FC = () => {
 
   // 计算电力平衡
   const powerBalance = useMemo(() => {
-    return (
-      powerService?.calculatePowerBalance(facilities) || {
-        status: 'balanced',
-        satisfactionRatio: 1,
-        generationCapacity: 0,
-        actualGeneration: 0,
-        consumptionDemand: 0,
-        actualConsumption: 0,
-        consumptionByCategory: {},
-      }
-    );
+    return powerService.calculatePowerBalance(facilities);
   }, [facilities, powerService]);
 
   // 发电设施统计
@@ -43,7 +33,7 @@ const PowerManagement: React.FC = () => {
     const stats = new Map<string, { count: number; power: number }>();
 
     facilities.forEach(facility => {
-      const power = powerService?.getFacilityPowerGeneration(facility) || 0;
+      const power = powerService.getFacilityPowerGeneration(facility) || 0;
       if (power > 0) {
         const existing = stats.get(facility.facilityId) || { count: 0, power: 0 };
         stats.set(facility.facilityId, {
@@ -107,15 +97,6 @@ const PowerManagement: React.FC = () => {
       }
     }
   };
-
-  // 如果服务未初始化，显示加载状态
-  if (!powerService) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" p={4}>
-        <Typography>正在加载服务...</Typography>
-      </Box>
-    );
-  }
 
   return (
     <Box>
@@ -197,7 +178,7 @@ const PowerManagement: React.FC = () => {
                 电力不足！所有耗电设施的效率降至 {(powerBalance.satisfactionRatio * 100).toFixed(0)}
                 %
               </Typography>
-              {(powerService?.getPowerPriorityRecommendations(facilities, powerBalance) || []).map(
+              {powerService.getPowerPriorityRecommendations(facilities, powerBalance).map(
                 (rec, i) => (
                   <Typography key={i} variant="caption" display="block">
                     • {rec}

@@ -64,7 +64,7 @@ export class ResearchService {
    */
   async startResearch(techId: string): Promise<ResearchResult> {
     // 检查科技是否存在
-    const tech = this.treeService?.getTechnology(techId);
+    const tech = this.treeService ? this.treeService.getTechnology(techId) : undefined;
     if (!tech) {
       return {
         success: false,
@@ -81,7 +81,7 @@ export class ResearchService {
     }
 
     // 检查是否已解锁
-    if (this.unlockService?.isTechUnlocked(techId)) {
+    if (this.unlockService && this.unlockService.isTechUnlocked(techId)) {
       return {
         success: false,
         error: '科技已经解锁',
@@ -204,12 +204,12 @@ export class ResearchService {
    * 检查是否可以开始研究
    */
   canStartResearch(techId: string): boolean {
-    const tech = this.treeService?.getTechnology(techId);
+    const tech = this.treeService ? this.treeService.getTechnology(techId) : undefined;
     if (!tech) return false;
 
     // 检查前置科技
     return tech.prerequisites.every(
-      (prereqId: string) => this.unlockService?.isTechUnlocked(prereqId) ?? false
+      (prereqId: string) => this.unlockService ? this.unlockService.isTechUnlocked(prereqId) : false
     );
   }
 
@@ -217,7 +217,7 @@ export class ResearchService {
    * 检查科技包是否充足
    */
   async checkSciencePackAvailability(techId: string): Promise<boolean> {
-    const tech = this.treeService?.getTechnology(techId);
+    const tech = this.treeService ? this.treeService.getTechnology(techId) : undefined;
     if (!tech || !this.inventoryOps) return false;
 
     for (const [packId, required] of Object.entries(tech.researchCost)) {
@@ -336,14 +336,14 @@ export class ResearchService {
    * 获取研究进度百分比
    */
   getResearchProgress(): number {
-    return this.currentResearch?.progress ?? 0;
+    return this.currentResearch ? this.currentResearch.progress : 0;
   }
 
   /**
    * 获取剩余研究时间（秒）
    */
   getTimeRemaining(): number {
-    return this.currentResearch?.timeRemaining ?? 0;
+    return this.currentResearch ? (this.currentResearch.timeRemaining ?? 0) : 0;
   }
 
   /**
@@ -357,6 +357,6 @@ export class ResearchService {
    * 获取正在研究的科技ID
    */
   getCurrentResearchId(): string | undefined {
-    return this.currentResearch?.techId;
+    return this.currentResearch ? this.currentResearch.techId : undefined;
   }
 }

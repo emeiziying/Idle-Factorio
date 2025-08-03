@@ -10,7 +10,6 @@ import type { IManualCraftingValidator } from '@/services/interfaces/IManualCraf
 
 // 验证结果类别常量
 export const ValidationCategory = {
-  RAW_MATERIAL: 'raw_material',
   CRAFTABLE: 'craftable',
   RESTRICTED: 'restricted',
   DATA_ERROR: 'data_error',
@@ -22,7 +21,6 @@ export type ValidationCategoryType = (typeof ValidationCategory)[keyof typeof Va
 export const ValidationReason = {
   ITEM_NOT_FOUND: 'item_not_found',
   DATA_SERVICE_UNAVAILABLE: 'data_service_unavailable',
-  RAW_MATERIAL: 'raw_material',
   RECIPE_AVAILABLE: 'recipe_available',
   FLUID_INVOLVED: 'fluid_involved',
   BLACKLISTED_ITEM: 'blacklisted_item',
@@ -76,23 +74,15 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
     this.clearCache();
   }
 
-  private getDataService(): DataService | null {
+  private getDataService(): DataService {
     if (!this.dataService) {
-      try {
-        this.dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
-      } catch {
-        return null;
-      }
+      this.dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
     }
     return this.dataService;
   }
 
-  private getRecipeService(): RecipeService | null {
-    try {
-      return getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
-    } catch {
-      return null;
-    }
+  private getRecipeService(): RecipeService {
+    return getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
   }
 
   /**
@@ -115,13 +105,6 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
     }
 
     const dataService = this.getDataService();
-    if (!dataService) {
-      return {
-        canCraftManually: false,
-        category: ValidationCategory.DATA_ERROR,
-        reason: ValidationReason.DATA_SERVICE_UNAVAILABLE,
-      };
-    }
     const item = dataService.getItem(itemId);
     if (!item) {
       const result = {
@@ -148,18 +131,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
     const recipeService = this.getRecipeService();
     const recipes = recipeService ? recipeService.getRecipesThatProduce(itemId) : [];
 
-    // 1. 检查是否为原材料（没有配方）
-    if (recipes.length === 0) {
-      const result = {
-        canCraftManually: true,
-        reason: ValidationReason.RAW_MATERIAL,
-        category: ValidationCategory.RAW_MATERIAL,
-      };
-      this.validationCache.set(itemId, result);
-      return result;
-    }
-
-    // 2. 检查配方是否有限制
+    // 检查配方是否有限制（所有物品都有配方）
     for (const recipe of recipes) {
       const validation = this.validateRecipe(recipe);
       if (validation.canCraftManually) {
@@ -238,7 +210,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
         const result = {
           canCraftManually: true,
           reason: ValidationReason.MINING_RECIPE,
-          category: ValidationCategory.RAW_MATERIAL,
+          category: ValidationCategory.CRAFTABLE,
         };
         this.recipeValidationCache.set(cacheKey, result);
         return result;
@@ -283,7 +255,7 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
       const result = {
         canCraftManually: true,
         reason: ValidationReason.COLLECTION_RECIPE,
-        category: ValidationCategory.RAW_MATERIAL,
+        category: ValidationCategory.CRAFTABLE,
       };
       this.recipeValidationCache.set(cacheKey, result);
       return result;
@@ -486,8 +458,6 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
    */
   private isFluidItem(itemId: string): boolean {
     const dataService = this.getDataService();
-    if (!dataService) return false;
-
     const item = dataService.getItem(itemId);
     if (!item) return false;
 
@@ -525,8 +495,6 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
    */
   private filterItemsByCondition(condition: (item: import('../types').Item) => boolean): string[] {
     const dataService = this.getDataService();
-    if (!dataService) return [];
-
     const allItems = dataService.getAllItems();
     const filteredItems: string[] = [];
 
@@ -580,7 +548,6 @@ export function getValidationReasonText(
   const reasonTexts: Record<string, Record<ValidationReasonType, string>> = {
     zh: {
       [ValidationReason.ITEM_NOT_FOUND]: '物品不存在',
-      [ValidationReason.RAW_MATERIAL]: '原材料，可直接采集',
       [ValidationReason.RECIPE_AVAILABLE]: '可通过配方手动制作',
       [ValidationReason.FLUID_INVOLVED]: '配方涉及流体，无法手动制作',
       [ValidationReason.BLACKLISTED_ITEM]: '黑名单物品，无法手动制作',
@@ -602,7 +569,6 @@ export function getValidationReasonText(
     },
     en: {
       [ValidationReason.ITEM_NOT_FOUND]: 'Item not found',
-      [ValidationReason.RAW_MATERIAL]: 'Raw material, can be collected directly',
       [ValidationReason.RECIPE_AVAILABLE]: 'Can be crafted manually via recipe',
       [ValidationReason.FLUID_INVOLVED]: 'Recipe involves fluids, cannot be crafted manually',
       [ValidationReason.BLACKLISTED_ITEM]: 'Blacklisted item, cannot be crafted manually',
@@ -640,13 +606,11 @@ export function getValidationCategoryText(
 ): string {
   const categoryTexts: Record<string, Record<ValidationCategoryType, string>> = {
     zh: {
-      [ValidationCategory.RAW_MATERIAL]: '原材料',
       [ValidationCategory.CRAFTABLE]: '可制作',
       [ValidationCategory.RESTRICTED]: '受限制',
       [ValidationCategory.DATA_ERROR]: '数据错误',
     },
     en: {
-      [ValidationCategory.RAW_MATERIAL]: 'Raw Material',
       [ValidationCategory.CRAFTABLE]: 'Craftable',
       [ValidationCategory.RESTRICTED]: 'Restricted',
       [ValidationCategory.DATA_ERROR]: 'Data Error',

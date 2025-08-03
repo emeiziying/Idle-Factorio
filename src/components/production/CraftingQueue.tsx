@@ -55,14 +55,9 @@ const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(
       }
     }, []);
 
-    const recipe = dataService?.getRecipe(task.recipeId);
-    const item = dataService?.getItem(task.itemId);
+    const recipe = dataService.getRecipe(task.recipeId);
+    const item = dataService.getItem(task.itemId);
 
-    // Handle missing data gracefully
-    // 如果DataService还未加载或数据缺失，不渲染
-    if (!dataService) {
-      return null;
-    }
 
     // 对于手动合成任务，不需要recipe数据
     const isManualTask = task.recipeId.startsWith('manual_');

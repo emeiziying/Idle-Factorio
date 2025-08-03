@@ -38,7 +38,7 @@ const ChestCraftingDialog: React.FC<ChestCraftingDialogProps> = ({ open, onClose
   const dataService = useDataService();
   const storageService = useStorageService();
 
-  const config = storageService?.getStorageConfig(chestType);
+  const config = storageService.getStorageConfig(chestType);
   if (!config) return null;
 
   const handleCraft = () => {
@@ -83,7 +83,7 @@ const ChestCraftingDialog: React.FC<ChestCraftingDialogProps> = ({ open, onClose
           {Object.entries(config.recipe).map(([itemId, amount]) => {
             const available = getInventoryItem(itemId).currentAmount;
             const needed = (amount as number) * craftQuantity;
-            const itemName = dataService?.getLocalizedItemName(itemId) || itemId;
+            const itemName = dataService.getLocalizedItemName(itemId) || itemId;
 
             return (
               <Card key={itemId} variant="outlined">
@@ -179,11 +179,11 @@ const StorageExpansionDialog: React.FC<StorageExpansionDialogProps> = ({ open, o
   };
 
   const getItemName = (itemId: string) => {
-    return dataService?.getLocalizedItemName(itemId) || itemId;
+    return dataService.getLocalizedItemName(itemId) || itemId;
   };
 
   const getItemStackSize = (itemId: string) => {
-    const gameItem = dataService?.getItem(itemId);
+    const gameItem = dataService.getItem(itemId);
     return gameItem?.stack || 100;
   };
 
@@ -199,7 +199,7 @@ const StorageExpansionDialog: React.FC<StorageExpansionDialogProps> = ({ open, o
 
         <DialogContent>
           {getAvailableChestTypes().map(chestType => {
-            const config = storageService?.getStorageConfig(chestType);
+            const config = storageService.getStorageConfig(chestType);
             if (!config) return null;
             const chestInventory = getInventoryItem(config.itemId);
             const hasChest = chestInventory.currentAmount > 0;

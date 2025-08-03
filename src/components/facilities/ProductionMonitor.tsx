@@ -36,7 +36,6 @@ import useGameStore from '@/store/gameStore';
 import FactorioIcon from '@/components/common/FactorioIcon';
 import { useDataService } from '@/hooks/useDIServices';
 import { FuelStatusDisplay } from '@/components/facilities/FuelStatusDisplay';
-import InlineLoading from '@/components/common/InlineLoading';
 
 const ProductionMonitor: React.FC = () => {
   const { facilities, updateFacility } = useGameStore();
@@ -46,12 +45,8 @@ const ProductionMonitor: React.FC = () => {
 
   // 过滤和分组设施
   const groupedFacilities = useMemo(() => {
-    if (!dataService) {
-      return new Map<string, FacilityInstance[]>();
-    }
-
     const filtered = facilities.filter(facility => {
-      const name = dataService?.getItemName(facility.facilityId) || facility.facilityId;
+      const name = dataService.getItemName(facility.facilityId) || facility.facilityId;
 
       // 搜索过滤
       if (searchTerm && !name.toLowerCase().includes(searchTerm.toLowerCase())) {
@@ -160,7 +155,7 @@ const ProductionMonitor: React.FC = () => {
                 </TableCell>
               </TableRow>
               {facilityList.map(facility => {
-                const name = dataService?.getItemName(facility.facilityId) || facility.facilityId;
+                const name = dataService.getItemName(facility.facilityId) || facility.facilityId;
                 return (
                   <TableRow key={facility.id}>
                     <TableCell>
@@ -224,7 +219,7 @@ const ProductionMonitor: React.FC = () => {
           </Typography>
           <Grid container spacing={2}>
             {facilityList.map(facility => {
-              const name = dataService?.getItemName(facility.facilityId) || facility.facilityId;
+              const name = dataService.getItemName(facility.facilityId) || facility.facilityId;
               return (
                 <Box
                   key={facility.id}
@@ -306,11 +301,6 @@ const ProductionMonitor: React.FC = () => {
     };
     return names[category] || category;
   };
-
-  // 如果服务还未加载，显示加载状态
-  if (!dataService) {
-    return <InlineLoading message="初始化数据服务中..." showSpinner={true} />;
-  }
 
   return (
     <Box>

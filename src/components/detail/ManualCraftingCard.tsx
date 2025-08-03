@@ -28,7 +28,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({
   const recipeService = useRecipeService();
 
   // 使用 RecipeService 的新方法获取手动制作信息
-  const manualCraftingInfo = recipeService?.getManualCraftingInfo(item.id);
+  const manualCraftingInfo = recipeService.getManualCraftingInfo(item.id);
 
   // 如果不能手动制作，显示受限提示
   if (!manualCraftingInfo?.canCraft) {
@@ -49,42 +49,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({
     );
   }
 
-  // 如果是原材料（无需配方），显示无需材料
-  if (manualCraftingInfo?.validation?.reason === 'raw_material') {
-    return (
-      <Box sx={{ mb: 2, pb: 2, borderBottom: 1, borderColor: 'divider' }}>
-        {/* 简单显示：无需材料的配方 */}
-        <Box
-          sx={{
-            p: 1.5,
-            bgcolor: 'background.default',
-            borderRadius: 1,
-            border: '1px solid',
-            borderColor: 'divider',
-            mb: 1.5,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 1,
-          }}
-        >
-          <Typography variant="body2" color="text.secondary">
-            无需材料
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            →
-          </Typography>
-          <FactorioIcon itemId={item.id} size={32} />
-          <Typography variant="body2">
-            {dataService?.getLocalizedItemName(item.id) ?? item.id} x1
-          </Typography>
-        </Box>
-
-        {/* 制作按钮 */}
-        <CraftingButtons onCraft={quantity => onManualCraft(item.id, quantity)} />
-      </Box>
-    );
-  }
+  // 所有物品都有配方，不需要检查 raw_material 情况
 
   // 如果有可手动制作的配方，显示第一个
   if (manualCraftingInfo?.recipe) {
@@ -143,7 +108,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({
                     key={itemId}
                     size="small"
                     avatar={<FactorioIcon itemId={itemId} size={16} />}
-                    label={`${dataService?.getLocalizedItemName(itemId) ?? itemId}: ${available}/${required}`}
+                    label={`${dataService.getLocalizedItemName(itemId) ?? itemId}: ${available}/${required}`}
                     color="warning"
                     variant="outlined"
                     onClick={() => onItemSelect && onItemSelect({ id: itemId } as Item)}

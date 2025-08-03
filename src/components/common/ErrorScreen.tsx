@@ -1,7 +1,7 @@
-import React from 'react';
-import { Box, Typography, Button, ThemeProvider, CssBaseline, Stack } from '@mui/material';
-import { Error as ErrorIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 import theme from '@/theme';
+import { Error as ErrorIcon, Refresh as RefreshIcon } from '@mui/icons-material';
+import { Box, Button, CssBaseline, Stack, ThemeProvider, Typography } from '@mui/material';
+import React from 'react';
 
 interface ErrorScreenProps {
   /** 错误标题 */
@@ -22,6 +22,7 @@ interface ErrorScreenProps {
   children?: React.ReactNode;
 }
 
+// 错误内容组件
 const ErrorContent: React.FC<Omit<ErrorScreenProps, 'withTheme'>> = ({
   title = '应用初始化失败',
   error,
@@ -38,6 +39,7 @@ const ErrorContent: React.FC<Omit<ErrorScreenProps, 'withTheme'>> = ({
       alignItems: 'center',
       justifyContent: 'center',
       height: '100vh',
+      width: '100vw',
       padding: 3,
       textAlign: 'center',
       bgcolor: 'background.default',
@@ -93,6 +95,7 @@ const ErrorContent: React.FC<Omit<ErrorScreenProps, 'withTheme'>> = ({
   </Box>
 );
 
+// 错误屏幕组件
 const ErrorScreen: React.FC<ErrorScreenProps> = ({ withTheme = false, ...props }) => {
   if (withTheme) {
     return (

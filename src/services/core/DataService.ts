@@ -149,11 +149,6 @@ export class DataService {
     }
   }
 
-  // 检查数据是否已加载
-  isDataLoaded(): boolean {
-    return this.gameData !== null;
-  }
-
   // 获取本地化的分类名称
   getLocalizedCategoryName(categoryId: string): string {
     if (!this.i18nData) {
@@ -417,14 +412,14 @@ export class DataService {
 
   // 检查是否有采矿配方
   private hasMiningRecipe(recipes: Recipe[]): boolean {
-    return recipes.some(recipe => recipe.flags?.includes('mining'));
+    return recipes.some(recipe => recipe.flags && recipe.flags.includes('mining'));
   }
 
   // 检查是否有可手动制作的配方
   private hasManualCraftingRecipe(recipes: Recipe[], visiting: Set<string>): boolean {
     return recipes.some(recipe => {
       // 跳过需要科技解锁的配方
-      if (recipe.flags?.includes('locked')) {
+      if (recipe.flags && recipe.flags.includes('locked')) {
         return false;
       }
 
@@ -447,8 +442,8 @@ export class DataService {
   ): boolean {
     return recipes.some(recipe => {
       // 检查科技解锁的配方
-      if (recipe.flags?.includes('locked')) {
-        if (!services.isTechServiceReady || !services.techService.isRecipeUnlocked?.(recipe.id)) {
+      if (recipe.flags && recipe.flags.includes('locked')) {
+        if (!services.isTechServiceReady || !services.techService.isRecipeUnlocked(recipe.id)) {
           return false;
         }
       }
@@ -587,7 +582,8 @@ export class DataService {
       },
     };
 
-    return rowNames[categoryId]?.[row] || `第${row + 1}组`;
+    const categoryRows = rowNames[categoryId];
+    return categoryRows ? categoryRows[row] || `第${row + 1}组` : `第${row + 1}组`;
   }
 
   // 获取物品图标数据
@@ -612,7 +608,7 @@ export class DataService {
       // RecipeService 不可用
     }
 
-    if (recipe?.iconText) {
+    if (recipe && recipe.iconText) {
       return {
         iconId: recipe.icon || itemId,
         iconText: recipe.iconText,
@@ -621,7 +617,7 @@ export class DataService {
 
     // 如果配方没有iconText，尝试从物品数据获取
     const item = this.getItem(itemId);
-    if (item?.iconText) {
+    if (item && item.iconText) {
       return {
         iconId: item.icon || itemId,
         iconText: item.iconText,
@@ -630,7 +626,7 @@ export class DataService {
 
     // 都没有iconText，使用默认logic
     return {
-      iconId: recipe?.icon || item?.icon || itemId,
+      iconId: (recipe && recipe.icon) || (item && item.icon) || itemId,
     };
   }
 
@@ -696,7 +692,7 @@ export class DataService {
   // 添加缺失的方法
   getItemName(itemId: string): string {
     const item = this.getItem(itemId);
-    return item?.name || itemId;
+    return item ? item.name : itemId;
   }
 
   getI18nName(item: Item): string {

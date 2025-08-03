@@ -27,10 +27,6 @@ export const useItemClick = (componentName: string, onItemSelect?: (item: Item) 
         return;
       }
 
-      if (!dataService) {
-        logger.warn(`${componentName}: DataService not available`);
-        return;
-      }
 
       if (onItemSelect) {
         const clickedItem = dataService.getItem(itemId);
@@ -79,10 +75,6 @@ export const useItemClickWithContext = <T = unknown>(
         return;
       }
 
-      if (!dataService) {
-        logger.warn(`${componentName}: DataService not available`);
-        return;
-      }
 
       if (onItemSelect) {
         const clickedItem = dataService.getItem(itemId);
@@ -117,10 +109,6 @@ export const useSafeItemClick = (
           throw new Error('No itemId provided');
         }
 
-        if (!dataService) {
-          throw new Error('DataService not available');
-        }
-
         if (!onItemSelect) {
           logger.debug(`${componentName}: onItemSelect callback not provided`);
           return;
@@ -134,7 +122,9 @@ export const useSafeItemClick = (
         onItemSelect(clickedItem);
       } catch (error) {
         logger.error(`${componentName}: Error handling item click:`, error);
-        onError?.(error as Error);
+        if (onError) {
+          onError(error as Error);
+        }
       }
     },
     [componentName, onItemSelect, onError, dataService]

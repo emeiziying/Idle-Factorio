@@ -16,7 +16,7 @@ const UsageCard: React.FC<UsageCardProps> = ({ usedInRecipes, onItemSelect }) =>
   const handleItemClick = (itemId: string) => {
     // Navigate to item detail
     if (onItemSelect) {
-      const clickedItem = dataService?.getItem(itemId);
+      const clickedItem = dataService.getItem(itemId);
       if (clickedItem) {
         // Navigate to clicked item
         onItemSelect(clickedItem);

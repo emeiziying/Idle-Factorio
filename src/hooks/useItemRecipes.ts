@@ -23,9 +23,6 @@ export const useItemRecipes = (item: Item) => {
       return { recipes: [], usedInRecipes: [] };
     }
 
-    if (!recipeService || !dataService) {
-      return { recipes: [], usedInRecipes: [] };
-    }
 
     const itemRecipes = recipeService.getRecipesThatProduce(item.id);
     const usageRecipes = recipeService.getRecipesThatUse(item.id);

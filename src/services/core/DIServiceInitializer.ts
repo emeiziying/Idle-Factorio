@@ -8,25 +8,25 @@ import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 
 // 核心服务
 import { DataService } from '@/services/core/DataService';
+import { GameConfig } from '@/services/core/GameConfig';
 import { UserProgressService } from '@/services/game/UserProgressService';
 import { StorageService } from '@/services/storage/StorageService';
-import { GameConfig } from '@/services/core/GameConfig';
 import ManualCraftingValidator from '@/utils/manualCraftingValidator';
 
 // 业务服务
-import { RecipeService } from '@/services/crafting/RecipeService';
 import { DependencyService } from '@/services/crafting/DependencyService';
 import { FuelService } from '@/services/crafting/FuelService';
+import { RecipeService } from '@/services/crafting/RecipeService';
 import { PowerService } from '@/services/game/PowerService';
 
 // 科技系统服务
+import { TechEventEmitter } from '@/services/technology/events';
+import { ResearchQueueService } from '@/services/technology/ResearchQueueService';
+import { ResearchService } from '@/services/technology/ResearchService';
 import { TechnologyService } from '@/services/technology/TechnologyService';
+import { TechProgressTracker } from '@/services/technology/TechProgressTracker';
 import { TechTreeService } from '@/services/technology/TechTreeService';
 import { TechUnlockService } from '@/services/technology/TechUnlockService';
-import { ResearchService } from '@/services/technology/ResearchService';
-import { ResearchQueueService } from '@/services/technology/ResearchQueueService';
-import { TechProgressTracker } from '@/services/technology/TechProgressTracker';
-import { TechEventEmitter } from '@/services/technology/events';
 
 // 游戏循环服务
 import { GameLoopService } from '@/services/game/GameLoopService';
@@ -160,7 +160,7 @@ export class DIServiceInitializer {
    */
   private static async initializeCoreServices(): Promise<void> {
     const startTime = Date.now();
-    
+
     try {
       // 1. 初始化数据服务并加载游戏数据
       const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
@@ -173,26 +173,25 @@ export class DIServiceInitializer {
       }
 
       // 3. 初始化科技服务
-      const technologyService = container.resolve<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
+      const technologyService = container.resolve<TechnologyService>(
+        SERVICE_TOKENS.TECHNOLOGY_SERVICE
+      );
       await technologyService.initialize();
 
       const totalTime = Date.now() - startTime;
       console.log(`[ServiceInit] All core services initialized in ${totalTime}ms`);
-      
     } catch (error) {
       console.error('[ServiceInit] Core services initialization failed:', error);
       throw error;
     }
   }
 
-
-
   /**
    * 初始化应用层
    */
   private static async initializeApplication(): Promise<void> {
     // 1. 同步科技数据到游戏状态存储
-    const { initializeTechnologyService } = useGameStore.getState();
+    const { initializeTechnologyService, startGameLoop } = useGameStore.getState();
     await initializeTechnologyService();
 
     // 2. 启动游戏循环系统
@@ -202,11 +201,7 @@ export class DIServiceInitializer {
     const defaultTasks = GameLoopTaskFactory.createAllDefaultTasks();
     defaultTasks.forEach(task => gameLoopService.addTask(task));
 
-    // 启动游戏循环
-    gameLoopService.start();
-
-    // 启动状态管理层的游戏循环控制器
-    const { startGameLoop } = useGameStore.getState();
+    // 启动状态管理层的游戏循环控制器（内部会调用 gameLoopService.start()）
     startGameLoop();
 
     // 设置任务状态监控定时器
@@ -235,14 +230,6 @@ export class DIServiceInitializer {
       }
     }
   }
-
-  /**
-   * 检查是否已初始化
-   */
-  static isInitialized(): boolean {
-    return this.initialized;
-  }
-
 
   /**
    * 重置初始化状态（主要用于测试）

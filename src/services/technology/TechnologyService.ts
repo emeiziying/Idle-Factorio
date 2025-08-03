@@ -139,13 +139,6 @@ export class TechnologyService {
   }
 
   /**
-   * 检查服务是否已初始化
-   */
-  public isServiceInitialized(): boolean {
-    return this.isInitialized;
-  }
-
-  /**
    * 等待服务初始化完成
    */
   public async waitForInitialization(): Promise<void> {
@@ -325,7 +318,7 @@ export class TechnologyService {
     }
 
     const currentResearch = this.researchService.getCurrentResearch();
-    if (currentResearch?.techId === techId) {
+    if (currentResearch && currentResearch.techId === techId) {
       return 'researching';
     }
 
@@ -471,14 +464,14 @@ export class TechnologyService {
   public getPrerequisiteNames(prerequisites: string[]): string[] {
     return prerequisites.map(id => {
       const tech = this.getTechnology(id);
-      return tech?.name || id;
+      return tech ? tech.name : id;
     });
   }
 
   public getResearchTriggerInfo(techId: string) {
     const tech = this.getTechnology(techId);
 
-    if (!tech?.researchTrigger) {
+    if (!tech || !tech.researchTrigger) {
       return { hasResearchTrigger: false };
     }
 
@@ -498,8 +491,8 @@ export class TechnologyService {
     techStates: Map<string, { status: TechStatus; progress?: number }>
   ): Technology[] {
     return technologies.sort((a, b) => {
-      const stateA = techStates.get(a.id)?.status || 'locked';
-      const stateB = techStates.get(b.id)?.status || 'locked';
+      const stateA = techStates.get(a.id)?.status ?? 'locked';
+      const stateB = techStates.get(b.id)?.status ?? 'locked';
 
       // 状态优先级：available > researching > unlocked > locked
       const priority = { available: 3, researching: 2, unlocked: 1, locked: 0 };
@@ -520,7 +513,7 @@ export class TechnologyService {
     techStates: Map<string, { status: TechStatus; progress?: number }>
   ): Technology[] {
     return technologies.filter(tech => {
-      const state = techStates.get(tech.id)?.status || 'locked';
+      const state = techStates.get(tech.id)?.status ?? 'locked';
       // 显示可研究、研究中和已解锁的技术
       return ['available', 'researching', 'unlocked'].includes(state);
     });

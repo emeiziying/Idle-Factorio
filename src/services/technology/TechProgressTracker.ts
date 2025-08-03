@@ -39,14 +39,14 @@ export class TechProgressTracker {
    * 从已解锁的科技重建统计
    */
   private rebuildStatisticsFromUnlocked(): void {
-    const unlockedTechs = this.unlockService?.getUnlockedTechs();
+    const unlockedTechs = this.unlockService ? this.unlockService.getUnlockedTechs() : [];
     if (!unlockedTechs) return;
 
     unlockedTechs.forEach(techId => {
       this.researchedTechs.add(techId);
 
       // 估算研究时间和消耗
-      const tech = this.treeService?.getTechnology(techId);
+      const tech = this.treeService ? this.treeService.getTechnology(techId) : undefined;
       if (tech) {
         this.totalResearchTime += tech.researchTime;
 
@@ -105,8 +105,8 @@ export class TechProgressTracker {
    * 获取科技统计信息
    */
   getTechStatistics(): TechStatistics {
-    const totalTechs = this.treeService?.getAllTechnologies().length || 0;
-    const unlockedCount = this.unlockService?.getUnlockedTechs().size || 0;
+    const totalTechs = this.treeService ? this.treeService.getAllTechnologies().length : 0;
+    const unlockedCount = this.unlockService ? this.unlockService.getUnlockedTechs().size : 0;
     const researchedCount = this.researchedTechs.size;
 
     // 获取分类统计

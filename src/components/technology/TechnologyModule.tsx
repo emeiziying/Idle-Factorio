@@ -129,7 +129,6 @@ const TechnologyModule: React.FC = React.memo(() => {
         status = 'researching';
         progress = researchState?.progress;
       } else if (
-        technologyService.isServiceInitialized() &&
         technologyService.isTechAvailable(tech.id)
       ) {
         status = 'available';

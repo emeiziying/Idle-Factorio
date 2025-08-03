@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
-import { useAsyncEffect } from 'ahooks';
 import { DIServiceInitializer } from '@/services/core/DIServiceInitializer';
+import { useAsyncEffect } from 'ahooks';
+import { useEffect, useState } from 'react';
 
 interface UseAppInitializationResult {
   isAppReady: boolean;
   initError: string | null;
 }
 
+// 初始化游戏系统
 export const useAppInitialization = (): UseAppInitializationResult => {
   const [isAppReady, setIsAppReady] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);

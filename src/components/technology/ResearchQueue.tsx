@@ -81,8 +81,6 @@ const ResearchQueue: React.FC<ResearchQueueProps> = React.memo(
 
     // 获取队列总时间 - 使用useMemo缓存
     const totalQueueTime = React.useMemo(() => {
-      if (!techService) return 0;
-
       let totalTime = 0;
       queue.forEach(item => {
         const tech = techService.getTechnology(item.techId);
@@ -162,7 +160,7 @@ const ResearchQueue: React.FC<ResearchQueueProps> = React.memo(
               <Card variant="outlined" sx={{ bgcolor: theme.palette.info.main + '10' }}>
                 <CardContent sx={{ '&:last-child': { pb: 1.5 } }}>
                   {(() => {
-                    const tech = techService?.getTechnology(currentResearch.techId);
+                    const tech = techService.getTechnology(currentResearch.techId);
                     return (
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <FactorioIcon
@@ -226,7 +224,7 @@ const ResearchQueue: React.FC<ResearchQueueProps> = React.memo(
             ) : (
               <List dense>
                 {queue.map((item, index) => {
-                  const tech = techService?.getTechnology(item.techId);
+                  const tech = techService.getTechnology(item.techId);
                   const priorityConfig = getPriorityLabel(item.priority);
                   const isBlocked = !item.canStart;
 
@@ -377,23 +375,6 @@ const ResearchQueue: React.FC<ResearchQueueProps> = React.memo(
   }
 );
 
-// 添加加载状态处理
-const ResearchQueueWithLoading: React.FC<ResearchQueueProps> = props => {
-  const techService = useTechnologyService();
-
-  if (!techService) {
-    return (
-      <Card sx={{ mb: 2 }}>
-        <CardContent sx={{ '&:last-child': { pb: 2 } }}>
-          <Typography>加载中...</Typography>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return <ResearchQueue {...props} />;
-};
-
 ResearchQueue.displayName = 'ResearchQueue';
 
-export default ResearchQueueWithLoading;
+export default ResearchQueue;
