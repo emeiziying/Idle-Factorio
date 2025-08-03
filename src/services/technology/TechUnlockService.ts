@@ -185,18 +185,22 @@ export class TechUnlockService {
       return true;
     }
 
-    // 检查所有生产者是否都支持Nauvis
+    // 检查是否有任何生产者支持Nauvis
     for (const producerId of recipe.producers) {
       const producer = this.getItemById(producerId);
       if (producer && producer.machine && producer.machine.locations) {
-        // 如果任何一个生产者不支持nauvis，则配方在nauvis不可用
-        if (!producer.machine.locations.includes('nauvis')) {
-          return false;
+        // 如果找到任何一个支持nauvis的生产者，配方就可以在nauvis使用
+        if (producer.machine.locations.includes('nauvis')) {
+          return true;
         }
+      } else {
+        // 如果生产者没有location限制，认为它在所有地方都可用
+        return true;
       }
     }
 
-    return true;
+    // 只有当所有生产者都明确不支持nauvis时，才返回false
+    return false;
   }
 
   /**
