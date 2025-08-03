@@ -13,6 +13,7 @@ import { createFacilitySlice } from '@/store/slices/facilityStore';
 import { createTechnologySlice } from '@/store/slices/technologyStore';
 import { createGameMetaSlice } from '@/store/slices/gameMetaStore';
 import { createGameLoopSlice } from '@/store/slices/gameLoopStore';
+import { createUIStateSlice } from '@/store/slices/uiStateStore';
 
 // 页面卸载时立即保存
 if (typeof window !== 'undefined') {
@@ -32,6 +33,7 @@ const useGameStore = create<GameState>()(
     ...createTechnologySlice(set, get, api),
     ...createGameMetaSlice(set, get, api),
     ...createGameLoopSlice(set, get, api),
+    ...createUIStateSlice(set, get, api),
   }))
 );
 

@@ -17,6 +17,7 @@ import type {
   ResearchPriority,
 } from '../../types/technology';
 import type { GameLoopSlice } from '@/store/slices/gameLoopStore';
+import type { UIStateSlice } from '@/store/slices/uiStateStore';
 
 // 库存管理切片状态
 export interface InventorySlice {
@@ -155,7 +156,8 @@ export interface GameState
     FacilitySlice,
     TechnologySlice,
     GameMetaSlice,
-    GameLoopSlice {}
+    GameLoopSlice,
+    UIStateSlice {}
 
 // Zustand StateCreator 类型别名
 export type SliceCreator<T> = StateCreator<

@@ -9,6 +9,7 @@ import { useTechnologyService } from '@/hooks/useDIServices';
 import type { TechStatus } from '@/types/technology';
 import { ResearchPriority } from '@/types/technology';
 import { useLocalStorageState } from 'ahooks';
+import { TECHNOLOGY_STORAGE_KEYS } from '@/constants/storageKeys';
 import { useUnlockedTechsRepair } from '@/hooks/useUnlockedTechsRepair';
 
 const TechnologyModule: React.FC = React.memo(() => {
@@ -38,7 +39,7 @@ const TechnologyModule: React.FC = React.memo(() => {
   const [loading, setLoading] = useState(() => technologies.size === 0);
   const [error, setError] = useState<string | null>(null);
   const [selectedTechId, setSelectedTechId] = useLocalStorageState<string | null>(
-    'technology-selected-tech',
+    TECHNOLOGY_STORAGE_KEYS.SELECTED_TECH,
     { defaultValue: null }
   );
 

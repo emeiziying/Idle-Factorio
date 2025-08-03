@@ -14,7 +14,7 @@ export const useAutoSaveBeforeUnload = (): void => {
     const { forceSaveGame } = useGameStore.getState();
     try {
       // 强制保存游戏状态，确保用户进度不丢失
-      forceSaveGame().catch(console.error);
+      await forceSaveGame();
     } catch (error) {
       console.error('页面卸载时存档失败:', error);
     }

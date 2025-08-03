@@ -19,12 +19,13 @@ import LoadingScreen from '@/components/common/LoadingScreen';
 import ErrorScreen from '@/components/common/ErrorScreen';
 import ClearGameButton from '@/components/common/ClearGameButton';
 import { useLocalStorageState } from 'ahooks';
+import { APP_STORAGE_KEYS } from '@/constants/storageKeys';
 import { useAppInitialization } from '@/hooks/useAppInitialization';
 import { useAutoSaveBeforeUnload } from '@/hooks/useAutoSaveBeforeUnload';
 import theme from '@/theme';
 
 const App: React.FC = () => {
-  const [currentModule, setCurrentModule] = useLocalStorageState('app-current-module', {
+  const [currentModule, setCurrentModule] = useLocalStorageState(APP_STORAGE_KEYS.CURRENT_MODULE, {
     defaultValue: 0,
   });
   const { isAppReady, initError } = useAppInitialization();
