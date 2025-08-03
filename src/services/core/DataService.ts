@@ -523,14 +523,7 @@ export class DataService {
     return itemsByRow;
   }
 
-  // 异步版本：等待服务初始化后获取物品列表
-  // 注意：在 DIServiceInitializer.initialize() 完成后，此方法与同步版本等效
-  async getItemsByRowAsync(categoryId: string): Promise<Map<number, Item[]>> {
-    // 清理缓存以确保使用最新的解锁状态
-    this.clearCache();
-    
-    return this.getItemsByRow(categoryId);
-  }
+
 
   // 获取行的显示名称
   getRowDisplayName(categoryId: string, row: number): string {

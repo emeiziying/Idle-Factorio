@@ -63,7 +63,7 @@ const ProductionModule: React.FC = React.memo(() => {
 
   // 验证并修复存储的selectedItem（防止数据更新后失效）
   useEffect(() => {
-    if (!loading && dataService?.isDataLoaded() && selectedItem) {
+    if (!loading && selectedItem) {
       // 检查存储的item是否还存在于当前数据中
       const currentItem = dataService.getItem(selectedItem.id);
       if (!currentItem) {

@@ -242,12 +242,6 @@ export const createUIStateSlice: SliceCreator<UIStateSlice> = (set, get) => ({
 
     try {
       const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
-      
-      // 确保数据已加载
-      if (!dataService?.isDataLoaded()) {
-        return null;
-      }
-
       const itemsByRow = dataService.getItemsByRow(selectedCategory);
       const sortedRows = Array.from(itemsByRow.keys()).sort((a, b) => a - b);
 

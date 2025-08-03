@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Divider } from '@mui/material';
 import ItemCard from '@/components/production/ItemCard';
-import InlineLoading from '@/components/common/InlineLoading';
 import { useDataService } from '@/hooks/useDIServices';
 import type { Item } from '@/types/index';
 
@@ -15,51 +14,9 @@ const ItemList: React.FC<ItemListProps> = React.memo(
   ({ categoryId, selectedItem, onItemSelect }) => {
     const dataService = useDataService();
     
-    // 使用 useState + useEffect 处理异步数据
-    const [itemsByRow, setItemsByRow] = useState<Map<number, Item[]>>(new Map());
-    const [sortedRows, setSortedRows] = useState<number[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [loadError, setLoadError] = useState<string | null>(null);
-
-    useEffect(() => {
-      if (!dataService) {
-        setLoading(false);
-        return;
-      }
-
-      const loadItems = async () => {
-        try {
-          setLoading(true);
-          setLoadError(null);
-          
-          // 使用异步版本等待服务初始化
-          const itemsByRowResult = await dataService.getItemsByRowAsync(categoryId);
-          const sortedRowsResult = Array.from(itemsByRowResult.keys()).sort((a, b) => a - b);
-          
-          setItemsByRow(itemsByRowResult);
-          setSortedRows(sortedRowsResult);
-        } catch (error) {
-          console.error('Error loading items for category', categoryId, ':', error);
-          setLoadError(error instanceof Error ? error.message : String(error));
-          setItemsByRow(new Map());
-          setSortedRows([]);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      loadItems();
-    }, [categoryId, dataService]);
-
-    // 如果服务还未就绪或正在加载，显示加载状态
-    if (!dataService || loading) {
-      return <InlineLoading message="加载物品数据中..." showSpinner={true} />;
-    }
-
-    // 如果有加载错误，显示错误信息
-    if (loadError) {
-      return <InlineLoading message={`加载失败: ${loadError}`} showSpinner={false} color="error" />;
-    }
+    // 直接获取数据，不需要异步加载
+    const itemsByRow = dataService.getItemsByRow(categoryId);
+    const sortedRows = Array.from(itemsByRow.keys()).sort((a, b) => a - b);
 
     if (sortedRows.length === 0) {
       return (
@@ -89,7 +46,7 @@ const ItemList: React.FC<ItemListProps> = React.memo(
       >
         {sortedRows.map((row, index) => {
           const items = itemsByRow.get(row) || [];
-          const rowName = dataService?.getRowDisplayName(categoryId, row) || '';
+          const rowName = dataService.getRowDisplayName(categoryId, row) || '';
 
           return (
             <Box key={`${categoryId}-row-${row}`} sx={{ mb: 0.5, width: '100%' }}>
