@@ -109,9 +109,11 @@ export class TechUnlockService {
 
       // 3. 找到不需要科技解锁的配方（初始可用配方）
       // 同时过滤掉科技研究配方（category为technology的配方）
+      // 以及非Nauvis星球的配方
       const initialRecipes = allRecipes.filter(recipe => 
         !techUnlockedRecipes.has(recipe.id) && 
-        recipe.category !== 'technology'
+        recipe.category !== 'technology' &&
+        this.isNauvisRecipe(recipe)
       );
 
       // 4. 从初始配方中提取物品和建筑
@@ -171,6 +173,48 @@ export class TechUnlockService {
     }
 
     return items;
+  }
+
+  /**
+   * 检查配方是否属于Nauvis星球
+   * 通过检查配方ID和输出物品来判断
+   */
+  private isNauvisRecipe(recipe: Recipe): boolean {
+    // 外星球特有的关键词
+    const alienKeywords = [
+      // Gleba
+      'yumako', 'jellynut', 'bioflux', 'pentapod', 'biter-egg',
+      'agricultural', 'nutrients', 'jelly',
+      // Vulcanus  
+      'tungsten', 'calcite', 'lava', 'foundry',
+      // Fulgora
+      'holmium', 'scrap', 'lithium', 'electromagnetic',
+      // Aquilo
+      'ammonia', 'fluorine', 'cryogenic', 'ice'
+    ];
+
+    // 检查配方ID
+    const recipeId = recipe.id.toLowerCase();
+    if (alienKeywords.some(keyword => recipeId.includes(keyword))) {
+      return false;
+    }
+
+    // 检查输出物品
+    if (recipe.out) {
+      for (const itemId of Object.keys(recipe.out)) {
+        const itemIdLower = itemId.toLowerCase();
+        if (alienKeywords.some(keyword => itemIdLower.includes(keyword))) {
+          return false;
+        }
+      }
+    }
+
+    // 特殊情况：太空路线配方保留（它们在所有星球都可用）
+    if (recipe.category === 'space') {
+      return true;
+    }
+
+    return true;
   }
 
   /**
