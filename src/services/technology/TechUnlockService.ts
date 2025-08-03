@@ -13,7 +13,7 @@ import {
 import { UserProgressService } from '@/services/game/UserProgressService';
 import type { RecipeService } from '@/services/crafting/RecipeService';
 import type { DataService } from '@/services/core/DataService';
-import type { Recipe } from '@/types';
+import type { Recipe, Item } from '@/types';
 
 export class TechUnlockService {
   // 解锁状态存储（仅配方和建筑，科技和物品使用 UserProgressService）
@@ -206,14 +206,14 @@ export class TechUnlockService {
   /**
    * 从游戏数据中获取物品
    */
-  private getItemById(itemId: string): any {
+  private getItemById(itemId: string): Item | null {
     if (!this.dataService) {
       return null;
     }
     
     const gameData = this.dataService.getRawGameData();
     if (gameData && gameData.items) {
-      return gameData.items.find((item: any) => item.id === itemId);
+      return gameData.items.find((item) => item.id === itemId) || null;
     }
     
     return null;
