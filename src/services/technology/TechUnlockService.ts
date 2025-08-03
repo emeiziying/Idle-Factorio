@@ -211,7 +211,7 @@ export class TechUnlockService {
       return null;
     }
     
-    const gameData = this.dataService.getGameData();
+    const gameData = this.dataService.getRawGameData();
     if (gameData && gameData.items) {
       return gameData.items.find((item: any) => item.id === itemId);
     }
