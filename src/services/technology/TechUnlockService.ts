@@ -108,7 +108,11 @@ export class TechUnlockService {
       const techUnlockedRecipes = this.getTechUnlockedRecipes(gameData);
 
       // 3. 找到不需要科技解锁的配方（初始可用配方）
-      const initialRecipes = allRecipes.filter(recipe => !techUnlockedRecipes.has(recipe.id));
+      // 同时过滤掉科技研究配方（category为technology的配方）
+      const initialRecipes = allRecipes.filter(recipe => 
+        !techUnlockedRecipes.has(recipe.id) && 
+        recipe.category !== 'technology'
+      );
 
       // 4. 从初始配方中提取物品和建筑
       const initialItems = this.extractItemsFromRecipes(initialRecipes);
