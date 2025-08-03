@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, Divider } from '@mui/material';
 import ItemCard from '@/components/production/ItemCard';
 import InlineLoading from '@/components/common/InlineLoading';
@@ -14,34 +14,45 @@ interface ItemListProps {
 const ItemList: React.FC<ItemListProps> = React.memo(
   ({ categoryId, selectedItem, onItemSelect }) => {
     const dataService = useDataService();
+    
+    // 使用 useState + useEffect 处理异步数据
+    const [itemsByRow, setItemsByRow] = useState<Map<number, Item[]>>(new Map());
+    const [sortedRows, setSortedRows] = useState<number[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
 
-    // 使用useMemo缓存计算结果
-    const { itemsByRow, sortedRows, loadError } = useMemo(() => {
-      // 只有在服务就绪时才计算
+    useEffect(() => {
       if (!dataService) {
-        return {
-          itemsByRow: new Map(),
-          sortedRows: [],
-          loadError: null,
-        };
+        setLoading(false);
+        return;
       }
 
-      try {
-        const itemsByRow = dataService.getItemsByRow(categoryId);
-        const sortedRows = Array.from(itemsByRow.keys()).sort((a, b) => a - b);
-        return { itemsByRow, sortedRows, loadError: null };
-      } catch (error) {
-        console.error('Error loading items for category', categoryId, ':', error);
-        return {
-          itemsByRow: new Map(),
-          sortedRows: [],
-          loadError: error instanceof Error ? error.message : String(error),
-        };
-      }
+      const loadItems = async () => {
+        try {
+          setLoading(true);
+          setLoadError(null);
+          
+          // 使用异步版本等待服务初始化
+          const itemsByRowResult = await dataService.getItemsByRowAsync(categoryId);
+          const sortedRowsResult = Array.from(itemsByRowResult.keys()).sort((a, b) => a - b);
+          
+          setItemsByRow(itemsByRowResult);
+          setSortedRows(sortedRowsResult);
+        } catch (error) {
+          console.error('Error loading items for category', categoryId, ':', error);
+          setLoadError(error instanceof Error ? error.message : String(error));
+          setItemsByRow(new Map());
+          setSortedRows([]);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      loadItems();
     }, [categoryId, dataService]);
 
-    // 如果服务还未就绪，显示加载状态
-    if (!dataService) {
+    // 如果服务还未就绪或正在加载，显示加载状态
+    if (!dataService || loading) {
       return <InlineLoading message="加载物品数据中..." showSpinner={true} />;
     }
 

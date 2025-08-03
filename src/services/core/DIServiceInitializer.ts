@@ -95,20 +95,14 @@ export class DIServiceInitializer {
         SERVICE_TOKENS.TECH_PROGRESS_TRACKER
       );
 
-      const technologyService = new TechnologyService();
-      // 通过反射设置私有属性（临时方案，后续可以通过构造函数注入）
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (technologyService as any).eventEmitter = eventEmitter;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (technologyService as any).treeService = treeService;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (technologyService as any).unlockService = unlockService;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (technologyService as any).researchService = researchService;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (technologyService as any).queueService = queueService;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (technologyService as any).progressTracker = progressTracker;
+      const technologyService = new TechnologyService(
+        eventEmitter,
+        treeService,
+        unlockService,
+        researchService,
+        queueService,
+        progressTracker
+      );
 
       return technologyService;
     });
@@ -143,30 +137,55 @@ export class DIServiceInitializer {
       return;
     }
 
-    // 1. 注册服务
-    this.registerServices();
+    try {
+      // 1. 注册服务
+      this.registerServices();
 
-    // 2. 初始化数据服务并加载游戏数据
-    const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
-    const gameData = await dataService.loadGameData();
+      // 2. 初始化核心服务
+      await this.initializeCoreServices();
 
-    // 3. 初始化配方服务
-    if (gameData.recipes) {
-      const recipeService = container.resolve<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
-      recipeService.initializeRecipes(gameData.recipes);
+      // 3. 初始化应用层
+      await this.initializeApplication();
+
+      this.initialized = true;
+    } catch (error) {
+      // 如果初始化失败，重置状态
+      this.initialized = false;
+      throw error;
     }
-
-    // 4. 初始化科技服务
-    const technologyService = container.resolve<TechnologyService>(
-      SERVICE_TOKENS.TECHNOLOGY_SERVICE
-    );
-    await technologyService.initialize();
-
-    // 5. 初始化应用层
-    await this.initializeApplication();
-
-    this.initialized = true;
   }
+
+  /**
+   * 初始化核心服务
+   */
+  private static async initializeCoreServices(): Promise<void> {
+    const startTime = Date.now();
+    
+    try {
+      // 1. 初始化数据服务并加载游戏数据
+      const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+      const gameData = await dataService.loadGameData();
+
+      // 2. 初始化配方服务
+      if (gameData.recipes) {
+        const recipeService = container.resolve<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+        recipeService.initializeRecipes(gameData.recipes);
+      }
+
+      // 3. 初始化科技服务
+      const technologyService = container.resolve<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
+      await technologyService.initialize();
+
+      const totalTime = Date.now() - startTime;
+      console.log(`[ServiceInit] All core services initialized in ${totalTime}ms`);
+      
+    } catch (error) {
+      console.error('[ServiceInit] Core services initialization failed:', error);
+      throw error;
+    }
+  }
+
+
 
   /**
    * 初始化应用层
@@ -223,6 +242,7 @@ export class DIServiceInitializer {
   static isInitialized(): boolean {
     return this.initialized;
   }
+
 
   /**
    * 重置初始化状态（主要用于测试）

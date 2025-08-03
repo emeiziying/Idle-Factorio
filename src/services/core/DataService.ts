@@ -1,11 +1,11 @@
 // 游戏数据管理服务
 
-import type { GameData, Item, Recipe, Category, IconData } from '@/types/index';
 import { getService } from '@/services/core/DIServiceInitializer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
-import type { UserProgressService } from '@/services/game/UserProgressService';
 import { RecipeService } from '@/services/crafting/RecipeService';
+import type { UserProgressService } from '@/services/game/UserProgressService';
 import type { TechnologyService } from '@/services/technology/TechnologyService';
+import type { Category, GameData, IconData, Item, Recipe } from '@/types/index';
 import { error as logError } from '@/utils/logger';
 
 // 异步导入游戏数据
@@ -324,6 +324,12 @@ export class DataService {
     return this.isItemUnlockedCached(itemId);
   }
 
+  // 异步版本：等待服务初始化后检查物品是否解锁
+  // 注意：在 DIServiceInitializer.initialize() 完成后，此方法与同步版本等效
+  async isItemUnlockedAsync(itemId: string): Promise<boolean> {
+    return this.isItemUnlocked(itemId);
+  }
+
   // 内部递归检查方法，带循环检测
   private isItemUnlockedInternal(itemId: string, visiting: Set<string>): boolean {
     // 防止循环依赖
@@ -333,104 +339,136 @@ export class DataService {
     visiting.add(itemId);
 
     try {
+      const services = this.getRequiredServices();
+      if (!services) {
+        return false;
+      }
+
       // 1. 优先检查 TechnologyService（决定性因素）
-      let techService: TechnologyService | null = null;
-      try {
-        techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
-        // 如果有完整的科技服务且已初始化，使用其决定性判断
-        if (techService?.isItemUnlocked && techService?.isServiceInitialized?.()) {
-          return techService.isItemUnlocked(itemId);
-        }
-      } catch {
-        // TechnologyService 不可用，继续其他检查
+      if (services.isTechServiceReady) {
+        return services.techService.isItemUnlocked(itemId);
       }
 
-      // 2. 检查是否为原材料（无配方的物品，可直接采集）
-      let recipeService: RecipeService | null = null;
-      try {
-        recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
-      } catch {
-        // RecipeService 不可用
-      }
-      const recipes = recipeService ? recipeService.getRecipesThatProduce(itemId) : [];
+      // 2. 检查是否为原材料（无配方的物品）
+      const recipes = services.recipeService.getRecipesThatProduce(itemId);
       if (recipes.length === 0) {
-        // 对于无配方的物品，检查是否有科技要求
-        if (techService?.isItemUnlocked && techService?.isServiceInitialized?.()) {
-          return techService.isItemUnlocked(itemId);
-        }
-        // 如果没有科技服务或未初始化，假设原材料始终可用
-        return true;
+        return true; // 原材料始终可用
       }
 
-      // 全局过滤：只允许Nauvis星球的配方（暂时限制）
-      // TODO: 未来可能需要支持其他星球的配方，当前限制可能过于严格
-      const nauvisRecipes = recipes.filter(
-        (recipe: Recipe) =>
-          !recipe.locations || recipe.locations.length === 0 || recipe.locations.includes('nauvis')
-      );
+      // 3. 获取有效配方（仅 Nauvis 星球）
+      const validRecipes = this.filterValidRecipes(recipes);
 
-      // 3. 优先检查mining配方（采矿配方始终可用）
-      for (const recipe of nauvisRecipes) {
-        if (recipe.flags && recipe.flags.includes('mining')) {
-          return true; // Nauvis星球的采矿配方
-        }
-      }
-
-      // 4. 检查是否有可以手动制作的基础配方（无locked标记且材料简单）
-      for (const recipe of nauvisRecipes) {
-        // 跳过有locked标记的配方（如科技包等需要科技解锁的配方）
-        if (recipe.flags && recipe.flags.includes('locked')) {
-          continue;
-        }
-
-        // 检查是否所有原材料都可用
-        if (recipe.in) {
-          const allIngredientsAvailable = Object.keys(recipe.in).every(ingredientId =>
-            this.isItemUnlockedInternal(ingredientId, visiting)
-          );
-
-          if (allIngredientsAvailable) {
-            return true; // 可以手动制作
-          }
-        }
-      }
-
-      // 5. 检查是否有任何配方被解锁且可用
-      for (const recipe of nauvisRecipes) {
-        // 检查配方是否通过科技解锁
-        if (recipe.flags && recipe.flags.includes('locked')) {
-          // 检查是否有科技解锁了这个配方
-          if (techService?.isRecipeUnlocked && techService?.isServiceInitialized?.()) {
-            const isRecipeUnlocked = techService.isRecipeUnlocked(recipe.id);
-            if (!isRecipeUnlocked) {
-              continue; // 配方未通过科技解锁，跳过
-            }
-          } else {
-            // 如果没有科技服务、方法或未初始化，locked配方默认不可用
-            continue;
-          }
-        }
-
-        // 检查配方的生产设备是否可用
-        if (!recipe.producers || recipe.producers.length === 0) {
-          return true; // 手动制作或无需设备
-        }
-
-        // 检查是否有任何生产设备被解锁且可以制作此配方
-        for (const producerId of recipe.producers) {
-          if (this.isItemUnlockedInternal(producerId, visiting)) {
-            // 额外检查：验证生产设备确实可以制作此配方
-            // 这里可以添加更严格的验证逻辑，比如检查生产设备的配方兼容性
-            // 目前假设 recipe.producers 列表已经正确，即列出的生产设备都能制作此配方
-            return true; // 至少有一个生产设备可用且兼容
-          }
-        }
-      }
-
-      return false;
+      // 4. 检查各种解锁途径
+      return this.checkUnlockPaths(validRecipes, services, visiting);
     } finally {
       visiting.delete(itemId);
     }
+  }
+
+  // 获取所需服务（初始化后所有服务都应该可用）
+  private getRequiredServices() {
+    try {
+      const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
+      const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+
+      // 在 DIServiceInitializer 完成后，所有服务都应该已经初始化
+      return {
+        techService,
+        recipeService,
+        isTechServiceReady: true, // 初始化后应该始终为 true
+      };
+    } catch {
+      // 如果服务获取失败，说明初始化有问题
+      return null;
+    }
+  }
+
+  // 过滤有效配方（仅 Nauvis 星球）
+  private filterValidRecipes(recipes: Recipe[]): Recipe[] {
+    return recipes.filter(
+      (recipe: Recipe) =>
+        !recipe.locations || recipe.locations.length === 0 || recipe.locations.includes('nauvis')
+    );
+  }
+
+  // 检查物品的各种解锁途径
+  private checkUnlockPaths(
+    recipes: Recipe[],
+    services: { techService: TechnologyService; recipeService: RecipeService; isTechServiceReady: boolean },
+    visiting: Set<string>
+  ): boolean {
+    // 1. 检查采矿配方（优先级最高）
+    if (this.hasMiningRecipe(recipes)) {
+      return true;
+    }
+
+    // 2. 检查手动制作配方
+    if (this.hasManualCraftingRecipe(recipes, visiting)) {
+      return true;
+    }
+
+    // 3. 检查科技解锁的配方
+    if (this.hasTechUnlockedRecipe(recipes, services, visiting)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  // 检查是否有采矿配方
+  private hasMiningRecipe(recipes: Recipe[]): boolean {
+    return recipes.some(recipe => recipe.flags?.includes('mining'));
+  }
+
+  // 检查是否有可手动制作的配方
+  private hasManualCraftingRecipe(recipes: Recipe[], visiting: Set<string>): boolean {
+    return recipes.some(recipe => {
+      // 跳过需要科技解锁的配方
+      if (recipe.flags?.includes('locked')) {
+        return false;
+      }
+
+      // 检查所有原材料是否可用
+      if (!recipe.in) {
+        return true;
+      }
+
+      return Object.keys(recipe.in).every(ingredientId =>
+        this.isItemUnlockedInternal(ingredientId, visiting)
+      );
+    });
+  }
+
+  // 检查是否有科技解锁的配方
+  private hasTechUnlockedRecipe(
+    recipes: Recipe[],
+    services: { techService: TechnologyService; recipeService: RecipeService; isTechServiceReady: boolean },
+    visiting: Set<string>
+  ): boolean {
+    return recipes.some(recipe => {
+      // 检查科技解锁的配方
+      if (recipe.flags?.includes('locked')) {
+        if (!services.isTechServiceReady || !services.techService.isRecipeUnlocked?.(recipe.id)) {
+          return false;
+        }
+      }
+
+      // 检查生产设备
+      return this.hasAvailableProducer(recipe, visiting);
+    });
+  }
+
+  // 检查是否有可用的生产设备
+  private hasAvailableProducer(recipe: Recipe, visiting: Set<string>): boolean {
+    // 无需设备或手动制作
+    if (!recipe.producers || recipe.producers.length === 0) {
+      return true;
+    }
+
+    // 检查是否有任何生产设备可用
+    return recipe.producers.some(producerId =>
+      this.isItemUnlockedInternal(producerId, visiting)
+    );
   }
 
   // 解锁物品
@@ -483,6 +521,15 @@ export class DataService {
     this.itemsByRowCache.set(cacheKey, itemsByRow);
 
     return itemsByRow;
+  }
+
+  // 异步版本：等待服务初始化后获取物品列表
+  // 注意：在 DIServiceInitializer.initialize() 完成后，此方法与同步版本等效
+  async getItemsByRowAsync(categoryId: string): Promise<Map<number, Item[]>> {
+    // 清理缓存以确保使用最新的解锁状态
+    this.clearCache();
+    
+    return this.getItemsByRow(categoryId);
   }
 
   // 获取行的显示名称

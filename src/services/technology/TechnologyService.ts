@@ -53,18 +53,23 @@ export class TechnologyService {
   // 其他
   private logger: Logger;
   private isInitialized = false;
+  private initializationPromise: Promise<void> | null = null;
 
-  constructor() {
-    // 创建事件发射器
-    this.eventEmitter = new TechEventEmitter();
-
-    // 创建子服务
-    this.treeService = new TechTreeService();
-    // TechUnlockService 需要通过DI初始化
-    this.unlockService = null as unknown as TechUnlockService; // 临时占位符，将由DIServiceInitializer设置
-    this.researchService = new ResearchService(this.eventEmitter);
-    this.queueService = new ResearchQueueService(this.eventEmitter);
-    this.progressTracker = new TechProgressTracker();
+  constructor(
+    eventEmitter?: TechEventEmitter,
+    treeService?: TechTreeService,
+    unlockService?: TechUnlockService,
+    researchService?: ResearchService,
+    queueService?: ResearchQueueService,
+    progressTracker?: TechProgressTracker
+  ) {
+    // 使用注入的依赖或创建新实例
+    this.eventEmitter = eventEmitter || new TechEventEmitter();
+    this.treeService = treeService || new TechTreeService();
+    this.unlockService = unlockService || (null as unknown as TechUnlockService);
+    this.researchService = researchService || new ResearchService(this.eventEmitter);
+    this.queueService = queueService || new ResearchQueueService(this.eventEmitter);
+    this.progressTracker = progressTracker || new TechProgressTracker();
 
     // 设置日志
     this.logger = new Logger();
@@ -90,6 +95,26 @@ export class TechnologyService {
       return;
     }
 
+    // 如果正在初始化，返回现有的 Promise
+    if (this.initializationPromise) {
+      return this.initializationPromise;
+    }
+
+    // 创建初始化 Promise
+    this.initializationPromise = this.doInitialize();
+    
+    try {
+      await this.initializationPromise;
+    } finally {
+      // 初始化完成后清理 Promise
+      this.initializationPromise = null;
+    }
+  }
+
+  /**
+   * 实际的初始化逻辑
+   */
+  private async doInitialize(): Promise<void> {
     try {
       this.logger.info('Initializing technology service...');
 
@@ -118,6 +143,19 @@ export class TechnologyService {
    */
   public isServiceInitialized(): boolean {
     return this.isInitialized;
+  }
+
+  /**
+   * 等待服务初始化完成
+   */
+  public async waitForInitialization(): Promise<void> {
+    if (this.isInitialized) {
+      return;
+    }
+    
+    if (this.initializationPromise) {
+      await this.initializationPromise;
+    }
   }
 
   /**
