@@ -176,45 +176,43 @@ export class TechUnlockService {
   }
 
   /**
-   * 检查配方是否属于Nauvis星球
-   * 通过检查配方ID和输出物品来判断
+   * 检查配方是否可以在Nauvis星球使用
+   * 通过检查配方的生产者(producers)的locations字段来判断
    */
   private isNauvisRecipe(recipe: Recipe): boolean {
-    // 外星球特有的关键词
-    const alienKeywords = [
-      // Gleba
-      'yumako', 'jellynut', 'bioflux', 'pentapod', 'biter-egg',
-      'agricultural', 'nutrients', 'jelly',
-      // Vulcanus  
-      'tungsten', 'calcite', 'lava', 'foundry',
-      // Fulgora
-      'holmium', 'scrap', 'lithium', 'electromagnetic',
-      // Aquilo
-      'ammonia', 'fluorine', 'cryogenic', 'ice'
-    ];
-
-    // 检查配方ID
-    const recipeId = recipe.id.toLowerCase();
-    if (alienKeywords.some(keyword => recipeId.includes(keyword))) {
-      return false;
+    // 如果配方没有生产者，默认认为可以在Nauvis使用
+    if (!recipe.producers || recipe.producers.length === 0) {
+      return true;
     }
 
-    // 检查输出物品
-    if (recipe.out) {
-      for (const itemId of Object.keys(recipe.out)) {
-        const itemIdLower = itemId.toLowerCase();
-        if (alienKeywords.some(keyword => itemIdLower.includes(keyword))) {
+    // 检查所有生产者是否都支持Nauvis
+    for (const producerId of recipe.producers) {
+      const producer = this.getItemById(producerId);
+      if (producer && producer.machine && producer.machine.locations) {
+        // 如果任何一个生产者不支持nauvis，则配方在nauvis不可用
+        if (!producer.machine.locations.includes('nauvis')) {
           return false;
         }
       }
     }
 
-    // 特殊情况：太空路线配方保留（它们在所有星球都可用）
-    if (recipe.category === 'space') {
-      return true;
-    }
-
     return true;
+  }
+
+  /**
+   * 从游戏数据中获取物品
+   */
+  private getItemById(itemId: string): any {
+    if (!this.dataService) {
+      return null;
+    }
+    
+    const gameData = this.dataService.getGameData();
+    if (gameData && gameData.items) {
+      return gameData.items.find((item: any) => item.id === itemId);
+    }
+    
+    return null;
   }
 
   /**
