@@ -121,7 +121,6 @@ export class TechnologyService {
       // 按顺序初始化各个子服务
       await this.treeService.initialize();
       await this.unlockService.initialize(this.treeService);
-      await this.researchService.initialize(this.treeService, this.unlockService);
       await this.queueService.initialize(this.treeService);
       await this.progressTracker.initialize(this.treeService, this.unlockService);
 

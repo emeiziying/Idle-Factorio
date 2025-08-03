@@ -77,7 +77,8 @@
       "Bash(/dev/null)",
       "Bash(npx ts-unused-exports:*)",
       "Bash(npx depcheck:*)",
-      "Bash(pnpm list:*)"
+      "Bash(pnpm list:*)",
+      "Bash(pntml lint:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

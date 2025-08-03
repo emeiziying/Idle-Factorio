@@ -11,6 +11,9 @@ import {
   type TechUnlockedEvent,
 } from '@/services/technology/events';
 import { UserProgressService } from '@/services/game/UserProgressService';
+import type { RecipeService } from '@/services/crafting/RecipeService';
+import type { DataService } from '@/services/core/DataService';
+import type { Recipe } from '@/types';
 
 export class TechUnlockService {
   // 解锁状态存储（仅配方和建筑，科技和物品使用 UserProgressService）
@@ -20,24 +23,39 @@ export class TechUnlockService {
   private userProgressService: UserProgressService;
   private eventEmitter: TechEventEmitter;
   private treeService?: TechTreeService;
+  private recipeService?: RecipeService;
+  private dataService?: DataService;
 
   constructor(
     userProgressService: UserProgressService,
     eventEmitter: TechEventEmitter,
-    treeService?: TechTreeService
+    treeService?: TechTreeService,
+    recipeService?: RecipeService,
+    dataService?: DataService
   ) {
     this.userProgressService = userProgressService;
     this.eventEmitter = eventEmitter;
     this.treeService = treeService;
+    this.recipeService = recipeService;
+    this.dataService = dataService;
   }
 
   /**
    * 初始化服务
    */
-  async initialize(treeService?: TechTreeService): Promise<void> {
+  async initialize(treeService?: TechTreeService, recipeService?: RecipeService, dataService?: DataService): Promise<void> {
     if (treeService) {
       this.treeService = treeService;
     }
+    
+    if (recipeService) {
+      this.recipeService = recipeService;
+    }
+    
+    if (dataService) {
+      this.dataService = dataService;
+    }
+    
 
     // 从用户进度服务加载已解锁的内容
     await this.loadUnlockedContent();
@@ -48,18 +66,18 @@ export class TechUnlockService {
    */
   private async loadUnlockedContent(): Promise<void> {
     // 重建配方和建筑解锁内容（从科技推导）
-    this.rebuildUnlockedContent();
+    await this.rebuildUnlockedContent();
   }
 
   /**
    * 根据已解锁的科技重建解锁内容
    */
-  private rebuildUnlockedContent(): void {
+  private async rebuildUnlockedContent(): Promise<void> {
     this.unlockedRecipes.clear();
     this.unlockedBuildings.clear();
 
     // 添加初始解锁的内容
-    this.addInitialUnlocks();
+    await this.addInitialUnlocks();
 
     // 从每个已解锁的科技收集解锁内容
     const unlockedTechs = this.userProgressService.getUnlockedTechs();
@@ -73,25 +91,112 @@ export class TechUnlockService {
 
   /**
    * 添加游戏开始时就解锁的内容
+   * 基于科技系统：找到所有不需要科技解锁的配方和物品
    */
-  private addInitialUnlocks(): void {
-    // 初始物品（委托给 UserProgressService）
-    const initialItems = [
-      'iron-plate',
-      'copper-plate',
-      'iron-gear-wheel',
-      'stone-furnace',
-      'wooden-chest',
+  private async addInitialUnlocks(): Promise<void> {
+    if (!this.recipeService || !this.dataService) {
+      console.warn('RecipeService 或 DataService 未初始化');
+      return;
+    }
+
+    try {
+      // 1. 获取所有配方和游戏数据
+      const allRecipes = this.recipeService.getAllRecipes();
+      const gameData = await this.dataService.loadGameData();
+
+      // 2. 收集所有科技解锁的配方
+      const techUnlockedRecipes = this.getTechUnlockedRecipes(gameData);
+
+      // 3. 找到不需要科技解锁的配方（初始可用配方）
+      const initialRecipes = allRecipes.filter(recipe => !techUnlockedRecipes.has(recipe.id));
+
+      // 4. 从初始配方中提取物品和建筑
+      const initialItems = this.extractItemsFromRecipes(initialRecipes);
+      const initialBuildings = this.extractBuildingsFromRecipes(initialRecipes);
+
+      // 5. 应用结果
+      this.userProgressService.unlockItems(initialItems);
+      initialRecipes.forEach(recipe => this.unlockedRecipes.add(recipe.id));
+      initialBuildings.forEach(building => this.unlockedBuildings.add(building));
+
+      console.log('Initial unlocks applied:', {
+        items: initialItems.length,
+        recipes: initialRecipes.length,
+        buildings: initialBuildings.length
+      });
+    } catch (error) {
+      console.error('Failed to calculate initial unlocks:', error);
+    }
+  }
+
+  /**
+   * 收集所有科技解锁的配方ID
+   */
+  private getTechUnlockedRecipes(gameData: { items?: Array<{ category?: string; unlockedRecipes?: string[] }> }): Set<string> {
+    const techUnlockedRecipes = new Set<string>();
+
+    // 检查游戏数据中的科技信息
+    if (gameData.items && Array.isArray(gameData.items)) {
+      for (const item of gameData.items) {
+        // 查找category为technology的物品
+        if (item.category === 'technology' && item.unlockedRecipes && Array.isArray(item.unlockedRecipes)) {
+          for (const recipeId of item.unlockedRecipes) {
+            techUnlockedRecipes.add(recipeId);
+          }
+        }
+      }
+    }
+
+    return techUnlockedRecipes;
+  }
+
+  /**
+   * 从配方中提取所有输出物品
+   */
+  private extractItemsFromRecipes(recipes: Recipe[]): string[] {
+    const items: string[] = [];
+
+    for (const recipe of recipes) {
+      if (recipe.out) {
+        for (const itemId of Object.keys(recipe.out)) {
+          if (!items.includes(itemId)) {
+            items.push(itemId);
+          }
+        }
+      }
+    }
+
+    return items;
+  }
+
+  /**
+   * 从配方中提取建筑物品
+   */
+  private extractBuildingsFromRecipes(recipes: Recipe[]): string[] {
+    const buildings: string[] = [];
+    
+    // 建筑物品的识别模式
+    const buildingIndicators = [
+      'furnace', 'chest', 'assembling-machine', 'miner', 'drill', 
+      'inserter', 'belt', 'underground', 'splitter', 'boiler', 'steam-engine'
     ];
-    this.userProgressService.unlockItems(initialItems);
 
-    // 初始配方
-    const initialRecipes = ['iron-plate', 'copper-plate', 'iron-gear-wheel', 'wooden-chest'];
-    initialRecipes.forEach(recipe => this.unlockedRecipes.add(recipe));
+    for (const recipe of recipes) {
+      if (recipe.out) {
+        for (const itemId of Object.keys(recipe.out)) {
+          // 检查是否是建筑物品
+          const isBuilding = buildingIndicators.some(indicator => 
+            itemId.includes(indicator)
+          );
+          
+          if (isBuilding && !buildings.includes(itemId)) {
+            buildings.push(itemId);
+          }
+        }
+      }
+    }
 
-    // 初始建筑
-    const initialBuildings = ['stone-furnace', 'wooden-chest'];
-    initialBuildings.forEach(building => this.unlockedBuildings.add(building));
+    return buildings;
   }
 
   /**
@@ -293,7 +398,7 @@ export class TechUnlockService {
   /**
    * 重置所有解锁状态（用于新游戏）
    */
-  resetUnlocks(): void {
+  async resetUnlocks(): Promise<void> {
     // 重置 UserProgressService
     this.userProgressService.resetProgress();
 
@@ -302,6 +407,6 @@ export class TechUnlockService {
     this.unlockedBuildings.clear();
 
     // 添加初始解锁
-    this.addInitialUnlocks();
+    await this.addInitialUnlocks();
   }
 }

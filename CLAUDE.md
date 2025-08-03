@@ -143,6 +143,34 @@ executeChainCrafting(chainAnalysis) {
 }
 ```
 
+### Technology Unlock System
+The application implements a dynamic technology-based unlock system that replaces hardcoded initial items:
+
+#### Dynamic Initial Unlock Logic
+```typescript
+// TechUnlockService automatically calculates initial unlocks based on game data
+private async addInitialUnlocks(): Promise<void> {
+  // 1. Load game data and scan for technology items
+  const gameData = await this.dataService.loadGameData();
+  
+  // 2. Collect all recipes unlocked by technologies
+  const techUnlockedRecipes = this.getTechUnlockedRecipes(gameData);
+  
+  // 3. Find recipes NOT in technology unlock lists = initially available
+  const initialRecipes = allRecipes.filter(recipe => !techUnlockedRecipes.has(recipe.id));
+  
+  // 4. Extract items and buildings from initial recipes
+  const initialItems = this.extractItemsFromRecipes(initialRecipes);
+  const initialBuildings = this.extractBuildingsFromRecipes(initialRecipes);
+}
+```
+
+#### Key Technology System Patterns
+- **No Hardcoded Lists**: Initial unlocks are calculated from game data automatically
+- **Technology Data Driven**: Scans `items` with `category: "technology"` and their `unlockedRecipes`
+- **Dynamic Adaptation**: Updates automatically when game data changes
+- **Service Integration**: TechUnlockService directly manages unlock logic without separate calculators
+
 ## Import Path Standards
 
 ### **CRITICAL**: Use @/ alias for all internal imports in source code
@@ -178,6 +206,7 @@ The application follows a service-oriented architecture with clear separation of
 - **UserProgressService**: Item unlock status management
 - **StorageService**: Storage configuration management with capacity and fluid handling
 - **TechnologyService**: Technology tree management and research progression
+- **TechUnlockService**: Dynamic initial unlock calculation based on game data technology system
 - **GameLoopService**: Unified game loop using requestAnimationFrame with task scheduling
 - **GameStorageService**: Unified save/load operations with optimization and compression
 - **GameConfig**: Centralized game constants and configuration management
@@ -347,7 +376,7 @@ const craftingQueue = useGameStore(state => state.craftingQueue);
 
 ### In Progress 🚧
 - **Facilities System**: Basic structure, needs power integration
-- **Technology System**: Research tree and unlock progression
+- **Technology System**: Research tree implemented, unlock progression active
 
 ### Planned 📋
 - **Power System**: Electricity generation/consumption balance
@@ -373,3 +402,8 @@ vi.mock('../../services/core/DataService');
 import { DataService } from '@/services/core/DataService';
 vi.mock('@/services/core/DataService');
 ```
+
+## Memories
+
+### Service Initialization
+- 所有的服务在启动时已经完成初始化，后续不需要再校验服务存不存在

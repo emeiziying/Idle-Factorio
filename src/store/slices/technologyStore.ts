@@ -3,7 +3,6 @@ import type { SliceCreator, TechnologySlice } from '@/store/types';
 import type { ResearchPriority } from '@/types/technology';
 import type { InventoryOperations } from '@/types/inventory';
 import type { TechnologyService } from '@/services/technology/TechnologyService';
-import type { DataService } from '@/services/core/DataService';
 import type { RecipeService } from '@/services/crafting/RecipeService';
 import type { Recipe } from '@/types/index';
 import { getService } from '@/services/core/DIServiceInitializer';
@@ -122,9 +121,7 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
       researchQueue: queue,
     }));
 
-    // 清理DataService的解锁缓存，使新解锁的配方生效
-    const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
-    dataService.clearUnlockCache();
+    // DataService 现在直接使用 TechnologyService，无需清理缓存
   },
 
   // 添加到研究队列
@@ -345,9 +342,7 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
             unlockedTechs: new Set([...state.unlockedTechs, recipe.id]),
           }));
 
-          // 清理DataService的解锁缓存，使新解锁的配方生效
-          const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
-          dataService.clearUnlockCache();
+          // DataService 现在直接使用 TechnologyService，无需清理缓存
 
           // Research unlocked by trigger
 

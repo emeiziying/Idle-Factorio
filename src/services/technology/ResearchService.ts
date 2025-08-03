@@ -7,6 +7,8 @@ import type { Technology, TechResearchState, ResearchResult } from '@/types/tech
 import type { InventoryOperations } from '@/types/inventory';
 import type { TechTreeService } from '@/services/technology/TechTreeService';
 import type { TechUnlockService } from '@/services/technology/TechUnlockService';
+import { getService } from '@/services/core/DIServiceInitializer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type { FacilityInstance } from '@/types/facilities';
 import { FacilityStatus } from '@/types/facilities';
 import {
@@ -23,9 +25,7 @@ export class ResearchService {
   // 当前研究状态
   private currentResearch: TechResearchState | undefined;
 
-  // 服务依赖
-  private treeService: TechTreeService | null = null;
-  private unlockService: TechUnlockService | null = null;
+  // 库存操作接口（由外部设置）
   private inventoryOps: InventoryOperations | null = null;
   private eventEmitter: TechEventEmitter;
 
@@ -38,11 +38,17 @@ export class ResearchService {
   }
 
   /**
-   * 初始化服务
+   * 获取 TechTreeService 实例
    */
-  async initialize(treeService: TechTreeService, unlockService: TechUnlockService): Promise<void> {
-    this.treeService = treeService;
-    this.unlockService = unlockService;
+  private getTechTreeService(): TechTreeService {
+    return getService<TechTreeService>(SERVICE_TOKENS.TECH_TREE_SERVICE);
+  }
+
+  /**
+   * 获取 TechUnlockService 实例
+   */
+  private getTechUnlockService(): TechUnlockService {
+    return getService<TechUnlockService>(SERVICE_TOKENS.TECH_UNLOCK_SERVICE);
   }
 
   /**
@@ -64,7 +70,7 @@ export class ResearchService {
    */
   async startResearch(techId: string): Promise<ResearchResult> {
     // 检查科技是否存在
-    const tech = this.treeService ? this.treeService.getTechnology(techId) : undefined;
+    const tech = this.getTechTreeService().getTechnology(techId);
     if (!tech) {
       return {
         success: false,
@@ -81,7 +87,7 @@ export class ResearchService {
     }
 
     // 检查是否已解锁
-    if (this.unlockService && this.unlockService.isTechUnlocked(techId)) {
+    if (this.getTechUnlockService().isTechUnlocked(techId)) {
       return {
         success: false,
         error: '科技已经解锁',
@@ -139,7 +145,7 @@ export class ResearchService {
   updateResearchProgress(deltaTime: number): ResearchCompletedEvent | null {
     if (!this.currentResearch) return null;
 
-    const tech = this.treeService?.getTechnology(this.currentResearch.techId);
+    const tech = this.getTechTreeService().getTechnology(this.currentResearch.techId);
     if (!tech) return null;
 
     // 重新计算研究时间（考虑研究室数量可能变化）
@@ -204,12 +210,12 @@ export class ResearchService {
    * 检查是否可以开始研究
    */
   canStartResearch(techId: string): boolean {
-    const tech = this.treeService ? this.treeService.getTechnology(techId) : undefined;
+    const tech = this.getTechTreeService().getTechnology(techId);
     if (!tech) return false;
 
     // 检查前置科技
     return tech.prerequisites.every(
-      (prereqId: string) => this.unlockService ? this.unlockService.isTechUnlocked(prereqId) : false
+      (prereqId: string) => this.getTechUnlockService().isTechUnlocked(prereqId)
     );
   }
 
@@ -217,7 +223,7 @@ export class ResearchService {
    * 检查科技包是否充足
    */
   async checkSciencePackAvailability(techId: string): Promise<boolean> {
-    const tech = this.treeService ? this.treeService.getTechnology(techId) : undefined;
+    const tech = this.getTechTreeService().getTechnology(techId);
     if (!tech || !this.inventoryOps) return false;
 
     for (const [packId, required] of Object.entries(tech.researchCost)) {

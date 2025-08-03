@@ -53,8 +53,9 @@ export class DIServiceInitializer {
       return new GameConfig(dataService);
     });
 
-    // 2. 注册事件系统
+    // 2. 注册事件系统和基础业务服务
     container.register(SERVICE_TOKENS.TECH_EVENT_EMITTER, TechEventEmitter);
+    container.register(SERVICE_TOKENS.RECIPE_SERVICE, RecipeService);
 
     // 3. 注册科技系统子服务
     container.register(SERVICE_TOKENS.TECH_TREE_SERVICE, TechTreeService);
@@ -65,7 +66,9 @@ export class DIServiceInitializer {
       );
       const eventEmitter = container.resolve<TechEventEmitter>(SERVICE_TOKENS.TECH_EVENT_EMITTER);
       const treeService = container.resolve<TechTreeService>(SERVICE_TOKENS.TECH_TREE_SERVICE);
-      return new TechUnlockService(userProgressService, eventEmitter, treeService);
+      const recipeService = container.resolve<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+      const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+      return new TechUnlockService(userProgressService, eventEmitter, treeService, recipeService, dataService);
     });
 
     container.registerFactory(SERVICE_TOKENS.RESEARCH_SERVICE, () => {
@@ -108,7 +111,6 @@ export class DIServiceInitializer {
     });
 
     // 5. 注册其他业务服务
-    container.register(SERVICE_TOKENS.RECIPE_SERVICE, RecipeService);
     container.register(SERVICE_TOKENS.DEPENDENCY_SERVICE, DependencyService);
 
     container.registerFactory(SERVICE_TOKENS.FUEL_SERVICE, () => {

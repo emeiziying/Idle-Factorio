@@ -3,7 +3,7 @@ import { Typography, Chip, Box, Button, useTheme } from '@mui/material';
 import type { Item } from '@/types/index';
 import useGameStore from '@/store/gameStore';
 import FactorioIcon from '@/components/common/FactorioIcon';
-import { useDataService, useStorageService } from '@/hooks/useDIServices';
+import { useDataService, useStorageService, useTechnologyService } from '@/hooks/useDIServices';
 
 interface InventoryManagementCardProps {
   item: Item;
@@ -17,6 +17,7 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({
   const theme = useTheme();
   const dataService = useDataService();
   const storageService = useStorageService();
+  const techService = useTechnologyService();
   const {
     getInventoryItem,
     getDeployedContainersForItem,
@@ -100,7 +101,7 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({
           .filter(storageType => {
             const storageConfig = storageService.getStorageConfig(storageType);
             // 只显示已解锁的存储设备
-            return storageConfig && dataService.isItemUnlocked(storageConfig.itemId);
+            return storageConfig && techService.isItemUnlocked(storageConfig.itemId);
           })
           .map(storageType => {
             const storageConfig = storageService.getStorageConfig(storageType);

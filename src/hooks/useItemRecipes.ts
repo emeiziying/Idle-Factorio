@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { Item, Recipe } from '@/types/index';
 import {
-  useDataService,
   useRecipeService,
   useManualCraftingValidator,
+  useTechnologyService,
 } from '@/hooks/useDIServices';
 
 export const useItemRecipes = (item: Item) => {
@@ -13,9 +13,9 @@ export const useItemRecipes = (item: Item) => {
   const [restrictedRecipes, setRestrictedRecipes] = useState<Recipe[]>([]);
   const [producerRecipes, setProducerRecipes] = useState<Recipe[]>([]);
 
-  const dataService = useDataService();
   const recipeService = useRecipeService();
   const validator = useManualCraftingValidator();
+  const techService = useTechnologyService();
 
   // 性能优化：使用useMemo缓存昂贵的计算
   const { recipes: memoizedRecipes, usedInRecipes: memoizedUsedInRecipes } = useMemo(() => {
@@ -30,11 +30,11 @@ export const useItemRecipes = (item: Item) => {
     // 恢复解锁过滤，但优化性能
     const isProducerUnlocked = (recipe: Recipe) => {
       if (!recipe.producers || recipe.producers.length === 0) return true;
-      return recipe.producers.some((pid: string) => dataService.isItemUnlocked(pid));
+      return recipe.producers.some((pid: string) => techService.isItemUnlocked(pid));
     };
 
     const isOutputUnlocked = (recipe: Recipe) => {
-      return Object.keys(recipe.out).every(itemId => dataService.isItemUnlocked(itemId));
+      return Object.keys(recipe.out).every(itemId => techService.isItemUnlocked(itemId));
     };
 
     const filteredRecipes = itemRecipes.filter(isProducerUnlocked);
@@ -46,7 +46,7 @@ export const useItemRecipes = (item: Item) => {
       recipes: filteredRecipes,
       usedInRecipes: filteredUsageRecipes,
     };
-  }, [item, dataService, recipeService]); // 包含所有服务依赖
+  }, [item, recipeService, techService]); // 包含所有服务依赖
 
   // 进一步优化：分类配方计算也使用useMemo
   const { manualCraftable, restricted, producer } = useMemo(() => {

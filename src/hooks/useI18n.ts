@@ -24,7 +24,7 @@ export const useItemName = (item?: Item | string | null): string => {
     if (!itemObj) return typeof item === 'string' ? item : '';
 
     // 优先使用国际化名称，其次是原始名称，最后是ID
-    return dataService.getI18nName(itemObj) || itemObj.name || itemObj.id;
+    return dataService.getLocalizedItemName(itemObj.id) || itemObj.name || itemObj.id;
   }, [item, dataService]);
 };
 
@@ -38,7 +38,7 @@ export const useCategoryName = (categoryId?: string | null): string => {
 
   return useMemo(() => {
     if (!categoryId) return '';
-    return dataService.getCategoryI18nName(categoryId) || categoryId;
+    return dataService.getLocalizedCategoryName(categoryId) || categoryId;
   }, [categoryId, dataService]);
 };
 
@@ -63,7 +63,7 @@ export const useRecipeName = (recipe?: Recipe | string | null): string => {
     if (mainOutput) {
       const outputItem = dataService.getItem(mainOutput);
       if (outputItem) {
-        return dataService.getI18nName(outputItem) || outputItem.name || outputItem.id;
+        return dataService.getLocalizedItemName(outputItem.id) || outputItem.name || outputItem.id;
       }
     }
 
@@ -88,7 +88,7 @@ export const useItemNames = (items: (Item | string)[]): Record<string, string> =
       const itemObj = typeof item === 'string' ? dataService.getItem(item) : item;
 
       if (itemObj) {
-        names[itemId] = dataService.getI18nName(itemObj) || itemObj.name || itemObj.id;
+        names[itemId] = dataService.getLocalizedItemName(itemObj.id) || itemObj.name || itemObj.id;
       }
     });
 

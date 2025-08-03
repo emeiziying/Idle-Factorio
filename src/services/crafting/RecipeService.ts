@@ -2,7 +2,7 @@ import type { Recipe } from '@/types';
 import { CUSTOM_RECIPES } from '@/data/customRecipes';
 import { getService } from '@/services/core/DIServiceInitializer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
-import type { DataService } from '@/services/core/DataService';
+import type { TechnologyService } from '@/services/technology/TechnologyService';
 import type { IManualCraftingValidator } from '@/services/interfaces/IManualCraftingValidator';
 
 /**
@@ -156,7 +156,7 @@ export class RecipeService {
       SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR
     );
 
-    const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+    const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
 
     // 1. 先判断物品是否可以手动制作
     const validation = validator.validateManualCrafting(itemId);
@@ -171,7 +171,7 @@ export class RecipeService {
 
     for (const recipe of allRecipes) {
       // 检查配方是否被解锁
-      if (dataService && !dataService.isItemUnlocked(recipe.id)) {
+      if (!techService.isItemUnlocked(recipe.id)) {
         continue; // 跳过未解锁的配方
       }
 
@@ -194,7 +194,7 @@ export class RecipeService {
       SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR
     );
 
-    const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+    const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
 
     // 1. 先判断物品是否可以手动制作
     const validation = validator.validateManualCrafting(itemId);
@@ -209,7 +209,7 @@ export class RecipeService {
 
     return allRecipes.filter(recipe => {
       // 检查配方是否被解锁
-      if (dataService && !dataService.isItemUnlocked(recipe.id)) {
+      if (!techService.isItemUnlocked(recipe.id)) {
         return false; // 跳过未解锁的配方
       }
 

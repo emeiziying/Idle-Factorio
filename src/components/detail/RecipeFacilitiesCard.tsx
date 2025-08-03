@@ -4,7 +4,7 @@ import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import type { Item } from '@/types/index';
 import type { FacilityInstance } from '@/types/facilities';
 import { useItemRecipes } from '@/hooks/useItemRecipes';
-import { useDataService, useManualCraftingValidator, useFuelService } from '@/hooks/useDIServices';
+import { useDataService, useManualCraftingValidator, useFuelService, useTechnologyService } from '@/hooks/useDIServices';
 import useGameStore from '@/store/gameStore';
 import FactorioIcon from '@/components/common/FactorioIcon';
 import { FuelStatusDisplay } from '@/components/facilities/FuelStatusDisplay';
@@ -20,6 +20,7 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
   const dataService = useDataService();
   const validator = useManualCraftingValidator();
   const fuelService = useFuelService();
+  const techService = useTechnologyService();
 
   // 处理设施图标点击
   const handleFacilityClick = (facilityId: string) => {
@@ -50,7 +51,7 @@ const RecipeFacilitiesCard: React.FC<RecipeFacilitiesCardProps> = ({ item, onIte
       if (recipe.producers) {
         recipe.producers.forEach(producer => {
           // 只添加已解锁的设施
-          if (dataService.isItemUnlocked(producer)) {
+          if (techService.isItemUnlocked(producer)) {
             facilityTypes.add(producer);
           }
         });
