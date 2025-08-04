@@ -27,7 +27,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
 
     // 如果这是第一个任务，立即启用制作系统
     const wasEmpty = state.craftingQueue.length === 0;
-    
+
     set(state => ({
       craftingQueue: [...state.craftingQueue, newTask],
     }));
@@ -137,7 +137,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
       set(state => ({
         craftingQueue: state.craftingQueue.filter(task => task.id !== taskId),
       }));
-      
+
       // 检查队列是否为空，如果为空则禁用制作系统
       const remainingTasks = get().craftingQueue.filter(task => task.id !== taskId);
       if (remainingTasks.length === 0) {
@@ -249,7 +249,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
 
     // 移除任务
     get().removeCraftingTask(taskId);
-    
+
     // 如果队列为空，禁用制作系统
     const remainingTasks = get().craftingQueue.filter(t => t.id !== taskId);
     if (remainingTasks.length === 0) {

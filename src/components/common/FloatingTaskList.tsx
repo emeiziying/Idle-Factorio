@@ -2,18 +2,22 @@ import FactorioIcon from '@/components/common/FactorioIcon';
 import { useDataService } from '@/hooks/useDIServices';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import useGameStore from '@/store/gameStore';
-import { Box, LinearProgress } from '@mui/material';
-import React from 'react';
+import { Box, LinearProgress, Chip } from '@mui/material';
+import React, { useMemo } from 'react';
+import { mergeCraftingTasks } from '@/utils/taskMerger';
 
 const FloatingTaskList: React.FC = () => {
   const craftingQueue = useGameStore(state => state.craftingQueue);
   const isMobile = useIsMobile();
   const dataService = useDataService();
 
-  // 过滤活动任务，最多显示18个（3行×6列）
-  const activeTasks = craftingQueue
-    .filter(task => task.status !== 'completed' && task.progress < 100)
-    .slice(0, 18);
+  // 先合并任务，再过滤活动任务，最多显示18个（3行×6列）
+  const activeTasks = useMemo(() => {
+    const mergedTasks = mergeCraftingTasks(craftingQueue);
+    return mergedTasks
+      .filter(task => task.status !== 'completed' && task.progress < 100)
+      .slice(0, 18);
+  }, [craftingQueue]);
 
   if (activeTasks.length === 0) return null;
 
@@ -60,6 +64,25 @@ const FloatingTaskList: React.FC = () => {
                     size={itemSize}
                     quantity={task.quantity > 1 ? task.quantity : undefined}
                   />
+                  {/* 合并标识 */}
+                  {task.isMerged && (
+                    <Chip
+                      label={`×${task.mergedCount}`}
+                      size="small"
+                      sx={{
+                        position: 'absolute',
+                        top: 1,
+                        right: 1,
+                        height: 12,
+                        fontSize: '8px',
+                        bgcolor: 'primary.main',
+                        color: 'primary.contrastText',
+                        '& .MuiChip-label': {
+                          px: 0.3,
+                        },
+                      }}
+                    />
+                  )}
                   <LinearProgress
                     variant="determinate"
                     value={progress}

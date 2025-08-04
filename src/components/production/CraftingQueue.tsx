@@ -9,6 +9,7 @@ import {
   DialogTitle,
   DialogContent,
   Slide,
+  Chip,
 } from '@mui/material';
 import { Clear as ClearIcon, Delete as DeleteIcon, Close as CloseIcon } from '@mui/icons-material';
 import type { TransitionProps } from '@mui/material/transitions';
@@ -16,7 +17,7 @@ import FactorioIcon from '@/components/common/FactorioIcon';
 import { useDataService } from '@/hooks/useDIServices';
 import useGameStore from '@/store/gameStore';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import type { CraftingTask } from '@/types/index';
+import { mergeCraftingTasks, getOriginalTaskIds, type MergedTask } from '@/utils/taskMerger';
 
 // Constants
 const QUEUE_CAPACITY = 50;
@@ -28,9 +29,9 @@ const GRID_GAP_DESKTOP = 2;
 
 // Sub-component for individual crafting queue items
 interface CraftingQueueItemProps {
-  task: CraftingTask;
+  task: MergedTask;
   isMobile: boolean;
-  onRemove: (taskId: string) => void;
+  onRemove: (taskIds: string[]) => void;
 }
 
 const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(
@@ -41,9 +42,10 @@ const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(
     const handleRemove = useCallback(
       (e: React.MouseEvent) => {
         e.stopPropagation();
-        onRemove(task.id);
+        const taskIds = task.isMerged ? getOriginalTaskIds(task) : [task.id];
+        onRemove(taskIds);
       },
-      [task.id, onRemove]
+      [task, onRemove]
     );
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -73,7 +75,7 @@ const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(
       <Box
         role="button"
         tabIndex={0}
-        aria-label={`制作 ${item.name || task.itemId} - 进度 ${Math.round(progress)}%`}
+        aria-label={`制作 ${item.name || task.itemId} - 进度 ${Math.round(progress)}%${task.isMerged ? ` (合并${task.mergedCount}个任务)` : ''}`}
         sx={{
           position: 'relative',
           cursor: 'default',
@@ -118,6 +120,26 @@ const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(
             size={itemSize}
             quantity={task.quantity > 1 ? task.quantity : undefined}
           />
+
+          {/* 合并标识 */}
+          {task.isMerged && (
+            <Chip
+              label={`×${task.mergedCount}`}
+              size="small"
+              sx={{
+                position: 'absolute',
+                top: 2,
+                left: 2,
+                height: 16,
+                fontSize: '10px',
+                bgcolor: 'primary.main',
+                color: 'primary.contrastText',
+                '& .MuiChip-label': {
+                  px: 0.5,
+                },
+              }}
+            />
+          )}
 
           {/* 底部线性进度条 */}
           <LinearProgress
@@ -197,11 +219,16 @@ const CraftingQueue: React.FC<CraftingQueueProps> = ({ open = false, onClose }) 
 
   // Memoize the remove handler to prevent unnecessary re-renders
   const handleRemoveTask = useCallback(
-    (taskId: string) => {
-      removeCraftingTask(taskId);
+    (taskIds: string[]) => {
+      taskIds.forEach(taskId => removeCraftingTask(taskId));
     },
     [removeCraftingTask]
   );
+
+  // Memoize merged tasks to prevent unnecessary recalculation
+  const mergedTasks = useMemo(() => {
+    return mergeCraftingTasks(craftingQueue);
+  }, [craftingQueue]);
 
   const handleClearAll = useCallback(() => {
     if (window.confirm('确定要清空所有制作任务吗？')) {
@@ -267,6 +294,11 @@ const CraftingQueue: React.FC<CraftingQueueProps> = ({ open = false, onClose }) 
       >
         <Box component="span">
           制作队列 ({craftingQueue.length}/{QUEUE_CAPACITY})
+          {mergedTasks.length !== craftingQueue.length && (
+            <Typography component="span" variant="caption" sx={{ ml: 1, opacity: 0.7 }}>
+              显示 {mergedTasks.length} 项
+            </Typography>
+          )}
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
           {craftingQueue.length > 1 && (
@@ -306,7 +338,7 @@ const CraftingQueue: React.FC<CraftingQueueProps> = ({ open = false, onClose }) 
           </Box>
         ) : (
           <Box sx={gridStyles} role="grid" aria-label="制作队列">
-            {craftingQueue.map(task => (
+            {mergedTasks.map(task => (
               <CraftingQueueItem
                 key={task.id}
                 task={task}

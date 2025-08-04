@@ -92,9 +92,9 @@ const FactorioIcon: React.FC<FactorioIconProps> = React.memo(
 
     // 尺寸计算 - size是容器总尺寸
     const containerSize = size;
-    const borderWidth = showBorder ? Math.max(1, Math.floor(size * 4 / 32)) : 0; // 按比例计算边框宽度
+    const borderWidth = showBorder ? Math.max(1, Math.floor((size * 4) / 32)) : 0; // 按比例计算边框宽度
     const iconSize = showBorder ? size - borderWidth * 2 : size; // 图标实际大小
-    
+
     const backgroundColor = shortage
       ? 'error.main'
       : selected
@@ -182,7 +182,6 @@ const FactorioIcon: React.FC<FactorioIconProps> = React.memo(
         });
       }
     }, [customImage, localSpriteSize]);
-
 
     return (
       <Box className={className} sx={containerStyles} title={alt || itemId}>
