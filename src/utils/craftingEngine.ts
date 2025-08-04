@@ -259,27 +259,10 @@ class CraftingEngine {
     if (!currentTask || currentTask.status === 'completed') return;
 
     // 检查是否为手动合成任务
-    if (currentTask.recipeId.startsWith('manual_')) {
-      // 手动合成任务需要时间计算
-      const itemId = currentTask.itemId;
-
-      // 获取物品的配方数据（用于时间计算）
+    if (currentTask.isManual) {
+      // 手动合成任务直接从recipeId获取配方
       const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
-      const recipes = recipeService.getRecipesThatProduce(itemId);
-
-      // 优先选择mining类型的配方，而不是recycling配方
-      let selectedRecipe = null;
-      if (recipes.length > 0) {
-        // 优先选择mining配方
-        const miningRecipe = recipes.find(r => r.flags?.includes('mining'));
-        if (miningRecipe) {
-          selectedRecipe = miningRecipe;
-        } else {
-          // 如果没有mining配方，选择第一个非recycling配方
-          const nonRecyclingRecipe = recipes.find(r => !r.flags?.includes('recycling'));
-          selectedRecipe = nonRecyclingRecipe || recipes[0];
-        }
-      }
+      const selectedRecipe = recipeService.getRecipeById(currentTask.recipeId);
 
       if (selectedRecipe) {
         // 使用手动合成效率计算时间
@@ -371,22 +354,9 @@ class CraftingEngine {
   private completeManualCraft(task: CraftingTask): void {
     const { updateInventory, completeCraftingTask, trackMinedEntity } = useGameStore.getState();
 
-    // 获取手动合成的配方信息
-    const itemId = task.itemId;
+    // 直接使用任务的recipeId获取配方
     const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
-    const recipes = recipeService.getRecipesThatProduce(itemId);
-
-    // 找到合适的配方（优先mining配方）
-    let selectedRecipe = null;
-    if (recipes.length > 0) {
-      const miningRecipe = recipes.find(r => r.flags?.includes('mining'));
-      if (miningRecipe) {
-        selectedRecipe = miningRecipe;
-      } else {
-        const nonRecyclingRecipe = recipes.find(r => !r.flags?.includes('recycling'));
-        selectedRecipe = nonRecyclingRecipe || recipes[0];
-      }
-    }
+    const selectedRecipe = recipeService.getRecipeById(task.recipeId);
 
     // 如果有配方且有输入材料，则消耗材料（链式任务的原材料已在创建时扣除）
     if (selectedRecipe && selectedRecipe.in && !task.chainId) {
@@ -399,7 +369,7 @@ class CraftingEngine {
 
     // 如果是采矿配方，追踪挖掘的实体（用于研究触发器）
     if (selectedRecipe && selectedRecipe.flags?.includes('mining')) {
-      trackMinedEntity(itemId, task.quantity);
+      trackMinedEntity(task.itemId, task.quantity);
     }
 
     // 完成任务（completeCraftingTask会自动调用updateInventory添加产品）

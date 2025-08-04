@@ -117,6 +117,7 @@ export interface CraftingTask {
   startTime: number;
   craftingTime: number;
   status?: 'pending' | 'crafting' | 'completed';
+  isManual?: boolean; // 是否为手动制作任务
   // 链式任务相关字段
   chainId?: string; // 所属任务链ID
   isIntermediateProduct?: boolean; // 是否为中间产物（不显示在库存中）

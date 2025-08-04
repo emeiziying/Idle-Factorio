@@ -131,6 +131,7 @@ export const useCrafting = () => {
       startTime: 0, // 任务开始时再设定
       craftingTime: recipe.time,
       status: 'pending',
+      isManual: true, // 标记为手动制作任务
     });
 
     if (success) {

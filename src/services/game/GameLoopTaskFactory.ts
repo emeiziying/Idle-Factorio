@@ -1,8 +1,9 @@
 // 重新设计的游戏循环任务工厂 - 高效模块化任务系统
+import useGameStore from '@/store/gameStore';
+import type { FacilityInstance } from '@/types/facilities';
 import type { GameLoopTask } from '@/types/gameLoop';
 import { GameLoopTaskType } from '@/types/gameLoop';
-import type { FacilityInstance } from '@/types/facilities';
-import useGameStore from '@/store/gameStore';
+import CraftingEngine from '@/utils/craftingEngine';
 
 // 任务配置接口
 interface TaskConfig {
@@ -111,17 +112,10 @@ export class GameLoopTaskFactory {
       }
 
       try {
-        // 使用动态导入并处理异步
-        import('../../utils/craftingEngine')
-          .then(({ default: CraftingEngine }) => {
-            const engine = CraftingEngine.getInstance();
-            engine.updateCraftingQueue();
-          })
-          .catch(error => {
-            console.error('制作系统更新失败:', error);
-          });
+        const engine = CraftingEngine.getInstance();
+        engine.updateCraftingQueue();
       } catch (error) {
-        console.error('制作系统初始化失败:', error);
+        console.error('制作系统更新失败:', error);
       }
     });
   }
