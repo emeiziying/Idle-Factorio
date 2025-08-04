@@ -45,11 +45,7 @@ const TASK_CONFIGS: Record<string, TaskConfig> = {
     name: '燃料消耗更新',
     priority: 3,
     baseInterval: 1000,
-    enabledByDefault: false,
-    shouldRun: () => {
-      const store = useGameStore.getState();
-      return store.facilities.some(f => f.fuelBuffer && f.fuelBuffer.slots.length > 0);
-    },
+    enabledByDefault: true, // 燃料消耗任务应该一直执行
   },
   [GameLoopTaskType.RESEARCH]: {
     id: GameLoopTaskType.RESEARCH,
@@ -184,10 +180,6 @@ export class GameLoopTaskFactory {
     const config = TASK_CONFIGS[GameLoopTaskType.FUEL_CONSUMPTION];
 
     return this.createTask(config, (deltaTime: number) => {
-      if (config.shouldRun && !config.shouldRun()) {
-        return;
-      }
-
       const store = useGameStore.getState();
       store.updateFuelConsumption(deltaTime);
     });

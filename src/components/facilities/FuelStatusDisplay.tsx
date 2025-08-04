@@ -88,13 +88,13 @@ export const FuelStatusDisplay: React.FC<FuelStatusDisplayProps> = ({
       />
 
       <Box display="flex" gap={1} flexWrap="wrap" mb={1}>
-        {fuelBuffer.slots?.map((slot, index) => (
+        {/* 显示当前燃料（每个设施只有1个燃料槽） */}
+        {fuelBuffer.slots && fuelBuffer.slots.length > 0 && fuelBuffer.slots[0].itemId ? (
           <Tooltip
-            key={index}
             title={
               <Box>
                 <Typography variant="caption">
-                  {slot.quantity}个 - {slot.remainingEnergy.toFixed(1)} MJ
+                  剩余能量: {fuelBuffer.slots[0].remainingEnergy.toFixed(1)} MJ
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   点击物品图标查看详情
@@ -103,54 +103,50 @@ export const FuelStatusDisplay: React.FC<FuelStatusDisplayProps> = ({
             }
           >
             <Box position="relative">
-              <FactorioIcon itemId={slot.itemId} size={32} quantity={slot.quantity} />
-              {/* 当前燃烧中的标记 */}
-              {index === 0 && slot.remainingEnergy < (slot.quantity > 0 ? 4 : 0) && (
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: -2,
-                    right: -2,
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    backgroundColor: 'warning.main',
-                    border: '1px solid',
-                    borderColor: 'background.paper',
-                  }}
-                />
-              )}
+              <FactorioIcon itemId={fuelBuffer.slots[0].itemId} size={32} quantity={1} />
+              {/* 燃烧中的标记 */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  bottom: -2,
+                  right: -2,
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  backgroundColor: status.isEmpty ? 'error.main' : 'success.main',
+                  border: '1px solid',
+                  borderColor: 'background.paper',
+                }}
+              />
             </Box>
           </Tooltip>
-        ))}
-
-        {/* 空槽位 */}
-        {Array.from({ length: (fuelBuffer.maxSlots || 0) - (fuelBuffer.slots?.length || 0) }).map(
-          (_, i) => (
-            <Box
-              key={`empty-${i}`}
-              sx={{
-                width: 32,
-                height: 32,
-                border: '2px dashed',
-                borderColor: 'divider',
-                borderRadius: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: 0.5,
-              }}
-            >
-              <LocalFireDepartment fontSize="small" color="disabled" />
-            </Box>
-          )
+        ) : (
+          /* 空燃料槽 */
+          <Box
+            sx={{
+              width: 32,
+              height: 32,
+              border: '2px dashed',
+              borderColor: 'divider',
+              borderRadius: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: 0.5,
+            }}
+          >
+            <LocalFireDepartment fontSize="small" color="disabled" />
+          </Box>
         )}
       </Box>
 
       <Typography variant="caption" color="text.secondary">
-        能量: {status.totalEnergy.toFixed(1)} / {status.maxEnergy.toFixed(0)} MJ
-        {(fuelBuffer.consumptionRate || 0) > 0 && (
-          <span> • 消耗: {((fuelBuffer.consumptionRate || 0) * 1000).toFixed(0)} kW</span>
+        能量: {status.totalEnergy.toFixed(1)} MJ {status.isEmpty ? '(无燃料)' : '(有燃料)'}
+        {(fuelBuffer.burnRate || fuelBuffer.consumptionRate || 0) > 0 && (
+          <span>
+            {' '}
+            • 消耗: {(fuelBuffer.burnRate || fuelBuffer.consumptionRate || 0).toFixed(0)} kW
+          </span>
         )}
       </Typography>
     </Box>

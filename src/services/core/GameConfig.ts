@@ -166,10 +166,10 @@ export class GameConfig {
   /**
    * 计算基于功率的最大燃料储存量
    */
-  calculateMaxFuelStorage(powerConsumption: number): number {
-    // 假设最大储存 = 功率消耗 * 储存时间常数
-    const storageTimeConstant = (this.constants.fuel.autoRefuelCheckInterval / 1000) * 200; // 200倍检查间隔的秒数
-    return powerConsumption * storageTimeConstant;
+  calculateMaxFuelStorage(): number {
+    // 每个设施只有1个燃料槽，不需要计算最大容量
+    // 返回0表示不限制容量
+    return 0;
   }
 
   /**
