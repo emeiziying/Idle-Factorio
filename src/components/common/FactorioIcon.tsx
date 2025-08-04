@@ -45,7 +45,6 @@ const FactorioIcon: React.FC<FactorioIconProps> = ({
 
   const dataService = useDataService();
 
-
   // 获取图标信息
   useEffect(() => {
     if (!itemId) return;

@@ -68,7 +68,13 @@ export class DIServiceInitializer {
       const treeService = container.resolve<TechTreeService>(SERVICE_TOKENS.TECH_TREE_SERVICE);
       const recipeService = container.resolve<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
       const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
-      return new TechUnlockService(userProgressService, eventEmitter, treeService, recipeService, dataService);
+      return new TechUnlockService(
+        userProgressService,
+        eventEmitter,
+        treeService,
+        recipeService,
+        dataService
+      );
     });
 
     container.registerFactory(SERVICE_TOKENS.RESEARCH_SERVICE, () => {

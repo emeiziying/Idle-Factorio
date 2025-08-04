@@ -146,7 +146,7 @@ describe('UserProgressService', () => {
     it('should clear unlocked techs after reset', () => {
       // 先解锁一些科技
       service.unlockTech('automation');
-      
+
       // 验证初始状态
       expect(service.isTechUnlocked('automation')).toBe(true);
 
@@ -183,10 +183,10 @@ describe('UserProgressService', () => {
     // 测试：正确的存储键
     it('should use correct storage key', () => {
       service.unlockTechs(['test-tech']);
-      
+
       const stored = localStorage.getItem('factorio_user_progress');
       expect(stored).toBeTruthy();
-      
+
       const data = JSON.parse(stored!);
       expect(data.unlockedTechs).toBeDefined();
     });
@@ -194,10 +194,10 @@ describe('UserProgressService', () => {
     // 测试：在localStorage中存储数据
     it('should store data in localStorage', () => {
       service.unlockTech('tech1');
-      
+
       const stored = localStorage.getItem('factorio_user_progress');
       expect(stored).toBeTruthy();
-      
+
       const data = JSON.parse(stored!);
       expect(data.unlockedTechs).toContain('tech1');
       expect(data.lastUpdated).toBeDefined();
@@ -207,7 +207,7 @@ describe('UserProgressService', () => {
     it('should handle corrupted localStorage data safely', () => {
       // 模拟损坏的JSON数据
       localStorage.setItem('factorio_user_progress', 'corrupted data');
-      
+
       // 应该能安全创建新实例
       const newService = new UserProgressService();
       expect(newService.getUnlockedTechs()).toEqual([]);

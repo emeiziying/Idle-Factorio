@@ -321,7 +321,6 @@ export class ResearchQueueService {
     isUnlocked: (techId: string) => boolean,
     isAvailable: (techId: string) => boolean
   ): string[] {
-
     const recommendations: string[] = [];
     const allTechs = this.treeService.getAllTechnologies();
 

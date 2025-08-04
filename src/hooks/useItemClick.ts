@@ -27,7 +27,6 @@ export const useItemClick = (componentName: string, onItemSelect?: (item: Item) 
         return;
       }
 
-
       if (onItemSelect) {
         const clickedItem = dataService.getItem(itemId);
         if (clickedItem) {
@@ -74,7 +73,6 @@ export const useItemClickWithContext = <T = unknown>(
         logger.warn(`${componentName}: No itemId provided`);
         return;
       }
-
 
       if (onItemSelect) {
         const clickedItem = dataService.getItem(itemId);

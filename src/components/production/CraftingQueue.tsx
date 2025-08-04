@@ -58,10 +58,8 @@ const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(
     const recipe = dataService.getRecipe(task.recipeId);
     const item = dataService.getItem(task.itemId);
 
-
-    // 对于手动合成任务，不需要recipe数据
-    const isManualTask = task.recipeId.startsWith('manual_');
-    if (!item || (!isManualTask && !recipe)) {
+    // craftingQueue 中的所有任务都是手动制作任务，仍需要 recipe 数据用于显示
+    if (!item || !recipe) {
       console.warn(`Missing data for task ${task.id}: recipe=${!!recipe}, item=${!!item}`);
       return null;
     }

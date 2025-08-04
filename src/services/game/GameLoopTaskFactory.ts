@@ -19,12 +19,13 @@ interface TaskConfig {
 const TASK_CONFIGS: Record<string, TaskConfig> = {
   [GameLoopTaskType.CRAFTING]: {
     id: GameLoopTaskType.CRAFTING,
-    name: '制作系统更新',
+    name: '手动制作系统更新',
     priority: 1,
     baseInterval: 100, // 100ms
     enabledByDefault: false,
     shouldRun: () => {
       const store = useGameStore.getState();
+      // craftingQueue 中的所有任务都是手动制作任务
       return store.craftingQueue.length > 0;
     },
   },
@@ -112,8 +113,7 @@ export class GameLoopTaskFactory {
       }
 
       try {
-        const engine = CraftingEngine.getInstance();
-        engine.updateCraftingQueue();
+        CraftingEngine.updateCraftingQueue();
       } catch (error) {
         console.error('制作系统更新失败:', error);
       }

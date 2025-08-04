@@ -15,7 +15,7 @@ const ItemCard: React.FC<ItemCardProps> = React.memo(({ item, onClick, selected 
   // 直接订阅inventory Map，避免调用getInventoryItem造成无限循环
   const inventory = useGameStore(state => state.inventory);
   const getInventoryItem = useGameStore(state => state.getInventoryItem);
-  
+
   // 使用useMemo缓存结果
   const inventoryItem = React.useMemo(() => {
     const existing = inventory.get(item.id);
@@ -25,7 +25,7 @@ const ItemCard: React.FC<ItemCardProps> = React.memo(({ item, onClick, selected 
     // 只有在没有找到时才调用getInventoryItem
     return getInventoryItem(item.id);
   }, [inventory, item.id, getInventoryItem]);
-  
+
   const isMobile = useIsMobile();
 
   const getStatusColor = (status: string) => {

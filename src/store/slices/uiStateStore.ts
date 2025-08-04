@@ -43,7 +43,12 @@ export interface UIStateSlice {
 // 从localStorage加载初始状态
 const loadInitialState = () => {
   if (typeof window === 'undefined') {
-    return { selectedCategory: '', selectedItem: null, isItemJump: false, showCraftingQueue: false };
+    return {
+      selectedCategory: '',
+      selectedItem: null,
+      isItemJump: false,
+      showCraftingQueue: false,
+    };
   }
 
   try {
@@ -59,7 +64,12 @@ const loadInitialState = () => {
     };
   } catch (error) {
     console.warn('Failed to load UI state from localStorage:', error);
-    return { selectedCategory: '', selectedItem: null, isItemJump: false, showCraftingQueue: false };
+    return {
+      selectedCategory: '',
+      selectedItem: null,
+      isItemJump: false,
+      showCraftingQueue: false,
+    };
   }
 };
 
@@ -69,7 +79,7 @@ export const createUIStateSlice: SliceCreator<UIStateSlice> = (set, get) => ({
 
   // 设置生产模块选中的分类
   setProductionSelectedCategory: (category: string) => {
-    set((state) => ({
+    set(state => ({
       production: {
         ...state.production,
         selectedCategory: category,
@@ -83,7 +93,7 @@ export const createUIStateSlice: SliceCreator<UIStateSlice> = (set, get) => ({
 
   // 设置生产模块选中的物品
   setProductionSelectedItem: (item: Item | null) => {
-    set((state) => ({
+    set(state => ({
       production: {
         ...state.production,
         selectedItem: item,
@@ -105,7 +115,7 @@ export const createUIStateSlice: SliceCreator<UIStateSlice> = (set, get) => ({
 
   // 同时设置分类和物品（用于跨模块跳转）
   setProductionSelection: (category: string, item: Item | null) => {
-    set((state) => ({
+    set(state => ({
       production: {
         ...state.production,
         selectedCategory: category,
@@ -129,7 +139,7 @@ export const createUIStateSlice: SliceCreator<UIStateSlice> = (set, get) => ({
 
   // 智能操作方法
   selectProductionCategory: (categoryId: string) => {
-    set((state) => ({
+    set(state => ({
       production: {
         ...state.production,
         selectedCategory: categoryId,
@@ -149,7 +159,7 @@ export const createUIStateSlice: SliceCreator<UIStateSlice> = (set, get) => ({
     const currentCategory = currentState.production.selectedCategory;
     const willSwitchCategory = Boolean(item.category && item.category !== currentCategory);
 
-    set((state) => ({
+    set(state => ({
       production: {
         ...state.production,
         selectedItem: item,
@@ -171,7 +181,7 @@ export const createUIStateSlice: SliceCreator<UIStateSlice> = (set, get) => ({
   },
 
   resetItemJump: () => {
-    set((state) => ({
+    set(state => ({
       production: {
         ...state.production,
         isItemJump: false,
@@ -181,7 +191,7 @@ export const createUIStateSlice: SliceCreator<UIStateSlice> = (set, get) => ({
 
   // 制作队列弹窗控制
   toggleCraftingQueue: () => {
-    set((state) => ({
+    set(state => ({
       production: {
         ...state.production,
         showCraftingQueue: !state.production.showCraftingQueue,
@@ -190,7 +200,7 @@ export const createUIStateSlice: SliceCreator<UIStateSlice> = (set, get) => ({
   },
 
   setCraftingQueueVisible: (visible: boolean) => {
-    set((state) => ({
+    set(state => ({
       production: {
         ...state.production,
         showCraftingQueue: visible,
@@ -202,25 +212,25 @@ export const createUIStateSlice: SliceCreator<UIStateSlice> = (set, get) => ({
   autoSelectFirstItemIfNeeded: (firstItem: Item | null) => {
     const state = get();
     const { selectedItem, isItemJump } = state.production;
-    
+
     // 只有在不是物品跳转且有第一个物品时才自动选择
     if (!firstItem || isItemJump) {
       return;
     }
-    
+
     // 如果当前选中的物品已经在正确的分类中，保持不变
     if (selectedItem && selectedItem.category === firstItem.category) {
       return;
     }
-    
+
     // 自动选择第一个物品
-    set((state) => ({
+    set(state => ({
       production: {
         ...state.production,
         selectedItem: firstItem,
       },
     }));
-    
+
     // 同步到localStorage
     if (typeof window !== 'undefined') {
       try {
@@ -235,7 +245,7 @@ export const createUIStateSlice: SliceCreator<UIStateSlice> = (set, get) => ({
   getFirstItemInCategory: () => {
     const state = get();
     const { selectedCategory } = state.production;
-    
+
     if (!selectedCategory) {
       return null;
     }
@@ -243,15 +253,15 @@ export const createUIStateSlice: SliceCreator<UIStateSlice> = (set, get) => ({
     // 数据已在全局初始化时加载完成
     const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
     const itemsByRow = dataService.getItemsByRow(selectedCategory);
-      const sortedRows = Array.from(itemsByRow.keys()).sort((a, b) => a - b);
+    const sortedRows = Array.from(itemsByRow.keys()).sort((a, b) => a - b);
 
-      for (const row of sortedRows) {
-        const items = itemsByRow.get(row) || [];
-        if (items.length > 0) {
-          return items[0];
-        }
+    for (const row of sortedRows) {
+      const items = itemsByRow.get(row) || [];
+      if (items.length > 0) {
+        return items[0];
       }
-      return null;
+    }
+    return null;
   },
 
   // 清空UI状态

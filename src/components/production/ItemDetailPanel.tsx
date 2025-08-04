@@ -54,10 +54,7 @@ const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item, onItemSelect })
         }}
       >
         {/* 1. 手动合成配方（顶部） */}
-        <ManualCraftingCard
-          item={item}
-          onItemSelect={onItemSelect}
-        />
+        <ManualCraftingCard item={item} onItemSelect={onItemSelect} />
 
         {/* 2. 设施列表（显示当前物品配方的设施，带添加移除按钮） */}
         <RecipeFacilitiesCard item={item} onItemSelect={onItemSelect} />

@@ -41,7 +41,6 @@ const FacilitiesModule: React.FC = React.memo(() => {
 
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
         {useMemo(() => {
-
           switch (currentTab) {
             case 0:
               return <PowerManagement />;

@@ -37,9 +37,9 @@ export const USER_PREFERENCE_KEYS = {
 } as const;
 
 // 导出所有存储键的联合类型（用于类型检查）
-export type StorageKey = 
-  | typeof APP_STORAGE_KEYS[keyof typeof APP_STORAGE_KEYS]
-  | typeof PRODUCTION_STORAGE_KEYS[keyof typeof PRODUCTION_STORAGE_KEYS]
-  | typeof TECHNOLOGY_STORAGE_KEYS[keyof typeof TECHNOLOGY_STORAGE_KEYS]
-  | typeof SETTINGS_STORAGE_KEYS[keyof typeof SETTINGS_STORAGE_KEYS]
-  | typeof USER_PREFERENCE_KEYS[keyof typeof USER_PREFERENCE_KEYS];
+export type StorageKey =
+  | (typeof APP_STORAGE_KEYS)[keyof typeof APP_STORAGE_KEYS]
+  | (typeof PRODUCTION_STORAGE_KEYS)[keyof typeof PRODUCTION_STORAGE_KEYS]
+  | (typeof TECHNOLOGY_STORAGE_KEYS)[keyof typeof TECHNOLOGY_STORAGE_KEYS]
+  | (typeof SETTINGS_STORAGE_KEYS)[keyof typeof SETTINGS_STORAGE_KEYS]
+  | (typeof USER_PREFERENCE_KEYS)[keyof typeof USER_PREFERENCE_KEYS];

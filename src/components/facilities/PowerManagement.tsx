@@ -178,13 +178,13 @@ const PowerManagement: React.FC = () => {
                 电力不足！所有耗电设施的效率降至 {(powerBalance.satisfactionRatio * 100).toFixed(0)}
                 %
               </Typography>
-              {powerService.getPowerPriorityRecommendations(facilities, powerBalance).map(
-                (rec, i) => (
+              {powerService
+                .getPowerPriorityRecommendations(facilities, powerBalance)
+                .map((rec, i) => (
                   <Typography key={i} variant="caption" display="block">
                     • {rec}
                   </Typography>
-                )
-              )}
+                ))}
             </Alert>
           )}
         </CardContent>

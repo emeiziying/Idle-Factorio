@@ -102,7 +102,7 @@ export class TechnologyService {
 
     // 创建初始化 Promise
     this.initializationPromise = this.doInitialize();
-    
+
     try {
       await this.initializationPromise;
     } finally {
@@ -144,7 +144,7 @@ export class TechnologyService {
     if (this.isInitialized) {
       return;
     }
-    
+
     if (this.initializationPromise) {
       await this.initializationPromise;
     }

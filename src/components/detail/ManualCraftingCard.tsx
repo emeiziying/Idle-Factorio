@@ -13,10 +13,7 @@ interface ManualCraftingCardProps {
   onItemSelect?: (item: Item) => void;
 }
 
-const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({
-  item,
-  onItemSelect,
-}) => {
+const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onItemSelect }) => {
   const { getInventoryItem, inventory } = useGameStore();
   const recipeService = useRecipeService();
   const dependencyService = useDependencyService();
@@ -30,7 +27,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({
   // 检查材料是否充足或可以链式合成
   const canCraft = useMemo(() => {
     if (!recipe) return false;
-    
+
     const hasInputMaterials = Object.keys(recipe.in).length > 0;
     const isMiningRecipe = recipe.flags?.includes('mining');
 

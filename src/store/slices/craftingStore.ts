@@ -1,9 +1,9 @@
 // 制作队列切片
-import type { SliceCreator, CraftingSlice } from '@/store/types';
-import type { CraftingTask, CraftingChain } from '@/types/index';
-import type { RecipeService } from '@/services/crafting/RecipeService';
 import { getService } from '@/services/core/DIServiceInitializer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
+import type { RecipeService } from '@/services/crafting/RecipeService';
+import type { CraftingSlice, SliceCreator } from '@/store/types';
+import type { CraftingChain, CraftingTask } from '@/types/index';
 
 export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
   // 初始状态
@@ -101,19 +101,9 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
         }
       }
 
-      // 普通任务处理
-      // 如果是手动合成任务，不需要归还库存（因为手动合成没有消耗库存）
-      if (!task.recipeId.startsWith('manual_')) {
-        // 获取配方信息并归还库存
-        const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
-        const recipe = recipeService.getRecipeById(task.recipeId);
-        if (recipe) {
-          // 归还输入材料
-          Object.entries(recipe.in).forEach(([itemId, required]) => {
-            get().updateInventory(itemId, (required as number) * task.quantity);
-          });
-        }
-      }
+      // 普通手动制作任务处理
+      // 手动制作任务的材料在完成时才消耗，取消未完成任务不需要归还材料
+      // 只有链式任务的基础材料需要在取消时归还（因为在创建链时已预先扣除）
 
       // 移除任务
       set(state => ({
@@ -172,14 +162,14 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
           // 最后一个任务完成，需要根据配方计算实际产出量
           const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
           let actualOutput = task.quantity; // 默认输出等于制作数量
-          
+
           // 直接使用任务的recipeId获取配方
           const recipe = recipeService.getRecipeById(task.recipeId);
           if (recipe && recipe.out[task.itemId]) {
             const outputPerCraft = recipe.out[task.itemId];
             actualOutput = task.quantity * outputPerCraft;
           }
-          
+
           get().updateInventory(task.itemId, actualOutput);
           console.log(
             `[链式任务] 链式任务完成: ${chain.name}, 最终产物: ${task.itemId} x${actualOutput} 已添加到库存`
@@ -197,15 +187,17 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
       // 普通任务，需要根据配方计算实际产出量
       const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
       let actualOutput = task.quantity; // 默认输出等于制作数量
-      
+
       // 直接使用任务的recipeId获取配方
       const recipe = recipeService.getRecipeById(task.recipeId);
       if (recipe && recipe.out[task.itemId]) {
         const outputPerCraft = recipe.out[task.itemId];
         actualOutput = task.quantity * outputPerCraft;
-        console.log(`[制作完成] ${task.itemId}: 制作${task.quantity}次，每次产出${outputPerCraft}个，总产出${actualOutput}个，使用配方: ${recipe.id}`);
+        console.log(
+          `[制作完成] ${task.itemId}: 制作${task.quantity}次，每次产出${outputPerCraft}个，总产出${actualOutput}个，使用配方: ${recipe.id}`
+        );
       }
-      
+
       get().updateInventory(task.itemId, actualOutput);
     }
 

@@ -3,9 +3,9 @@
  * 提供统一的名称获取和翻译功能
  */
 
-import { useMemo } from 'react';
-import type { Item, Recipe } from '@/types/index';
 import { useDataService } from '@/hooks/useDIServices';
+import type { Item, Recipe } from '@/types/index';
+import { useMemo } from 'react';
 
 /**
  * 获取物品的国际化名称
@@ -81,7 +81,6 @@ export const useItemNames = (items: (Item | string)[]): Record<string, string> =
 
   return useMemo(() => {
     const names: Record<string, string> = {};
-
 
     items.forEach(item => {
       const itemId = typeof item === 'string' ? item : item.id;

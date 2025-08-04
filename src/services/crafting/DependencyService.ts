@@ -99,7 +99,7 @@ export class DependencyService {
 
           tasks.push({
             id: `chain_${taskIdCounter++}`,
-            recipeId: `manual_${inputItemId}`,
+            recipeId: materialRecipe.id, // 使用真实的配方ID
             itemId: inputItemId,
             quantity: craftQuantity,
             progress: 0,
@@ -114,7 +114,7 @@ export class DependencyService {
     // 添加主任务
     tasks.push({
       id: `chain_${taskIdCounter++}`,
-      recipeId: `manual_${itemId}`,
+      recipeId: mainRecipe.id, // 使用真实的配方ID
       itemId: itemId,
       quantity: quantity,
       progress: 0,

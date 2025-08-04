@@ -4,7 +4,12 @@ import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import type { Item } from '@/types/index';
 import type { FacilityInstance } from '@/types/facilities';
 import { useItemRecipes } from '@/hooks/useItemRecipes';
-import { useDataService, useManualCraftingValidator, useFuelService, useTechnologyService } from '@/hooks/useDIServices';
+import {
+  useDataService,
+  useManualCraftingValidator,
+  useFuelService,
+  useTechnologyService,
+} from '@/hooks/useDIServices';
 import useGameStore from '@/store/gameStore';
 import FactorioIcon from '@/components/common/FactorioIcon';
 import { FuelStatusDisplay } from '@/components/facilities/FuelStatusDisplay';

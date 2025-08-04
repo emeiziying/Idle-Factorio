@@ -27,7 +27,6 @@ const RecipeInfo: React.FC<RecipeInfoProps> = ({ itemId, onRecipeSelect }) => {
   const recipes = getRecommendedRecipes(itemId);
   const stats = getRecipeStats(itemId);
 
-
   if (!item) {
     return <div className="p-4 text-gray-500">物品不存在</div>;
   }

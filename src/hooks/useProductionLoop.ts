@@ -137,7 +137,6 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
 
   // 主更新循环
   const updateProduction = useCallback(() => {
-
     const currentTime = Date.now();
     const deltaTime = msToSeconds(currentTime - lastUpdateRef.current);
     lastUpdateRef.current = currentTime;

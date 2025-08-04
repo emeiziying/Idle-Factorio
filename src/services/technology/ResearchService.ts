@@ -214,8 +214,8 @@ export class ResearchService {
     if (!tech) return false;
 
     // 检查前置科技
-    return tech.prerequisites.every(
-      (prereqId: string) => this.getTechUnlockService().isTechUnlocked(prereqId)
+    return tech.prerequisites.every((prereqId: string) =>
+      this.getTechUnlockService().isTechUnlocked(prereqId)
     );
   }
 
