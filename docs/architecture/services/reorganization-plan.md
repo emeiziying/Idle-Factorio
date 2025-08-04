@@ -55,7 +55,7 @@ services/
 │   └── index.ts
 │
 ├── interfaces/               # 服务接口定义
-│   └── IManualCraftingValidator.ts
+│   └── (已清理过时接口)
 │
 ├── interfaces.ts             # 通用服务接口
 └── index.ts                  # 统一服务导出

@@ -1,8 +1,10 @@
 # RecipeService 应用总结
 
+> ⚠️ **部分过时**: 这个文档记录了 RecipeService 的设计和功能，但部分组件引用可能已过时。
+
 ## 概述
 
-RecipeService 已经成功集成到项目中，成为了配方管理的核心服务。本文档总结了 RecipeService 的应用情况和新增功能。
+RecipeService 是项目中配方管理的核心服务，提供了丰富的配方查询、分析和推荐功能。
 
 ## 核心功能
 
@@ -34,11 +36,11 @@ getRecipeDependencyChain(recipe: Recipe, maxDepth: number = 5)
 
 ### 2. 配方成本计算
 ```typescript
-calculateRecipeCost(recipe: Recipe, includeRawMaterials: boolean = true)
+calculateRecipeCost(recipe: Recipe, includeBasicMaterials: boolean = true)
 ```
 - 计算直接成本
-- 计算总成本（包含原材料）
-- 识别原材料
+- 计算总成本（包含基础材料）
+- 识别基础材料
 
 ### 3. 最优生产路径
 ```typescript
@@ -86,24 +88,12 @@ getRecipeComplexityScore(recipe: Recipe): number
 - 配方统计功能
 - 搜索功能
 
-### 3. 自定义工具函数
-- `customRecipeUtils.ts` 提供便捷的配方工具函数
-- 支持高级功能调用
-- 向后兼容的木材专用函数
-
 ## 组件应用
 
-### 1. 现有组件更新
-- **ItemDetailPanel**: 添加配方分析标签页
-- **RecipeInfo**: 使用 RecipeService 的统计功能
+### 主要集成点
+- **ItemDetailPanel**: 使用 RecipeService 进行配方查询和分析
 - **CraftingQueue**: 通过 DataService 使用 RecipeService
-
-### 2. 新组件
-- **RecipeAnalysis**: 展示 RecipeService 的高级功能
-  - 配方依赖链分析
-  - 成本分析
-  - 最优路径展示
-  - 增强统计信息
+- **各种制作相关组件**: 调用 RecipeService 的查询方法
 
 ## 功能特性
 
@@ -151,13 +141,14 @@ const optimalPath = RecipeService.getOptimalProductionPath('wood', 1, unlockedIt
 const recommendations = RecipeService.getRecipeRecommendations('wood', unlockedItems, 'efficiency');
 ```
 
-### 3. 组件使用
+### 3. 在组件中使用
 ```typescript
-// 在组件中使用
-<RecipeAnalysis 
-  itemId="wood" 
-  unlockedItems={['assembling-machine-1', 'furnace']} 
-/>
+// 通过DI容器获取服务
+const recipeService = useRecipeService();
+
+// 使用服务方法
+const recipes = recipeService.getRecipesThatProduce(itemId);
+const bestRecipe = recipeService.getMostEfficientRecipe(itemId);
 ```
 
 ## 未来扩展
