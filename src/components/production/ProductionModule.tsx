@@ -18,14 +18,12 @@ const ProductionModule: React.FC = React.memo(() => {
   const selectedItem = useGameStore(state => state.production.selectedItem);
   const isItemJump = useGameStore(state => state.production.isItemJump);
   const showCraftingQueue = useGameStore(state => state.production.showCraftingQueue);
-  const {
-    selectProductionCategory,
-    selectProductionItem,
-    resetItemJump,
-    setCraftingQueueVisible,
-    autoSelectFirstItemIfNeeded,
-    getFirstItemInCategory,
-  } = useGameStore();
+  const selectProductionCategory = useGameStore(state => state.selectProductionCategory);
+  const selectProductionItem = useGameStore(state => state.selectProductionItem);
+  const resetItemJump = useGameStore(state => state.resetItemJump);
+  const setCraftingQueueVisible = useGameStore(state => state.setCraftingQueueVisible);
+  const autoSelectFirstItemIfNeeded = useGameStore(state => state.autoSelectFirstItemIfNeeded);
+  const getFirstItemInCategory = useGameStore(state => state.getFirstItemInCategory);
 
   // 设置默认分类
   useEffect(() => {

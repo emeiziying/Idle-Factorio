@@ -1,9 +1,12 @@
-import type { Recipe } from '@/types';
 import { CUSTOM_RECIPES } from '@/data/customRecipes';
 import { getService } from '@/services/core/DIServiceInitializer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
+import type {
+  IManualCraftingValidator,
+  ManualCraftingValidation,
+} from '@/services/interfaces/IManualCraftingValidator';
 import type { TechnologyService } from '@/services/technology/TechnologyService';
-import type { IManualCraftingValidator } from '@/services/interfaces/IManualCraftingValidator';
+import type { Recipe } from '@/types';
 
 /**
  * 配方服务
@@ -164,14 +167,12 @@ export class RecipeService {
       return null;
     }
 
-    // 所有物品都有配方，不需要检查 raw_material
-
-    // 3. 获取所有配方并找到可手动制作的
+    // 2. 获取所有配方并找到可手动制作的
     const allRecipes = this.getRecipesThatProduce(itemId);
 
     for (const recipe of allRecipes) {
       // 检查配方是否被解锁
-      if (!techService.isItemUnlocked(recipe.id)) {
+      if (!techService.isRecipeUnlocked(recipe.id)) {
         continue; // 跳过未解锁的配方
       }
 
@@ -202,9 +203,7 @@ export class RecipeService {
       return [];
     }
 
-    // 所有物品都有配方，不需要检查 raw_material
-
-    // 3. 获取所有配方并筛选可手动制作的
+    // 2. 获取所有配方并筛选可手动制作的
     const allRecipes = this.getRecipesThatProduce(itemId);
 
     return allRecipes.filter(recipe => {
@@ -241,7 +240,7 @@ export class RecipeService {
     canCraft: boolean;
     recipe: Recipe | null;
     allRecipes: Recipe[];
-    validation: import('../interfaces/IManualCraftingValidator').ManualCraftingValidation;
+    validation: ManualCraftingValidation;
   } {
     const validator = getService<IManualCraftingValidator>(
       SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR

@@ -42,6 +42,10 @@ export class DataService {
 
     try {
       this.gameData = gameData as unknown as GameData;
+
+      // 加载国际化数据
+      await this.loadI18nData();
+
       this.clearCache();
       return this.gameData;
     } catch (error) {
@@ -57,7 +61,7 @@ export class DataService {
     }
 
     try {
-      const i18nModule = await import(`../../data/spa/i18n/${locale}.json`);
+      const i18nModule = await import(`@/data/spa/i18n/${locale}.json`);
       this.i18nData = i18nModule.default as I18nData;
       return this.i18nData;
     } catch (error) {
