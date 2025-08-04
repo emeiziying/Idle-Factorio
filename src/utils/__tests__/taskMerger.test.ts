@@ -45,11 +45,11 @@ describe('taskMerger', () => {
       });
     });
 
-    it('should merge consecutive identical tasks', () => {
+    it('should merge consecutive identical tasks with same quantity', () => {
       const tasks = [
-        createTask('1', 'wood', 'wood-recipe', 5, 20),
-        createTask('2', 'wood', 'wood-recipe', 3, 60),
-        createTask('3', 'wood', 'wood-recipe', 2, 80),
+        createTask('1', 'wood', 'wood-recipe', 2, 20), // 相同数量
+        createTask('2', 'wood', 'wood-recipe', 2, 60), // 相同数量
+        createTask('3', 'wood', 'wood-recipe', 2, 80), // 相同数量
       ];
       const result = mergeCraftingTasks(tasks);
 
@@ -57,13 +57,45 @@ describe('taskMerger', () => {
       expect(result[0]).toMatchObject({
         id: '1', // 使用第一个任务的 id
         itemId: 'wood',
-        quantity: 10, // 5 + 3 + 2
+        quantity: 6, // 2 + 2 + 2
         isMerged: true,
         mergedCount: 3,
       });
 
       // 检查进度显示：应该显示第一个进行中任务的进度，这里都是 crafting 状态，显示第一个任务的进度
       expect(result[0].progress).toBe(20); // 第一个任务的进度
+    });
+
+    it('should not merge tasks with different quantities', () => {
+      const tasks = [
+        createTask('1', 'wood', 'wood-recipe', 1, 20), // 数量1
+        createTask('2', 'wood', 'wood-recipe', 5, 60), // 数量5
+        createTask('3', 'wood', 'wood-recipe', 1, 80), // 数量1
+      ];
+      const result = mergeCraftingTasks(tasks);
+
+      expect(result).toHaveLength(3); // 不应该合并，因为数量不同
+      expect(result[0]).toMatchObject({
+        id: '1',
+        itemId: 'wood',
+        quantity: 1,
+        isMerged: false,
+        mergedCount: 1,
+      });
+      expect(result[1]).toMatchObject({
+        id: '2',
+        itemId: 'wood',
+        quantity: 5,
+        isMerged: false,
+        mergedCount: 1,
+      });
+      expect(result[2]).toMatchObject({
+        id: '3',
+        itemId: 'wood',
+        quantity: 1,
+        isMerged: false,
+        mergedCount: 1,
+      });
     });
 
     it('should not merge different items', () => {
@@ -102,10 +134,10 @@ describe('taskMerger', () => {
       expect(result[1].isMerged).toBe(false);
     });
 
-    it('should merge tasks with different non-completed status (crafting + pending)', () => {
+    it('should merge tasks with different non-completed status and same quantity', () => {
       const tasks = [
-        createTask('1', 'wood', 'wood-recipe', 5, 20, undefined, 'crafting'),
-        createTask('2', 'wood', 'wood-recipe', 3, 60, undefined, 'pending'),
+        createTask('1', 'wood', 'wood-recipe', 2, 20, undefined, 'crafting'), // 相同数量
+        createTask('2', 'wood', 'wood-recipe', 2, 60, undefined, 'pending'), // 相同数量
       ];
       const result = mergeCraftingTasks(tasks);
 
@@ -113,7 +145,7 @@ describe('taskMerger', () => {
       expect(result[0]).toMatchObject({
         id: '1',
         itemId: 'wood',
-        quantity: 8, // 5 + 3
+        quantity: 4, // 2 + 2
         isMerged: true,
         mergedCount: 2,
         status: 'crafting', // 有进行中任务时显示为进行中
@@ -123,8 +155,8 @@ describe('taskMerger', () => {
 
     it('should merge pending tasks and show as pending', () => {
       const tasks = [
-        createTask('1', 'wood', 'wood-recipe', 2, 0, undefined, 'pending'),
-        createTask('2', 'wood', 'wood-recipe', 3, 0, undefined, 'pending'),
+        createTask('1', 'wood', 'wood-recipe', 2, 0, undefined, 'pending'), // 相同数量
+        createTask('2', 'wood', 'wood-recipe', 2, 0, undefined, 'pending'), // 相同数量
       ];
       const result = mergeCraftingTasks(tasks);
 
@@ -132,7 +164,7 @@ describe('taskMerger', () => {
       expect(result[0]).toMatchObject({
         id: '1',
         itemId: 'wood',
-        quantity: 5,
+        quantity: 4, // 2 + 2
         progress: 0, // 没有进行中任务，显示0进度
         isMerged: true,
         mergedCount: 2,
@@ -302,11 +334,18 @@ describe('taskMerger', () => {
       expect(canTasksBeMerged(task1, task2)).toBe(false);
     });
 
-    it('should return true for different non-completed status', () => {
-      const task1 = createTask('1', 'wood', 'wood-recipe', 1, 20, undefined, 'crafting');
-      const task2 = createTask('2', 'wood', 'wood-recipe', 1, 40, undefined, 'pending');
+    it('should return true for different non-completed status with same quantity', () => {
+      const task1 = createTask('1', 'wood', 'wood-recipe', 2, 20, undefined, 'crafting');
+      const task2 = createTask('2', 'wood', 'wood-recipe', 2, 40, undefined, 'pending');
 
       expect(canTasksBeMerged(task1, task2)).toBe(true);
+    });
+
+    it('should return false for different quantities', () => {
+      const task1 = createTask('1', 'wood', 'wood-recipe', 1, 20, undefined, 'crafting');
+      const task2 = createTask('2', 'wood', 'wood-recipe', 5, 40, undefined, 'crafting');
+
+      expect(canTasksBeMerged(task1, task2)).toBe(false);
     });
 
     it('should return false for completed tasks', () => {

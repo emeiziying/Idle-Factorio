@@ -38,11 +38,13 @@ export function mergeCraftingTasks(tasks: CraftingTask[]): MergedTask[] {
 
     // 检查是否可以合并：
     // 1. 相同的 itemId 和 recipeId
-    // 2. 都不是链式任务（chainId 为空）
-    // 3. 状态都不是已完成（进行中和未进行的可以合并）
+    // 2. 相同的 quantity（数量）
+    // 3. 都不是链式任务（chainId 为空）
+    // 4. 状态都不是已完成（进行中和未进行的可以合并）
     const canMerge =
       currentTask.itemId === lastTaskInGroup.itemId &&
       currentTask.recipeId === lastTaskInGroup.recipeId &&
+      currentTask.quantity === lastTaskInGroup.quantity &&
       !currentTask.chainId &&
       !lastTaskInGroup.chainId &&
       currentTask.status !== 'completed' &&
@@ -125,6 +127,7 @@ export function canTasksBeMerged(task1: CraftingTask, task2: CraftingTask): bool
   return (
     task1.itemId === task2.itemId &&
     task1.recipeId === task2.recipeId &&
+    task1.quantity === task2.quantity &&
     !task1.chainId &&
     !task2.chainId &&
     task1.status !== 'completed' &&
