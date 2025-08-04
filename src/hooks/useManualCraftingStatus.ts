@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useManualCraftingValidator, useRecipeService } from '@/hooks/useDIServices';
 import type { Item, Recipe } from '@/types/index';
-import { useRecipeService, useManualCraftingValidator } from '@/hooks/useDIServices';
+import { useMemo } from 'react';
 
 export interface ManualCraftingStatus {
   title: string;
@@ -28,9 +28,9 @@ export const useManualCraftingStatus = (item: Item): ManualCraftingStatus => {
     // 如果没有配方
     if (itemRecipes.length === 0) {
       return {
-        title: '手动合成',
+        title: '未查询到配方',
         color: 'text.primary',
-        canCraft: true,
+        canCraft: false,
         hasRecipes: false,
       };
     }

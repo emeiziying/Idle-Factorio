@@ -1,12 +1,12 @@
 // 制作引擎 - 处理制作队列和物品生产
 
-import type { CraftingTask, Recipe } from '@/types/index';
-import useGameStore from '@/store/gameStore';
 import type { DataService } from '@/services/core/DataService';
-import type { RecipeService } from '@/services/crafting/RecipeService';
-import type { GameConfig } from '@/services/core/GameConfig';
 import { getService } from '@/services/core/DIServiceInitializer';
+import type { GameConfig } from '@/services/core/GameConfig';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
+import type { RecipeService } from '@/services/crafting/RecipeService';
+import useGameStore from '@/store/gameStore';
+import type { CraftingTask, Recipe } from '@/types/index';
 import { secondsToMs } from '@/utils/common';
 
 // 设备效率配置 - 基于Factorio的采矿机设计
@@ -303,9 +303,6 @@ class CraftingEngine {
         if (progress >= 100) {
           this.completeManualCraft(currentTask);
         }
-      } else {
-        // 如果没有配方（原材料），立即完成
-        this.completeManualCraft(currentTask);
       }
       return;
     }

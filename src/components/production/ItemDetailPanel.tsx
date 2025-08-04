@@ -17,7 +17,7 @@ interface ItemDetailPanelProps {
 const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item, onItemSelect }) => {
   const { usedInRecipes, hasFacilityRecipes } = useItemRecipes(item);
 
-  const { handleManualCraft, showMessage, closeMessage } = useCrafting();
+  const { showMessage, closeMessage } = useCrafting();
 
   return (
     <Box
@@ -56,7 +56,6 @@ const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item, onItemSelect })
         {/* 1. 手动合成配方（顶部） */}
         <ManualCraftingCard
           item={item}
-          onManualCraft={handleManualCraft}
           onItemSelect={onItemSelect}
         />
 

@@ -169,10 +169,20 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
         console.log(`[链式任务] 是否中间产物: ${task.isIntermediateProduct}`);
 
         if (isLastTask) {
-          // 最后一个任务完成，将最终产物添加到库存
-          get().updateInventory(task.itemId, task.quantity);
+          // 最后一个任务完成，需要根据配方计算实际产出量
+          const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+          let actualOutput = task.quantity; // 默认输出等于制作数量
+          
+          // 直接使用任务的recipeId获取配方
+          const recipe = recipeService.getRecipeById(task.recipeId);
+          if (recipe && recipe.out[task.itemId]) {
+            const outputPerCraft = recipe.out[task.itemId];
+            actualOutput = task.quantity * outputPerCraft;
+          }
+          
+          get().updateInventory(task.itemId, actualOutput);
           console.log(
-            `[链式任务] 链式任务完成: ${chain.name}, 最终产物: ${task.itemId} x${task.quantity} 已添加到库存`
+            `[链式任务] 链式任务完成: ${chain.name}, 最终产物: ${task.itemId} x${actualOutput} 已添加到库存`
           );
 
           // 标记链为完成
@@ -184,8 +194,19 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
         }
       }
     } else {
-      // 普通任务，直接添加产品到库存
-      get().updateInventory(task.itemId, task.quantity);
+      // 普通任务，需要根据配方计算实际产出量
+      const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+      let actualOutput = task.quantity; // 默认输出等于制作数量
+      
+      // 直接使用任务的recipeId获取配方
+      const recipe = recipeService.getRecipeById(task.recipeId);
+      if (recipe && recipe.out[task.itemId]) {
+        const outputPerCraft = recipe.out[task.itemId];
+        actualOutput = task.quantity * outputPerCraft;
+        console.log(`[制作完成] ${task.itemId}: 制作${task.quantity}次，每次产出${outputPerCraft}个，总产出${actualOutput}个，使用配方: ${recipe.id}`);
+      }
+      
+      get().updateInventory(task.itemId, actualOutput);
     }
 
     // 先标记任务为已完成，然后移除

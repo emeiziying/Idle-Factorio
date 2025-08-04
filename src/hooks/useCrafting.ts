@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import type { Recipe } from '@/types/index';
+import { useDependencyService } from '@/hooks/useDIServices';
 import useGameStore from '@/store/gameStore';
+import type { Recipe } from '@/types/index';
+import { useState } from 'react';
 import {
   type CraftingChainAnalysis,
   type CraftingDependency,
 } from '../services/crafting/DependencyService';
-import { useDependencyService } from '@/hooks/useDIServices';
 
 export const useCrafting = () => {
   const [showMessage, setShowMessage] = useState({
@@ -67,38 +67,12 @@ export const useCrafting = () => {
     }
   };
 
-  const handleManualCraft = (itemId: string, quantity: number = 1, recipe?: Recipe) => {
-    // 如果没有配方，直接添加到制作队列
-    if (!recipe) {
-      const success = addCraftingTask({
-        recipeId: `manual_${itemId}`,
-        itemId: itemId,
-        quantity,
-        progress: 0,
-        startTime: 0, // 任务开始时再设定
-        craftingTime: 0,
-        status: 'pending',
-      });
-
-      if (success) {
-        setShowMessage({
-          open: true,
-          message: `已添加手动合成任务: ${itemId} x${quantity}`,
-          severity: 'success',
-        });
-      } else {
-        setShowMessage({
-          open: true,
-          message: '制作队列已满',
-          severity: 'warning',
-        });
-      }
-      return;
-    }
-
+  const handleManualCraft = (itemId: string, quantity: number = 1, recipe: Recipe) => {
     // 检查材料是否足够（采矿配方无需材料）
     const isMiningRecipe = recipe.flags && recipe.flags.includes('mining');
     const hasInputMaterials = Object.keys(recipe.in).length > 0;
+
+    console.log('handleManualCraft', itemId, quantity, recipe);
 
     if (hasInputMaterials && !isMiningRecipe) {
       const canCraft = Object.entries(recipe.in).every(([itemId, required]) => {
@@ -148,9 +122,9 @@ export const useCrafting = () => {
       }
     }
 
-    // 添加到制作队列
+    // 添加到制作队列，使用真实的配方ID
     const success = addCraftingTask({
-      recipeId: `manual_${itemId}`,
+      recipeId: recipe.id, // 使用传入的配方ID，而不是虚构的manual_前缀
       itemId: itemId,
       quantity,
       progress: 0,
