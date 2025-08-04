@@ -2,6 +2,7 @@ import { Box, Typography } from '@mui/material';
 import React, { useEffect } from 'react';
 
 import CategoryTabs from '@/components/common/CategoryTabs';
+import FloatingTaskList from '@/components/common/FloatingTaskList';
 import CraftingQueue from '@/components/production/CraftingQueue';
 import ItemDetailPanel from '@/components/production/ItemDetailPanel';
 import ItemList from '@/components/production/ItemList';
@@ -108,6 +109,9 @@ const ProductionModule: React.FC = React.memo(() => {
 
       {/* 制作队列弹窗 */}
       <CraftingQueue open={showCraftingQueue} onClose={() => setCraftingQueueVisible(false)} />
+
+      {/* 浮动任务列表 - 左下角自动显示 */}
+      <FloatingTaskList />
     </Box>
   );
 });

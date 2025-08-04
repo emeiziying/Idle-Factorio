@@ -2,8 +2,10 @@
 import { getService } from '@/services/core/DIServiceInitializer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type { RecipeService } from '@/services/crafting/RecipeService';
+import type { GameLoopService } from '@/services/game/GameLoopService';
 import type { CraftingSlice, SliceCreator } from '@/store/types';
 import type { CraftingChain, CraftingTask } from '@/types/index';
+import { GameLoopTaskType } from '@/types/gameLoop';
 
 export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
   // 初始状态
@@ -23,9 +25,22 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
       id: `craft_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     };
 
+    // 如果这是第一个任务，立即启用制作系统
+    const wasEmpty = state.craftingQueue.length === 0;
+    
     set(state => ({
       craftingQueue: [...state.craftingQueue, newTask],
     }));
+
+    // 立即启用制作任务
+    if (wasEmpty) {
+      try {
+        const gameLoopService = getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
+        gameLoopService.enableTask(GameLoopTaskType.CRAFTING);
+      } catch (error) {
+        console.warn('[制作队列] 无法启用制作任务:', error);
+      }
+    }
 
     return true;
   },
@@ -54,10 +69,23 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
       return ''; // 队列空间不足
     }
 
+    // 如果队列为空，启用制作系统
+    const wasEmpty = currentTaskCount === 0;
+
     set(state => ({
       craftingQueue: [...state.craftingQueue, ...tasksWithIds],
       craftingChains: [...state.craftingChains, newChain],
     }));
+
+    // 立即启用制作任务
+    if (wasEmpty) {
+      try {
+        const gameLoopService = getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
+        gameLoopService.enableTask(GameLoopTaskType.CRAFTING);
+      } catch (error) {
+        console.warn('[制作队列] 无法启用制作任务:', error);
+      }
+    }
 
     return chainId;
   },
@@ -109,6 +137,17 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
       set(state => ({
         craftingQueue: state.craftingQueue.filter(task => task.id !== taskId),
       }));
+      
+      // 检查队列是否为空，如果为空则禁用制作系统
+      const remainingTasks = get().craftingQueue.filter(task => task.id !== taskId);
+      if (remainingTasks.length === 0) {
+        try {
+          const gameLoopService = getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
+          gameLoopService.disableTask(GameLoopTaskType.CRAFTING);
+        } catch (error) {
+          console.warn('[制作队列] 无法禁用制作任务:', error);
+        }
+      }
     }
   },
 
@@ -210,5 +249,16 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
 
     // 移除任务
     get().removeCraftingTask(taskId);
+    
+    // 如果队列为空，禁用制作系统
+    const remainingTasks = get().craftingQueue.filter(t => t.id !== taskId);
+    if (remainingTasks.length === 0) {
+      try {
+        const gameLoopService = getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
+        gameLoopService.disableTask(GameLoopTaskType.CRAFTING);
+      } catch (error) {
+        console.warn('[制作队列] 无法禁用制作任务:', error);
+      }
+    }
   },
 });

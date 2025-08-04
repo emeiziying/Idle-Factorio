@@ -6,3 +6,4 @@ export { default as CategoryTabs } from './CategoryTabs';
 export { default as FactorioIcon } from './FactorioIcon';
 export { default as ClickableWrapper } from './ClickableWrapper';
 export { default as ChainCraftingDialog } from './ChainCraftingDialog';
+export { default as FloatingTaskList } from './FloatingTaskList';

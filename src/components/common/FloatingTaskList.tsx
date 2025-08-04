@@ -1,0 +1,90 @@
+import FactorioIcon from '@/components/common/FactorioIcon';
+import { useDataService } from '@/hooks/useDIServices';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import useGameStore from '@/store/gameStore';
+import { Box, LinearProgress } from '@mui/material';
+import React from 'react';
+
+const FloatingTaskList: React.FC = () => {
+  const craftingQueue = useGameStore(state => state.craftingQueue);
+  const isMobile = useIsMobile();
+  const dataService = useDataService();
+
+  // 过滤活动任务，最多显示18个（3行×6列）
+  const activeTasks = craftingQueue
+    .filter(task => task.status !== 'completed' && task.progress < 100)
+    .slice(0, 18);
+
+  if (activeTasks.length === 0) return null;
+
+  const itemSize = isMobile ? 44 : 56;
+  const gap = isMobile ? 0.5 : 1;
+
+  return (
+    <Box
+      sx={{
+        position: 'absolute',
+        bottom: 20,
+        left: 20,
+        zIndex: 1000,
+        display: 'flex',
+        flexDirection: 'column',
+        gap,
+        maxWidth: `${itemSize * 6 + gap * 5}px`,
+        pointerEvents: 'none',
+      }}
+    >
+      {Array.from({ length: Math.min(Math.ceil(activeTasks.length / 6), 3) }, (_, rowIndex) => {
+        const rowTasks = activeTasks.slice(rowIndex * 6, (rowIndex + 1) * 6);
+        return (
+          <Box key={rowIndex} sx={{ display: 'flex', gap, justifyContent: 'flex-start' }}>
+            {rowTasks.map(task => {
+              const item = dataService.getItem(task.itemId);
+              if (!item) return null;
+
+              const progress = Math.max(0, Math.min(100, task.progress || 0));
+
+              return (
+                <Box
+                  key={task.id}
+                  sx={{
+                    position: 'relative',
+                    width: itemSize,
+                    height: itemSize,
+                    flexShrink: 0,
+                    opacity: progress >= 100 ? 0.7 : 1,
+                  }}
+                >
+                  <FactorioIcon
+                    itemId={task.itemId}
+                    size={itemSize}
+                    quantity={task.quantity > 1 ? task.quantity : undefined}
+                  />
+                  <LinearProgress
+                    variant="determinate"
+                    value={progress}
+                    sx={{
+                      width: itemSize,
+                      height: 3,
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      borderRadius: 1,
+                      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                      '& .MuiLinearProgress-bar': {
+                        borderRadius: 1,
+                        backgroundColor: progress >= 100 ? '#4caf50' : '#2196f3',
+                      },
+                    }}
+                  />
+                </Box>
+              );
+            })}
+          </Box>
+        );
+      })}
+    </Box>
+  );
+};
+
+export default FloatingTaskList;

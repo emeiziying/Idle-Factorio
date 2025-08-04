@@ -101,7 +101,7 @@ const ItemCard: React.FC<ItemCardProps> = React.memo(({ item, onClick, selected 
         {/* 物品图标 */}
         <FactorioIcon
           itemId={item.id}
-          size={isMobile ? 36 : 48}
+          size={isMobile ? 44 : 56}
           quantity={inventoryItem.currentAmount > 0 ? inventoryItem.currentAmount : undefined}
           selected={selected}
         />

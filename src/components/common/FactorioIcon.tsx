@@ -1,182 +1,214 @@
-import React, { useState, useEffect } from 'react';
-import { Box } from '@mui/material';
 import { useDataService } from '@/hooks/useDIServices';
-import type { IconData } from '@/types/index';
+import { Box } from '@mui/material';
+import React, { useEffect, useMemo, useState } from 'react';
 
 // 导入图标精灵图
 import iconSprite from '@/data/spa/icons.webp';
 
 interface FactorioIconProps {
-  itemId?: string; // 当使用customImage时可选
+  itemId?: string;
   size?: number;
   className?: string;
   alt?: string;
   quantity?: number;
   showBorder?: boolean;
-  customImage?: string; // 自定义图片URL
-  shortage?: boolean; // 是否数量不足
-  selected?: boolean; // 是否选中状态
-  selectedBgColor?: string; // 选中时的背景色
-  displayText?: string; // 自定义显示文本（优先级最高）
+  customImage?: string;
+  shortage?: boolean;
+  selected?: boolean;
+  selectedBgColor?: string;
+  displayText?: string;
 }
 
-const ICON_UNIT = 66; // 单个图标标准尺寸
-const SPRITE_URL = iconSprite; // 使用导入的图标路径
+const ICON_UNIT = 66;
+const SPRITE_URL = iconSprite;
 
-const FactorioIcon: React.FC<FactorioIconProps> = ({
-  itemId,
-  size = 32,
-  className,
-  alt,
-  quantity,
-  showBorder = true,
-  customImage,
-  shortage,
-  selected = false,
-  selectedBgColor = '#e39827',
-  displayText,
-}) => {
-  const [iconData, setIconData] = useState<IconData | null>(null);
-  const [spriteSize, setSpriteSize] = useState<{ width: number; height: number } | null>(null);
-  const [effectiveIconId, setEffectiveIconId] = useState<string | undefined>(itemId);
+// 精灵图尺寸缓存 - 全局单例
+let globalSpriteSize: { width: number; height: number } | null = null;
+let spriteSizePromise: Promise<{ width: number; height: number }> | null = null;
 
-  // 状态：从服务层获取的iconText
-  const [recipeIconText, setRecipeIconText] = useState<string | undefined>(undefined);
+const loadSpriteSize = (): Promise<{ width: number; height: number }> => {
+  if (globalSpriteSize) {
+    return Promise.resolve(globalSpriteSize);
+  }
 
-  const dataService = useDataService();
+  if (!spriteSizePromise) {
+    spriteSizePromise = new Promise(resolve => {
+      const img = new Image();
+      img.src = SPRITE_URL;
+      img.onload = () => {
+        globalSpriteSize = { width: img.naturalWidth, height: img.naturalHeight };
+        resolve(globalSpriteSize);
+      };
+    });
+  }
 
-  // 获取图标信息
-  useEffect(() => {
-    if (!itemId) return;
-
-    const iconInfo = dataService.getIconInfo(itemId);
-
-    setEffectiveIconId(iconInfo.iconId);
-    setRecipeIconText(iconInfo.iconText);
-  }, [itemId, dataService]);
-
-  // 加载iconData - 只在没有customImage时加载
-  useEffect(() => {
-    if (customImage || !effectiveIconId) return;
-    setIconData(dataService.getIconData(effectiveIconId));
-  }, [effectiveIconId, customImage, dataService]);
-
-  // 动态获取精灵图尺寸 - 只在没有customImage时加载
-  useEffect(() => {
-    if (customImage || spriteSize) return;
-    const img = new window.Image();
-    img.src = SPRITE_URL;
-    img.onload = () => {
-      setSpriteSize({ width: img.naturalWidth, height: img.naturalHeight });
-    };
-  }, [spriteSize, customImage]);
-
-  // 解析position字段
-  const getSpritePosition = (position: string) => {
-    if (!spriteSize) return {};
-    // 例：-66px -132px
-    const [xStr, yStr] = position.split(' ');
-    const x = parseInt(xStr, 10);
-    const y = parseInt(yStr, 10);
-    // 目标显示尺寸
-    const displaySize = size;
-    return {
-      backgroundPosition: `${(x * displaySize) / ICON_UNIT}px ${(y * displaySize) / ICON_UNIT}px`,
-      backgroundSize: `${(spriteSize.width * displaySize) / ICON_UNIT}px ${(spriteSize.height * displaySize) / ICON_UNIT}px`,
-      width: displaySize,
-      height: displaySize,
-    };
-  };
-
-  const containerSize = showBorder ? size + 8 : size; // 图标尺寸 + 4px padding on each side (if border shown)
-
-  // 计算背景色
-  const getBackgroundColor = () => {
-    if (shortage) return 'error.main';
-    if (selected) return selectedBgColor;
-    return customImage || iconData?.position ? '#313131' : '#999';
-  };
-
-  // 公共容器样式
-  const containerStyles = {
-    width: containerSize,
-    height: containerSize,
-    ...(showBorder && {
-      padding: '3px',
-      backgroundColor: getBackgroundColor(),
-      borderTop: '1px solid #454545',
-      borderLeft: '1px solid #212121',
-      borderRight: '1px solid #212121',
-      borderBottom: '1px solid #191919',
-    }),
-    display: 'inline-block',
-    flexShrink: 0,
-    position: 'relative',
-  };
-
-  // 公共数量显示样式
-  const quantityStyles = {
-    position: 'absolute' as const,
-    bottom: '0px',
-    right: showBorder ? '2px' : '0px',
-    color: '#fff',
-    fontSize: `${Math.max(10, Math.floor(size * 0.4))}px`, // 根据图标大小计算字体大小
-    fontWeight: 'bold',
-    textShadow: '0px 1px 1px #000, 0px -1px 1px #000, 1px 0px 1px #000, -1px 0px 1px #000',
-    lineHeight: 1,
-    pointerEvents: 'none' as const,
-  };
-
-  // 格式化数量显示
-  const formatQuantity = (qty: number) => {
-    return qty > 999 ? `${Math.floor(qty / 1000)}k` : qty;
-  };
-
-  // 获取要显示的文本：优先级 displayText > recipeIconText > quantity
-  const getDisplayText = () => {
-    if (displayText !== undefined) return displayText;
-    if (recipeIconText !== undefined) return recipeIconText;
-    if (quantity !== undefined) return formatQuantity(quantity);
-    return undefined;
-  };
-
-  const textToDisplay = getDisplayText();
-
-  // 如果数据未加载完成，显示占位符
-  const isLoading = !customImage && (!iconData || !spriteSize) && itemId;
-
-  return (
-    <Box className={className} sx={containerStyles} title={alt || itemId}>
-      <Box
-        sx={{
-          width: size,
-          height: size,
-          ...(customImage
-            ? {
-                backgroundImage: `url(${customImage})`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center',
-                backgroundSize: 'contain',
-              }
-            : iconData?.position && spriteSize
-              ? {
-                  backgroundImage: `url(${SPRITE_URL})`,
-                  backgroundRepeat: 'no-repeat',
-                  ...getSpritePosition(iconData.position),
-                }
-              : isLoading
-                ? {
-                    // 加载中状态 - 显示透明背景避免闪烁
-                    backgroundColor: 'transparent',
-                  }
-                : {
-                    bgcolor: 'grey.300',
-                  }),
-        }}
-      />
-      {textToDisplay !== undefined && !isLoading && <Box sx={quantityStyles}>{textToDisplay}</Box>}
-    </Box>
-  );
+  return spriteSizePromise;
 };
+
+const FactorioIcon: React.FC<FactorioIconProps> = React.memo(
+  ({
+    itemId,
+    size = 32,
+    className,
+    alt,
+    quantity,
+    showBorder = true,
+    customImage,
+    shortage,
+    selected = false,
+    selectedBgColor = '#e39827',
+    displayText,
+  }) => {
+    const dataService = useDataService();
+
+    // 本地状态来跟踪精灵图尺寸，强制重新渲染
+    const [localSpriteSize, setLocalSpriteSize] = useState(globalSpriteSize);
+
+    // 获取图标数据 - 一次性获取所有需要的数据
+    const iconInfo = useMemo(() => {
+      if (customImage || !itemId) {
+        return { iconData: null, iconText: undefined, isLoading: false };
+      }
+
+      const info = dataService.getIconInfo(itemId);
+      const iconData = info.iconId ? dataService.getIconData(info.iconId) : null;
+
+      return {
+        iconData,
+        iconText: info.iconText,
+        isLoading: !iconData && !!itemId,
+      };
+    }, [itemId, customImage, dataService]);
+
+    // 格式化显示文本
+    const textToDisplay = useMemo(() => {
+      if (displayText !== undefined) return displayText;
+      if (iconInfo.iconText !== undefined) return iconInfo.iconText;
+      if (quantity !== undefined) {
+        return quantity > 999 ? `${Math.floor(quantity / 1000)}k` : quantity;
+      }
+      return undefined;
+    }, [displayText, iconInfo.iconText, quantity]);
+
+    // 尺寸计算 - size是容器总尺寸
+    const containerSize = size;
+    const borderWidth = showBorder ? Math.max(1, Math.floor(size * 4 / 32)) : 0; // 按比例计算边框宽度
+    const iconSize = showBorder ? size - borderWidth * 2 : size; // 图标实际大小
+    
+    const backgroundColor = shortage
+      ? 'error.main'
+      : selected
+        ? selectedBgColor
+        : customImage || iconInfo.iconData
+          ? '#313131'
+          : '#999';
+
+    const containerStyles = useMemo(
+      () => ({
+        width: containerSize,
+        height: containerSize,
+        display: 'inline-block',
+        flexShrink: 0,
+        position: 'relative',
+        ...(showBorder && {
+          padding: `${borderWidth}px`,
+          backgroundColor,
+          borderTop: '1px solid #454545',
+          borderLeft: '1px solid #212121',
+          borderRight: '1px solid #212121',
+          borderBottom: '1px solid #191919',
+        }),
+      }),
+      [containerSize, showBorder, backgroundColor, borderWidth]
+    );
+
+    // 内容样式 - 使用实际图标大小
+    const contentStyles = useMemo(() => {
+      if (customImage) {
+        return {
+          width: iconSize,
+          height: iconSize,
+          backgroundImage: `url(${customImage})`,
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          backgroundSize: 'contain',
+        };
+      }
+
+      if (iconInfo.iconData?.position && localSpriteSize) {
+        // 解析精灵图位置
+        const [xStr, yStr] = iconInfo.iconData.position.split(' ');
+        const x = parseInt(xStr, 10);
+        const y = parseInt(yStr, 10);
+
+        return {
+          width: iconSize,
+          height: iconSize,
+          backgroundImage: `url(${SPRITE_URL})`,
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: `${(x * iconSize) / ICON_UNIT}px ${(y * iconSize) / ICON_UNIT}px`,
+          backgroundSize: `${(localSpriteSize.width * iconSize) / ICON_UNIT}px ${(localSpriteSize.height * iconSize) / ICON_UNIT}px`,
+        };
+      }
+
+      return {
+        width: iconSize,
+        height: iconSize,
+        backgroundColor: iconInfo.isLoading ? 'transparent' : 'grey.300',
+      };
+    }, [customImage, iconInfo.iconData?.position, iconInfo.isLoading, iconSize, localSpriteSize]);
+
+    // 文本样式 - 基于图标实际大小计算字体
+    const textStyles = useMemo(
+      () => ({
+        position: 'absolute' as const,
+        bottom: '0px',
+        right: showBorder ? `${borderWidth}px` : '0px',
+        color: '#fff',
+        fontSize: `${Math.max(8, Math.floor(iconSize * 0.4))}px`,
+        fontWeight: 'bold',
+        textShadow: '0px 1px 1px #000, 0px -1px 1px #000, 1px 0px 1px #000, -1px 0px 1px #000',
+        lineHeight: 1,
+        pointerEvents: 'none' as const,
+      }),
+      [showBorder, iconSize, borderWidth]
+    );
+
+    // 初始化精灵图尺寸
+    useEffect(() => {
+      if (!customImage && !localSpriteSize) {
+        loadSpriteSize().then(size => {
+          setLocalSpriteSize(size);
+        });
+      }
+    }, [customImage, localSpriteSize]);
+
+
+    return (
+      <Box className={className} sx={containerStyles} title={alt || itemId}>
+        <Box sx={contentStyles} />
+        {textToDisplay !== undefined && !iconInfo.isLoading && (
+          <Box sx={textStyles}>{textToDisplay}</Box>
+        )}
+      </Box>
+    );
+  },
+  (prevProps, nextProps) => {
+    // 只比较影响渲染的关键属性
+    return (
+      prevProps.itemId === nextProps.itemId &&
+      prevProps.size === nextProps.size &&
+      prevProps.quantity === nextProps.quantity &&
+      prevProps.showBorder === nextProps.showBorder &&
+      prevProps.customImage === nextProps.customImage &&
+      prevProps.shortage === nextProps.shortage &&
+      prevProps.selected === nextProps.selected &&
+      prevProps.selectedBgColor === nextProps.selectedBgColor &&
+      prevProps.displayText === nextProps.displayText
+    );
+  }
+);
+
+FactorioIcon.displayName = 'FactorioIcon';
 
 export default FactorioIcon;

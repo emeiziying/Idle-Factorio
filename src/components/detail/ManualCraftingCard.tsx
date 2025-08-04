@@ -1,7 +1,7 @@
 import CraftingButtons from '@/components/detail/CraftingButtons';
 import RecipeFlowDisplay from '@/components/detail/RecipeFlowDisplay';
-import { useRecipeService, useDependencyService } from '@/hooks/useDIServices';
 import { useCrafting } from '@/hooks/useCrafting';
+import { useDependencyService, useRecipeService } from '@/hooks/useDIServices';
 import { useManualCraftingStatus } from '@/hooks/useManualCraftingStatus';
 import useGameStore from '@/store/gameStore';
 import type { Item } from '@/types/index';
@@ -76,7 +76,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onItemSel
             recipe={recipe}
             themeColor="primary.main"
             showTime={true}
-            iconSize={32}
+            iconSize={40}
             onItemSelect={onItemSelect}
             customTime={recipe.time}
           />
