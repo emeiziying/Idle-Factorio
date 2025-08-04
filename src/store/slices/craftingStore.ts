@@ -84,7 +84,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
           } else {
             // 任务被手动取消，需要取消整个链
             if (chain.rawMaterialsConsumed) {
-              // 归还所有预扣的原材料
+              // 归还所有预扣的基础材料
               for (const [materialId, amount] of chain.rawMaterialsConsumed) {
                 get().updateInventory(materialId, amount);
               }

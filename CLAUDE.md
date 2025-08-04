@@ -117,27 +117,27 @@ The application implements sophisticated chain crafting with proper inventory ma
 
 #### DependencyService Chain Analysis
 ```typescript
-// Recursive calculation of total raw material needs
-calculateTotalRawMaterialNeeds(recipe, quantity, totalNeeds);
+// Recursive calculation of total basic material needs
+calculateTotalBasicMaterialNeeds(recipe, quantity, totalNeeds);
 
 // Pre-validation of total materials before creating chain
 analyzeCraftingChain(itemId, quantity, inventory): CraftingChainAnalysis | null;
 
-// Returns null if insufficient total raw materials
+// Returns null if insufficient total basic materials
 // Example: Crafting 1 burner-mining-drill needs 3 gears + 3 iron-plates
 ```
 
 #### Chain Crafting Execution Flow
 ```typescript
-// 1. Pre-calculate total raw material requirements
-// 2. Pre-deduct all raw materials from inventory immediately  
+// 1. Pre-calculate total basic material requirements
+// 2. Pre-deduct all basic materials from inventory immediately  
 // 3. Create chain tasks without additional material deduction
 // 4. CraftingEngine skips material deduction for chain tasks (task.chainId exists)
-// 5. Handle chain cancellation with full raw material refund
+// 5. Handle chain cancellation with full basic material refund
 
 executeChainCrafting(chainAnalysis) {
-  // Immediate raw material deduction prevents phantom crafting
-  for (const [materialId, totalNeeded] of chainAnalysis.totalRawMaterialNeeds) {
+  // Immediate basic material deduction prevents phantom crafting
+  for (const [materialId, totalNeeded] of chainAnalysis.totalBasicMaterialNeeds) {
     updateInventory(materialId, -totalNeeded);
   }
 }

@@ -24,7 +24,7 @@ export interface CraftingChainAnalysis {
   dependencies: CraftingDependency[];
   tasks: CraftingTask[];
   totalItems: number;
-  totalRawMaterialNeeds?: Map<string, number>; // 总原材料需求
+  totalBasicMaterialNeeds?: Map<string, number>; // 总基础材料需求
 }
 
 export class DependencyService {
@@ -55,17 +55,17 @@ export class DependencyService {
 
     const dependencies: CraftingDependency[] = [];
     const tasks: CraftingTask[] = [];
-    const totalRawMaterialNeeds = new Map<string, number>(); // 总原材料需求
+    const totalBasicMaterialNeeds = new Map<string, number>(); // 总基础材料需求
     let taskIdCounter = 1;
 
-    // 首先计算总的原材料需求
-    this.calculateTotalRawMaterialNeeds(mainRecipe, quantity, totalRawMaterialNeeds);
+    // 首先计算总的基础材料需求
+    this.calculateTotalBasicMaterialNeeds(mainRecipe, quantity, totalBasicMaterialNeeds);
 
-    // 检查总原材料是否足够
-    for (const [rawMaterialId, totalNeeded] of totalRawMaterialNeeds) {
-      const available = inventory.get(rawMaterialId)?.currentAmount || 0;
+    // 检查总基础材料是否足够
+    for (const [basicMaterialId, totalNeeded] of totalBasicMaterialNeeds) {
+      const available = inventory.get(basicMaterialId)?.currentAmount || 0;
       if (available < totalNeeded) {
-        // 如果总的原材料不够，无法创建链式制作
+        // 如果总的基础材料不够，无法创建链式制作
         return null;
       }
     }
@@ -132,17 +132,17 @@ export class DependencyService {
       dependencies,
       tasks,
       totalItems: dependencies.length + 1,
-      totalRawMaterialNeeds, // 添加总原材料需求信息
+      totalBasicMaterialNeeds, // 添加总基础材料需求信息
     };
   }
 
   /**
-   * 递归计算总的原材料需求
+   * 递归计算总的基础材料需求
    * @param recipe 配方
    * @param quantity 制作数量
    * @param totalNeeds 总需求映射
    */
-  private calculateTotalRawMaterialNeeds(
+  private calculateTotalBasicMaterialNeeds(
     recipe: Recipe,
     quantity: number,
     totalNeeds: Map<string, number>
@@ -153,21 +153,21 @@ export class DependencyService {
       // 检查这个材料是否可以进一步制作
       const inputRecipe = this.getBestManualCraftingRecipe(inputItemId);
 
-      // 采矿配方不需要材料，不应计入原材料需求
+      // 采矿配方不需要材料，不应计入基础材料需求
       if (
         inputRecipe &&
         inputRecipe.in &&
         Object.keys(inputRecipe.in).length > 0 &&
         !inputRecipe.flags?.includes('mining')
       ) {
-        // 这是一个中间产物，需要递归计算其原材料需求
-        this.calculateTotalRawMaterialNeeds(
+        // 这是一个中间产物，需要递归计算其基础材料需求
+        this.calculateTotalBasicMaterialNeeds(
           inputRecipe,
           Math.ceil(totalRequired / Object.values(inputRecipe.out)[0]),
           totalNeeds
         );
       } else {
-        // 这是原材料或可采矿物品，不计入原材料需求
+        // 这是基础材料或可采矿物品，不计入基础材料需求
         // 采矿物品可以无限制获取，所以不需要验证库存
         if (!inputRecipe || !inputRecipe.flags?.includes('mining')) {
           const existingNeed = totalNeeds.get(inputItemId) || 0;

@@ -68,7 +68,7 @@ export const useCrafting = () => {
   };
 
   const handleManualCraft = (itemId: string, quantity: number = 1, recipe?: Recipe) => {
-    // 如果没有配方（原材料），直接添加到制作队列
+    // 如果没有配方，直接添加到制作队列
     if (!recipe) {
       const success = addCraftingTask({
         recipeId: `manual_${itemId}`,
@@ -129,10 +129,10 @@ export const useCrafting = () => {
               return;
             }
           } else if (chain === null) {
-            // 链式分析返回null，说明原材料不足
+            // 链式分析返回null，说明基础材料不足
             setShowMessage({
               open: true,
-              message: '原材料不足，无法创建制作链。请先获取足够的基础材料。',
+              message: '基础材料不足，无法创建制作链。请先获取足够的基础材料。',
               severity: 'error',
             });
             return;
@@ -179,23 +179,23 @@ export const useCrafting = () => {
   };
 
   const executeChainCrafting = (chainAnalysis: CraftingChainAnalysis) => {
-    // 预先扣除总原材料库存
-    if (chainAnalysis.totalRawMaterialNeeds) {
-      for (const [materialId, totalNeeded] of chainAnalysis.totalRawMaterialNeeds) {
+    // 预先扣除总基础材料库存
+    if (chainAnalysis.totalBasicMaterialNeeds) {
+      for (const [materialId, totalNeeded] of chainAnalysis.totalBasicMaterialNeeds) {
         const available = getInventoryItem(materialId).currentAmount;
         if (available < totalNeeded) {
           setShowMessage({
             open: true,
-            message: `原材料${materialId}不足，需要${totalNeeded}个，只有${available}个`,
+            message: `基础材料${materialId}不足，需要${totalNeeded}个，只有${available}个`,
             severity: 'error',
           });
           return;
         }
       }
 
-      // 扣除原材料库存
+      // 扣除基础材料库存
       const { updateInventory } = useGameStore.getState();
-      for (const [materialId, totalNeeded] of chainAnalysis.totalRawMaterialNeeds) {
+      for (const [materialId, totalNeeded] of chainAnalysis.totalBasicMaterialNeeds) {
         updateInventory(materialId, -totalNeeded);
       }
     }
@@ -224,7 +224,7 @@ export const useCrafting = () => {
       },
       status: 'pending' as const,
       totalProgress: 0,
-      rawMaterialsConsumed: chainAnalysis.totalRawMaterialNeeds, // 记录已消耗的原材料
+      rawMaterialsConsumed: chainAnalysis.totalBasicMaterialNeeds, // 记录已消耗的基础材料
     };
 
     const chainId = addCraftingChain(chainData);

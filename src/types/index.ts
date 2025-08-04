@@ -135,7 +135,7 @@ export interface CraftingChain {
   };
   status: 'pending' | 'crafting' | 'completed';
   totalProgress: number; // 整个链的总进度 (0-1)
-  rawMaterialsConsumed?: Map<string, number>; // 已预先消耗的原材料
+  rawMaterialsConsumed?: Map<string, number>; // 已预先消耗的基础材料
 }
 
 // 图标数据接口

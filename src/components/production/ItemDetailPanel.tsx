@@ -5,9 +5,8 @@ import RecipeFacilitiesCard from '@/components/detail/RecipeFacilitiesCard';
 import UsageCard from '@/components/detail/UsageCard';
 import { useCrafting } from '@/hooks/useCrafting';
 import { useItemRecipes } from '@/hooks/useItemRecipes';
-import { useManualCraftingStatus } from '@/hooks/useManualCraftingStatus';
 import type { Item } from '@/types/index';
-import { Alert, Box, Divider, Snackbar, Typography } from '@mui/material';
+import { Alert, Box, Divider, Snackbar } from '@mui/material';
 import React from 'react';
 
 interface ItemDetailPanelProps {
@@ -19,7 +18,6 @@ const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item, onItemSelect })
   const { usedInRecipes, hasFacilityRecipes } = useItemRecipes(item);
 
   const { handleManualCraft, showMessage, closeMessage } = useCrafting();
-  const manualCraftingStatus = useManualCraftingStatus(item);
 
   return (
     <Box
@@ -56,26 +54,11 @@ const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item, onItemSelect })
         }}
       >
         {/* 1. 手动合成配方（顶部） */}
-        <Box sx={{ mb: 2 }}>
-          <Typography
-            variant="subtitle2"
-            gutterBottom
-            sx={{
-              fontSize: '0.9rem',
-              fontWeight: 600,
-              color: manualCraftingStatus.color,
-              mb: 1.5,
-            }}
-          >
-            {manualCraftingStatus.title}
-          </Typography>
-
-          <ManualCraftingCard
-            item={item}
-            onManualCraft={handleManualCraft}
-            onItemSelect={onItemSelect}
-          />
-        </Box>
+        <ManualCraftingCard
+          item={item}
+          onManualCraft={handleManualCraft}
+          onItemSelect={onItemSelect}
+        />
 
         {/* 2. 设施列表（显示当前物品配方的设施，带添加移除按钮） */}
         <RecipeFacilitiesCard item={item} onItemSelect={onItemSelect} />

@@ -25,7 +25,7 @@ export const useManualCraftingStatus = (item: Item): ManualCraftingStatus => {
 
     const itemRecipes = recipeService.getRecipesThatProduce(item.id);
 
-    // 如果没有配方（原材料）
+    // 如果没有配方
     if (itemRecipes.length === 0) {
       return {
         title: '手动合成',
