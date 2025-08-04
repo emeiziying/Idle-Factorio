@@ -4,10 +4,11 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 import useGameStore from '@/store/gameStore';
 import { Box, LinearProgress, Chip } from '@mui/material';
 import React, { useMemo } from 'react';
-import { mergeCraftingTasks } from '@/utils/taskMerger';
+import { mergeCraftingTasks, getTaskIdsToCancel } from '@/utils/taskMerger';
 
 const FloatingTaskList: React.FC = () => {
   const craftingQueue = useGameStore(state => state.craftingQueue);
+  const removeCraftingTask = useGameStore(state => state.removeCraftingTask);
   const isMobile = useIsMobile();
   const dataService = useDataService();
 
@@ -35,7 +36,7 @@ const FloatingTaskList: React.FC = () => {
         flexDirection: 'column',
         gap,
         maxWidth: `${itemSize * 6 + gap * 5}px`,
-        pointerEvents: 'none',
+        pointerEvents: 'auto', // 允许点击交互
       }}
     >
       {Array.from({ length: Math.min(Math.ceil(activeTasks.length / 6), 3) }, (_, rowIndex) => {
@@ -48,15 +49,27 @@ const FloatingTaskList: React.FC = () => {
 
               const progress = Math.max(0, Math.min(100, task.progress || 0));
 
+              const handleClick = () => {
+                const taskIds = getTaskIdsToCancel(task, craftingQueue);
+                taskIds.forEach(taskId => removeCraftingTask(taskId));
+              };
+
               return (
                 <Box
                   key={task.id}
+                  onClick={handleClick}
                   sx={{
                     position: 'relative',
                     width: itemSize,
                     height: itemSize,
                     flexShrink: 0,
                     opacity: progress >= 100 ? 0.7 : 1,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      opacity: 0.6,
+                      transform: 'scale(0.9)',
+                    },
                   }}
                 >
                   <FactorioIcon

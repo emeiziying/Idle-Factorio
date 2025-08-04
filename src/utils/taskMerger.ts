@@ -134,3 +134,26 @@ export function canTasksBeMerged(task1: CraftingTask, task2: CraftingTask): bool
     task2.status !== 'completed'
   );
 }
+
+/**
+ * 获取要取消的任务ID列表
+ * 处理合并任务、链式任务和普通任务的取消逻辑
+ */
+export function getTaskIdsToCancel(
+  task: MergedTask | CraftingTask,
+  allTasks: CraftingTask[]
+): string[] {
+  // 如果是合并任务
+  if ('isMerged' in task && task.isMerged) {
+    return getOriginalTaskIds(task as MergedTask);
+  }
+
+  // 如果是链式任务，取消整个链
+  if (task.chainId) {
+    const allChainTasks = allTasks.filter(t => t.chainId === task.chainId);
+    return allChainTasks.map(t => t.id);
+  }
+
+  // 普通单个任务
+  return [task.id];
+}

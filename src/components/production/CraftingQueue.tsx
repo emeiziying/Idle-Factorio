@@ -11,13 +11,13 @@ import {
   Slide,
   Chip,
 } from '@mui/material';
-import { Clear as ClearIcon, Delete as DeleteIcon, Close as CloseIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, Close as CloseIcon } from '@mui/icons-material';
 import type { TransitionProps } from '@mui/material/transitions';
 import FactorioIcon from '@/components/common/FactorioIcon';
 import { useDataService } from '@/hooks/useDIServices';
 import useGameStore from '@/store/gameStore';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { mergeCraftingTasks, getOriginalTaskIds, type MergedTask } from '@/utils/taskMerger';
+import { mergeCraftingTasks, getTaskIdsToCancel, type MergedTask } from '@/utils/taskMerger';
 
 // Constants
 const QUEUE_CAPACITY = 50;
@@ -37,25 +37,32 @@ interface CraftingQueueItemProps {
 const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(
   ({ task, isMobile, onRemove }) => {
     const dataService = useDataService();
+    const craftingQueue = useGameStore(state => state.craftingQueue);
 
-    // Always call hooks first
-    const handleRemove = useCallback(
+    // 点击任务项直接取消任务
+    const handleClick = useCallback(
       (e: React.MouseEvent) => {
         e.stopPropagation();
-        const taskIds = task.isMerged ? getOriginalTaskIds(task) : [task.id];
+        const taskIds = getTaskIdsToCancel(task, craftingQueue);
         onRemove(taskIds);
       },
-      [task, onRemove]
+      [task, onRemove, craftingQueue]
     );
 
-    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-      // 移除键盘取消功能，因为现在只有取消按钮可以取消任务
-      // 保留基本的焦点管理
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        (e.target as HTMLElement).blur();
-      }
-    }, []);
+    const handleKeyDown = useCallback(
+      (e: React.KeyboardEvent) => {
+        // 按Enter或Space键也可以取消任务
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          const taskIds = getTaskIdsToCancel(task, craftingQueue);
+          onRemove(taskIds);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          (e.target as HTMLElement).blur();
+        }
+      },
+      [task, onRemove, craftingQueue]
+    );
 
     const recipe = dataService.getRecipe(task.recipeId);
     const item = dataService.getItem(task.itemId);
@@ -69,16 +76,15 @@ const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(
     // Validate progress value
     const progress = Math.max(0, Math.min(100, task.progress || 0));
     const itemSize = isMobile ? MOBILE_ITEM_SIZE : DESKTOP_ITEM_SIZE;
-    const cancelButtonSize = isMobile ? 16 : 20;
 
     return (
       <Box
         role="button"
         tabIndex={0}
-        aria-label={`制作 ${item.name || task.itemId} - 进度 ${Math.round(progress)}%${task.isMerged ? ` (合并${task.mergedCount}个任务)` : ''}`}
+        aria-label={`点击取消制作 ${item.name || task.itemId} - 进度 ${Math.round(progress)}%${task.isMerged ? ` (合并${task.mergedCount}个任务)` : ''}`}
         sx={{
           position: 'relative',
-          cursor: 'default',
+          cursor: 'pointer',
           // 移除transform动画，使用opacity和box-shadow代替
           transition: 'opacity 0.2s ease, box-shadow 0.2s ease',
           // 确保固定尺寸，避免布局跳动
@@ -86,11 +92,9 @@ const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(
           height: itemSize,
           flexShrink: 0,
           '&:hover': {
-            opacity: 0.9,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-            '& .cancel-button': {
-              opacity: 1,
-            },
+            opacity: 0.8,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+            transform: 'scale(0.95)',
           },
           '&:focus': {
             outline: '2px solid',
@@ -98,6 +102,7 @@ const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(
             outlineOffset: 2,
           },
         }}
+        onClick={handleClick}
         onKeyDown={handleKeyDown}
       >
         {/* 物品图标和进度条容器 */}
@@ -163,33 +168,6 @@ const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(
             }}
           />
         </Box>
-
-        {/* 取消按钮 */}
-        <IconButton
-          className="cancel-button"
-          size="small"
-          aria-label="取消制作任务"
-          onClick={handleRemove}
-          sx={{
-            position: 'absolute',
-            top: -3,
-            right: -3,
-            bgcolor: 'error.main',
-            color: 'white',
-            opacity: 0,
-            transition: 'all 0.2s ease',
-            width: cancelButtonSize,
-            height: cancelButtonSize,
-            minWidth: 'unset',
-            '&:hover': {
-              bgcolor: 'error.dark',
-              opacity: 1,
-              transform: 'scale(1.1)',
-            },
-          }}
-        >
-          <ClearIcon sx={{ fontSize: cancelButtonSize - 4 }} />
-        </IconButton>
       </Box>
     );
   }

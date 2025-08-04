@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { mergeCraftingTasks, getOriginalTaskIds, canTasksBeMerged } from '../taskMerger';
+import {
+  mergeCraftingTasks,
+  getOriginalTaskIds,
+  canTasksBeMerged,
+  getTaskIdsToCancel,
+} from '../taskMerger';
 import type { CraftingTask } from '@/types/index';
 
 describe('taskMerger', () => {
@@ -353,6 +358,59 @@ describe('taskMerger', () => {
       const task2 = createTask('2', 'wood', 'wood-recipe', 1, 40, undefined, 'pending');
 
       expect(canTasksBeMerged(task1, task2)).toBe(false);
+    });
+  });
+
+  describe('getTaskIdsToCancel', () => {
+    it('should return single id for regular task', () => {
+      const task = createTask('1', 'wood', 'wood-recipe', 1, 20);
+      const allTasks = [task];
+
+      const result = getTaskIdsToCancel(task, allTasks);
+      expect(result).toEqual(['1']);
+    });
+
+    it('should return all chain task ids for chain task', () => {
+      const task1 = createTask('1', 'wood', 'wood-recipe', 1, 20, 'chain-1');
+      const task2 = createTask('2', 'iron-plate', 'iron-plate-recipe', 1, 40, 'chain-1');
+      const task3 = createTask('3', 'gear', 'gear-recipe', 1, 60, 'chain-1');
+      const task4 = createTask('4', 'copper-plate', 'copper-plate-recipe', 1, 80); // 不是链式任务
+
+      const allTasks = [task1, task2, task3, task4];
+
+      // 点击链中的任意一个任务，应该返回整个链的所有任务ID
+      const result1 = getTaskIdsToCancel(task1, allTasks);
+      expect(result1).toEqual(['1', '2', '3']);
+
+      const result2 = getTaskIdsToCancel(task2, allTasks);
+      expect(result2).toEqual(['1', '2', '3']);
+
+      const result3 = getTaskIdsToCancel(task3, allTasks);
+      expect(result3).toEqual(['1', '2', '3']);
+
+      // 非链式任务只返回自己的ID
+      const result4 = getTaskIdsToCancel(task4, allTasks);
+      expect(result4).toEqual(['4']);
+    });
+
+    it('should return original task ids for merged task', () => {
+      const task1 = createTask('1', 'wood', 'wood-recipe', 2, 20);
+      const task2 = createTask('2', 'wood', 'wood-recipe', 2, 40);
+      const allTasks = [task1, task2];
+
+      const mergedTasks = mergeCraftingTasks(allTasks);
+      const mergedTask = mergedTasks[0];
+
+      const result = getTaskIdsToCancel(mergedTask, allTasks);
+      expect(result).toEqual(['1', '2']);
+    });
+
+    it('should handle empty chain gracefully', () => {
+      const task = createTask('1', 'wood', 'wood-recipe', 1, 20, 'nonexistent-chain');
+      const allTasks = [task];
+
+      const result = getTaskIdsToCancel(task, allTasks);
+      expect(result).toEqual(['1']); // 只有这一个任务在这个链中
     });
   });
 });
