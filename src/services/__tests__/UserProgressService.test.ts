@@ -6,10 +6,9 @@ vi.mock('../../utils/logger', () => ({
   warn: vi.fn(),
 }));
 
-// UserProgressService 测试套件 - 用户进度管理服务
+// UserProgressService 测试套件 - 用户进度管理服务（仅科技解锁）
 describe('UserProgressService', () => {
   let service: UserProgressService;
-  const STORAGE_KEY = 'factorio_user_progress';
 
   beforeEach(() => {
     // 清空 localStorage
@@ -34,100 +33,6 @@ describe('UserProgressService', () => {
     });
   });
 
-  // 物品解锁测试
-  describe('item unlocking', () => {
-    // 物品解锁状态检查
-    describe('isItemUnlocked', () => {
-      // 测试：锁定的物品应返回 false
-      it('should return false for locked items', () => {
-        expect(service.isItemUnlocked('iron-plate')).toBe(false);
-      });
-
-      // 测试：解锁的物品应返回 true
-      it('should return true for unlocked items', () => {
-        service.unlockItem('iron-plate');
-        expect(service.isItemUnlocked('iron-plate')).toBe(true);
-      });
-    });
-
-    // 解锁单个物品
-    describe('unlockItem', () => {
-      // 测试：应该解锁单个物品
-      it('should unlock single item', () => {
-        service.unlockItem('copper-plate');
-
-        expect(service.isItemUnlocked('copper-plate')).toBe(true);
-        expect(service.getUnlockedItems()).toContain('copper-plate');
-      });
-
-      // 测试：解锁后应保存进度
-      it('should save progress after unlocking', () => {
-        const saveSpy = vi.spyOn(
-          service as unknown as { saveProgress: () => void },
-          'saveProgress'
-        );
-
-        service.unlockItem('steel-plate');
-
-        expect(saveSpy).toHaveBeenCalled();
-      });
-
-      // 测试：应该处理重复解锁
-      it('should handle duplicate unlocks', () => {
-        service.unlockItem('iron-gear-wheel');
-        service.unlockItem('iron-gear-wheel');
-
-        const unlockedItems = service.getUnlockedItems();
-        expect(unlockedItems.filter(id => id === 'iron-gear-wheel')).toHaveLength(1);
-      });
-    });
-
-    // 批量解锁物品
-    describe('unlockItems', () => {
-      // 测试：应该解锁多个物品
-      it('should unlock multiple items', () => {
-        const items = ['iron-plate', 'copper-plate', 'steel-plate'];
-
-        service.unlockItems(items);
-
-        items.forEach(item => {
-          expect(service.isItemUnlocked(item)).toBe(true);
-        });
-      });
-
-      // 测试：批量解锁后应只保存一次进度
-      it('should save progress once after batch unlock', () => {
-        const saveSpy = vi.spyOn(
-          service as unknown as { saveProgress: () => void },
-          'saveProgress'
-        );
-
-        service.unlockItems(['item1', 'item2', 'item3']);
-
-        expect(saveSpy).toHaveBeenCalledTimes(1);
-      });
-    });
-
-    // 获取已解锁物品
-    describe('getUnlockedItems', () => {
-      // 测试：没有解锁物品时应返回空数组
-      it('should return empty array when no items unlocked', () => {
-        expect(service.getUnlockedItems()).toEqual([]);
-      });
-
-      // 测试：应返回所有已解锁的物品
-      it('should return all unlocked items', () => {
-        service.unlockItems(['item1', 'item2', 'item3']);
-
-        const unlocked = service.getUnlockedItems();
-        expect(unlocked).toHaveLength(3);
-        expect(unlocked).toContain('item1');
-        expect(unlocked).toContain('item2');
-        expect(unlocked).toContain('item3');
-      });
-    });
-  });
-
   // 科技解锁测试
   describe('technology unlocking', () => {
     // 科技解锁状态检查
@@ -142,210 +47,170 @@ describe('UserProgressService', () => {
         service.unlockTech('automation');
         expect(service.isTechUnlocked('automation')).toBe(true);
       });
+
+      // 测试：未解锁的科技应返回 false
+      it('should return false for non-unlocked techs after unlocking another', () => {
+        service.unlockTech('automation');
+        // 另一个科技应仍然返回 false
+        expect(service.isTechUnlocked('logistics')).toBe(false);
+        expect(service.getUnlockedTechs()).toEqual(['automation']);
+      });
+
+      // 测试：重复解锁应保持幂等
+      it('should be idempotent when unlocking same tech multiple times', () => {
+        service.unlockTech('automation');
+        service.unlockTech('automation');
+        service.unlockTech('automation');
+
+        const unlockedTechs = service.getUnlockedTechs();
+        expect(unlockedTechs).toEqual(['automation']);
+        expect(unlockedTechs.filter(id => id === 'automation')).toHaveLength(1);
+      });
     });
 
-    // 解锁单个科技
+    // 单个科技解锁
     describe('unlockTech', () => {
-      // 测试：应该解锁单个科技
-      it('should unlock single tech', () => {
-        service.unlockTech('logistics');
+      // 测试：解锁后科技状态应正确更新
+      it('should update tech status after unlocking', () => {
+        service.unlockTech('automation');
 
-        expect(service.isTechUnlocked('logistics')).toBe(true);
-        expect(service.getUnlockedTechs()).toContain('logistics');
-      });
-
-      // 测试：解锁后应保存进度
-      it('should save progress after unlocking', () => {
-        const saveSpy = vi.spyOn(
-          service as unknown as { saveProgress: () => void },
-          'saveProgress'
-        );
-
-        service.unlockTech('steel-processing');
-
-        expect(saveSpy).toHaveBeenCalled();
+        expect(service.isTechUnlocked('automation')).toBe(true);
+        const unlockedTechs = service.getUnlockedTechs();
+        expect(unlockedTechs).toContain('automation');
+        expect(unlockedTechs.every(id => typeof id === 'string')).toBe(true);
       });
     });
 
-    // 批量解锁科技
+    // 批量科技解锁
     describe('unlockTechs', () => {
-      // 测试：应该解锁多个科技
-      it('should unlock multiple techs', () => {
-        const techs = ['automation', 'logistics', 'steel-processing'];
+      // 测试：批量解锁多个科技
+      it('should unlock multiple techs at once', () => {
+        const techsToUnlock = ['automation', 'logistics', 'steel-processing'];
+        service.unlockTechs(techsToUnlock);
 
-        service.unlockTechs(techs);
-
-        techs.forEach(tech => {
-          expect(service.isTechUnlocked(tech)).toBe(true);
+        techsToUnlock.forEach(techId => {
+          expect(service.isTechUnlocked(techId)).toBe(true);
         });
       });
 
-      // 获取已解锁科技
-      describe('getUnlockedTechs', () => {
-        // 测试：没有解锁科技时应返回空数组
-        it('should return empty array when no techs unlocked', () => {
-          expect(service.getUnlockedTechs()).toEqual([]);
-        });
+      // 测试：空数组应正常处理
+      it('should handle empty array gracefully', () => {
+        const initialTechs = service.getUnlockedTechs();
+        service.unlockTechs([]);
 
-        // 测试：应返回所有已解锁的科技
-        it('should return all unlocked techs', () => {
-          service.unlockTechs(['tech1', 'tech2', 'tech3']);
-
-          const unlocked = service.getUnlockedTechs();
-          expect(unlocked).toHaveLength(3);
-          expect(unlocked).toContain('tech1');
-          expect(unlocked).toContain('tech2');
-          expect(unlocked).toContain('tech3');
-        });
-      });
-    });
-    // 进度持久化测试
-    describe('progress persistence', () => {
-      // 测试：应保存进度到 localStorage
-      it('should save progress to localStorage', () => {
-        service.unlockItems(['iron-plate', 'copper-plate']);
-        service.unlockTechs(['automation', 'logistics']);
-
-        const saved = localStorage.getItem(STORAGE_KEY);
-        expect(saved).toBeTruthy();
-
-        const data = JSON.parse(saved!);
-        expect(data.unlockedItems).toContain('iron-plate');
-        expect(data.unlockedItems).toContain('copper-plate');
-        expect(data.unlockedTechs).toContain('automation');
-        expect(data.unlockedTechs).toContain('logistics');
-        expect(data.lastUpdated).toBeDefined();
+        expect(service.getUnlockedTechs()).toEqual(initialTechs);
       });
 
-      // 测试：初始化时应从 localStorage 加载进度
-      it('should load progress from localStorage on initialization', () => {
-        // Set up saved data
-        // 设置保存的数据
-        const savedData = {
-          unlockedItems: ['saved-item-1', 'saved-item-2'],
-          unlockedTechs: ['saved-tech-1', 'saved-tech-2'],
-          lastUpdated: Date.now(),
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
+      // 测试：复杂批量解锁场景
+      it('should handle complex batch unlock scenarios', () => {
+        // 先解锁一些科技
+        service.unlockTechs(['tech1', 'tech2']);
 
-        // Create new instance
-        // 创建新实例
-        (
-          UserProgressService as unknown as {
-            instance: UserProgressService | null;
-          }
-        ).instance = null;
-        const newService = new UserProgressService();
+        // 再解锁更多科技（包括重复的）
+        service.unlockTechs(['tech2', 'tech3', 'tech4']);
 
-        // Check loaded data
-        // 检查加载的数据
-        expect(newService.isItemUnlocked('saved-item-1')).toBe(true);
-        expect(newService.isItemUnlocked('saved-item-2')).toBe(true);
-        expect(newService.isTechUnlocked('saved-tech-1')).toBe(true);
-        expect(newService.isTechUnlocked('saved-tech-2')).toBe(true);
-      });
+        const unlockedTechs = service.getUnlockedTechs();
+        expect(unlockedTechs).toContain('tech1');
+        expect(unlockedTechs).toContain('tech2');
+        expect(unlockedTechs).toContain('tech3');
+        expect(unlockedTechs).toContain('tech4');
 
-      // 测试：应处理损坏的 localStorage 数据
-      it('should handle corrupted localStorage data', () => {
-        localStorage.setItem(STORAGE_KEY, 'invalid json');
-
-        // Should not throw when creating instance
-        // 创建实例时不应抛出错误
-        (
-          UserProgressService as unknown as {
-            instance: UserProgressService | null;
-          }
-        ).instance = null;
-        expect(() => new UserProgressService()).not.toThrow();
-
-        const newService = new UserProgressService();
-        expect(newService.getUnlockedItems()).toEqual([]);
-        expect(newService.getUnlockedTechs()).toEqual([]);
-      });
-
-      // 测试：保存时应处理 localStorage 错误
-      it('should handle localStorage errors when saving', () => {
-        // Mock localStorage.setItem to throw
-        // 模拟 localStorage.setItem 抛出错误
-        const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-          throw new Error('Storage quota exceeded');
-        });
-
-        // Should not throw when saving
-        // 保存时不应抛出错误
-        expect(() => service.unlockItem('test-item')).not.toThrow();
-
-        setItemSpy.mockRestore();
+        // 确认没有重复
+        const uniqueTechs = [...new Set(unlockedTechs)];
+        expect(unlockedTechs).toHaveLength(uniqueTechs.length);
       });
     });
 
-    // 重置进度测试
-    describe('resetProgress', () => {
-      // 测试：应清除所有已解锁的物品和科技
-      it('should clear all unlocked items and techs', () => {
-        service.unlockItems(['item1', 'item2', 'item3']);
-        service.unlockTechs(['tech1', 'tech2', 'tech3']);
-
-        service.resetProgress();
-
-        expect(service.getUnlockedItems()).toEqual([]);
+    // 获取已解锁科技列表
+    describe('getUnlockedTechs', () => {
+      // 测试：初始状态下应返回空数组
+      it('should return empty array initially', () => {
         expect(service.getUnlockedTechs()).toEqual([]);
       });
 
-      // 测试：应保存清除后的状态到 localStorage
-      it('should save cleared state to localStorage', () => {
-        service.unlockItems(['item1', 'item2']);
-        service.unlockTechs(['tech1', 'tech2']);
+      // 测试：解锁后应返回正确的科技列表
+      it('should return correct techs after unlocking', () => {
+        service.unlockTechs(['automation', 'logistics']);
 
-        service.resetProgress();
-
-        const saved = localStorage.getItem(STORAGE_KEY);
-        const data = JSON.parse(saved!);
-
-        expect(data.unlockedItems).toEqual([]);
-        expect(data.unlockedTechs).toEqual([]);
+        const unlockedTechs = service.getUnlockedTechs();
+        expect(unlockedTechs).toHaveLength(2);
+        expect(unlockedTechs).toContain('automation');
+        expect(unlockedTechs).toContain('logistics');
       });
     });
+  });
 
-    // 边界情况测试
-    describe('edge cases', () => {
-      // 测试：应处理批量操作中的空数组
-      it('should handle empty arrays in batch operations', () => {
-        expect(() => service.unlockItems([])).not.toThrow();
-        expect(() => service.unlockTechs([])).not.toThrow();
-      });
+  // 进度重置测试
+  describe('progress reset', () => {
+    // 测试：重置后科技应清空
+    it('should clear unlocked techs after reset', () => {
+      // 先解锁一些科技
+      service.unlockTech('automation');
+      
+      // 验证初始状态
+      expect(service.isTechUnlocked('automation')).toBe(true);
 
-      // 测试：应为物品和科技维护独立的命名空间
-      it('should maintain separate namespaces for items and techs', () => {
-        service.unlockItem('automation');
-        service.unlockTech('automation');
+      // 重置
+      service.resetProgress();
 
-        expect(service.isItemUnlocked('automation')).toBe(true);
-        expect(service.isTechUnlocked('automation')).toBe(true);
+      // 验证清空结果
+      expect(service.isTechUnlocked('automation')).toBe(false);
+      expect(service.getUnlockedTechs()).toEqual([]);
+    });
+  });
 
-        // They should be tracked separately
-        // 它们应该被分别跟踪
-        expect(service.getUnlockedItems()).toContain('automation');
-        expect(service.getUnlockedTechs()).toContain('automation');
-      });
+  // 数据持久化测试
+  describe('data persistence', () => {
+    // 测试：数据持久化 - 应该保存和加载解锁的科技
+    it('should persist and load unlocked techs', () => {
+      // 解锁一些科技
+      service.unlockTechs(['automation', 'logistics']);
 
-      // 测试：应处理非常大的数据集
-      it('should handle very large datasets', () => {
-        const largeItemSet = Array.from({ length: 1000 }, (_, i) => `item-${i}`);
-        const largeTechSet = Array.from({ length: 1000 }, (_, i) => `tech-${i}`);
+      // 创建新实例（模拟重新加载）
+      const newService = new UserProgressService();
 
-        service.unlockItems(largeItemSet);
-        service.unlockTechs(largeTechSet);
+      // 验证数据是否正确加载
+      expect(newService.isTechUnlocked('automation')).toBe(true);
+      expect(newService.isTechUnlocked('logistics')).toBe(true);
+    });
 
-        expect(service.getUnlockedItems()).toHaveLength(1000);
-        expect(service.getUnlockedTechs()).toHaveLength(1000);
+    // 测试：应该获取正确的解锁科技列表
+    it('should get correct unlocked techs list', () => {
+      const unlockedTechs = service.getUnlockedTechs();
+      expect(Array.isArray(unlockedTechs)).toBe(true);
+    });
 
-        // Should still be able to save and load
-        // 仍应能够保存和加载
-        const saved = localStorage.getItem(STORAGE_KEY);
-        expect(saved).toBeTruthy();
-        expect(JSON.parse(saved!).unlockedItems).toHaveLength(1000);
-      });
+    // 测试：正确的存储键
+    it('should use correct storage key', () => {
+      service.unlockTechs(['test-tech']);
+      
+      const stored = localStorage.getItem('factorio_user_progress');
+      expect(stored).toBeTruthy();
+      
+      const data = JSON.parse(stored!);
+      expect(data.unlockedTechs).toBeDefined();
+    });
+
+    // 测试：在localStorage中存储数据
+    it('should store data in localStorage', () => {
+      service.unlockTech('tech1');
+      
+      const stored = localStorage.getItem('factorio_user_progress');
+      expect(stored).toBeTruthy();
+      
+      const data = JSON.parse(stored!);
+      expect(data.unlockedTechs).toContain('tech1');
+      expect(data.lastUpdated).toBeDefined();
+    });
+
+    // 测试：损坏的localStorage数据应被安全处理
+    it('should handle corrupted localStorage data safely', () => {
+      // 模拟损坏的JSON数据
+      localStorage.setItem('factorio_user_progress', 'corrupted data');
+      
+      // 应该能安全创建新实例
+      const newService = new UserProgressService();
+      expect(newService.getUnlockedTechs()).toEqual([]);
     });
   });
 });

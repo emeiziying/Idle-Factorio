@@ -1,9 +1,9 @@
-import React from 'react';
-import { Typography, Box, Tooltip } from '@mui/material';
-import type { Item } from '@/types/index';
-import useGameStore from '@/store/gameStore';
 import FactorioIcon from '@/components/common/FactorioIcon';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import useGameStore from '@/store/gameStore';
+import type { Item } from '@/types/index';
+import { Box, Tooltip, Typography } from '@mui/material';
+import React from 'react';
 
 interface ItemCardProps {
   item: Item;
@@ -12,8 +12,8 @@ interface ItemCardProps {
 }
 
 const ItemCard: React.FC<ItemCardProps> = React.memo(({ item, onClick, selected = false }) => {
-  const getInventoryItem = useGameStore(state => state.getInventoryItem);
-  const inventoryItem = getInventoryItem(item.id);
+  // 响应式获取inventory item - 当inventory更新时会自动重新渲染
+  const inventoryItem = useGameStore(state => state.getInventoryItem(item.id));
   const isMobile = useIsMobile();
 
   const getStatusColor = (status: string) => {

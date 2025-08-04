@@ -3,7 +3,6 @@
 import { getService } from '@/services/core/DIServiceInitializer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import { RecipeService } from '@/services/crafting/RecipeService';
-import type { UserProgressService } from '@/services/game/UserProgressService';
 import type { TechnologyService } from '@/services/technology/TechnologyService';
 import type { Category, GameData, IconData, Item, Recipe } from '@/types/index';
 import { error as logError } from '@/utils/logger';
@@ -196,14 +195,6 @@ export class DataService {
     return this.gameData.categories.find((cat: Category) => cat.id === categoryId);
   }
 
-  // 解锁物品
-  unlockItem(itemId: string): void {
-    const userProgressService = getService<UserProgressService>(
-      SERVICE_TOKENS.USER_PROGRESS_SERVICE
-    );
-    userProgressService.unlockItem(itemId);
-  }
-
   // 按行号获取分类内的物品子分组 - 性能优化版本
   getItemsByRow(categoryId: string): Map<number, Item[]> {
     if (!this.gameData) return new Map();
@@ -243,65 +234,6 @@ export class DataService {
     this.itemsByRowCache.set(cacheKey, itemsByRow);
 
     return itemsByRow;
-  }
-
-  // 获取行的显示名称
-  getRowDisplayName(categoryId: string, row: number): string {
-    const rowNames: Record<string, Record<number, string>> = {
-      'intermediate-products': {
-        0: '原材料',
-        1: '基础材料',
-        2: '组件',
-        3: '科技包',
-        4: '高级组件',
-        5: '特殊材料',
-        6: '生产模块',
-        7: '军用装备',
-        8: '高级材料',
-        9: '核能材料',
-        10: '太空材料',
-        11: '科技包', // automation-science-pack在row 11
-        12: '高级科技包',
-        13: '特殊科技包',
-        14: '终极材料',
-        15: '扩展材料',
-      },
-      production: {
-        0: '工具',
-        1: '电力生产',
-        2: '资源开采',
-        3: '冶炼',
-        4: '制造',
-        5: '模块和插件',
-        6: '火箭部件',
-      },
-      logistics: {
-        0: '存储',
-        1: '传送带',
-        2: '机械臂',
-        3: '基础设施',
-        4: '铁路运输',
-        5: '载具',
-        6: '机器人物流',
-        7: '电路网络',
-        8: '建设',
-      },
-      combat: {
-        0: '武器',
-        1: '弹药',
-        2: '防御',
-        3: '载具装备',
-        4: '军用设施',
-        5: '炮弹',
-        6: '核武器',
-      },
-      fluids: {
-        0: '流体',
-      },
-    };
-
-    const categoryRows = rowNames[categoryId];
-    return categoryRows ? categoryRows[row] || `第${row + 1}组` : `第${row + 1}组`;
   }
 
   // 获取物品图标数据

@@ -52,6 +52,10 @@ export interface Item {
     speed: number;
   };
   machine?: Machine;
+  technology?: {
+    prerequisites?: string[];
+    unlockedRecipes?: string[];
+  };
 }
 
 // 研究触发器接口

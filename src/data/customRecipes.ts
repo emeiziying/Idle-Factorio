@@ -12,48 +12,19 @@ import type { Recipe } from '@/types';
  * 木材获取配方
  * 木材是唯一无法通过自动化设备采集的原材料
  * - 死树给 2 个木材，采集时间 0.5 秒
- * - 大树给 4 个木材，采集时间 0.55 秒
  */
 const WOOD_RECIPES: Recipe[] = [
-  // 手动砍树 - 死树
+  // 手动砍树
   {
-    id: 'wood-mining-dead-tree',
-    name: 'Wood (Dead Tree)',
+    id: 'wood-mining',
+    name: 'Wood',
     category: 'intermediate-products',
     time: 0.5,
     in: {},
     out: { wood: 2 },
     cost: 0, // 手动采集，无成本
-    flags: ['mining', 'manual'],
+    flags: ['mining'],
     producers: [], // 只能手动采集，不能自动化
-    locations: ['nauvis'],
-  },
-
-  // 手动砍树 - 大树
-  {
-    id: 'wood-mining-big-tree',
-    name: 'Wood (Big Tree)',
-    category: 'intermediate-products',
-    time: 0.55,
-    in: {},
-    out: { wood: 4 },
-    cost: 0, // 手动采集，无成本
-    flags: ['mining', 'manual'],
-    producers: [], // 只能手动采集，不能自动化
-    locations: ['nauvis'],
-  },
-
-  // 手动砍树 - 平均产出（用于计算）
-  {
-    id: 'wood-mining-average',
-    name: 'Wood (Average)',
-    category: 'intermediate-products',
-    time: 0.525, // 平均时间
-    in: {},
-    out: { wood: 3 }, // 平均产出
-    cost: 0,
-    flags: ['mining', 'manual'],
-    producers: [],
     locations: ['nauvis'],
   },
 ];
@@ -82,24 +53,6 @@ export const CUSTOM_RECIPES_BY_ITEM: Record<string, Recipe[]> = {
   // iron_ore: IRON_ORE_RECIPES,
   // copper_ore: COPPER_ORE_RECIPES,
 };
-
-/**
- * 配方类型常量
- */
-export const RecipeType = {
-  // 木材配方
-  WOOD: {
-    MANUAL_DEAD_TREE: 'wood-mining-dead-tree',
-    MANUAL_BIG_TREE: 'wood-mining-big-tree',
-    MANUAL_AVERAGE: 'wood-mining-average',
-  },
-  // 在这里添加其他物品的配方类型
-  // 例如：
-  // STONE: {
-  //   MANUAL_MINING: "stone-mining-manual",
-  //   AUTOMATED_MINING: "stone-mining-automated"
-  // },
-} as const;
 
 /**
  * 获取指定物品的自定义配方
@@ -146,4 +99,4 @@ export const getItemsWithCustomRecipes = (): string[] => {
 };
 
 // 向后兼容的导出（保持现有代码不变）
-export { WOOD_RECIPES, RecipeType as WoodRecipeType };
+export { WOOD_RECIPES };
