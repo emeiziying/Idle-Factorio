@@ -241,7 +241,7 @@ function calculateProductionEfficiency(
 
 ### 生产系统
 
-````typescript
+```typescript
 interface ProductionFacility {
   id: string;
   type: string;
@@ -316,6 +316,7 @@ interface AutomationManager {
   consumeFuel(facility: ProductionFacility, deltaTime: number): void;
   refuelFacility(facility: ProductionFacility): boolean;
 }
+```
 
 ### 手动操作系统
 
@@ -386,7 +387,7 @@ interface HarvestResult {
   resourcesGained: number;
   cooldownRemaining: number;
 }
-````
+```
 
 #### 手动操作机制详解
 
@@ -419,26 +420,17 @@ function canManualCraft(item: FactorioItem): boolean {
 }
 
 // 无法手动制作的物品类型
-function isManualCraftingExcluded(recipe: Recipe): boolean {
+function isManualCraftingExcluded(recipe: FactorioRecipe): boolean {
   // 1. 检查配方是否涉及流体
-  const hasFluidInput = recipe.inputs.some((input) => isFluid(input.id));
-  const hasFluidOutput = recipe.outputs.some((output) => isFluid(output.id));
+  const hasFluidInput = Object.keys(recipe.in).some((inputId) => isFluid(inputId));
+  const hasFluidOutput = Object.keys(recipe.out).some((outputId) => isFluid(outputId));
 
   if (hasFluidInput || hasFluidOutput) {
     return true; // 任何涉及流体的配方都无法手动制作
   }
 
-  // 2. 流体相关配方分类(需要化工厂、炼油厂)
-  if (recipe.category === "chemistry" || recipe.category === "oil-processing") {
-    return true;
-  }
-
-  // 3. 熔炼配方(需要熔炉)
-  if (recipe.category === "smelting") {
-    return true;
-  }
-
-  // 4. 需要特殊设施的配方
+  // 2. 检查是否需要特殊设施
+  // 玩家只能模拟基础组装机的功能
   const specialFacilities = [
     "oil-refinery",
     "chemical-plant",
@@ -449,6 +441,13 @@ function isManualCraftingExcluded(recipe: Recipe): boolean {
     "stone-furnace",
     "steel-furnace",
     "electric-furnace",
+    "electromagnetic-plant",
+    "cryogenic-plant",
+    "biochamber",
+    "agricultural-tower",
+    "lab",
+    "biolab",
+    "spoilage" // 特殊过程，非机器
   ];
 
   // 如果配方只能在特殊设施中制作，则无法手动制作
@@ -458,11 +457,11 @@ function isManualCraftingExcluded(recipe: Recipe): boolean {
     return true;
   }
 
-  // 其他大部分配方都可以手动制作(包括组装机配方)
+  // 其他配方（主要是标准组装机配方）可以手动制作
   return false;
 }
 
-// 判断物品是否为流体
+// 判断物品ID是否为流体
 function isFluid(itemId: string): boolean {
   // 从data.json中获取物品信息，检查category是否为'fluids'
   const item = getItemFromData(itemId);
@@ -566,7 +565,6 @@ const manualCraftableItems = {
   "uranium-fuel-cell": false, // 需要离心机
   concrete: false, // 需要水(流体输入)
 };
-```
 
 // 配方系统
 interface Recipe {
@@ -600,8 +598,7 @@ getAvailableRecipes(): Recipe[];
 // 根据输出物品查找配方
 findRecipesByOutput(itemId: string): Recipe[];
 }
-
-````
+```
 
 #### 配方锁定机制
 
@@ -640,7 +637,7 @@ const steelChestRecipe: Recipe = {
   producers: ["assembling-machine-1", "assembling-machine-2", "assembling-machine-3"],
   isLocked: true  // 需要通过"steel-processing"科技解锁
 };
-````
+```
 
 ### 科技系统
 
@@ -938,6 +935,30 @@ interface FactorioTechnology extends FactorioItemBase {
   };
 }
 
+// 异星工厂管道
+interface FactorioPipe extends FactorioItemBase {
+  category: "logistics";
+  pipe: {
+    speed: number; // 管道速度
+  };
+}
+
+// 异星工厂货运车厢
+interface FactorioCargoWagon extends FactorioItemBase {
+  category: "logistics";
+  cargoWagon: {
+    size: number; // 货运车厢尺寸
+  };
+}
+
+// 异星工厂流体车厢
+interface FactorioFluidWagon extends FactorioItemBase {
+  category: "logistics";
+  fluidWagon: {
+    capacity: number; // 流体车厢容量
+  };
+}
+
 // 联合类型，表示所有可能的物品类型
 type FactorioItemUnion =
   | FactorioItem
@@ -946,7 +967,10 @@ type FactorioItemUnion =
   | FactorioBeacon
   | FactorioModule
   | FactorioFuel
-  | FactorioTechnology;
+  | FactorioTechnology
+  | FactorioPipe
+  | FactorioCargoWagon
+  | FactorioFluidWagon;
 
 interface FactorioRecipe {
   id: string;
@@ -957,10 +981,20 @@ interface FactorioRecipe {
   producers: string[]; // 可生产的机器列表
   in: Record<string, number>; // 输入资源
   out: Record<string, number>; // 输出资源
+  catalyst?: Record<string, number>; // 催化剂
+  cost?: number; // 成本
   flags?: string[]; // 如["locked"]
   disallowedEffects?: string[]; // 禁用的模块效果
   icon?: string; // 自定义图标（如果与id不同）
   iconText?: string; // 图标上显示的文本（如科技等级等）
+  locations?: string[]; // 可用地点
+  researchTrigger?: { // 研究触发器
+    type: string;
+    item?: string;
+    count?: number;
+    entity?: string;
+  };
+  count?: number; // 数量
 }
 
 // 注意：FactorioTechnology现在已经在上面的联合类型中定义
