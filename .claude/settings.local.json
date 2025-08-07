@@ -78,7 +78,10 @@
       "Bash(npx ts-unused-exports:*)",
       "Bash(npx depcheck:*)",
       "Bash(pnpm list:*)",
-      "Bash(pntml lint:*)"
+      "Bash(pntml lint:*)",
+      "Bash(pnpm test:*)",
+      "Bash(node:*)",
+      "Bash(curl:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

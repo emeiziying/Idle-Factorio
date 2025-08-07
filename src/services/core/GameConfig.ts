@@ -1,3 +1,5 @@
+import { FACILITY_FUEL_CONFIGS, type FuelConfig } from '@/data/fuelConfigs';
+
 // 游戏配置服务 - 集中管理所有游戏常量和配置
 // 用于替代分散在各个文件中的硬编码常量
 
@@ -177,6 +179,13 @@ export class GameConfig {
    */
   updateConstants(newConstants: Partial<GameConstants>): void {
     this.constants = { ...this.constants, ...newConstants };
+  }
+
+  /**
+   * 获取设施的燃料配置
+   */
+  getFacilityFuelConfig(facilityId: string): FuelConfig | null {
+    return FACILITY_FUEL_CONFIGS[facilityId] || null;
   }
 }
 

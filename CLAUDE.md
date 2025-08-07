@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is **Idle Factorio** - a React-based idle factory management game inspired by Factorio. The application is built with modern React architecture and implements core game mechanics for production management.
 
 **Current State**: Active development - Core modules implemented  
-**Tech Stack**: React 19.1.0 + TypeScript + Vite + Material-UI v7.2.0 + Zustand  
+**Tech Stack**: React 19.1.0 + TypeScript + Vite + Material-UI v7.2.0 + Zustand + ahooks  
 **Package Manager**: pnpm (configured with pnpm@9.15.0)
 
 ## Development Commands
@@ -210,6 +210,9 @@ The application follows a service-oriented architecture with clear separation of
 - **GameLoopService**: Unified game loop using requestAnimationFrame with task scheduling
 - **GameStorageService**: Unified save/load operations with optimization and compression
 - **GameConfig**: Centralized game constants and configuration management
+- **PowerService**: Power generation, consumption, and distribution system
+- **ResearchService**: Research queue management and progress tracking
+- **TechTreeService**: Technology tree navigation and dependency management
 
 ### Custom Hooks Pattern
 Use custom hooks to encapsulate complex state logic:
@@ -356,6 +359,7 @@ const craftingQueue = useGameStore(state => state.craftingQueue);
 - Implement virtualization for large lists (@tanstack/react-virtual)
 - Utilize DataService caching mechanisms
 - Minimize re-renders with proper dependency arrays
+- **Build Optimization**: Vite config includes manual chunk splitting for vendor libraries, game data, and services
 
 ### Component Development
 - **Mobile-First**: Design for touch interactions and mobile viewports

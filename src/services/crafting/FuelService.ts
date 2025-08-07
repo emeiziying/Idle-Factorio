@@ -143,102 +143,68 @@ export class FuelService {
     isProducing: boolean = true,
     getInventoryItem?: (itemId: string) => { currentAmount: number }
   ): FuelUpdateResult {
-    // 检查燃料缓存区
     if (!facility.fuelBuffer) {
       return { success: false, reason: 'No fuel buffer' };
     }
-
     const buffer = facility.fuelBuffer;
-    if (!buffer) {
-      return { success: false, reason: 'No fuel available' };
-    }
-    // 使用传入的时间增量，而不是计算时间差
     const timeDelta = msToSeconds(_deltaTime);
-
-    // 更新时间戳
     buffer.lastUpdate = Date.now();
 
-    // 如果不在生产，不消耗燃料
     if (!isProducing || facility.status === 'stopped' || facility.isActive === false) {
       return { success: true, energyConsumed: 0 };
     }
 
-    // 检查是否有足够的输入材料
     if (getInventoryItem && facility.production?.currentRecipeId) {
       const recipe = this.recipeService.getRecipeById(facility.production.currentRecipeId);
-      if (recipe && recipe.in) {
-        // 检查所有输入材料是否充足
+      if (recipe?.in) {
         for (const [itemId, required] of Object.entries(recipe.in)) {
-          const inventory = getInventoryItem(itemId);
-          if (inventory.currentAmount < (required as number)) {
-            // 材料不足，不消耗燃料
+          if (getInventoryItem(itemId).currentAmount < (required as number)) {
             return { success: true, energyConsumed: 0 };
           }
         }
       }
     }
 
-    // 计算需要消耗的能量
-    // burnRate 单位: kW, timeDelta 单位: 秒
-    // energyNeeded 单位: kW * 秒 = kWs = kJ，需要转换为 MJ
     const burnRate = buffer.burnRate || buffer.consumptionRate || 0; // kW
-    const energyNeeded = (burnRate * timeDelta * facility.efficiency) / 1000; // 转换 kJ 到 MJ
+    const energyNeeded = (burnRate * timeDelta * facility.efficiency) / 1000; // MJ
 
-    // 从燃料槽中消耗能量
     let remainingNeed = energyNeeded;
-    const slotsToRemove: number[] = [];
+    let energyConsumed = 0;
 
-    for (let i = 0; i < buffer.slots.length && remainingNeed > 0; i++) {
-      const slot = buffer.slots[i];
+    if (buffer.slots.length > 0 && buffer.slots[0].itemId) {
+      const slot = buffer.slots[0];
+      const fuelItem = this.dataService.getItem(slot.itemId);
+      const fuelValue = fuelItem?.fuel?.value || 0;
 
-      if (slot.remainingEnergy >= remainingNeed) {
-        // 当前物品能量足够
-        slot.remainingEnergy -= remainingNeed;
-        remainingNeed = 0;
-      } else {
-        // 当前物品能量不足，消耗完并继续
-        remainingNeed -= slot.remainingEnergy;
-        slot.remainingEnergy = 0;
-        slot.quantity--;
+      while (remainingNeed > 0 && slot.quantity > 0) {
+        const energyAvailable = slot.remainingEnergy;
+        const energyToConsume = Math.min(remainingNeed, energyAvailable);
 
-        if (slot.quantity <= 0) {
-          // 该槽位已空
-          slotsToRemove.push(i);
-        } else {
-          // 开始燃烧下一个物品
-          const fuelItem = this.dataService.getItem(slot.itemId);
-          if (fuelItem?.fuel?.value) {
-            slot.remainingEnergy = fuelItem.fuel.value; // MJ
+        slot.remainingEnergy -= energyToConsume;
+        remainingNeed -= energyToConsume;
+        energyConsumed += energyToConsume;
+
+        if (slot.remainingEnergy <= 0) {
+          slot.quantity--;
+          if (slot.quantity > 0) {
+            slot.remainingEnergy = fuelValue; // Refill from next item in stack
+          } else {
+            // Last item in stack consumed
+            slot.itemId = '';
+            slot.remainingEnergy = 0;
+            break; // Exit loop, slot is empty
           }
         }
       }
     }
 
-    // 移除空槽位
-    slotsToRemove.reverse().forEach(index => {
-      buffer.slots.splice(index, 1);
-    });
-
-    // 更新总能量
     buffer.totalEnergy = this.calculateTotalEnergy(buffer);
 
-    // 计算实际消耗的能量
-    const actualEnergyConsumed = energyNeeded - remainingNeed;
-
-    // 如果完全没有燃料，返回失败
-    if (actualEnergyConsumed === 0) {
-      return {
-        success: false,
-        reason: 'No fuel available',
-        energyConsumed: 0,
-      };
+    if (energyConsumed === 0 && energyNeeded > 0) {
+      return { success: false, reason: 'No fuel available', energyConsumed: 0 };
     }
 
-    // 即使燃料不足，也返回成功，但返回实际消耗的能量
-    return {
-      success: true,
-      energyConsumed: actualEnergyConsumed,
-    };
+    return { success: true, energyConsumed };
   }
 
   /**
@@ -257,24 +223,67 @@ export class FuelService {
     // 检查燃料是否兼容
     if (!this.isFuelCompatible(facilityId, itemId)) {
       const fuelCategory = this.gameConfig.getFuelCategory(itemId);
-      if (fuelCategory) {
-        return { success: false, reason: `Fuel category not accepted: ${fuelCategory}` };
-      } else {
-        return { success: false, reason: `Item is not a fuel: ${itemId}` };
-      }
+      return {
+        success: false,
+        reason: fuelCategory
+          ? `Fuel category not accepted: ${fuelCategory}`
+          : `Item is not a fuel: ${itemId}`,
+      };
     }
 
-    // 获取燃料能量值
+    // 获取燃料能量值和设施配置
     const fuelItem = this.dataService.getItem(itemId);
-    if (!fuelItem || !fuelItem.fuel) {
-      return { success: false, reason: `Item is not a fuel: ${itemId}` };
+    // TODO: This is a temporary fix, we should inject GameConfig properly
+    const facilityConfig = this.gameConfig.getFacilityFuelConfig
+      ? this.gameConfig.getFacilityFuelConfig(facilityId)
+      : null;
+
+    if (!fuelItem?.fuel || !facilityConfig) {
+      return { success: false, reason: `Invalid fuel or facility config: ${itemId}` };
+    }
+    const fuelValue = fuelItem.fuel.value; // MJ
+    const maxStack = facilityConfig.maxStackPerSlot;
+
+    // 假设只有一个燃料槽
+    const slot = buffer.slots[0];
+
+    // 如果槽位为空，或燃料类型相同且未满
+    if (!slot || !slot.itemId || (slot.itemId === itemId && slot.quantity < maxStack)) {
+      if (!slot || !slot.itemId) {
+        // 槽位为空，直接设置
+        buffer.slots[0] = {
+          itemId,
+          quantity: 0,
+          remainingEnergy: 0,
+        };
+      }
+
+      const currentSlot = buffer.slots[0];
+      const canAdd = maxStack - currentSlot.quantity;
+      const quantityToAdd = Math.min(quantity, canAdd);
+
+      if (quantityToAdd <= 0) {
+        return { success: false, reason: 'Fuel slot is full', quantityRemaining: quantity };
+      }
+
+      // 如果是第一次添加燃料到空槽，设置当前燃烧的能量
+      if (currentSlot.quantity === 0) {
+        currentSlot.remainingEnergy = fuelValue;
+      }
+      currentSlot.quantity += quantityToAdd;
+
+      buffer.totalEnergy = this.calculateTotalEnergy(buffer);
+      buffer.lastUpdate = Date.now();
+
+      return {
+        success: true,
+        quantityAdded: quantityToAdd,
+        quantityRemaining: quantity - quantityToAdd,
+      };
     }
 
-    // 燃料值单位：MJ
-    const fuelValue = fuelItem.fuel.value; // MJ
-
-    // 每个设施只能放1个燃料，如果已有燃料则替换
-    if (buffer.slots.length > 0 && buffer.slots[0].itemId && buffer.slots[0].itemId !== itemId) {
+    // 槽位被不同类型的燃料占满
+    if (slot.itemId !== itemId) {
       return {
         success: false,
         reason: 'Fuel slot occupied by different fuel type',
@@ -282,35 +291,8 @@ export class FuelService {
       };
     }
 
-    // 每次只能添加1个燃料
-    if (quantity > 1) {
-      quantity = 1;
-    }
-
-    // 添加到燃料槽（每个设施只有1个槽位，只能放1个燃料）
-    if (buffer.slots.length === 0) {
-      buffer.slots.push({
-        itemId,
-        quantity: 1,
-        remainingEnergy: fuelValue,
-      });
-    } else {
-      // 替换现有燃料
-      buffer.slots[0] = {
-        itemId,
-        quantity: 1,
-        remainingEnergy: fuelValue,
-      };
-    }
-
-    buffer.totalEnergy = fuelValue; // 总能量就是当前燃料的能量
-    buffer.lastUpdate = Date.now();
-
-    return {
-      success: true,
-      quantityAdded: 1,
-      quantityRemaining: quantity - 1,
-    };
+    // 槽位已满
+    return { success: false, reason: 'Fuel slot is full', quantityRemaining: quantity };
   }
 
   /**
@@ -321,117 +303,153 @@ export class FuelService {
     getInventoryItem: (itemId: string) => InventoryItem,
     updateInventory?: (itemId: string, amount: number) => void
   ): AutoRefuelResult {
-    // 检查燃料缓存区
     const buffer = facility.fuelBuffer;
-    if (!buffer) {
-      return { success: false, itemsConsumed: {} };
-    }
-    const itemsConsumed: Record<string, number> = {};
+    if (!buffer) return { success: false, itemsConsumed: {} };
 
-    // 从data.json获取机器信息
     const facilityId = facility.facilityId || facility.itemId;
-    if (!facilityId) {
-      return { success: false, itemsConsumed: {} };
-    }
+    if (!facilityId) return { success: false, itemsConsumed: {} };
+
     const itemData = this.dataService.getItem(facilityId);
-    if (!itemData || !itemData.machine) {
-      return { success: false, itemsConsumed: {} };
-    }
+    if (itemData?.machine?.type !== 'burner') return { success: false, itemsConsumed: {} };
 
-    const machineData = itemData.machine;
+    // TODO: This is a temporary fix, we should inject GameConfig properly
+    const facilityConfig = this.gameConfig.getFacilityFuelConfig
+      ? this.gameConfig.getFacilityFuelConfig(facilityId)
+      : null;
+    if (!facilityConfig) return { success: false, itemsConsumed: {} };
 
-    // 只有burner类型的机器需要燃料
-    if (machineData.type !== 'burner') {
-      return { success: false, itemsConsumed: {} };
-    }
+    const maxStack = facilityConfig.maxStackPerSlot;
+    const slot = buffer.slots[0];
 
-    // 检查燃料缓存区是否已满
-    if (this.isFuelBufferFull(facility)) {
+    // 如果燃料槽已满，则无需补充
+    if (slot && slot.quantity >= maxStack) {
       return { success: true, itemsConsumed: {} };
     }
 
-    // 尝试添加燃料
+    const itemsConsumed: Record<string, number> = {};
     const priority = this.getFuelPriority();
-    for (const fuelItemId of priority) {
-      const fuelInventory = getInventoryItem(fuelItemId);
-      if (fuelInventory.currentAmount > 0) {
-        // 检查燃料是否兼容
-        if (this.isFuelCompatible(facilityId!, fuelItemId)) {
-          // 只添加1个燃料
-          const result = this.addFuel(buffer, fuelItemId, 1, facilityId!);
-          if (result.success) {
-            itemsConsumed[fuelItemId] = 1;
-            // 更新库存
-            if (updateInventory) {
-              updateInventory(fuelItemId, -1);
-            }
-            return { success: true, itemsConsumed };
-          }
+
+    // 确定要补充的燃料类型和数量
+    const fuelToRefill =
+      slot && slot.itemId
+        ? slot.itemId
+        : priority.find(
+            fuelItemId =>
+              this.isFuelCompatible(facilityId, fuelItemId) &&
+              getInventoryItem(fuelItemId).currentAmount > 0
+          );
+
+    if (!fuelToRefill) {
+      return { success: false, itemsConsumed: {} }; // 没有兼容且可用的燃料
+    }
+
+    const currentQuantity = slot && slot.itemId === fuelToRefill ? slot.quantity : 0;
+    const needed = maxStack - currentQuantity;
+    if (needed <= 0) {
+      return { success: true, itemsConsumed: {} };
+    }
+
+    const available = getInventoryItem(fuelToRefill).currentAmount;
+    const quantityToAdd = Math.min(needed, available);
+
+    if (quantityToAdd > 0) {
+      const result = this.addFuel(buffer, fuelToRefill, quantityToAdd, facilityId);
+      if (result.success && result.quantityAdded) {
+        itemsConsumed[fuelToRefill] = (itemsConsumed[fuelToRefill] || 0) + result.quantityAdded;
+        if (updateInventory) {
+          updateInventory(fuelToRefill, -result.quantityAdded);
         }
       }
     }
 
-    return { success: false, itemsConsumed: {} };
+    return { success: Object.keys(itemsConsumed).length > 0, itemsConsumed };
   }
 
   /**
    * 获取燃料状态信息
    */
   getFuelStatus(buffer: GenericFuelBuffer): FuelStatus {
-    const totalEnergy = buffer.totalEnergy;
+    const totalEnergy = this.calculateTotalEnergy(buffer);
     const burnRate = buffer.burnRate || buffer.consumptionRate || 0;
-    const runTime = burnRate > 0 ? totalEnergy / burnRate : 0;
+    const runTime = burnRate > 0 ? totalEnergy / (burnRate / 1000) : 0; // burnRate is kW, need MW for MJ
 
-    // 计算当前燃烧进度
     let burnProgress = 0;
-    if (buffer.slots && buffer.slots.length > 0 && buffer.slots[0].itemId) {
-      const currentSlot = buffer.slots[0];
-      const item = this.dataService.getItem(currentSlot.itemId);
-      const totalItemEnergy = item?.fuel?.value || 0; // MJ (每个设施只有1个燃料)
-      const remainingEnergy = currentSlot.remainingEnergy;
-      burnProgress = totalItemEnergy > 0 ? (remainingEnergy / totalItemEnergy) * 100 : 0;
-    }
+    let maxEnergy = 0;
 
-    // 每个设施只有1个燃料，不需要最大容量概念
-    const currentFuelEnergy =
-      buffer.slots.length > 0 && buffer.slots[0].itemId
-        ? this.dataService.getItem(buffer.slots[0].itemId)?.fuel?.value || 0
-        : 0;
+    if (buffer.slots && buffer.slots.length > 0 && buffer.slots[0].itemId) {
+      const slot = buffer.slots[0];
+      const item = this.dataService.getItem(slot.itemId);
+      if (item) {
+        // Check if item is defined
+        const fuelValue = item?.fuel?.value || 0;
+        if (fuelValue > 0) {
+          burnProgress = (slot.remainingEnergy / fuelValue) * 100;
+        }
+        // TODO: This is a temporary fix, we should inject GameConfig properly
+        const facilityConfig = this.gameConfig.getFacilityFuelConfig
+          ? this.gameConfig.getFacilityFuelConfig(slot.itemId) // Use slot.itemId instead of item.name
+          : null;
+        if (facilityConfig) {
+          maxEnergy = facilityConfig.maxStackPerSlot * fuelValue;
+        }
+      }
+    }
 
     return {
       totalEnergy,
-      maxEnergy: currentFuelEnergy, // 当前燃料的总能量作为"最大值"
-      fillPercentage: currentFuelEnergy > 0 ? (totalEnergy / currentFuelEnergy) * 100 : 0,
+      maxEnergy,
+      fillPercentage: maxEnergy > 0 ? (totalEnergy / maxEnergy) * 100 : 0,
       burnProgress,
       estimatedRunTime: runTime,
-      isEmpty:
-        !buffer.slots || buffer.slots.length === 0 || !buffer.slots[0].itemId || totalEnergy === 0,
-      isFull: buffer.slots.length > 0 && buffer.slots[0].itemId !== '', // 有燃料就算"满"
+      isEmpty: totalEnergy === 0,
+      isFull: totalEnergy >= maxEnergy && maxEnergy > 0,
     };
   }
 
   /**
-   * 计算缓存区总能量（每个设施只有1个燃料）
+   * 计算缓存区总能量
    */
   private calculateTotalEnergy(buffer: GenericFuelBuffer): number {
     if (buffer.slots.length === 0 || !buffer.slots[0].itemId) {
       return 0;
     }
-    // 每个设施只有1个燃料，总能量就是剩余能量
-    return buffer.slots[0].remainingEnergy;
+    const slot = buffer.slots[0];
+    const fuelItem = this.dataService.getItem(slot.itemId);
+    if (!fuelItem?.fuel) {
+      return 0;
+    }
+    const fuelValue = fuelItem.fuel.value; // MJ
+
+    if (slot.quantity <= 0) {
+      return 0;
+    }
+
+    // 总能量 = (满能量的物品数量 * 单个能量值) + 当前正在燃烧的物品的剩余能量
+    return (slot.quantity - 1) * fuelValue + slot.remainingEnergy;
   }
 
   /**
-   * 检查燃料缓存区是否已满（每个设施只有1个燃料槽）
+   * 检查燃料缓存区是否已满
    */
   private isFuelBufferFull(facility: FacilityInstance): boolean {
     const buffer = facility.fuelBuffer;
-    if (!buffer) {
+    if (!buffer || !buffer.slots || buffer.slots.length === 0) {
       return false;
     }
 
-    // 如果有燃料就算满了
-    return buffer.slots.length > 0 && buffer.slots[0].itemId !== '';
+    const facilityId = facility.facilityId || facility.itemId;
+    if (!facilityId) return false;
+
+    // TODO: This is a temporary fix, we should inject GameConfig properly
+    const facilityConfig = this.gameConfig.getFacilityFuelConfig
+      ? this.gameConfig.getFacilityFuelConfig(facilityId)
+      : null;
+    if (!facilityConfig) return false;
+
+    const maxStack = facilityConfig.maxStackPerSlot;
+    const slot = buffer.slots[0];
+
+    return slot.quantity >= maxStack;
   }
 
   // 设施优先级缓存 - 动态从data.json计算
@@ -614,24 +632,21 @@ export class FuelService {
     fuelAvailable: Record<string, number>,
     updateInventory: (itemId: string, amount: number) => void
   ): void {
-    // 按优先级分配燃料
+    // 按优先级（已在调用方排序）分配燃料
     for (const facility of facilities) {
       if (!facility.fuelBuffer) continue;
 
       const status = this.getFuelStatus(facility.fuelBuffer);
       if (status.isEmpty) {
-        // 为设施分配1个燃料（每个设施都只需覄1个）
+        // 尝试为该高优先级设施找到任何可用燃料
         for (const fuelType of fuelPriority) {
           if (fuelAvailable[fuelType] > 0 && this.isFuelCompatible(facility.facilityId, fuelType)) {
-            const result = this.addFuel(
-              facility.fuelBuffer!,
-              fuelType,
-              1, // 始终只添加1个
-              facility.facilityId
-            );
+            const result = this.addFuel(facility.fuelBuffer, fuelType, 1, facility.facilityId);
             if (result.success) {
               fuelAvailable[fuelType]--;
               updateInventory(fuelType, -1);
+              // 成功为该设施添加燃料后，继续处理下一个设施
+              // 而不是继续为同一个设施添加其他类型的燃料
               break;
             }
           }
@@ -680,3 +695,12 @@ export class FuelService {
     return fuelCategories.includes(fuelCategory);
   }
 }
+
+// 示例用法
+// const fuelService = new FuelService(dataService, gameConfig, recipeService);
+// const buffer = fuelService.initializeFuelBuffer('stone-furnace');
+// if (buffer) {
+//   fuelService.addFuel(buffer, 'coal', 10, 'stone-furnace');
+//   const status = fuelService.getFuelStatus(buffer);
+//   console.log(status);
+// }
