@@ -187,17 +187,9 @@ function updatePowerBalance(powerSystem: PowerSystem, deltaTime: number) {
 
 **燃料系统**：
 
-```typescript
-// 燃料能量值示例
-const fuelValues = {
-  wood: 2, // 木材: 2MJ
-  coal: 4, // 煤炭: 4MJ
-  "solid-fuel": 12, // 固体燃料: 12MJ
-  "rocket-fuel": 100, // 火箭燃料: 100MJ
-  "uranium-fuel-cell": 8000, // 铀燃料棒: 8000MJ
-  "fusion-power-cell": 40000, // 聚变燃料: 40000MJ
-};
-```
+燃料数据从 `data.json` 中的物品动态加载。任何定义了 `fuel` 属性的物品都将被视为燃料。`FactorioFuel` 接口描述了其数据结构，其中 `fuel.value` 字段定义了燃料的能量值（以 MJ 为单位）。
+
+这种数据驱动的方法取代了之前硬编码的 `fuelValues` 常量，确保了游戏与数据源的一致性。
 
 **自动化生产流程**：
 
