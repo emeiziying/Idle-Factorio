@@ -61,25 +61,44 @@ interface ResourceManager {
 ```typescript
 // 能源类型
 interface PowerSystem {
-  totalPowerGeneration: number;    // 总发电量 (kW)
-  totalPowerConsumption: number;   // 总耗电量 (kW)
-  powerSatisfaction: number;       // 电力满足率 (0-1)
-  
-  generators: PowerGenerator[];    // 发电设施
-  consumers: PowerConsumer[];      // 耗电设施
-  
+  totalPowerGeneration: number; // 总发电量 (kW)
+  totalPowerConsumption: number; // 总耗电量 (kW)
+  powerSatisfaction: number; // 电力满足率 (0-1)
+
+  // 电力存储系统
+  totalStorageCapacity: number; // 总存储容量 (MJ)
+  currentStoredPower: number; // 当前存储电量 (MJ)
+  storageEfficiency: number; // 存储效率 (0-1)
+
+  generators: PowerGenerator[]; // 发电设施
+  consumers: PowerConsumer[]; // 耗电设施
+  accumulators: Accumulator[]; // 蓄电池
+
   updatePowerBalance(): void;
   calculatePowerSatisfaction(): number;
+  updatePowerStorage(deltaTime: number): void;
+}
+
+// 蓄电池系统
+interface Accumulator {
+  id: string;
+  maxCapacity: number; // 最大容量 (MJ)
+  currentCharge: number; // 当前电量 (MJ)
+  chargeRate: number; // 充电速率 (kW)
+  dischargeRate: number; // 放电速率 (kW)
+  efficiency: number; // 充放电效率
+  isCharging: boolean;
+  isDischarging: boolean;
 }
 
 // 发电设施
 interface PowerGenerator {
   id: string;
-  type: 'steam-engine' | 'solar-panel' | 'nuclear-reactor' | 'fusion-reactor';
-  maxPowerOutput: number;          // 最大发电量 (kW)
-  currentPowerOutput: number;      // 当前发电量 (kW)
-  efficiency: number;              // 发电效率
-  fuelConsumption?: number;        // 燃料消耗率 (单位/秒)
+  type: "steam-engine" | "solar-panel" | "nuclear-reactor" | "fusion-reactor";
+  maxPowerOutput: number; // 最大发电量 (kW)
+  currentPowerOutput: number; // 当前发电量 (kW)
+  efficiency: number; // 发电效率
+  fuelConsumption?: number; // 燃料消耗率 (单位/秒)
   isActive: boolean;
 }
 
@@ -87,16 +106,16 @@ interface PowerGenerator {
 interface PowerConsumer {
   id: string;
   type: string;
-  powerUsage: number;              // 工作功耗 (kW)
-  drainUsage: number;              // 待机功耗 (kW)
+  powerUsage: number; // 工作功耗 (kW)
+  drainUsage: number; // 待机功耗 (kW)
   isActive: boolean;
-  powerSatisfied: boolean;         // 是否有足够电力
+  powerSatisfied: boolean; // 是否有足够电力
 }
 
 // 燃料系统
 interface FuelSystem {
   fuels: Map<string, Fuel>;
-  
+
   getFuelValue(fuelId: string): number;
   consumeFuel(facilityId: string, fuelType: string, amount: number): boolean;
   calculateBurnTime(fuelId: string, powerDemand: number): number;
@@ -104,59 +123,124 @@ interface FuelSystem {
 
 interface Fuel {
   id: string;
-  category: 'chemical' | 'nuclear' | 'nutrients' | 'food' | 'fluid';
-  energyValue: number;             // 能量值 (MJ)
-  burnRate: number;                // 燃烧速率
+  category: "chemical" | "nuclear" | "nutrients" | "food" | "fluid";
+  energyValue: number; // 能量值 (MJ)
+  burnRate: number; // 燃烧速率
 }
 ```
 
 #### 能源机制详解
 
 **电力生产**：
+
 - **蒸汽机**: 消耗燃料(煤炭、木材等)产生电力，需要水和燃料
 - **太阳能板**: 白天自动发电，无燃料消耗，夜间停止
 - **核反应堆**: 消耗核燃料，持续高功率发电
 - **聚变反应堆**: 最高级发电设施，消耗聚变燃料
 
 **电力消耗**：
+
 - **工作功耗(usage)**: 设施工作时的电力消耗
 - **待机功耗(drain)**: 设施空闲时的基础电力消耗
 - **功耗计算**: `总功耗 = Σ(工作设施的usage) + Σ(所有设施的drain)`
 
+**电力存储机制**：
+
+- **无蓄电池时**: 电力无法存储，发电量 < 消耗量时所有设施按电力满足率降低效率
+- **有蓄电池时**: 多余电力自动存储，电力不足时自动放电
+- **存储优先级**: 发电量 > 消耗量时充电，发电量 < 消耗量时放电
+- **夜间供电**: 太阳能+蓄电池组合，白天充电夜间放电
+
+**电力平衡算法**：
+
+```typescript
+function updatePowerBalance(powerSystem: PowerSystem, deltaTime: number) {
+  const generation = calculateTotalGeneration();
+  const consumption = calculateTotalConsumption();
+  const surplus = generation - consumption;
+
+  if (surplus > 0) {
+    // 有多余电力，优先充电
+    chargeAccumulators(surplus, deltaTime);
+    powerSystem.powerSatisfaction = 1.0;
+  } else if (surplus < 0) {
+    // 电力不足，尝试放电
+    const discharged = dischargeAccumulators(-surplus, deltaTime);
+    powerSystem.powerSatisfaction = (generation + discharged) / consumption;
+  } else {
+    powerSystem.powerSatisfaction = 1.0;
+  }
+}
+```
+
 **燃料系统**：
+
 ```typescript
 // 燃料能量值示例
 const fuelValues = {
-  wood: 2,           // 木材: 2MJ
-  coal: 4,           // 煤炭: 4MJ  
-  'solid-fuel': 12,  // 固体燃料: 12MJ
-  'rocket-fuel': 100, // 火箭燃料: 100MJ
-  'uranium-fuel-cell': 8000, // 铀燃料棒: 8000MJ
-  'fusion-power-cell': 40000  // 聚变燃料: 40000MJ
+  wood: 2, // 木材: 2MJ
+  coal: 4, // 煤炭: 4MJ
+  "solid-fuel": 12, // 固体燃料: 12MJ
+  "rocket-fuel": 100, // 火箭燃料: 100MJ
+  "uranium-fuel-cell": 8000, // 铀燃料棒: 8000MJ
+  "fusion-power-cell": 40000, // 聚变燃料: 40000MJ
 };
 ```
 
 **自动化生产流程**：
-1. **电力检查**: 设施启动前检查是否有足够电力
+
+1. **电力效率**: 根据电网的电力满足率调整设施生产效率
 2. **燃料供应**: 燃料驱动设施自动消耗燃料库存
 3. **生产执行**: 满足条件时按配方进行生产
 4. **资源流动**: 自动从输入库存消耗资源，向输出库存添加产品
-5. **效率计算**: 根据电力满足率和燃料供应调整生产效率
+5. **效率计算**: 根据电力满足率、燃料供应和模块效果调整实际生产效率
+
+**生产效率计算示例**：
+
+```typescript
+function calculateProductionEfficiency(
+  facility: ProductionFacility,
+  powerSatisfaction: number
+): number {
+  let efficiency = 1.0;
+
+  // 1. 电力效率影响
+  if (facility.powerType === "electric") {
+    efficiency *= powerSatisfaction; // 电力不足时按比例降低效率
+  }
+
+  // 2. 燃料供应影响
+  if (facility.powerType === "burner" && !facility.hasFuel) {
+    efficiency = 0; // 燃料驱动设施没有燃料时完全停止
+  }
+
+  // 3. 模块效果影响
+  const moduleSpeedBonus = calculateModuleSpeedBonus(facility.installedModules);
+  efficiency *= 1 + moduleSpeedBonus;
+
+  // 4. 资源供应影响
+  if (!facility.hasInputs || !facility.hasOutputSpace) {
+    efficiency = 0; // 没有输入资源或输出空间时停止
+  }
+
+  return Math.max(0, Math.min(efficiency, 10)); // 限制在0-10倍之间
+}
+```
 
 ### 生产系统
 
-```typescript
+````typescript
 interface ProductionFacility {
   id: string;
   type: string;
   level: number;
   isActive: boolean;
-  
+
   // 生产配置
   currentRecipe: Recipe | null;
   productionProgress: number;      // 当前生产进度 (0-1)
   productionSpeed: number;         // 生产速度倍数
-  
+
   // 能源配置
   powerType: 'electric' | 'burner';
   powerUsage: number;              // 工作功耗 (kW)
@@ -164,17 +248,18 @@ interface ProductionFacility {
   fuelCategories?: string[];       // 可用燃料类型
   currentFuel?: string;            // 当前燃料类型
   fuelAmount: number;              // 燃料库存
-  
+
   // 模块系统
   moduleSlots: number;
   installedModules: Module[];
-  
+
   // 状态管理
-  hasPower: boolean;               // 是否有电力供应
+  powerEfficiency: number;         // 电力效率 (0-1，基于电网电力满足率)
   hasFuel: boolean;                // 是否有燃料(燃料驱动设施)
   hasInputs: boolean;              // 是否有足够输入资源
   hasOutputSpace: boolean;         // 是否有输出空间
-  
+  actualEfficiency: number;        // 实际生产效率 (综合电力、燃料、模块效果)
+
   // 方法
   canProduce(): boolean;
   startProduction(): void;
@@ -203,53 +288,187 @@ interface Module {
 // 自动化生产管理器
 interface AutomationManager {
   facilities: Map<string, ProductionFacility>;
-  
+
   // 自动化逻辑
   updateAllFacilities(deltaTime: number): void;
   checkResourceAvailability(facility: ProductionFacility): boolean;
-  checkPowerAvailability(facility: ProductionFacility): boolean;
+  calculatePowerEfficiency(facility: ProductionFacility): number;
   checkFuelAvailability(facility: ProductionFacility): boolean;
-  
+
   // 资源分配
   allocateResources(facility: ProductionFacility): boolean;
   consumeInputs(facility: ProductionFacility): void;
   produceOutputs(facility: ProductionFacility): void;
-  
+
   // 燃料管理
   consumeFuel(facility: ProductionFacility, deltaTime: number): void;
   refuelFacility(facility: ProductionFacility): boolean;
 }
 
-// 配方系统
-interface Recipe {
+### 手动操作系统
+
+手动操作系统管理玩家的直接交互，包括资源采集和物品制作：
+
+```typescript
+interface ManualOperationSystem {
+  // 手动采集
+  harvestableResources: Map<string, HarvestableResource>;
+
+  // 手动制作
+  craftableItems: Map<string, CraftableItem>;
+
+  // 操作方法
+  harvestResource(resourceId: string): boolean;
+  craftItem(itemId: string, quantity: number): boolean;
+  canHarvest(resourceId: string): boolean;
+  canCraft(itemId: string, quantity: number): boolean;
+}
+
+// 可采集资源
+interface HarvestableResource {
   id: string;
   name: string;
-  category: string;
-  productionTime: number;
-  inputs: ResourceRequirement[];
-  outputs: ResourceOutput[];
-  producers: string[];        // 可生产的机器列表
-  isLocked: boolean;         // 是否需要科技解锁
-  allowedEffects?: string[]; // 允许的模块效果
+  harvestAmount: number;           // 每次采集数量
+  harvestTime: number;             // 采集时间(秒)
+  cooldownTime: number;            // 冷却时间(秒)
+  lastHarvestTime: number;         // 上次采集时间
+  maxAvailable: number;            // 地图上可采集的总量
+  currentAvailable: number;        // 当前可采集数量
+  regenerationRate?: number;       // 再生速率(单位/秒)
+}
+
+// 可制作物品
+interface CraftableItem {
+  id: string;
+  name: string;
+  recipe: Recipe;
+  craftTime: number;               // 制作时间(秒)
+  canManualCraft: boolean;         // 是否可手动制作
+  requiredTechnology?: string;     // 需要的科技
+}
+
+// 手动操作管理器
+interface ManualCraftingManager {
+  // 判断物品是否可手动制作
+  canManualCraft(itemId: string): boolean;
+
+  // 判断资源是否可手动采集
+  canManualHarvest(resourceId: string): boolean;
+
+  // 执行手动制作
+  performManualCraft(itemId: string, quantity: number): CraftResult;
+
+  // 执行手动采集
+  performManualHarvest(resourceId: string): HarvestResult;
+}
+
+interface CraftResult {
+  success: boolean;
+  itemsProduced: number;
+  resourcesConsumed: ResourceRequirement[];
+  timeRequired: number;
+}
+
+interface HarvestResult {
+  success: boolean;
+  resourcesGained: number;
+  cooldownRemaining: number;
+}
+````
+
+#### 手动操作机制详解
+
+**资源采集规则**：
+
+- **基础资源**: 木材、石头可通过点击地图采集
+- **矿物资源**: 铁矿、铜矿、煤炭需要建造采矿机自动开采
+- **采集限制**: 每种资源有采集冷却时间和地图总量限制
+- **再生机制**: 部分资源(如木材)可通过科技解锁循环生产
+
+**手动制作规则**：
+
+```typescript
+// 手动制作判断逻辑
+function canManualCraft(item: FactorioItem): boolean {
+  // 1. 检查是否有对应的制作配方
+  const recipe = findRecipeByOutput(item.id);
+  if (!recipe) return false;
+
+  // 2. 检查配方是否已解锁
+  if (recipe.isLocked && !isTechnologyResearched(recipe.requiredTechnology)) {
+    return false;
+  }
+
+  // 3. 检查是否只需要基础资源(无需机器)
+  // 在Factorio中，大多数物品都需要机器制作
+  // 只有极少数基础物品可能支持手动制作
+  return (
+    recipe.producers.includes("character") || recipe.producers.length === 0
+  );
+}
+```
+
+**采集示例**：
+
+```typescript
+const harvestableResources = {
+  wood: {
+    id: "wood",
+    harvestAmount: 4, // 每次采集4个木材
+    harvestTime: 0.5, // 0.5秒采集时间
+    cooldownTime: 2.0, // 2秒冷却
+    maxAvailable: 1000, // 地图上最多1000个
+    regenerationRate: 0.1, // 每秒再生0.1个
+  },
+  stone: {
+    id: "stone",
+    harvestAmount: 2,
+    harvestTime: 1.0,
+    cooldownTime: 3.0,
+    maxAvailable: 500,
+    regenerationRate: 0.05,
+  },
+};
+```
+
+**制作限制**：
+
+- 大多数物品需要通过生产设施制作
+- 手动制作通常只适用于最基础的物品
+- 制作时间比机器生产慢很多
+- 无法享受模块加成和科技加成
+
+// 配方系统
+interface Recipe {
+id: string;
+name: string;
+category: string;
+productionTime: number;
+inputs: ResourceRequirement[];
+outputs: ResourceOutput[];
+producers: string[]; // 可生产的机器列表
+isLocked: boolean; // 是否需要科技解锁
+allowedEffects?: string[]; // 允许的模块效果
 }
 
 interface RecipeManager {
-  recipes: Map<string, Recipe>;
-  unlockedRecipes: Set<string>;
-  
-  // 检查配方是否已解锁
-  isRecipeUnlocked(recipeId: string): boolean;
-  
-  // 解锁配方（由科技系统调用）
-  unlockRecipe(recipeId: string): void;
-  
-  // 获取可用配方列表
-  getAvailableRecipes(): Recipe[];
-  
-  // 根据输出物品查找配方
-  findRecipesByOutput(itemId: string): Recipe[];
+recipes: Map<string, Recipe>;
+unlockedRecipes: Set<string>;
+
+// 检查配方是否已解锁
+isRecipeUnlocked(recipeId: string): boolean;
+
+// 解锁配方（由科技系统调用）
+unlockRecipe(recipeId: string): void;
+
+// 获取可用配方列表
+getAvailableRecipes(): Recipe[];
+
+// 根据输出物品查找配方
+findRecipesByOutput(itemId: string): Recipe[];
 }
-```
+
+````
 
 #### 配方锁定机制
 
@@ -279,7 +498,7 @@ const woodenChestRecipe: Recipe = {
 
 // 需要科技解锁的配方
 const steelChestRecipe: Recipe = {
-  id: "steel-chest", 
+  id: "steel-chest",
   name: "Steel chest",
   category: "logistics",
   productionTime: 0.5,
@@ -288,7 +507,7 @@ const steelChestRecipe: Recipe = {
   producers: ["assembling-machine-1", "assembling-machine-2", "assembling-machine-3"],
   isLocked: true  // 需要通过"steel-processing"科技解锁
 };
-```
+````
 
 ### 科技系统
 
