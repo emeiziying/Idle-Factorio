@@ -54,6 +54,95 @@ interface ResourceManager {
 }
 ```
 
+### 能源系统
+
+能源系统管理电力生产、分配和消耗，支持多种能源类型：
+
+```typescript
+// 能源类型
+interface PowerSystem {
+  totalPowerGeneration: number;    // 总发电量 (kW)
+  totalPowerConsumption: number;   // 总耗电量 (kW)
+  powerSatisfaction: number;       // 电力满足率 (0-1)
+  
+  generators: PowerGenerator[];    // 发电设施
+  consumers: PowerConsumer[];      // 耗电设施
+  
+  updatePowerBalance(): void;
+  calculatePowerSatisfaction(): number;
+}
+
+// 发电设施
+interface PowerGenerator {
+  id: string;
+  type: 'steam-engine' | 'solar-panel' | 'nuclear-reactor' | 'fusion-reactor';
+  maxPowerOutput: number;          // 最大发电量 (kW)
+  currentPowerOutput: number;      // 当前发电量 (kW)
+  efficiency: number;              // 发电效率
+  fuelConsumption?: number;        // 燃料消耗率 (单位/秒)
+  isActive: boolean;
+}
+
+// 耗电设施
+interface PowerConsumer {
+  id: string;
+  type: string;
+  powerUsage: number;              // 工作功耗 (kW)
+  drainUsage: number;              // 待机功耗 (kW)
+  isActive: boolean;
+  powerSatisfied: boolean;         // 是否有足够电力
+}
+
+// 燃料系统
+interface FuelSystem {
+  fuels: Map<string, Fuel>;
+  
+  getFuelValue(fuelId: string): number;
+  consumeFuel(facilityId: string, fuelType: string, amount: number): boolean;
+  calculateBurnTime(fuelId: string, powerDemand: number): number;
+}
+
+interface Fuel {
+  id: string;
+  category: 'chemical' | 'nuclear' | 'nutrients' | 'food' | 'fluid';
+  energyValue: number;             // 能量值 (MJ)
+  burnRate: number;                // 燃烧速率
+}
+```
+
+#### 能源机制详解
+
+**电力生产**：
+- **蒸汽机**: 消耗燃料(煤炭、木材等)产生电力，需要水和燃料
+- **太阳能板**: 白天自动发电，无燃料消耗，夜间停止
+- **核反应堆**: 消耗核燃料，持续高功率发电
+- **聚变反应堆**: 最高级发电设施，消耗聚变燃料
+
+**电力消耗**：
+- **工作功耗(usage)**: 设施工作时的电力消耗
+- **待机功耗(drain)**: 设施空闲时的基础电力消耗
+- **功耗计算**: `总功耗 = Σ(工作设施的usage) + Σ(所有设施的drain)`
+
+**燃料系统**：
+```typescript
+// 燃料能量值示例
+const fuelValues = {
+  wood: 2,           // 木材: 2MJ
+  coal: 4,           // 煤炭: 4MJ  
+  'solid-fuel': 12,  // 固体燃料: 12MJ
+  'rocket-fuel': 100, // 火箭燃料: 100MJ
+  'uranium-fuel-cell': 8000, // 铀燃料棒: 8000MJ
+  'fusion-power-cell': 40000  // 聚变燃料: 40000MJ
+};
+```
+
+**自动化生产流程**：
+1. **电力检查**: 设施启动前检查是否有足够电力
+2. **燃料供应**: 燃料驱动设施自动消耗燃料库存
+3. **生产执行**: 满足条件时按配方进行生产
+4. **资源流动**: 自动从输入库存消耗资源，向输出库存添加产品
+5. **效率计算**: 根据电力满足率和燃料供应调整生产效率
+
 ### 生产系统
 
 ```typescript
@@ -62,10 +151,35 @@ interface ProductionFacility {
   type: string;
   level: number;
   isActive: boolean;
-  inputResources: ResourceRequirement[];
-  outputResources: ResourceOutput[];
-  productionTime: number; // 生产周期（秒）
-  efficiency: number; // 效率倍数
+  
+  // 生产配置
+  currentRecipe: Recipe | null;
+  productionProgress: number;      // 当前生产进度 (0-1)
+  productionSpeed: number;         // 生产速度倍数
+  
+  // 能源配置
+  powerType: 'electric' | 'burner';
+  powerUsage: number;              // 工作功耗 (kW)
+  drainUsage: number;              // 待机功耗 (kW)
+  fuelCategories?: string[];       // 可用燃料类型
+  currentFuel?: string;            // 当前燃料类型
+  fuelAmount: number;              // 燃料库存
+  
+  // 模块系统
+  moduleSlots: number;
+  installedModules: Module[];
+  
+  // 状态管理
+  hasPower: boolean;               // 是否有电力供应
+  hasFuel: boolean;                // 是否有燃料(燃料驱动设施)
+  hasInputs: boolean;              // 是否有足够输入资源
+  hasOutputSpace: boolean;         // 是否有输出空间
+  
+  // 方法
+  canProduce(): boolean;
+  startProduction(): void;
+  updateProduction(deltaTime: number): void;
+  completeProduction(): void;
 }
 
 interface ProductionChain {
@@ -74,18 +188,165 @@ interface ProductionChain {
   updateProduction(deltaTime: number): void;
   checkBottlenecks(): string[];
 }
+
+// 模块系统
+interface Module {
+  id: string;
+  type: 'speed' | 'productivity' | 'efficiency' | 'quality';
+  speedBonus?: number;             // 速度加成
+  productivityBonus?: number;      // 产能加成
+  efficiencyBonus?: number;        // 效率加成 (减少功耗)
+  qualityBonus?: number;           // 品质加成
+  powerConsumptionMultiplier: number; // 功耗倍数
+}
+
+// 自动化生产管理器
+interface AutomationManager {
+  facilities: Map<string, ProductionFacility>;
+  
+  // 自动化逻辑
+  updateAllFacilities(deltaTime: number): void;
+  checkResourceAvailability(facility: ProductionFacility): boolean;
+  checkPowerAvailability(facility: ProductionFacility): boolean;
+  checkFuelAvailability(facility: ProductionFacility): boolean;
+  
+  // 资源分配
+  allocateResources(facility: ProductionFacility): boolean;
+  consumeInputs(facility: ProductionFacility): void;
+  produceOutputs(facility: ProductionFacility): void;
+  
+  // 燃料管理
+  consumeFuel(facility: ProductionFacility, deltaTime: number): void;
+  refuelFacility(facility: ProductionFacility): boolean;
+}
+
+// 配方系统
+interface Recipe {
+  id: string;
+  name: string;
+  category: string;
+  productionTime: number;
+  inputs: ResourceRequirement[];
+  outputs: ResourceOutput[];
+  producers: string[];        // 可生产的机器列表
+  isLocked: boolean;         // 是否需要科技解锁
+  allowedEffects?: string[]; // 允许的模块效果
+}
+
+interface RecipeManager {
+  recipes: Map<string, Recipe>;
+  unlockedRecipes: Set<string>;
+  
+  // 检查配方是否已解锁
+  isRecipeUnlocked(recipeId: string): boolean;
+  
+  // 解锁配方（由科技系统调用）
+  unlockRecipe(recipeId: string): void;
+  
+  // 获取可用配方列表
+  getAvailableRecipes(): Recipe[];
+  
+  // 根据输出物品查找配方
+  findRecipesByOutput(itemId: string): Recipe[];
+}
+```
+
+#### 配方锁定机制
+
+**配方状态分类**：
+- **默认解锁配方**：基础配方如木箱、铁箱等，游戏开始时即可使用
+- **科技锁定配方**：标记为`"locked"`的配方，需要通过科技研究解锁
+
+**解锁流程**：
+1. 游戏开始时，只有未标记`"locked"`的配方可用
+2. 科技研究完成时，解锁该科技的`unlockedRecipes`列表中的所有配方
+3. 配方解锁后，玩家可以在相应的生产设施中使用该配方
+4. UI界面显示配方的锁定状态和解锁条件
+
+**配方示例**：
+```typescript
+// 默认解锁的基础配方
+const woodenChestRecipe: Recipe = {
+  id: "wooden-chest",
+  name: "Wooden chest",
+  category: "logistics",
+  productionTime: 0.5,
+  inputs: [{ id: "wood", amount: 2 }],
+  outputs: [{ id: "wooden-chest", amount: 1 }],
+  producers: ["assembling-machine-1", "assembling-machine-2", "assembling-machine-3"],
+  isLocked: false
+};
+
+// 需要科技解锁的配方
+const steelChestRecipe: Recipe = {
+  id: "steel-chest", 
+  name: "Steel chest",
+  category: "logistics",
+  productionTime: 0.5,
+  inputs: [{ id: "steel-plate", amount: 8 }],
+  outputs: [{ id: "steel-chest", amount: 1 }],
+  producers: ["assembling-machine-1", "assembling-machine-2", "assembling-machine-3"],
+  isLocked: true  // 需要通过"steel-processing"科技解锁
+};
 ```
 
 ### 科技系统
 
+科技系统管理研究进度和解锁新配方，支持两种解锁方式：
+
+1. **传统研究解锁**：通过实验室消耗科学包进行研究
+2. **触发式自动解锁**：满足特定条件时自动完成
+
 ```typescript
+interface TechnologySystem {
+  researchedTechnologies: Set<string>;
+  currentResearch: string | null;
+  researchProgress: number;
+
+  // 检查科技是否可以研究（前置依赖已满足）
+  canResearch(techId: string): boolean;
+
+  // 检查科技是否满足自动解锁条件
+  checkResearchTriggers(): void;
+
+  // 开始传统研究
+  startResearch(techId: string): void;
+
+  // 更新研究进度
+  updateResearch(deltaTime: number): void;
+
+  // 完成科技研究
+  completeResearch(techId: string): void;
+
+  // 获取科技解锁的配方列表
+  getUnlockedRecipes(techId: string): string[];
+}
+
+// 科技触发器类型
+interface ResearchTrigger {
+  type:
+    | "craft-item"
+    | "build-entity"
+    | "mine-entity"
+    | "create-space-platform"
+    | "capture-spawner";
+  item?: string; // craft-item类型需要
+  entity?: string; // build-entity, mine-entity类型需要
+  count?: number; // 需要的数量
+}
+
+// 科技数据结构
 interface Technology {
   id: string;
   name: string;
-  description: string;
-  cost: ResourceRequirement[];
-  prerequisites: string[];
-  unlocks: string[]; // 解锁的建筑或功能
+  prerequisites: string[]; // 前置科技依赖
+  unlockedRecipes: string[]; // 解锁的配方
+  researchTrigger?: ResearchTrigger; // 自动解锁触发条件
+  researchCost?: {
+    // 传统研究成本
+    [sciencePackId: string]: number;
+  };
+  researchTime?: number; // 研究时间（秒）
   isResearched: boolean;
   researchProgress: number;
 }
@@ -96,6 +357,63 @@ interface TechnologyTree {
   getAvailableTechnologies(): Technology[];
   checkPrerequisites(techId: string): boolean;
 }
+```
+
+#### 科技解锁机制
+
+**前置依赖检查**：
+
+- 科技必须满足所有 prerequisites 中列出的前置科技
+- 使用深度优先搜索验证依赖链完整性
+- 支持多重依赖（一个科技可以依赖多个前置科技）
+
+**自动解锁触发器**：
+
+- `craft-item`: 制造指定物品达到数量时解锁（如制造 50 个铁板解锁蒸汽动力）
+- `build-entity`: 建造指定建筑时解锁（如建造小行星收集器解锁太空科学包）
+- `mine-entity`: 开采指定资源时解锁（如开采原油解锁石油加工）
+- `create-space-platform`: 创建太空平台时解锁
+- `capture-spawner`: 捕获生物巢穴时解锁
+
+**解锁流程**：
+
+1. 游戏持续监控玩家行为（制造、建造、开采等）
+2. 检查是否满足任何科技的 researchTrigger 条件
+3. 满足条件时自动完成科技研究
+4. 解锁科技的 unlockedRecipes 中列出的所有配方
+5. 更新可研究科技列表（检查新的前置依赖）
+
+**科技类型示例**：
+
+```typescript
+// 自动解锁科技示例
+const steamPowerTech: Technology = {
+  id: "steam-power",
+  name: "Steam power",
+  prerequisites: [],
+  unlockedRecipes: ["pipe", "pipe-to-ground", "steam-engine"],
+  researchTrigger: {
+    type: "craft-item",
+    item: "iron-plate",
+    count: 50,
+  },
+  isResearched: false,
+  researchProgress: 0,
+};
+
+// 传统研究科技示例
+const automationScienceTech: Technology = {
+  id: "automation-science-pack-technology",
+  name: "Automation science pack",
+  prerequisites: ["steam-power", "electronics"],
+  unlockedRecipes: ["automation-science-pack"],
+  researchCost: {
+    "automation-science-pack": 10,
+  },
+  researchTime: 5,
+  isResearched: false,
+  researchProgress: 0,
+};
 ```
 
 ### 时间和离线系统
@@ -562,9 +880,10 @@ interface ErrorHandler {
 
 ### 🌳 木材获取策略
 
-基于Factorio数据分析，游戏初始阶段的木材获取机制：
+基于 Factorio 数据分析，游戏初始阶段的木材获取机制：
 
 #### **初始阶段：手动采集**
+
 ```typescript
 interface ManualHarvesting {
   resourceType: "wood";
@@ -576,6 +895,7 @@ interface ManualHarvesting {
 ```
 
 #### **自动化阶段：科技解锁后的循环生产**
+
 ```typescript
 interface WoodProductionCycle {
   woodProcessing: {
@@ -595,33 +915,35 @@ interface WoodProductionCycle {
 ```
 
 #### **游戏开始资源配置**
+
 ```typescript
 interface InitialResources {
-  wood: 50;        // 用于制作木箱等早期物品
-  stone: 20;       // 用于熔炉和基础建筑
-  ironOre: 0;      // 通过采矿机获取
-  copperOre: 0;    // 通过采矿机获取
-  coal: 0;         // 通过采矿机获取，重要燃料
+  wood: 50; // 用于制作木箱等早期物品
+  stone: 20; // 用于熔炉和基础建筑
+  ironOre: 0; // 通过采矿机获取
+  copperOre: 0; // 通过采矿机获取
+  coal: 0; // 通过采矿机获取，重要燃料
 }
 ```
 
 #### **资源获取优先级**
+
 1. **木材**: 手动采集 → 科技解锁后循环生产
 2. **矿物**: 建造采矿机进行自动化开采
-3. **燃料**: 煤炭（采矿）→ 木材（备用燃料，能量值2）
+3. **燃料**: 煤炭（采矿）→ 木材（备用燃料，能量值 2）
 4. **高级资源**: 通过生产链逐步解锁
 
 这个机制确保了游戏的渐进式发展，从手动操作逐步过渡到自动化生产。
 
-## Idle游戏UI架构设计
+## Idle 游戏 UI 架构设计
 
 ### 🎮 **整体布局**
 
 ```typescript
 interface IdleGameUI {
-  topBar: CategoryBar;      // 顶部分类栏
-  leftPanel: ItemList;      // 左侧物品列表
-  rightPanel: ItemDetail;   // 右侧物品详情
+  topBar: CategoryBar; // 顶部分类栏
+  leftPanel: ItemList; // 左侧物品列表
+  rightPanel: ItemDetail; // 右侧物品详情
 }
 ```
 
@@ -639,8 +961,8 @@ interface CategoryTab {
   name: string;
   localizedName: string;
   icon?: string;
-  itemCount: number;        // 该分类下的物品数量
-  unlockedCount: number;    // 已解锁的物品数量
+  itemCount: number; // 该分类下的物品数量
+  unlockedCount: number; // 已解锁的物品数量
 }
 ```
 
@@ -650,7 +972,7 @@ interface CategoryTab {
 interface ItemList {
   items: ItemListEntry[];
   searchFilter: string;
-  sortBy: 'name' | 'quantity' | 'productionRate';
+  sortBy: "name" | "quantity" | "productionRate";
   showOnlyUnlocked: boolean;
 }
 
@@ -658,10 +980,10 @@ interface ItemListEntry {
   item: FactorioItemUnion;
   currentQuantity: number;
   maxQuantity: number;
-  productionRate: number;    // 每秒生产/消耗速率
+  productionRate: number; // 每秒生产/消耗速率
   isUnlocked: boolean;
   isProducing: boolean;
-  hasAutomation: boolean;    // 是否配置了自动化
+  hasAutomation: boolean; // 是否配置了自动化
   onClick: () => void;
 }
 ```
@@ -676,13 +998,14 @@ interface ItemDetail {
 }
 
 interface DetailTab {
-  id: 'info' | 'manual' | 'automation' | 'storage';
+  id: "info" | "manual" | "automation" | "storage";
   name: string;
   component: React.Component;
 }
 ```
 
 #### **信息标签页**
+
 ```typescript
 interface InfoTab {
   item: FactorioItemUnion;
@@ -693,21 +1016,22 @@ interface InfoTab {
   maxQuantity: number;
   productionRate: number;
   consumptionRate: number;
-  usedInRecipes: string[];   // 用于哪些配方
+  usedInRecipes: string[]; // 用于哪些配方
   producedByRecipes: string[]; // 由哪些配方生产
 }
 ```
 
 #### **手动操作标签页**
+
 ```typescript
 interface ManualTab {
   item: FactorioItemUnion;
-  canHarvest: boolean;       // 是否可以手动采集
-  canCraft: boolean;         // 是否可以手动合成
+  canHarvest: boolean; // 是否可以手动采集
+  canCraft: boolean; // 是否可以手动合成
   harvestButton: {
     enabled: boolean;
-    cooldown: number;        // 冷却时间（毫秒）
-    amount: number;          // 每次获得数量
+    cooldown: number; // 冷却时间（毫秒）
+    amount: number; // 每次获得数量
     onClick: () => void;
   };
   craftButton: {
@@ -721,6 +1045,7 @@ interface ManualTab {
 ```
 
 #### **自动化配置标签页**
+
 ```typescript
 interface AutomationTab {
   item: FactorioItemUnion;
@@ -728,7 +1053,7 @@ interface AutomationTab {
   currentFacility: FactorioMachine | null;
   facilityLevel: number;
   maxLevel: number;
-  efficiency: number;        // 当前效率百分比
+  efficiency: number; // 当前效率百分比
   upgradeOptions: {
     nextLevel: number;
     cost: ResourceRequirement[];
@@ -748,6 +1073,7 @@ interface ModuleSlot {
 ```
 
 #### **存储配置标签页**
+
 ```typescript
 interface StorageTab {
   item: FactorioItemUnion;
