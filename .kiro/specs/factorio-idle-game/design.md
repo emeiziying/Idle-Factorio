@@ -588,6 +588,9 @@ unlockedRecipes: Set<string>;
 // 检查配方是否已解锁
 isRecipeUnlocked(recipeId: string): boolean;
 
+// 检查配方是否已解锁
+isRecipeUnlocked(recipeId: string): boolean;
+
 // 解锁配方（由科技系统调用）
 unlockRecipe(recipeId: string): void;
 
