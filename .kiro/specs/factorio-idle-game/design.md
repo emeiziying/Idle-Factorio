@@ -2,7 +2,7 @@
 
 ## 概述
 
-本设计文档描述了 Factorio 风格放置游戏的技术架构和实现方案。游戏采用基于 Web 的架构，使用 TypeScript/JavaScript 开发，支持本地存储和离线计算。核心设计理念是创建一个可扩展的生产系统，支持复杂的资源流动和自动化机制。
+本设计文档描述了 Factorio 风格放置游戏的技术架构和实现方案。游戏采用基于 Web 的架构，使用 TypeScript/JavaScript 开发，支持本地存储和离线计算。核心设计理念是创建一个**数据驱动**的可扩展生产系统，所有游戏内容(物品、配方、科技、机器等)都从 data.json 中动态加载，避免硬编码。
 
 ## 架构
 
@@ -21,6 +21,18 @@ graph TB
     GM --> SS[存储系统]
     GM --> TC[时间控制器]
     TC --> OC[离线计算器]
+
+    %% 数据层
+    DL[数据层] --> GM
+    DL --> RS
+    DL --> PS
+    DL --> TS
+    DL --> US
+
+    %% 数据源
+    DJ[data.json] --> DL
+    I18N[i18n/*.json] --> DL
+    HASH[hash.json] --> DL
 ```
 
 ### 核心模块
@@ -380,10 +392,12 @@ interface HarvestResult {
 
 **资源采集规则**：
 
-- **基础资源**: 木材、石头可通过点击地图采集
-- **矿物资源**: 铁矿、铜矿、煤炭需要建造采矿机自动开采
-- **采集限制**: 每种资源有采集冷却时间和地图总量限制
-- **再生机制**: 部分资源(如木材)可通过科技解锁循环生产
+- **可手动采集**: 木材(砍树)、石头(采石)、铁矿、铜矿、煤炭等固体资源
+- **需要机器采集**: 石油、天然气等流体资源需要抽油机
+- **采集机制**: 手动采集有动画时间，不同资源采集速度不同
+- **资源再生**: 树木可以重新种植，矿物资源有限但矿脉很大
+- **早期依赖**: 游戏开始时可以手动采集所有基础资源(木材、石头、矿物)
+- **效率对比**: 手动采集速度远低于机器，激励玩家建设自动化采矿
 
 **手动制作规则**：
 
@@ -399,12 +413,60 @@ function canManualCraft(item: FactorioItem): boolean {
     return false;
   }
 
-  // 3. 检查是否只需要基础资源(无需机器)
-  // 在Factorio中，大多数物品都需要机器制作
-  // 只有极少数基础物品可能支持手动制作
-  return (
-    recipe.producers.includes("character") || recipe.producers.length === 0
-  );
+  // 3. 检查是否可以手动制作
+  // 根据Factorio Wiki，大部分物品都可以手动制作，除了特殊情况
+  return !isManualCraftingExcluded(recipe);
+}
+
+// 无法手动制作的物品类型
+function isManualCraftingExcluded(recipe: Recipe): boolean {
+  // 1. 检查配方是否涉及流体
+  const hasFluidInput = recipe.inputs.some((input) => isFluid(input.id));
+  const hasFluidOutput = recipe.outputs.some((output) => isFluid(output.id));
+
+  if (hasFluidInput || hasFluidOutput) {
+    return true; // 任何涉及流体的配方都无法手动制作
+  }
+
+  // 2. 流体相关配方分类(需要化工厂、炼油厂)
+  if (recipe.category === "chemistry" || recipe.category === "oil-processing") {
+    return true;
+  }
+
+  // 3. 熔炼配方(需要熔炉)
+  if (recipe.category === "smelting") {
+    return true;
+  }
+
+  // 4. 需要特殊设施的配方
+  const specialFacilities = [
+    "oil-refinery",
+    "chemical-plant",
+    "centrifuge",
+    "rocket-silo",
+    "nuclear-reactor",
+    "foundry",
+    "stone-furnace",
+    "steel-furnace",
+    "electric-furnace",
+  ];
+
+  // 如果配方只能在特殊设施中制作，则无法手动制作
+  if (
+    recipe.producers.every((producer) => specialFacilities.includes(producer))
+  ) {
+    return true;
+  }
+
+  // 其他大部分配方都可以手动制作(包括组装机配方)
+  return false;
+}
+
+// 判断物品是否为流体
+function isFluid(itemId: string): boolean {
+  // 从data.json中获取物品信息，检查category是否为'fluids'
+  const item = getItemFromData(itemId);
+  return item?.category === "fluids";
 }
 ```
 
@@ -412,31 +474,99 @@ function canManualCraft(item: FactorioItem): boolean {
 
 ```typescript
 const harvestableResources = {
+  // 地表资源 - 采集速度快
   wood: {
     id: "wood",
     harvestAmount: 4, // 每次采集4个木材
     harvestTime: 0.5, // 0.5秒采集时间
-    cooldownTime: 2.0, // 2秒冷却
+    cooldownTime: 1.0, // 1秒冷却
     maxAvailable: 1000, // 地图上最多1000个
-    regenerationRate: 0.1, // 每秒再生0.1个
+    regenerationRate: 0.1, // 每秒再生0.1个(可重新种植)
   },
   stone: {
     id: "stone",
     harvestAmount: 2,
     harvestTime: 1.0,
-    cooldownTime: 3.0,
+    cooldownTime: 2.0,
     maxAvailable: 500,
-    regenerationRate: 0.05,
+    regenerationRate: 0, // 石头不再生
+  },
+
+  // 矿物资源 - 采集速度慢，但储量大
+  "iron-ore": {
+    id: "iron-ore",
+    harvestAmount: 1, // 每次采集1个铁矿
+    harvestTime: 2.0, // 2秒采集时间(比机器慢很多)
+    cooldownTime: 1.0, // 1秒冷却
+    maxAvailable: 10000, // 矿脉储量大
+    regenerationRate: 0, // 矿物不再生
+  },
+  "copper-ore": {
+    id: "copper-ore",
+    harvestAmount: 1,
+    harvestTime: 2.0,
+    cooldownTime: 1.0,
+    maxAvailable: 8000,
+    regenerationRate: 0,
+  },
+  coal: {
+    id: "coal",
+    harvestAmount: 1,
+    harvestTime: 2.5, // 煤炭稍难采集
+    cooldownTime: 1.0,
+    maxAvailable: 6000,
+    regenerationRate: 0,
   },
 };
 ```
 
-**制作限制**：
+**采集效率对比**：
 
-- 大多数物品需要通过生产设施制作
-- 手动制作通常只适用于最基础的物品
-- 制作时间比机器生产慢很多
-- 无法享受模块加成和科技加成
+```typescript
+// 手动采集 vs 机器采集效率对比
+const harvestingEfficiency = {
+  "iron-ore": {
+    manual: 0.5, // 手动: 0.5个/秒 (2秒采集1个)
+    burnerDrill: 0.25, // 燃料采矿机: 0.25个/秒
+    electricDrill: 0.5, // 电力采矿机: 0.5个/秒
+  },
+  wood: {
+    manual: 2.0, // 手动砍树: 2个/秒 (快速)
+    // 木材没有专用采集机器
+  },
+};
+```
+
+**手动制作特点**：
+
+- **可制作范围**: 大部分物品都可以手动制作，包括电路板、齿轮、弹药等
+- **无法手动制作**: 涉及流体的配方、熔炼配方、特殊设施专用配方
+- **制作速度**: 手动制作速度固定为 0.5 倍(比机器慢)
+- **无加成效果**: 无法享受模块加成、科技加成和生产力奖励
+- **便携性**: 随时随地可以制作，不需要电力和设施
+
+**手动制作示例**：
+
+```typescript
+const manualCraftableItems = {
+  // ✅ 可以手动制作
+  "iron-gear-wheel": { craftTime: 1.0, baseTime: 0.5 }, // 2倍时间
+  "electronic-circuit": { craftTime: 1.0, baseTime: 0.5 },
+  "transport-belt": { craftTime: 1.0, baseTime: 0.5 },
+  inserter: { craftTime: 1.0, baseTime: 0.5 },
+  "assembling-machine-1": { craftTime: 1.0, baseTime: 0.5 },
+
+  // ❌ 无法手动制作
+  "iron-plate": false, // 需要熔炉熔炼
+  "petroleum-gas": false, // 流体，需要炼油厂
+  "sulfuric-acid": false, // 流体，需要化工厂
+  "plastic-bar": false, // 需要石油气(流体输入)
+  battery: false, // 需要硫酸(流体输入)
+  "engine-unit": false, // 需要润滑油(流体输入)
+  "uranium-fuel-cell": false, // 需要离心机
+  concrete: false, // 需要水(流体输入)
+};
+```
 
 // 配方系统
 interface Recipe {
@@ -940,6 +1070,11 @@ interface FactorioDataProcessor {
   isTechnology(item: FactorioItemUnion): item is FactorioTechnology;
   isModule(item: FactorioItemUnion): item is FactorioModule;
   isBeacon(item: FactorioItemUnion): item is FactorioBeacon;
+  isFluid(itemId: string): boolean;
+
+  // 手动制作检查方法
+  canManualCraft(recipeId: string): boolean;
+  canManualHarvest(itemId: string): boolean;
 }
 
 // 游戏数据适配
