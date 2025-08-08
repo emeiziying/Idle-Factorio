@@ -36,9 +36,57 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
   },
 
   removeFacility: (facilityId: string) => {
+    const facility = get().facilities.find(f => f.id === facilityId);
+    if (facility) {
+      // 如果设施正在生产且有进度，返还已消耗的材料
+      get().handleFacilityProductionCancellation(facility);
+    }
+
     set(state => ({
       facilities: state.facilities.filter(facility => facility.id !== facilityId),
     }));
+  },
+
+  // 停止设施生产
+  stopFacilityProduction: (facilityId: string) => {
+    const facility = get().facilities.find(f => f.id === facilityId);
+    if (facility && facility.status === 'running') {
+      // 返还已消耗的材料
+      get().handleFacilityProductionCancellation(facility);
+
+      // 重置生产状态
+      get().updateFacility(facilityId, {
+        status: 'stopped',
+        production: facility.production
+          ? {
+              ...facility.production,
+              progress: 0,
+            }
+          : undefined,
+      });
+    }
+  },
+
+  // 处理设施生产取消的材料返还
+  handleFacilityProductionCancellation: facility => {
+    const production = facility.production;
+    if (!production?.currentRecipeId || !production.progress || production.progress === 0) {
+      return; // 没有进行中的生产，无需返还
+    }
+
+    const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+    const recipe = dataService.getRecipe(production.currentRecipeId);
+    if (!recipe?.in) {
+      return; // 没有输入材料，无需返还
+    }
+
+    console.log(`[Facility] 设施 ${facility.id} 生产取消，返还材料`);
+
+    // 返还已消耗的输入材料
+    Object.entries(recipe.in).forEach(([itemId, quantity]) => {
+      get().updateInventory(itemId, quantity as number);
+      console.log(`[Facility] 返还 ${itemId} x${quantity}`);
+    });
   },
 
   _repairFacilityState: () => {

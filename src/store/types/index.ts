@@ -90,6 +90,8 @@ export interface FacilitySlice {
   addFacility: (facility: FacilityInstance) => void;
   updateFacility: (facilityId: string, updates: Partial<FacilityInstance>) => void;
   removeFacility: (facilityId: string) => void;
+  stopFacilityProduction: (facilityId: string) => void;
+  handleFacilityProductionCancellation: (facility: FacilityInstance) => void;
   _repairFacilityState: () => void;
 
   // 燃料系统

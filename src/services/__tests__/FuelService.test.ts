@@ -1,6 +1,7 @@
 import GameConfig from '@/services/core/GameConfig';
 import { FuelService, type GenericFuelBuffer } from '@/services/crafting/FuelService';
 import type { FacilityInstance } from '@/types/facilities';
+import type { InventoryItem } from '@/types';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 // 简化的假数据服务
@@ -145,11 +146,48 @@ describe('FuelService smart distribution (shortage fairness)', () => {
       makeFacility('f2', 'stone-furnace'), // 次高
     ];
 
-    const inventory: Record<string, { currentAmount: number }> = { coal: { currentAmount: 1 } };
-    const getInventoryItem = (itemId: string): { currentAmount: number } =>
-      inventory[itemId] || { currentAmount: 0 };
+    const inventory: Record<string, InventoryItem> = {
+      coal: {
+        itemId: 'coal',
+        currentAmount: 1,
+        stackSize: 50,
+        baseStacks: 1,
+        additionalStacks: 0,
+        totalStacks: 1,
+        maxCapacity: 50,
+        productionRate: 0,
+        consumptionRate: 0,
+        status: 'normal',
+      },
+    };
+    const getInventoryItem = (itemId: string): InventoryItem =>
+      inventory[itemId] || {
+        itemId,
+        currentAmount: 0,
+        stackSize: 50,
+        baseStacks: 1,
+        additionalStacks: 0,
+        totalStacks: 1,
+        maxCapacity: 50,
+        productionRate: 0,
+        consumptionRate: 0,
+        status: 'normal',
+      };
     const updateInventory = (itemId: string, amount: number): void => {
-      if (!inventory[itemId]) inventory[itemId] = { currentAmount: 0 };
+      if (!inventory[itemId]) {
+        inventory[itemId] = {
+          itemId,
+          currentAmount: 0,
+          stackSize: 50,
+          baseStacks: 1,
+          additionalStacks: 0,
+          totalStacks: 1,
+          maxCapacity: 50,
+          productionRate: 0,
+          consumptionRate: 0,
+          status: 'normal',
+        };
+      }
       inventory[itemId].currentAmount += amount;
     };
 

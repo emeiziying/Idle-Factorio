@@ -80,6 +80,7 @@ export class GameStorageService {
   private saveTimeout: ReturnType<typeof setTimeout> | null = null;
   private readonly debounceMs: number = 2000;
   private readonly storageKey = 'factorio-game-storage';
+  private pendingState: Partial<GameState> | null = null; // 保存等待写入的快照
 
   private constructor() {
     // 延迟初始化 dataService，避免在测试收集阶段构造依赖
@@ -117,6 +118,7 @@ export class GameStorageService {
 
       // 设置新的待保存任务
       this.pendingSave = { resolve, reject };
+      this.pendingState = state;
 
       // 设置防抖计时器
       this.saveTimeout = setTimeout(async () => {
@@ -128,6 +130,7 @@ export class GameStorageService {
         } finally {
           this.pendingSave = null;
           this.saveTimeout = null;
+          this.pendingState = null;
         }
       }, this.debounceMs);
     });
@@ -188,6 +191,20 @@ export class GameStorageService {
   private async executeSave(state: Partial<GameState>): Promise<void> {
     // 数据优化
     const optimized = this.optimizeState(state);
+    if (import.meta.env.DEV) {
+      try {
+        const fuelSnapshots = (optimized.facilities || []).map(f => ({
+          id: f.id,
+          type: f.type,
+          fuel: f.fuel,
+          progress: f.progress,
+          status: f.status,
+        }));
+        console.debug('[GameStorage] Saving facilities fuel snapshot:', fuelSnapshots);
+      } catch (e) {
+        console.warn('[GameStorage] Failed to log fuel snapshot on save:', e);
+      }
+    }
     const jsonString = JSON.stringify(optimized);
 
     // 数据压缩
@@ -251,12 +268,29 @@ export class GameStorageService {
     if (state.facilities) {
       optimized.facilities = state.facilities.map((facility: FacilityInstance) => {
         const fuel = facility.fuelBuffer?.slots?.[0];
+        if (import.meta.env.DEV) {
+          console.debug('[GameStorage] Optimize facility fuel:', {
+            id: facility.id,
+            type: facility.facilityId,
+            slot: fuel
+              ? {
+                  itemId: fuel.itemId,
+                  remainingEnergy: fuel.remainingEnergy,
+                  quantity: fuel.quantity,
+                }
+              : null,
+          });
+        }
         return {
           id: facility.id,
           type: facility.facilityId,
           recipe: facility.targetItemId || '',
           progress: Math.round((facility.production?.progress || 0) * 100) / 100,
-          fuel: fuel ? { [fuel.itemId]: Math.round(fuel.remainingEnergy * 100) / 100 } : {},
+          // 仅当有有效燃料物品且剩余能量>0时才保存，否则存空对象
+          fuel:
+            fuel && fuel.itemId && fuel.remainingEnergy > 0
+              ? { [fuel.itemId]: Math.round(fuel.remainingEnergy * 100) / 100 }
+              : {},
           status: facility.status,
           efficiency: facility.efficiency,
         };
@@ -317,14 +351,25 @@ export class GameStorageService {
           // 存档中记录的是“当前这块燃料的剩余能量”，不是总能量
           // 因此恢复时最多只应还原为1个单位的燃料，并且剩余能量不应超过单个燃料的能量值
           const clampedEnergy = Math.max(0, Math.min(energy as number, fuelValue));
-          return {
+          const slot = {
             itemId,
             quantity: clampedEnergy > 0 ? 1 : 0,
             remainingEnergy: clampedEnergy,
           };
+          if (import.meta.env.DEV) {
+            console.debug('[GameStorage] Restore facility fuel slot:', {
+              id: facility.id,
+              type: facility.type,
+              itemId,
+              savedEnergy: energy,
+              fuelValue,
+              restored: slot,
+            });
+          }
+          return slot;
         });
 
-        return {
+        const restoredFacility = {
           id: facility.id,
           facilityId: facility.type,
           targetItemId: facility.recipe,
@@ -348,6 +393,14 @@ export class GameStorageService {
             lastUpdate: optimized.time,
           },
         };
+        if (import.meta.env.DEV) {
+          console.debug('[GameStorage] Restored facility:', {
+            id: restoredFacility.id,
+            type: restoredFacility.facilityId,
+            fuelBuffer: restoredFacility.fuelBuffer,
+          });
+        }
+        return restoredFacility;
       });
     }
 
@@ -397,18 +450,35 @@ export class GameStorageService {
       this.pendingSave.reject(new Error('保存任务被取消'));
       this.pendingSave = null;
     }
+    // 不清理 pendingState，这样 flushPendingSave 仍可立即写入
   }
 
   /**
    * 立即执行待处理的保存
    */
   private flushPendingSave(): void {
-    if (this.saveTimeout && this.pendingSave) {
-      clearTimeout(this.saveTimeout);
-      // 注意：这里是同步操作，用于页面卸载时的紧急保存
-      this.pendingSave.resolve();
-      this.pendingSave = null;
-      this.saveTimeout = null;
+    if (this.saveTimeout && this.pendingSave && this.pendingState) {
+      try {
+        // 清理定时器，转为同步保存以适配 beforeunload
+        clearTimeout(this.saveTimeout);
+
+        const optimized = this.optimizeState(this.pendingState);
+        const jsonString = JSON.stringify(optimized);
+        const compressed = LZString.compressToUTF16(jsonString);
+        const finalData = compressed.length * 2 < jsonString.length ? compressed : jsonString;
+        localStorage.setItem(this.storageKey, finalData);
+        if (import.meta.env.DEV) {
+          console.debug('[GameStorage] flushPendingSave: wrote snapshot synchronously');
+        }
+        this.pendingSave.resolve();
+      } catch (e) {
+        console.warn('[GameStorage] flushPendingSave failed:', e);
+        this.pendingSave.resolve();
+      } finally {
+        this.pendingSave = null;
+        this.saveTimeout = null;
+        this.pendingState = null;
+      }
     }
   }
 
