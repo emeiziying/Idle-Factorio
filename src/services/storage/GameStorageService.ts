@@ -5,8 +5,8 @@
 
 import { DataService } from '@/services/core/DataService';
 import type { FacilityInstance, FacilityStatus } from '@/types/facilities';
-import type { CraftingTask, CraftingChain, DeployedContainer, InventoryItem } from '@/types/index';
-import type { TechResearchState, ResearchQueueItem } from '@/types/technology';
+import type { CraftingChain, CraftingTask, DeployedContainer, InventoryItem } from '@/types/index';
+import type { ResearchQueueItem, TechResearchState } from '@/types/technology';
 import LZString from 'lz-string';
 
 // 游戏状态类型定义
@@ -73,7 +73,7 @@ interface PendingSave {
 
 export class GameStorageService {
   private static instance: GameStorageService;
-  private dataService: DataService;
+  private dataService: DataService | null = null;
 
   // 防抖相关
   private pendingSave: PendingSave | null = null;
@@ -82,7 +82,7 @@ export class GameStorageService {
   private readonly storageKey = 'factorio-game-storage';
 
   private constructor() {
-    this.dataService = new DataService();
+    // 延迟初始化 dataService，避免在测试收集阶段构造依赖
 
     // 页面卸载时立即保存
     if (typeof window !== 'undefined') {
@@ -97,6 +97,14 @@ export class GameStorageService {
       GameStorageService.instance = new GameStorageService();
     }
     return GameStorageService.instance;
+  }
+
+  // 延迟获取 DataService 实例
+  private getDataService(): DataService {
+    if (!this.dataService) {
+      this.dataService = new DataService();
+    }
+    return this.dataService;
   }
 
   /**
@@ -306,7 +314,7 @@ export class GameStorageService {
         const fuelItems = Object.entries(facility.fuel);
         const slots = fuelItems.map(([itemId, energy]) => ({
           itemId,
-          quantity: Math.ceil(energy / (this.dataService.getItem(itemId)?.fuel?.value || 1)),
+          quantity: Math.ceil(energy / (this.getDataService().getItem(itemId)?.fuel?.value || 1)),
           remainingEnergy: energy,
         }));
 
@@ -406,12 +414,12 @@ export class GameStorageService {
   }
 
   private getItemStackSize(itemId: string): number {
-    const item = this.dataService.getItem(itemId);
+    const item = this.getDataService().getItem(itemId);
     return item?.stack || 50;
   }
 
   private getFacilityMaxEnergy(facilityType: string): number {
-    const item = this.dataService.getItem(facilityType);
+    const item = this.getDataService().getItem(facilityType);
     if (item?.machine?.usage) {
       // usage 字段就是最大能量消耗，通常也等于最大能量容量
       return item.machine.usage;
@@ -420,7 +428,7 @@ export class GameStorageService {
   }
 
   private getFacilityConsumptionRate(facilityType: string): number {
-    const item = this.dataService.getItem(facilityType);
+    const item = this.getDataService().getItem(facilityType);
     if (item?.machine?.usage) {
       // 消耗率 = usage / 1000（转换为每毫秒的消耗）
       return item.machine.usage / 1000;

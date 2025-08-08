@@ -1,21 +1,21 @@
-import React, { useState } from 'react';
+import FactorioIcon from '@/components/common/FactorioIcon';
+import { FUEL_PRIORITY } from '@/data/fuelConfigs';
+import { useDataService, useFuelService } from '@/hooks/useDIServices';
+import { ArrowDownward, ArrowUpward, Info, LocalFireDepartment } from '@mui/icons-material';
 import {
   Box,
   Card,
   CardContent,
-  Typography,
+  Chip,
+  IconButton,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  IconButton,
   Tooltip,
-  Chip,
+  Typography,
 } from '@mui/material';
-import { ArrowUpward, ArrowDownward, LocalFireDepartment, Info } from '@mui/icons-material';
-import FactorioIcon from '@/components/common/FactorioIcon';
-import { FUEL_PRIORITY } from '@/data/fuelConfigs';
-import { useDataService } from '@/hooks/useDIServices';
+import React, { useState } from 'react';
 
 interface FuelPrioritySettingsProps {
   onPriorityChange?: (newPriority: string[]) => void;
@@ -24,6 +24,7 @@ interface FuelPrioritySettingsProps {
 const FuelPrioritySettings: React.FC<FuelPrioritySettingsProps> = ({ onPriorityChange }) => {
   const [fuelPriority, setFuelPriority] = useState<string[]>(FUEL_PRIORITY);
   const dataService = useDataService();
+  const fuelService = useFuelService();
 
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
@@ -31,6 +32,7 @@ const FuelPrioritySettings: React.FC<FuelPrioritySettingsProps> = ({ onPriorityC
     [newPriority[index - 1], newPriority[index]] = [newPriority[index], newPriority[index - 1]];
     setFuelPriority(newPriority);
     onPriorityChange?.(newPriority);
+    fuelService.setFuelPriority(newPriority);
   };
 
   const handleMoveDown = (index: number) => {
@@ -39,6 +41,7 @@ const FuelPrioritySettings: React.FC<FuelPrioritySettingsProps> = ({ onPriorityC
     [newPriority[index], newPriority[index + 1]] = [newPriority[index + 1], newPriority[index]];
     setFuelPriority(newPriority);
     onPriorityChange?.(newPriority);
+    fuelService.setFuelPriority(newPriority);
   };
 
   const getFuelInfo = (fuelId: string) => {

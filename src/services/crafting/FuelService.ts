@@ -1,13 +1,13 @@
 // 燃料服务 - 管理所有燃料相关逻辑
 
 import { DataService } from '@/services/core/DataService';
-import { RecipeService } from '@/services/crafting/RecipeService';
 import { GameConfig } from '@/services/core/GameConfig';
+import { RecipeService } from '@/services/crafting/RecipeService';
 import type { FacilityInstance } from '@/types/facilities';
 import { FacilityStatus } from '@/types/facilities';
 import type { InventoryItem } from '@/types/index';
-import { warn as logWarn, error as logError } from '@/utils/logger';
 import { msToSeconds } from '@/utils/common';
+import { error as logError, warn as logWarn } from '@/utils/logger';
 
 // 燃料更新结果
 export interface FuelUpdateResult {
@@ -33,6 +33,8 @@ export interface AutoRefuelResult {
 // 燃料状态信息
 // 燃料缓冲区类型 - 使用新的 slots 结构
 export interface GenericFuelBuffer {
+  /** 归属的设施ID，用于计算最大容量等配置 */
+  facilityId?: string;
   slots: Array<{ itemId: string; quantity: number; remainingEnergy: number }>;
   totalEnergy: number;
   maxCapacity?: number;
@@ -120,6 +122,7 @@ export class FuelService {
 
     // 每个设施只需要1个燃料槽，不设置最大容量限制
     return {
+      facilityId,
       slots: [
         {
           itemId: '',
@@ -385,9 +388,9 @@ export class FuelService {
         if (fuelValue > 0) {
           burnProgress = (slot.remainingEnergy / fuelValue) * 100;
         }
-        // TODO: This is a temporary fix, we should inject GameConfig properly
+        // 依据设施ID获取配置（buffer.facilityId 在初始化时注入）
         const facilityConfig = this.gameConfig.getFacilityFuelConfig
-          ? this.gameConfig.getFacilityFuelConfig(slot.itemId) // Use slot.itemId instead of item.name
+          ? this.gameConfig.getFacilityFuelConfig(buffer.facilityId || '')
           : null;
         if (facilityConfig) {
           maxEnergy = facilityConfig.maxStackPerSlot * fuelValue;
@@ -428,29 +431,7 @@ export class FuelService {
     return (slot.quantity - 1) * fuelValue + slot.remainingEnergy;
   }
 
-  /**
-   * 检查燃料缓存区是否已满
-   */
-  private isFuelBufferFull(facility: FacilityInstance): boolean {
-    const buffer = facility.fuelBuffer;
-    if (!buffer || !buffer.slots || buffer.slots.length === 0) {
-      return false;
-    }
-
-    const facilityId = facility.facilityId || facility.itemId;
-    if (!facilityId) return false;
-
-    // TODO: This is a temporary fix, we should inject GameConfig properly
-    const facilityConfig = this.gameConfig.getFacilityFuelConfig
-      ? this.gameConfig.getFacilityFuelConfig(facilityId)
-      : null;
-    if (!facilityConfig) return false;
-
-    const maxStack = facilityConfig.maxStackPerSlot;
-    const slot = buffer.slots[0];
-
-    return slot.quantity >= maxStack;
-  }
+  // 注意：曾有 isFuelBufferFull 方法，但当前逻辑不再需要，已移除以减少未使用警告
 
   // 设施优先级缓存 - 动态从data.json计算
   private facilityPriorityCache = new Map<string, number>();

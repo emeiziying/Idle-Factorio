@@ -1,10 +1,10 @@
 // 生产循环 Hook - 管理设施生产和燃料消耗
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useFuelService, usePowerService, useRecipeService } from '@/hooks/useDIServices';
 import useGameStore from '@/store/gameStore';
-import { useFuelService, useRecipeService, usePowerService } from '@/hooks/useDIServices';
 import type { FacilityInstance } from '@/types/facilities';
 import { msToSeconds } from '@/utils/common';
+import { useCallback, useEffect, useRef } from 'react';
 
 interface UseProductionLoopOptions {
   updateInterval?: number; // 更新间隔（毫秒）
@@ -22,8 +22,6 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
     updateFacility,
     batchUpdateInventory, // 新增：批量更新
     getInventoryItem,
-    updateFuelConsumption,
-    autoRefuelFacilities,
     trackCraftedItem,
     trackMinedEntity,
   } = useGameStore();
@@ -163,13 +161,7 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
       }
     });
 
-    // 3. 更新燃料消耗
-    updateFuelConsumption(deltaTime);
-
-    // 4. 尝试自动补充燃料
-    autoRefuelFacilities();
-
-    // 5. 更新生产进度
+    // 3. 更新生产进度（燃料消耗与自动补给由 GameLoop 任务负责）
     facilities.forEach(facility => {
       // 检查设施状态
       if (facility.status === 'no_fuel' && facility.fuelBuffer) {
@@ -185,15 +177,7 @@ export const useProductionLoop = (options: UseProductionLoopOptions = {}) => {
         updateFacilityProduction(facility, deltaTime);
       }
     });
-  }, [
-    facilities,
-    updateFuelConsumption,
-    autoRefuelFacilities,
-    updateFacility,
-    fuelService,
-    updateFacilityProduction,
-    powerService,
-  ]);
+  }, [facilities, updateFacility, fuelService, updateFacilityProduction, powerService]);
 
   // 设置定时器
   useEffect(() => {
