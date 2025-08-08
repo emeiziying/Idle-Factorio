@@ -1,5 +1,5 @@
 // 游戏循环服务 - 重新设计的高性能统一循环管理
-import type { GameLoopTask, GameLoopStats, GameLoopConfig } from '@/types/gameLoop';
+import type { GameLoopConfig, GameLoopStats, GameLoopTask } from '@/types/gameLoop';
 import { PerformanceLevel } from '@/types/gameLoop';
 
 // 任务执行结果
@@ -206,6 +206,7 @@ export class GameLoopService {
 
       try {
         // 使用智能调度器检查任务是否需要执行
+        let effectiveDeltaTime = deltaTime;
         if (task.fixedTimeStep) {
           const adjustedInterval = this.scheduler.getAdjustedInterval(task.id, task.fixedTimeStep);
           const timeSinceLastExecution = totalTime - task.lastExecutionTime;
@@ -213,11 +214,13 @@ export class GameLoopService {
           if (timeSinceLastExecution < adjustedInterval) {
             continue; // 跳过这个任务
           }
+          // 在写入 lastExecutionTime 之前，先记录应当传给任务的有效 deltaTime
+          effectiveDeltaTime = timeSinceLastExecution;
           task.lastExecutionTime = totalTime;
         }
 
         // 执行任务
-        task.update(deltaTime, totalTime);
+        task.update(effectiveDeltaTime, totalTime);
         tasksExecuted++;
 
         // 记录任务执行时间和结果

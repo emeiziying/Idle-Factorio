@@ -202,7 +202,29 @@ export class DIServiceInitializer {
     const { initializeTechnologyService, startGameLoop } = useGameStore.getState();
     await initializeTechnologyService();
 
-    // 2. 启动游戏循环系统
+    // 2. 启动游戏循环系统前，校正从存档恢复的设施燃料功率（可能因数据未加载而使用了占位默认值）
+    try {
+      const store = useGameStore.getState();
+      const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+      const facilities = store.facilities;
+      facilities.forEach(f => {
+        if (!f.fuelBuffer) return;
+        const item = dataService.getItem(f.facilityId);
+        const usage = item?.machine?.usage;
+        if (typeof usage === 'number' && usage > 0 && f.fuelBuffer!.burnRate !== usage) {
+          store.updateFacility(f.id, {
+            fuelBuffer: { ...f.fuelBuffer!, burnRate: usage },
+          });
+        }
+      });
+    } catch (e) {
+      // 在开发环境下输出日志，避免打断初始化流程
+      if (import.meta.env.DEV) {
+        console.warn('[ServiceInit] 校正设施燃料功率失败（可忽略）:', e);
+      }
+    }
+
+    // 3. 启动游戏循环系统
     const gameLoopService = container.resolve<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
 
     // 添加所有默认的游戏系统任务

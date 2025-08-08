@@ -312,11 +312,17 @@ export class GameStorageService {
     if (restored.facilities) {
       restored.facilities = optimized.facilities.map(facility => {
         const fuelItems = Object.entries(facility.fuel);
-        const slots = fuelItems.map(([itemId, energy]) => ({
-          itemId,
-          quantity: Math.ceil(energy / (this.getDataService().getItem(itemId)?.fuel?.value || 1)),
-          remainingEnergy: energy,
-        }));
+        const slots = fuelItems.map(([itemId, energy]) => {
+          const fuelValue = this.getDataService().getItem(itemId)?.fuel?.value || 0;
+          // 存档中记录的是“当前这块燃料的剩余能量”，不是总能量
+          // 因此恢复时最多只应还原为1个单位的燃料，并且剩余能量不应超过单个燃料的能量值
+          const clampedEnergy = Math.max(0, Math.min(energy as number, fuelValue));
+          return {
+            itemId,
+            quantity: clampedEnergy > 0 ? 1 : 0,
+            remainingEnergy: clampedEnergy,
+          };
+        });
 
         return {
           id: facility.id,
@@ -332,11 +338,13 @@ export class GameStorageService {
             outputBuffer: [],
           },
           fuelBuffer: {
+            facilityId: facility.type,
             slots,
             maxSlots: Math.max(1, slots.length),
-            totalEnergy: Object.values(facility.fuel).reduce((sum, energy) => sum + energy, 0),
+            totalEnergy:
+              slots.length > 0 ? slots.reduce((sum, s) => sum + s.remainingEnergy, 0) : 0,
             maxEnergy: this.getFacilityMaxEnergy(facility.type),
-            consumptionRate: this.getFacilityConsumptionRate(facility.type),
+            burnRate: this.getFacilityConsumptionRate(facility.type),
             lastUpdate: optimized.time,
           },
         };
@@ -430,10 +438,10 @@ export class GameStorageService {
   private getFacilityConsumptionRate(facilityType: string): number {
     const item = this.getDataService().getItem(facilityType);
     if (item?.machine?.usage) {
-      // 消耗率 = usage / 1000（转换为每毫秒的消耗）
-      return item.machine.usage / 1000;
+      // 燃料消耗率应该保持 kW 单位，与 FuelService.initializeFuelBuffer 保持一致
+      return item.machine.usage;
     }
-    return 0.1; // 默认值
+    return 100; // 默认值 (kW)
   }
 
   private ensureInventoryMap(inventory: unknown): Map<string, InventoryItem> {

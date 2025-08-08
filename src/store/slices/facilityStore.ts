@@ -1,9 +1,9 @@
 // 设施管理切片
-import type { SliceCreator, FacilitySlice } from '@/store/types';
-import type { FuelService } from '@/services/crafting/FuelService';
 import type { DataService } from '@/services/core/DataService';
 import { getService } from '@/services/core/DIServiceInitializer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
+import type { FuelService } from '@/services/crafting/FuelService';
+import type { FacilitySlice, SliceCreator } from '@/store/types';
 
 export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
   // 初始状态
@@ -111,42 +111,64 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
     const fuelService = getService<FuelService>(SERVICE_TOKENS.FUEL_SERVICE);
     const facilities = get().facilities;
 
+    // 小工具：为指定设施尝试补充 1 个燃料（按优先级选择兼容燃料）
+    const tryRefuelOne = (facilityToRefuel: {
+      id: string;
+      facilityId: string;
+      fuelBuffer?: Parameters<typeof fuelService.addFuel>[0];
+    }): boolean => {
+      if (!facilityToRefuel.fuelBuffer) return false;
+      const priority = fuelService.getFuelPriority();
+      const chosen = priority.find(
+        fuelId =>
+          fuelService.isFuelCompatible(facilityToRefuel.facilityId, fuelId) &&
+          get().getInventoryItem(fuelId).currentAmount > 0
+      );
+      if (!chosen) return false;
+      const addRes = fuelService.addFuel(
+        facilityToRefuel.fuelBuffer,
+        chosen,
+        1,
+        facilityToRefuel.facilityId
+      );
+      if (addRes.success && addRes.quantityAdded) {
+        get().updateInventory(chosen, -addRes.quantityAdded);
+        return true;
+      }
+      return false;
+    };
+
     facilities.forEach(facility => {
-      if (facility.fuelBuffer) {
-        const isProducing =
-          facility.status === 'running' && facility.production?.progress !== undefined;
-        const result = fuelService.updateFuelConsumption(
-          facility,
-          deltaTime,
-          isProducing,
-          get().getInventoryItem
-        );
+      const buffer = facility.fuelBuffer;
+      if (!buffer) return;
 
-        if (!result.success && facility.status === 'running') {
-          // 燃料耗尽，更新状态
-          get().updateFacility(facility.id, {
-            status: 'no_fuel',
-            fuelBuffer: facility.fuelBuffer,
-          });
+      const isProducing =
+        facility.status === 'running' && facility.production?.progress !== undefined;
+      const result = fuelService.updateFuelConsumption(
+        facility,
+        deltaTime,
+        isProducing,
+        get().getInventoryItem
+      );
 
-          // 尝试自动补充
-          const refuelResult = fuelService.autoRefuel(facility, get().getInventoryItem);
-          if (refuelResult.success) {
-            // 扣除库存
-            Object.entries(refuelResult.itemsConsumed).forEach(([itemId, amount]) => {
-              get().updateInventory(itemId, -amount);
-            });
-
-            // 恢复运行
-            get().updateFacility(facility.id, {
-              status: 'running',
-              fuelBuffer: facility.fuelBuffer,
-            });
-          }
-        } else if (result.success) {
-          // 更新燃料缓存
-          get().updateFacility(facility.id, { fuelBuffer: facility.fuelBuffer });
+      if (!result.success && facility.status === 'running') {
+        // 优先尝试最小补充（只补 1 个），成功则直接恢复运行；否则进入 no_fuel
+        if (tryRefuelOne(facility)) {
+          get().updateFacility(facility.id, { status: 'running', fuelBuffer: buffer });
+        } else {
+          get().updateFacility(facility.id, { status: 'no_fuel', fuelBuffer: buffer });
         }
+        return;
+      }
+
+      if (result.success) {
+        // 同步燃料缓存（例如 remainingEnergy 变化）
+        get().updateFacility(facility.id, { fuelBuffer: buffer });
+      }
+
+      // 场景：设施处于 no_fuel，但玩家后来获得了燃料，周期性尝试最小补充
+      if (facility.status === 'no_fuel' && tryRefuelOne(facility)) {
+        get().updateFacility(facility.id, { status: 'running', fuelBuffer: buffer });
       }
     });
   },

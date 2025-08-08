@@ -185,7 +185,32 @@ export class GameConfig {
    * 获取设施的燃料配置
    */
   getFacilityFuelConfig(facilityId: string): FuelConfig | null {
-    return FACILITY_FUEL_CONFIGS[facilityId] || null;
+    // 先查找静态配置
+    const predefined = FACILITY_FUEL_CONFIGS[facilityId];
+    if (predefined) return predefined;
+
+    // 动态回退：从数据中推导（仅针对 burner 设备）
+    const item = this.dataService.getItem(facilityId);
+    const machine = item?.machine;
+    if (machine?.type === 'burner') {
+      // 使用机器声明的燃料类别；若缺失则回退为化学燃料
+      const acceptedCategories =
+        machine.fuelCategories && machine.fuelCategories.length > 0
+          ? (machine.fuelCategories as unknown as FuelConfig['acceptedCategories'])
+          : (['chemical'] as FuelConfig['acceptedCategories']);
+
+      // 槽位固定为 1；堆叠上限优先取物品 stack，否则用全局默认堆叠
+      const maxStackPerSlot =
+        item?.stack && item.stack > 0 ? item.stack : this.constants.storage.defaultStackSize;
+
+      return {
+        acceptedCategories,
+        fuelSlots: this.constants.fuel.defaultFuelSlots,
+        maxStackPerSlot,
+      };
+    }
+
+    return null;
   }
 }
 

@@ -1,4 +1,7 @@
 // 重新设计的游戏循环任务工厂 - 高效模块化任务系统
+import { getService } from '@/services/core/DIServiceInitializer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
+import type { RecipeService } from '@/services/crafting/RecipeService';
 import useGameStore from '@/store/gameStore';
 import type { FacilityInstance } from '@/types/facilities';
 import type { GameLoopTask } from '@/types/gameLoop';
@@ -127,11 +130,12 @@ export class GameLoopTaskFactory {
       }
 
       const store = useGameStore.getState();
-      const { facilities, updateFacility, updateInventory } = store;
+      const { facilities, updateFacility, batchUpdateInventory, getInventoryItem } = store;
+      const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
 
       // 批量处理设施更新，减少 store 更新次数
       const facilityUpdates: Array<{ id: string; updates: Partial<FacilityInstance> }> = [];
-      const inventoryUpdates = new Map<string, number>();
+      const batchedInventoryUpdates: Array<{ itemId: string; amount: number }> = [];
 
       facilities.forEach(facility => {
         if (facility.status !== 'running' || !facility.production) return;
@@ -139,9 +143,27 @@ export class GameLoopTaskFactory {
         const production = facility.production;
         if (!production.currentRecipeId) return;
 
-        // 更新生产进度
-        const baseCraftingTime = 1000; // 1秒
-        const progressIncrement = deltaTime / baseCraftingTime;
+        const recipe = recipeService.getRecipeById(production.currentRecipeId);
+        if (!recipe) return;
+
+        // 若材料不足则不推进进度
+        let hasEnoughMaterials = true;
+        if (recipe.in) {
+          for (const [itemId, required] of Object.entries(recipe.in)) {
+            const inv = getInventoryItem(itemId);
+            if (inv.currentAmount < (required as number)) {
+              hasEnoughMaterials = false;
+              break;
+            }
+          }
+        }
+
+        if (!hasEnoughMaterials) {
+          return;
+        }
+
+        // 按配方时间推进（recipe.time 为秒；deltaTime 为毫秒）并考虑效率
+        const progressIncrement = (deltaTime / (recipe.time * 1000)) * (facility.efficiency || 1);
         const newProgress = Math.min((production.progress || 0) + progressIncrement, 1);
 
         const updatedProduction = {
@@ -151,11 +173,36 @@ export class GameLoopTaskFactory {
 
         // 完成生产
         if (newProgress >= 1) {
-          if (facility.targetItemId) {
-            const currentAmount = inventoryUpdates.get(facility.targetItemId) || 0;
-            inventoryUpdates.set(facility.targetItemId, currentAmount + 1);
+          // 检查输出容量是否足够
+          let canProduce = true;
+          if (recipe.out) {
+            for (const [itemId, qty] of Object.entries(recipe.out)) {
+              const inv = getInventoryItem(itemId);
+              if (inv.currentAmount + (qty as number) > inv.maxCapacity) {
+                canProduce = false;
+                break;
+              }
+            }
           }
-          updatedProduction.progress = 0;
+
+          if (!canProduce) {
+            // 输出空间不足：标记为 output_full，不消耗输入，也不清零进度
+            facilityUpdates.push({ id: facility.id, updates: { status: 'output_full' } });
+          } else {
+            // 扣除输入
+            if (recipe.in) {
+              for (const [itemId, quantity] of Object.entries(recipe.in)) {
+                batchedInventoryUpdates.push({ itemId, amount: -(quantity as number) });
+              }
+            }
+            // 添加产出
+            if (recipe.out) {
+              for (const [itemId, quantity] of Object.entries(recipe.out)) {
+                batchedInventoryUpdates.push({ itemId, amount: quantity as number });
+              }
+            }
+            updatedProduction.progress = 0;
+          }
         }
 
         facilityUpdates.push({
@@ -169,9 +216,9 @@ export class GameLoopTaskFactory {
         updateFacility(id, updates);
       });
 
-      inventoryUpdates.forEach((amount, itemId) => {
-        updateInventory(itemId, amount);
-      });
+      if (batchedInventoryUpdates.length > 0) {
+        batchUpdateInventory(batchedInventoryUpdates);
+      }
     });
   }
 
