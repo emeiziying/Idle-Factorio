@@ -16,6 +16,10 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
   onCategoryChange,
 }) => {
   const isMobile = useIsMobile();
+  const validCategoryIds = new Set(categories.map(category => category.id));
+  const safeSelectedCategory = validCategoryIds.has(selectedCategory)
+    ? selectedCategory
+    : (categories[0]?.id ?? false);
 
   const handleChange = (_event: React.SyntheticEvent, newValue: string) => {
     onCategoryChange(newValue);
@@ -64,7 +68,7 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
       }}
     >
       <Tabs
-        value={selectedCategory}
+        value={safeSelectedCategory}
         onChange={handleChange}
         variant="scrollable"
         scrollButtons="auto"
