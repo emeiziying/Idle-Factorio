@@ -51,7 +51,7 @@ export interface CraftingSlice {
   addCraftingTask: (task: Omit<CraftingTask, 'id'>) => boolean;
   addCraftingChain: (chain: Omit<CraftingChain, 'id'>) => string;
   removeCraftingTask: (taskId: string) => void;
-  updateCraftingProgress: (taskId: string, progress: number) => void;
+  updateCraftingProgress: (taskId: string, progress: number, startTime?: number) => void;
   completeCraftingTask: (taskId: string) => void;
 }
 

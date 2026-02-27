@@ -33,10 +33,10 @@ class CraftingEngine {
       const baseTime = selectedRecipe.time || 1; // 基础时间
       const craftingTime = secondsToMs((baseTime / manualEfficiency) * currentTask.quantity);
 
-      // 确保有开始时间 - 只在第一次执行时设定
+      // 确保有开始时间 - 只在第一次执行时设定（通过 store 更新，避免直接变更 Zustand 状态）
       if (!currentTask.startTime || currentTask.startTime === 0) {
-        currentTask.startTime = now;
-        updateCraftingProgress(currentTask.id, 0);
+        updateCraftingProgress(currentTask.id, 0, now);
+        return; // 下一帧再计算进度，此时 startTime 已写入 store
       }
 
       // 计算进度
