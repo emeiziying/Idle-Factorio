@@ -307,9 +307,12 @@ export class GameLoopService {
 
     // 根据页面可见性和性能等级决定调度方式
     if (!this.isVisible) {
-      // 页面不可见时，使用 setTimeout 降低频率
+      // 页面不可见时，使用 setTimeout 降低频率（backgroundThrottleRatio 控制）
       const throttledInterval = 1000 / this.config.targetFPS / this.config.backgroundThrottleRatio;
       setTimeout(() => this.loop(), throttledInterval);
+    } else if (this.performanceLevel === PerformanceLevel.BACKGROUND) {
+      // 后台性能模式：1 FPS，用于极低资源占用场景
+      setTimeout(() => this.loop(), 1000);
     } else if (this.performanceLevel === PerformanceLevel.LOW) {
       // 低性能模式，降低到 15 FPS
       setTimeout(() => this.loop(), 1000 / 15);
@@ -317,7 +320,7 @@ export class GameLoopService {
       // 中等性能模式，降低到 30 FPS
       setTimeout(() => this.loop(), 1000 / 30);
     } else {
-      // 正常情况使用 requestAnimationFrame
+      // HIGH 模式使用 requestAnimationFrame（最流畅）
       this.animationFrameId = requestAnimationFrame(() => this.loop());
     }
   }

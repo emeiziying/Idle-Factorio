@@ -3,7 +3,27 @@ import type { DataService } from '@/services/core/DataService';
 import { getService } from '@/services/core/DIServiceInitializer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type { FuelService } from '@/services/crafting/FuelService';
+import type { GameLoopService } from '@/services/game/GameLoopService';
 import type { FacilitySlice, SliceCreator } from '@/store/types';
+import { GameLoopTaskType } from '@/types/gameLoop';
+
+// 判断设施是否处于需要循环处理的活跃状态
+const isActiveFacilityStatus = (status: string) =>
+  status === 'running' || status === 'no_resource' || status === 'output_full';
+
+// 立即启用/禁用设施任务的辅助函数
+const syncFacilitiesTask = (enable: boolean) => {
+  try {
+    const svc = getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
+    if (enable) {
+      svc.enableTask(GameLoopTaskType.FACILITIES);
+    } else {
+      svc.disableTask(GameLoopTaskType.FACILITIES);
+    }
+  } catch {
+    // 服务可能尚未初始化（存档加载阶段），忽略
+  }
+};
 
 export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
   // 初始状态
@@ -33,6 +53,11 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
         facility.id === facilityId ? { ...facility, ...updates } : facility
       ),
     }));
+
+    // 状态变为活跃时立即启用设施任务，避免等待 updateTasksState 轮询（最长 10s）
+    if (updates.status && isActiveFacilityStatus(updates.status)) {
+      syncFacilitiesTask(true);
+    }
   },
 
   removeFacility: (facilityId: string) => {
@@ -45,6 +70,12 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
     set(state => ({
       facilities: state.facilities.filter(facility => facility.id !== facilityId),
     }));
+
+    // 若无活跃设施，立即禁用设施任务
+    const hasActive = get().facilities.some(f => isActiveFacilityStatus(f.status));
+    if (!hasActive) {
+      syncFacilitiesTask(false);
+    }
   },
 
   // 停止设施生产

@@ -139,8 +139,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
       }));
 
       // 检查队列是否为空，如果为空则禁用制作系统
-      const remainingTasks = get().craftingQueue.filter(task => task.id !== taskId);
-      if (remainingTasks.length === 0) {
+      if (get().craftingQueue.length === 0) {
         try {
           const gameLoopService = getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
           gameLoopService.disableTask(GameLoopTaskType.CRAFTING);
@@ -247,18 +246,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
       ),
     }));
 
-    // 移除任务
+    // 移除任务（removeCraftingTask 内部已处理队列为空时禁用制作任务）
     get().removeCraftingTask(taskId);
-
-    // 如果队列为空，禁用制作系统
-    const remainingTasks = get().craftingQueue.filter(t => t.id !== taskId);
-    if (remainingTasks.length === 0) {
-      try {
-        const gameLoopService = getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
-        gameLoopService.disableTask(GameLoopTaskType.CRAFTING);
-      } catch (error) {
-        console.warn('[制作队列] 无法禁用制作任务:', error);
-      }
-    }
   },
 });
