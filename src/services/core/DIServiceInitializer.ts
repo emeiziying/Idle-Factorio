@@ -36,6 +36,7 @@ import useGameStore from '@/store/gameStore';
 
 export class DIServiceInitializer {
   private static initialized = false;
+  private static taskMonitorIntervalId: ReturnType<typeof setInterval> | null = null;
 
   /**
    * 注册所有服务到 DI 容器
@@ -234,8 +235,11 @@ export class DIServiceInitializer {
     // 启动状态管理层的游戏循环控制器（内部会调用 gameLoopService.start()）
     startGameLoop();
 
-    // 设置任务状态监控定时器
-    setInterval(() => {
+    // 设置任务状态监控定时器（清理旧的，防止热重载时重复创建）
+    if (this.taskMonitorIntervalId !== null) {
+      clearInterval(this.taskMonitorIntervalId);
+    }
+    this.taskMonitorIntervalId = setInterval(() => {
       GameLoopTaskFactory.updateTasksState(gameLoopService['tasks']);
     }, 10000);
   }
@@ -244,6 +248,12 @@ export class DIServiceInitializer {
    * 清理资源
    */
   static cleanup(): void {
+    // 清理任务监控定时器
+    if (this.taskMonitorIntervalId !== null) {
+      clearInterval(this.taskMonitorIntervalId);
+      this.taskMonitorIntervalId = null;
+    }
+
     // 停止游戏循环
     if (container.has(SERVICE_TOKENS.GAME_LOOP_SERVICE)) {
       const gameLoopService = container.resolve<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);

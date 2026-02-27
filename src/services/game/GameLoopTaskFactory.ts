@@ -40,7 +40,10 @@ const TASK_CONFIGS: Record<string, TaskConfig> = {
     enabledByDefault: false,
     shouldRun: () => {
       const store = useGameStore.getState();
-      return store.facilities.some(f => f.status === 'running');
+      // 除 running 外，no_resource/output_full 设施也需要周期性恢复检查
+      return store.facilities.some(
+        f => f.status === 'running' || f.status === 'no_resource' || f.status === 'output_full'
+      );
     },
   },
   [GameLoopTaskType.FUEL_CONSUMPTION]: {
@@ -138,50 +141,66 @@ export class GameLoopTaskFactory {
       const batchedInventoryUpdates: Array<{ itemId: string; amount: number }> = [];
 
       facilities.forEach(facility => {
-        if (facility.status !== 'running' || !facility.production) return;
+        if (!facility.production?.currentRecipeId) return;
 
         const production = facility.production;
-        if (!production.currentRecipeId) return;
-
         const recipe = recipeService.getRecipeById(production.currentRecipeId);
         if (!recipe) return;
+
+        // ── 阻塞状态恢复检查 ──────────────────────────────────────────────
+        // no_resource：当材料补充后恢复运行；output_full：当输出空间释放后恢复运行
+        if (facility.status === 'no_resource' || facility.status === 'output_full') {
+          if (facility.status === 'no_resource') {
+            const hasEnoughMaterials =
+              !recipe.in ||
+              Object.entries(recipe.in).every(
+                ([itemId, required]) =>
+                  getInventoryItem(itemId).currentAmount >= (required as number)
+              );
+            if (hasEnoughMaterials) {
+              facilityUpdates.push({ id: facility.id, updates: { status: 'running' } });
+            }
+          } else {
+            // output_full：progress 保留在 >= 1，恢复后下一轮立即输出
+            const hasOutputSpace =
+              !recipe.out ||
+              Object.entries(recipe.out).every(([itemId, qty]) => {
+                const inv = getInventoryItem(itemId);
+                return inv.currentAmount + (qty as number) <= inv.maxCapacity;
+              });
+            if (hasOutputSpace) {
+              facilityUpdates.push({ id: facility.id, updates: { status: 'running' } });
+            }
+          }
+          // 本轮跳过生产更新，下轮以 running 状态处理
+          return;
+        }
+
+        if (facility.status !== 'running') return;
 
         const currentProgress = production.progress || 0;
 
         // 如果是新开始的生产（进度为0），需要检查并扣除输入材料
         if (currentProgress === 0) {
           // 检查材料是否充足
-          let hasEnoughMaterials = true;
-          if (recipe.in) {
-            for (const [itemId, required] of Object.entries(recipe.in)) {
-              const inv = getInventoryItem(itemId);
-              if (inv.currentAmount < (required as number)) {
-                hasEnoughMaterials = false;
-                break;
-              }
-            }
-          }
-
+          const hasEnoughMaterials =
+            !recipe.in ||
+            Object.entries(recipe.in).every(
+              ([itemId, required]) => getInventoryItem(itemId).currentAmount >= (required as number)
+            );
           if (!hasEnoughMaterials) {
-            // 材料不足，设施进入等待状态
             facilityUpdates.push({ id: facility.id, updates: { status: 'no_resource' } });
             return;
           }
 
           // 检查输出容量是否足够
-          let hasOutputSpace = true;
-          if (recipe.out) {
-            for (const [itemId, qty] of Object.entries(recipe.out)) {
+          const hasOutputSpace =
+            !recipe.out ||
+            Object.entries(recipe.out).every(([itemId, qty]) => {
               const inv = getInventoryItem(itemId);
-              if (inv.currentAmount + (qty as number) > inv.maxCapacity) {
-                hasOutputSpace = false;
-                break;
-              }
-            }
-          }
-
+              return inv.currentAmount + (qty as number) <= inv.maxCapacity;
+            });
           if (!hasOutputSpace) {
-            // 输出空间不足
             facilityUpdates.push({ id: facility.id, updates: { status: 'output_full' } });
             return;
           }
@@ -206,19 +225,15 @@ export class GameLoopTaskFactory {
         // 完成生产时只需要添加产出
         if (newProgress >= 1) {
           // 再次检查输出容量（防止在生产过程中容量被其他途径占用）
-          let canOutput = true;
-          if (recipe.out) {
-            for (const [itemId, qty] of Object.entries(recipe.out)) {
+          const canOutput =
+            !recipe.out ||
+            Object.entries(recipe.out).every(([itemId, qty]) => {
               const inv = getInventoryItem(itemId);
-              if (inv.currentAmount + (qty as number) > inv.maxCapacity) {
-                canOutput = false;
-                break;
-              }
-            }
-          }
+              return inv.currentAmount + (qty as number) <= inv.maxCapacity;
+            });
 
           if (!canOutput) {
-            // 输出空间不足，设施停止但不重置进度
+            // 输出空间不足，设施停止但不重置进度（恢复时直接输出）
             facilityUpdates.push({ id: facility.id, updates: { status: 'output_full' } });
           } else {
             // 添加产出并重置进度开始下一轮生产
