@@ -32,15 +32,6 @@ export interface GameLoopConfig {
   backgroundThrottleRatio: number; // 后台节流比例
 }
 
-export interface GameLoopState {
-  isRunning: boolean;
-  isPaused: boolean;
-  isVisible: boolean; // 页面是否可见
-  config: GameLoopConfig;
-  stats: GameLoopStats;
-  tasks: Map<string, GameLoopTask>;
-}
-
 // 任务类型常量
 export const GameLoopTaskType = {
   CRAFTING: 'crafting',

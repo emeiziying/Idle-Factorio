@@ -149,12 +149,15 @@ export const createInventorySlice: SliceCreator<InventorySlice> = (set, get) => 
         const containers = state.deployedContainers.filter(c => c.targetItemId === itemId);
         const additionalStacks = containers.reduce((sum, c) => sum + c.additionalStacks, 0);
         const totalStacks = currentItem.baseStacks + additionalStacks;
+        const newMaxCapacity = totalStacks * currentItem.stackSize;
 
         const updatedItem = {
           ...currentItem,
           additionalStacks,
           totalStacks,
-          maxCapacity: totalStacks * currentItem.stackSize,
+          maxCapacity: newMaxCapacity,
+          // 容量缩减时截断当前数量，防止库存超出上限
+          currentAmount: Math.min(currentItem.currentAmount, newMaxCapacity),
         };
 
         newInventory.set(itemId, updatedItem);

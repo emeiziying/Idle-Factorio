@@ -103,11 +103,29 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
           const isTaskCompleted = task.status === 'completed';
 
           if (isTaskCompleted) {
-            // 任务完成，只移除这个任务，保留链和其他任务
+            // 任务完成，移除这个任务；若链中已无剩余任务则同时清理链记录
             console.log(`[链式任务] 移除已完成任务: ${taskId}`);
-            set(state => ({
-              craftingQueue: state.craftingQueue.filter(t => t.id !== taskId),
-            }));
+            set(state => {
+              const newQueue = state.craftingQueue.filter(t => t.id !== taskId);
+              const hasRemainingTasks = newQueue.some(t => t.chainId === chain.id);
+              return {
+                craftingQueue: newQueue,
+                craftingChains: hasRemainingTasks
+                  ? state.craftingChains
+                  : state.craftingChains.filter(c => c.id !== chain.id),
+              };
+            });
+            // 链的最后一个任务完成时，队列可能已空，需要禁用制作系统
+            if (get().craftingQueue.length === 0) {
+              try {
+                const gameLoopService = getService<GameLoopService>(
+                  SERVICE_TOKENS.GAME_LOOP_SERVICE
+                );
+                gameLoopService.disableTask(GameLoopTaskType.CRAFTING);
+              } catch (error) {
+                console.warn('[制作队列] 无法禁用制作任务:', error);
+              }
+            }
             return;
           } else {
             // 任务被手动取消，需要取消整个链
@@ -124,6 +142,17 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
               craftingQueue: state.craftingQueue.filter(task => task.chainId !== chain.id),
               craftingChains: state.craftingChains.filter(c => c.id !== chain.id),
             }));
+            // 取消整个链后，队列可能已空，需要禁用制作系统
+            if (get().craftingQueue.length === 0) {
+              try {
+                const gameLoopService = getService<GameLoopService>(
+                  SERVICE_TOKENS.GAME_LOOP_SERVICE
+                );
+                gameLoopService.disableTask(GameLoopTaskType.CRAFTING);
+              } catch (error) {
+                console.warn('[制作队列] 无法禁用制作任务:', error);
+              }
+            }
             return;
           }
         }
@@ -139,8 +168,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
       }));
 
       // 检查队列是否为空，如果为空则禁用制作系统
-      const remainingTasks = get().craftingQueue.filter(task => task.id !== taskId);
-      if (remainingTasks.length === 0) {
+      if (get().craftingQueue.length === 0) {
         try {
           const gameLoopService = getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
           gameLoopService.disableTask(GameLoopTaskType.CRAFTING);
@@ -151,10 +179,17 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
     }
   },
 
-  updateCraftingProgress: (taskId: string, progress: number) => {
+  updateCraftingProgress: (taskId: string, progress: number, startTime?: number) => {
     set(state => ({
       craftingQueue: state.craftingQueue.map(task =>
-        task.id === taskId ? { ...task, progress, status: 'crafting' as const } : task
+        task.id === taskId
+          ? {
+              ...task,
+              progress,
+              status: 'crafting' as const,
+              ...(startTime !== undefined && { startTime }),
+            }
+          : task
       ),
     }));
   },
@@ -174,11 +209,11 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
       // 检查链中是否有依赖于此任务的任务，如果有则可以开始执行
       const chain = state.craftingChains.find(c => c.id === task.chainId);
       if (chain) {
-        // 更新链的进度
-        const completedTasks =
-          chain.tasks.filter(
-            t => state.craftingQueue.find(qt => qt.id === t.id)?.status === 'completed'
-          ).length + 1; // +1 for the current task
+        // 更新链的进度：用当前队列中剩余任务数反推已完成数（含当前任务）
+        const remainingInQueue = get().craftingQueue.filter(
+          t => t.chainId === chain.id && t.id !== taskId
+        ).length;
+        const completedTasks = chain.tasks.length - remainingInQueue;
         const totalProgress = completedTasks / chain.tasks.length;
 
         set(state => ({
@@ -247,18 +282,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
       ),
     }));
 
-    // 移除任务
+    // 移除任务（removeCraftingTask 内部已处理队列为空时禁用制作任务）
     get().removeCraftingTask(taskId);
-
-    // 如果队列为空，禁用制作系统
-    const remainingTasks = get().craftingQueue.filter(t => t.id !== taskId);
-    if (remainingTasks.length === 0) {
-      try {
-        const gameLoopService = getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
-        gameLoopService.disableTask(GameLoopTaskType.CRAFTING);
-      } catch (error) {
-        console.warn('[制作队列] 无法禁用制作任务:', error);
-      }
-    }
   },
 });
