@@ -141,9 +141,9 @@ export class GameLoopTaskFactory {
       const batchedInventoryUpdates: Array<{ itemId: string; amount: number }> = [];
 
       facilities.forEach(facility => {
-        if (!facility.production?.currentRecipeId) return;
-
         const production = facility.production;
+        if (!production || !production.currentRecipeId) return;
+
         const recipe = recipeService.getRecipeById(production.currentRecipeId);
         if (!recipe) return;
 
