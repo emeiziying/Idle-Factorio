@@ -345,7 +345,7 @@ export class GameLoopTaskFactory {
   }
 
   // 智能任务状态管理 - 根据游戏状态动态调整任务
-  static updateTasksState(tasks: Map<string, GameLoopTask>): void {
+  static updateTasksState(tasks: ReadonlyMap<string, GameLoopTask>): void {
     // 根据配置自动更新任务状态
     Object.values(TASK_CONFIGS).forEach(config => {
       const task = tasks.get(config.id);

@@ -97,7 +97,7 @@ export class GameLoopService {
     targetFPS: 60,
     maxDeltaTime: 100, // 最大 100ms delta，防止大跳跃
     enableStats: true,
-    enablePerformanceMode: false,
+    enablePerformanceMode: true,
     backgroundThrottleRatio: 0.1, // 后台时降到 10% 频率
   };
 
@@ -111,6 +111,7 @@ export class GameLoopService {
   private frameTimeBuffer: number[] = [];
   private readonly FRAME_TIME_BUFFER_SIZE = 60;
   private slowFrameThreshold: number = 16.67; // 60fps = 16.67ms per frame
+  private performanceMonitorIntervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
     this.setupVisibilityHandling();
@@ -138,6 +139,11 @@ export class GameLoopService {
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
+    }
+
+    if (this.performanceMonitorIntervalId !== null) {
+      clearInterval(this.performanceMonitorIntervalId);
+      this.performanceMonitorIntervalId = null;
     }
 
     console.log('[GameLoop] 停止游戏循环');
@@ -360,7 +366,7 @@ export class GameLoopService {
   // 设置性能监控
   private setupPerformanceMonitoring(): void {
     // 每5秒重置慢帧计数
-    setInterval(() => {
+    this.performanceMonitorIntervalId = setInterval(() => {
       this.stats.performance.slowFrames = 0;
     }, 5000);
   }
@@ -417,6 +423,11 @@ export class GameLoopService {
       this.taskExecutionResults.delete(taskId);
       console.log(`[GameLoop] 移除任务: ${taskId}`);
     }
+  }
+
+  // 返回任务映射的只读视图，供外部协调器（如 DIServiceInitializer）使用
+  getTasks(): ReadonlyMap<string, GameLoopTask> {
+    return this.tasks;
   }
 
   enableTask(taskId: string): void {

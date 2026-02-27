@@ -240,7 +240,7 @@ export class DIServiceInitializer {
       clearInterval(this.taskMonitorIntervalId);
     }
     this.taskMonitorIntervalId = setInterval(() => {
-      GameLoopTaskFactory.updateTasksState(gameLoopService['tasks']);
+      GameLoopTaskFactory.updateTasksState(gameLoopService.getTasks());
     }, 10000);
   }
 
