@@ -36,7 +36,38 @@ import useGameStore from '@/store/gameStore';
 
 export class DIServiceInitializer {
   private static initialized = false;
+  private static initializingPromise: Promise<void> | null = null;
+  private static activeConsumers = 0;
   private static taskMonitorIntervalId: ReturnType<typeof setInterval> | null = null;
+  private static cleanupTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  /**
+   * 声明一个运行时消费者，避免 StrictMode 开发环境下初始化后立刻被清理
+   */
+  static async acquire(): Promise<void> {
+    this.activeConsumers += 1;
+    this.cancelScheduledCleanup();
+    try {
+      await this.initialize();
+    } catch (error) {
+      this.activeConsumers = Math.max(0, this.activeConsumers - 1);
+      if (this.activeConsumers === 0) {
+        this.scheduleCleanup();
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * 释放一个运行时消费者；当没有消费者时再执行清理
+   */
+  static release(): void {
+    this.activeConsumers = Math.max(0, this.activeConsumers - 1);
+
+    if (this.activeConsumers === 0) {
+      this.scheduleCleanup();
+    }
+  }
 
   /**
    * 注册所有服务到 DI 容器
@@ -146,22 +177,35 @@ export class DIServiceInitializer {
       return;
     }
 
-    try {
-      // 1. 注册服务
-      this.registerServices();
-
-      // 2. 初始化核心服务
-      await this.initializeCoreServices();
-
-      // 3. 初始化应用层
-      await this.initializeApplication();
-
-      this.initialized = true;
-    } catch (error) {
-      // 如果初始化失败，重置状态
-      this.initialized = false;
-      throw error;
+    if (this.initializingPromise) {
+      return this.initializingPromise;
     }
+
+    this.initializingPromise = (async () => {
+      try {
+        container.clear();
+
+        // 1. 注册服务
+        this.registerServices();
+
+        // 2. 初始化核心服务
+        await this.initializeCoreServices();
+
+        // 3. 初始化应用层
+        await this.initializeApplication();
+
+        this.initialized = true;
+      } catch (error) {
+        // 如果初始化失败，重置状态
+        this.initialized = false;
+        container.clear();
+        throw error;
+      } finally {
+        this.initializingPromise = null;
+      }
+    })();
+
+    return this.initializingPromise;
   }
 
   /**
@@ -244,10 +288,38 @@ export class DIServiceInitializer {
     }, 10000);
   }
 
+  private static scheduleCleanup(): void {
+    this.cancelScheduledCleanup();
+    this.cleanupTimeoutId = setTimeout(() => {
+      this.cleanupTimeoutId = null;
+      if (this.activeConsumers === 0) {
+        this.cleanup();
+      }
+    }, 0);
+  }
+
+  private static cancelScheduledCleanup(): void {
+    if (this.cleanupTimeoutId !== null) {
+      clearTimeout(this.cleanupTimeoutId);
+      this.cleanupTimeoutId = null;
+    }
+  }
+
   /**
    * 清理资源
    */
   static cleanup(): void {
+    this.cancelScheduledCleanup();
+
+    if (this.initializingPromise) {
+      void this.initializingPromise.finally(() => {
+        if (this.activeConsumers === 0) {
+          this.cleanup();
+        }
+      });
+      return;
+    }
+
     // 清理任务监控定时器
     if (this.taskMonitorIntervalId !== null) {
       clearInterval(this.taskMonitorIntervalId);
@@ -269,14 +341,25 @@ export class DIServiceInitializer {
         console.error('[DIServiceInit] 游戏循环停止失败:', error);
       }
     }
+
+    container.clear();
+    this.initialized = false;
+    this.activeConsumers = 0;
   }
 
   /**
    * 重置初始化状态（主要用于测试）
    */
   static reset(): void {
+    this.cancelScheduledCleanup();
+    if (this.taskMonitorIntervalId !== null) {
+      clearInterval(this.taskMonitorIntervalId);
+      this.taskMonitorIntervalId = null;
+    }
     container.clear();
     this.initialized = false;
+    this.initializingPromise = null;
+    this.activeConsumers = 0;
   }
 
   /**

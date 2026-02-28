@@ -1,4 +1,5 @@
 // 游戏元数据切片
+import { gameSnapshotRepository } from '@/app/persistence/LocalStorageSnapshotRepository';
 import type { SliceCreator, GameMetaSlice } from '@/store/types';
 import { gameStorageService } from '@/services/storage/GameStorageService';
 
@@ -12,6 +13,7 @@ export const createGameMetaSlice: SliceCreator<GameMetaSlice> = (set, get) => ({
   clearGameData: async () => {
     // 清除游戏存档
     await gameStorageService.clearGameData();
+    await gameSnapshotRepository.clear();
 
     // 重置状态
     set(() => ({
@@ -56,9 +58,12 @@ export const createGameMetaSlice: SliceCreator<GameMetaSlice> = (set, get) => ({
       if (loadedState) {
         set(() => loadedState);
         console.log('[Load] 存档加载完成');
+        return true;
       }
+      return false;
     } catch (error) {
       console.error('[Load] 存档加载失败:', error);
+      return false;
     }
   },
 

@@ -13,13 +13,11 @@ import {
 import React from 'react';
 
 import ClearGameButton from '@/components/common/ClearGameButton';
-import ErrorScreen from '@/components/common/ErrorScreen';
-import LoadingScreen from '@/components/common/LoadingScreen';
+import ExperimentalRuntimeDebugPanel from '@/components/common/ExperimentalRuntimeDebugPanel';
 import FacilitiesModule from '@/components/facilities/FacilitiesModule';
 import ProductionModule from '@/components/production/ProductionModule';
 import TechnologyModule from '@/components/technology/TechnologyModule';
 import { APP_STORAGE_KEYS } from '@/constants/storageKeys';
-import { useAppInitialization } from '@/hooks/useAppInitialization';
 import { useAutoSaveBeforeUnload } from '@/hooks/useAutoSaveBeforeUnload';
 import theme from '@/theme';
 import { useLocalStorageState } from 'ahooks';
@@ -29,8 +27,6 @@ const App: React.FC = () => {
   const [currentModule, setCurrentModule] = useLocalStorageState(APP_STORAGE_KEYS.CURRENT_MODULE, {
     defaultValue: 0,
   });
-  // 初始化游戏系统
-  const { isAppReady, initError } = useAppInitialization();
   // 自动保存游戏进度
   useAutoSaveBeforeUnload();
 
@@ -38,28 +34,6 @@ const App: React.FC = () => {
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setCurrentModule(newValue);
   };
-
-  if (initError) {
-    return (
-      <ErrorScreen
-        withTheme
-        error={`初始化失败: ${initError}`}
-        showRetry
-        retryText="重新加载"
-        onRetry={() => window.location.reload()}
-      />
-    );
-  }
-
-  if (!isAppReady) {
-    return (
-      <LoadingScreen
-        withTheme
-        message="正在初始化游戏系统..."
-        subtitle="请稍候，首次加载可能需要几秒钟"
-      />
-    );
-  }
 
   return (
     <ThemeProvider theme={theme}>
@@ -77,6 +51,7 @@ const App: React.FC = () => {
           <BottomNavigationAction label="科技" icon={<ScienceIcon />} showLabel={true} />
         </BottomNavigation>
 
+        {import.meta.env.DEV && <ExperimentalRuntimeDebugPanel />}
         {import.meta.env.DEV && <ClearGameButton />}
       </Box>
     </ThemeProvider>

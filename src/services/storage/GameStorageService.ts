@@ -3,6 +3,7 @@
  * 整合了数据优化、压缩、防抖和localStorage操作
  */
 
+import { persistRuntimeSnapshotFromLegacyState } from '@/app/persistence/mirrorLegacyStoreStateToRuntimeSnapshot';
 import { DataService } from '@/services/core/DataService';
 import type { FacilityInstance, FacilityStatus } from '@/types/facilities';
 import type { CraftingChain, CraftingTask, DeployedContainer, InventoryItem } from '@/types/index';
@@ -30,8 +31,11 @@ interface GameState {
   saveKey: string;
 }
 
+const CURRENT_OPTIMIZED_SAVE_SCHEMA_VERSION = 2;
+
 // 优化后的存档格式
 interface OptimizedSaveData {
+  schemaVersion: number;
   inventory: Record<string, number>; // 简化为物品ID->数量
   craftingQueue: CraftingTask[];
   craftingChains: CraftingChain[];
@@ -58,12 +62,22 @@ interface OptimizedSaveData {
 interface OptimizedFacility {
   id: string;
   type: string;
-  recipe: string;
+  recipe: string; // 旧版兼容字段
+  currentRecipeId?: string;
+  targetItemId?: string;
   progress: number;
-  fuel: Record<string, number>;
+  fuel: Record<string, number>; // 旧版兼容字段
+  fuelState?: {
+    itemId: string;
+    quantity: number;
+    remainingEnergy: number;
+  } | null;
   status: FacilityStatus;
   efficiency: number;
 }
+
+type OptimizedSaveInput = Partial<OptimizedSaveData> & Record<string, unknown>;
+type OptimizedFacilityInput = Partial<OptimizedFacility> & Record<string, unknown>;
 
 // 防抖存储状态
 interface PendingSave {
@@ -80,17 +94,9 @@ export class GameStorageService {
   private saveTimeout: ReturnType<typeof setTimeout> | null = null;
   private readonly debounceMs: number = 2000;
   private readonly storageKey = 'factorio-game-storage';
-  private pendingState: Partial<GameState> | null = null; // 保存等待写入的快照
 
   private constructor() {
     // 延迟初始化 dataService，避免在测试收集阶段构造依赖
-
-    // 页面卸载时立即保存
-    if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', () => {
-        this.flushPendingSave();
-      });
-    }
   }
 
   static getInstance(): GameStorageService {
@@ -118,7 +124,6 @@ export class GameStorageService {
 
       // 设置新的待保存任务
       this.pendingSave = { resolve, reject };
-      this.pendingState = state;
 
       // 设置防抖计时器
       this.saveTimeout = setTimeout(async () => {
@@ -130,7 +135,6 @@ export class GameStorageService {
         } finally {
           this.pendingSave = null;
           this.saveTimeout = null;
-          this.pendingState = null;
         }
       }, this.debounceMs);
     });
@@ -164,12 +168,19 @@ export class GameStorageService {
 
       const parsed = JSON.parse(decompressedData);
 
-      // 检测数据格式并恢复
-      if (this.isOptimizedFormat(parsed)) {
-        return this.restoreFromOptimized(parsed);
-      } else {
-        return this.restoreFromLegacy(parsed);
+      const optimized = this.parseOptimizedSaveData(parsed);
+      if (optimized) {
+        if (optimized.didMigrate) {
+          const { finalData } = this.serializeOptimizedSaveData(optimized.data);
+          localStorage.setItem(this.storageKey, finalData);
+          console.log(
+            `[GameStorage] 存档已迁移到 schema v${CURRENT_OPTIMIZED_SAVE_SCHEMA_VERSION}`
+          );
+        }
+        return this.restoreFromOptimized(optimized.data);
       }
+
+      return this.restoreFromLegacy(parsed);
     } catch (error) {
       console.error('[GameStorage] 加载游戏数据失败:', error);
       return null;
@@ -205,26 +216,17 @@ export class GameStorageService {
         console.warn('[GameStorage] Failed to log fuel snapshot on save:', e);
       }
     }
-    const jsonString = JSON.stringify(optimized);
-
-    // 数据压缩
-    let finalData = jsonString;
-    let sizeInfo = '';
-
-    const originalSize = jsonString.length;
-    const compressed = LZString.compressToUTF16(jsonString);
-    const compressedSize = compressed.length * 2; // UTF-16每字符2字节
-
-    if (compressedSize < originalSize) {
-      finalData = compressed;
-      const reduction = Math.round((1 - compressedSize / originalSize) * 100);
-      sizeInfo = ` (优化+压缩: ${this.formatSize(originalSize)} → ${this.formatSize(compressedSize)}, -${reduction}%)`;
-    } else {
-      sizeInfo = ` (未压缩: ${this.formatSize(originalSize)})`;
-    }
+    const { finalData, sizeInfo } = this.serializeOptimizedSaveData(optimized);
 
     // 保存到localStorage
     localStorage.setItem(this.storageKey, finalData);
+
+    try {
+      await persistRuntimeSnapshotFromLegacyState(state);
+    } catch (error) {
+      console.warn('[GameStorage] 新 runtime 快照镜像失败（不影响旧存档）:', error);
+    }
+
     console.log(`[GameStorage] 存档成功${sizeInfo}`);
   }
 
@@ -233,6 +235,7 @@ export class GameStorageService {
    */
   private optimizeState(state: Partial<GameState>): OptimizedSaveData {
     const optimized: OptimizedSaveData = {
+      schemaVersion: CURRENT_OPTIMIZED_SAVE_SCHEMA_VERSION,
       inventory: {},
       craftingQueue: state.craftingQueue || [],
       craftingChains: state.craftingChains || [],
@@ -284,13 +287,23 @@ export class GameStorageService {
         return {
           id: facility.id,
           type: facility.facilityId,
-          recipe: facility.targetItemId || '',
+          recipe: facility.production?.currentRecipeId || facility.targetItemId || '',
+          currentRecipeId: facility.production?.currentRecipeId || '',
+          targetItemId: facility.targetItemId || '',
           progress: Math.round((facility.production?.progress || 0) * 100) / 100,
           // 仅当有有效燃料物品且剩余能量>0时才保存，否则存空对象
           fuel:
             fuel && fuel.itemId && fuel.remainingEnergy > 0
               ? { [fuel.itemId]: Math.round(fuel.remainingEnergy * 100) / 100 }
               : {},
+          fuelState:
+            fuel && fuel.itemId && fuel.quantity > 0
+              ? {
+                  itemId: fuel.itemId,
+                  quantity: fuel.quantity,
+                  remainingEnergy: Math.round(fuel.remainingEnergy * 100) / 100,
+                }
+              : null,
           status: facility.status,
           efficiency: facility.efficiency,
         };
@@ -345,43 +358,66 @@ export class GameStorageService {
     // 恢复设施
     if (restored.facilities) {
       restored.facilities = optimized.facilities.map(facility => {
-        const fuelItems = Object.entries(facility.fuel);
-        const slots = fuelItems.map(([itemId, energy]) => {
-          const fuelValue = this.getDataService().getItem(itemId)?.fuel?.value || 0;
-          // 存档中记录的是“当前这块燃料的剩余能量”，不是总能量
-          // 因此恢复时最多只应还原为1个单位的燃料，并且剩余能量不应超过单个燃料的能量值
-          const clampedEnergy = Math.max(0, Math.min(energy as number, fuelValue));
-          const slot = {
-            itemId,
-            quantity: clampedEnergy > 0 ? 1 : 0,
-            remainingEnergy: clampedEnergy,
-          };
-          if (import.meta.env.DEV) {
-            console.debug('[GameStorage] Restore facility fuel slot:', {
-              id: facility.id,
-              type: facility.type,
-              itemId,
-              savedEnergy: energy,
-              fuelValue,
-              restored: slot,
+        const restoredFuelState = facility.fuelState;
+        const legacyFuelItems = Object.entries(facility.fuel);
+        const slots = restoredFuelState
+          ? (() => {
+              const fuelValue =
+                this.getDataService().getItem(restoredFuelState.itemId)?.fuel?.value || 0;
+              return [
+                {
+                  itemId: restoredFuelState.itemId,
+                  quantity: Math.max(0, restoredFuelState.quantity),
+                  remainingEnergy: Math.max(
+                    0,
+                    fuelValue > 0
+                      ? Math.min(restoredFuelState.remainingEnergy, fuelValue)
+                      : restoredFuelState.remainingEnergy
+                  ),
+                },
+              ];
+            })()
+          : legacyFuelItems.map(([itemId, energy]) => {
+              const fuelValue = this.getDataService().getItem(itemId)?.fuel?.value || 0;
+              // 存档中记录的是“当前这块燃料的剩余能量”，不是总能量
+              // 因此恢复时最多只应还原为1个单位的燃料，并且剩余能量不应超过单个燃料的能量值
+              const clampedEnergy = Math.max(0, Math.min(energy as number, fuelValue));
+              const slot = {
+                itemId,
+                quantity: clampedEnergy > 0 ? 1 : 0,
+                remainingEnergy: clampedEnergy,
+              };
+              if (import.meta.env.DEV) {
+                console.debug('[GameStorage] Restore facility fuel slot:', {
+                  id: facility.id,
+                  type: facility.type,
+                  itemId,
+                  savedEnergy: energy,
+                  fuelValue,
+                  restored: slot,
+                });
+              }
+              return slot;
             });
-          }
-          return slot;
-        });
+
+        const currentRecipeId = facility.currentRecipeId || facility.recipe || '';
+        const targetItemId = facility.targetItemId || facility.recipe || '';
 
         const restoredFacility = {
           id: facility.id,
           facilityId: facility.type,
-          targetItemId: facility.recipe,
+          targetItemId,
           count: 1,
           status: facility.status as FacilityStatus,
           efficiency: facility.efficiency,
-          production: {
-            currentRecipeId: facility.recipe,
-            progress: facility.progress,
-            inputBuffer: [],
-            outputBuffer: [],
-          },
+          production: currentRecipeId
+            ? {
+                currentRecipeId,
+                progress: facility.progress,
+                inputBuffer: [],
+                outputBuffer: [],
+              }
+            : undefined,
           fuelBuffer: {
             facilityId: facility.type,
             slots,
@@ -427,15 +463,156 @@ export class GameStorageService {
   /**
    * 检测是否为优化格式
    */
-  private isOptimizedFormat(data: unknown): data is OptimizedSaveData {
+  private isOptimizedFormat(data: unknown): data is OptimizedSaveInput {
     const obj = data as Record<string, unknown>;
     return !!(
       obj &&
       obj.inventory &&
       typeof obj.inventory === 'object' &&
       !Array.isArray(obj.inventory) &&
-      !('entries' in obj.inventory)
+      !('entries' in obj.inventory) &&
+      'stats' in obj &&
+      'research' in obj &&
+      'favorites' in obj &&
+      'recent' in obj &&
+      'containers' in obj &&
+      'time' in obj
     );
+  }
+
+  private parseOptimizedSaveData(
+    data: unknown
+  ): { data: OptimizedSaveData; didMigrate: boolean } | null {
+    if (!this.isOptimizedFormat(data)) {
+      return null;
+    }
+
+    return this.migrateOptimizedSaveData(data);
+  }
+
+  private migrateOptimizedSaveData(data: OptimizedSaveInput): {
+    data: OptimizedSaveData;
+    didMigrate: boolean;
+  } {
+    const schemaVersion = this.getOptimizedSaveSchemaVersion(data);
+    const stats = this.asRecord(data.stats);
+    const research = this.asRecord(data.research);
+
+    if (schemaVersion > CURRENT_OPTIMIZED_SAVE_SCHEMA_VERSION) {
+      console.warn(`[GameStorage] 检测到更高版本的存档 schema v${schemaVersion}，将按兼容模式读取`);
+    }
+
+    return {
+      didMigrate: schemaVersion < CURRENT_OPTIMIZED_SAVE_SCHEMA_VERSION,
+      data: {
+        schemaVersion: Math.max(schemaVersion, CURRENT_OPTIMIZED_SAVE_SCHEMA_VERSION),
+        inventory: this.normalizeNumberRecord(data.inventory),
+        craftingQueue: Array.isArray(data.craftingQueue)
+          ? (data.craftingQueue as CraftingTask[])
+          : [],
+        craftingChains: Array.isArray(data.craftingChains)
+          ? (data.craftingChains as CraftingChain[])
+          : [],
+        facilities: Array.isArray(data.facilities)
+          ? data.facilities.map(facility =>
+              this.normalizeOptimizedFacility(facility as OptimizedFacilityInput)
+            )
+          : [],
+        stats: {
+          total: typeof stats?.total === 'number' ? stats.total : 0,
+          crafted: this.normalizeTupleEntries(stats?.crafted),
+          built: this.normalizeTupleEntries(stats?.built),
+          mined: this.normalizeTupleEntries(stats?.mined),
+        },
+        research: {
+          state: (research?.state as TechResearchState | null) || null,
+          queue: Array.isArray(research?.queue) ? (research.queue as ResearchQueueItem[]) : [],
+          unlocked: this.normalizeStringArray(research?.unlocked),
+          auto: typeof research?.auto === 'boolean' ? research.auto : true,
+        },
+        favorites: this.normalizeStringArray(data.favorites),
+        recent: this.normalizeStringArray(data.recent),
+        containers: Array.isArray(data.containers) ? (data.containers as DeployedContainer[]) : [],
+        time: typeof data.time === 'number' ? data.time : Date.now(),
+      },
+    };
+  }
+
+  private normalizeOptimizedFacility(facility: OptimizedFacilityInput): OptimizedFacility {
+    const legacyFuel = this.normalizeNumberRecord(facility.fuel);
+    const recipe = typeof facility.recipe === 'string' ? facility.recipe : '';
+    const currentRecipeId =
+      typeof facility.currentRecipeId === 'string' ? facility.currentRecipeId : recipe;
+    const targetItemId = typeof facility.targetItemId === 'string' ? facility.targetItemId : recipe;
+
+    return {
+      id: typeof facility.id === 'string' ? facility.id : '',
+      type: typeof facility.type === 'string' ? facility.type : '',
+      recipe,
+      currentRecipeId,
+      targetItemId,
+      progress: typeof facility.progress === 'number' ? facility.progress : 0,
+      fuel: legacyFuel,
+      fuelState: this.normalizeFuelState(facility.fuelState, legacyFuel),
+      status: (facility.status as FacilityStatus) || 'stopped',
+      efficiency: typeof facility.efficiency === 'number' ? facility.efficiency : 0,
+    };
+  }
+
+  private normalizeFuelState(
+    fuelState: unknown,
+    legacyFuel: Record<string, number>
+  ): OptimizedFacility['fuelState'] {
+    if (fuelState && typeof fuelState === 'object') {
+      const normalized = fuelState as Record<string, unknown>;
+      const itemId = typeof normalized.itemId === 'string' ? normalized.itemId : '';
+      const quantity = typeof normalized.quantity === 'number' ? normalized.quantity : 0;
+      const remainingEnergy =
+        typeof normalized.remainingEnergy === 'number' ? normalized.remainingEnergy : 0;
+
+      if (itemId && quantity > 0) {
+        return {
+          itemId,
+          quantity,
+          remainingEnergy,
+        };
+      }
+    }
+
+    const [legacyItemId, legacyEnergy] = Object.entries(legacyFuel)[0] || [];
+    if (!legacyItemId || typeof legacyEnergy !== 'number') {
+      return null;
+    }
+
+    return {
+      itemId: legacyItemId,
+      quantity: legacyEnergy > 0 ? 1 : 0,
+      remainingEnergy: legacyEnergy,
+    };
+  }
+
+  private serializeOptimizedSaveData(optimized: OptimizedSaveData): {
+    finalData: string;
+    sizeInfo: string;
+  } {
+    const jsonString = JSON.stringify(optimized);
+
+    let finalData = jsonString;
+    let sizeInfo = '';
+
+    const originalSize = jsonString.length;
+    const compressed = LZString.compressToUTF16(jsonString);
+    const compressedSize = compressed.length * 2; // UTF-16每字符2字节
+
+    if (compressedSize < originalSize) {
+      finalData = compressed;
+      const reduction = Math.round((1 - compressedSize / originalSize) * 100);
+      sizeInfo = ` (优化+压缩: ${this.formatSize(originalSize)} → ${this.formatSize(compressedSize)}, -${reduction}%)`;
+    } else {
+      sizeInfo = ` (未压缩: ${this.formatSize(originalSize)})`;
+    }
+
+    return { finalData, sizeInfo };
   }
 
   /**
@@ -450,36 +627,7 @@ export class GameStorageService {
       this.pendingSave.reject(new Error('保存任务被取消'));
       this.pendingSave = null;
     }
-    // 不清理 pendingState，这样 flushPendingSave 仍可立即写入
-  }
-
-  /**
-   * 立即执行待处理的保存
-   */
-  private flushPendingSave(): void {
-    if (this.saveTimeout && this.pendingSave && this.pendingState) {
-      try {
-        // 清理定时器，转为同步保存以适配 beforeunload
-        clearTimeout(this.saveTimeout);
-
-        const optimized = this.optimizeState(this.pendingState);
-        const jsonString = JSON.stringify(optimized);
-        const compressed = LZString.compressToUTF16(jsonString);
-        const finalData = compressed.length * 2 < jsonString.length ? compressed : jsonString;
-        localStorage.setItem(this.storageKey, finalData);
-        if (import.meta.env.DEV) {
-          console.debug('[GameStorage] flushPendingSave: wrote snapshot synchronously');
-        }
-        this.pendingSave.resolve();
-      } catch (e) {
-        console.warn('[GameStorage] flushPendingSave failed:', e);
-        this.pendingSave.resolve();
-      } finally {
-        this.pendingSave = null;
-        this.saveTimeout = null;
-        this.pendingState = null;
-      }
-    }
+    // 不清理 pendingState，便于后续立即转强制保存
   }
 
   // 工具方法
@@ -524,6 +672,56 @@ export class GameStorageService {
     if (map instanceof Map) return map;
     if (Array.isArray(map)) return new Map(map as [K, V][]);
     return new Map();
+  }
+
+  private getOptimizedSaveSchemaVersion(data: OptimizedSaveInput): number {
+    if (typeof data.schemaVersion === 'number' && Number.isFinite(data.schemaVersion)) {
+      return data.schemaVersion;
+    }
+
+    return 1;
+  }
+
+  private normalizeStringArray(value: unknown): string[] {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    return value.filter((item): item is string => typeof item === 'string');
+  }
+
+  private normalizeNumberRecord(value: unknown): Record<string, number> {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return {};
+    }
+
+    return Object.fromEntries(
+      Object.entries(value).filter(
+        (entry): entry is [string, number] => typeof entry[1] === 'number'
+      )
+    );
+  }
+
+  private normalizeTupleEntries(value: unknown): [string, number][] {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    return value.filter(
+      (entry): entry is [string, number] =>
+        Array.isArray(entry) &&
+        entry.length >= 2 &&
+        typeof entry[0] === 'string' &&
+        typeof entry[1] === 'number'
+    );
+  }
+
+  private asRecord(value: unknown): Record<string, unknown> | null {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return null;
+    }
+
+    return value as Record<string, unknown>;
   }
 }
 

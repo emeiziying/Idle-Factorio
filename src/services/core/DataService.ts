@@ -9,18 +9,24 @@ import { error as logError } from '@/utils/logger';
 
 // 异步导入游戏数据
 import gameData from '@/data/spa/data.json';
+import zhI18nData from '@/data/spa/i18n/zh.json';
 
 interface I18nData {
   categories: Record<string, string>;
   items: Record<string, string>;
   recipes: Record<string, string>;
-  locations: Record<string, string>;
+  locations?: Record<string, string>;
   technologies?: Record<string, string>; // 可选，如果没有则回退到 recipes 字段
 }
+
+const I18N_LOADERS: Record<string, () => Promise<I18nData>> = {
+  ja: async () => (await import('@/data/spa/i18n/ja.json')).default as I18nData,
+};
 
 export class DataService {
   private gameData: GameData | null = null;
   private i18nData: I18nData | null = null;
+  private i18nLocale: string | null = null;
 
   // 性能优化：添加缓存
   private itemsByRowCache = new Map<string, Map<number, Item[]>>();
@@ -61,13 +67,24 @@ export class DataService {
 
   // 加载国际化数据
   async loadI18nData(locale: string = 'zh'): Promise<I18nData> {
-    if (this.i18nData) {
+    if (this.i18nData && this.i18nLocale === locale) {
       return this.i18nData;
     }
 
     try {
-      const i18nModule = await import(`@/data/spa/i18n/${locale}.json`);
-      this.i18nData = i18nModule.default as I18nData;
+      if (locale === 'zh') {
+        this.i18nData = zhI18nData as I18nData;
+        this.i18nLocale = locale;
+        return this.i18nData;
+      }
+
+      const loader = I18N_LOADERS[locale];
+      if (!loader) {
+        throw new Error(`Unsupported locale: ${locale}`);
+      }
+
+      this.i18nData = await loader();
+      this.i18nLocale = locale;
       return this.i18nData;
     } catch (error) {
       logError('Error loading i18n data:', error);
@@ -78,6 +95,7 @@ export class DataService {
         locations: {},
       };
       this.i18nData = fallbackData;
+      this.i18nLocale = locale;
       return fallbackData;
     }
   }

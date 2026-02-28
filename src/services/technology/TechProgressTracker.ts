@@ -29,6 +29,8 @@ export class TechProgressTracker {
     if (treeService) this.treeService = treeService;
     if (unlockService) this.unlockService = unlockService;
 
+    this.resetStatistics();
+
     // 从已解锁的科技重建统计
     if (this.unlockService) {
       this.rebuildStatisticsFromUnlocked();

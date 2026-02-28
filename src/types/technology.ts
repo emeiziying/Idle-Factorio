@@ -103,6 +103,7 @@ export interface Technology {
   researchTrigger?: {
     type: string;
     item?: string;
+    entity?: string;
     count?: number;
   };
 }

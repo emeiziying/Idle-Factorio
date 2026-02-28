@@ -69,6 +69,14 @@ export class TechUnlockService {
   }
 
   /**
+   * 使用外部快照恢复已解锁科技，并重建派生解锁内容
+   */
+  async hydrateUnlockedTechs(techIds: Iterable<string>): Promise<void> {
+    this.userProgressService.replaceUnlockedTechs(techIds);
+    await this.loadUnlockedContent();
+  }
+
+  /**
    * 从用户进度加载解锁状态
    */
   private async loadUnlockedContent(): Promise<void> {

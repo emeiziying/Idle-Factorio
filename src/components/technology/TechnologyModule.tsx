@@ -1,12 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, CircularProgress, Alert, useTheme, useMediaQuery } from '@mui/material';
+import {
+  Box,
+  Typography,
+  CircularProgress,
+  Alert,
+  Button,
+  ButtonGroup,
+  useTheme,
+  useMediaQuery,
+} from '@mui/material';
+import { adaptGameStateResearchToLegacyView } from '@/app/runtime/adapters/adaptRuntimeResearchToLegacyView';
+import { adaptLegacyStoreStateToGameState } from '@/app/persistence/adaptLegacyStoreStateToSnapshot';
+import { useGameRuntimeRegistry } from '@/app/runtime/useGameRuntimeRegistry';
+import ExperimentalTechDetailActions from '@/components/technology/ExperimentalTechDetailActions';
+import ExperimentalResearchQueuePreview from '@/components/technology/ExperimentalResearchQueuePreview';
 import TechSimpleGrid from '@/components/technology/TechSimpleGrid';
 import TechDetailPanel from '@/components/technology/TechDetailPanel';
 import ResearchQueue from '@/components/technology/ResearchQueue';
+import { getGameCatalog } from '@/data/catalog/loadGameCatalog';
+import {
+  buildTechnologyDetailMetadata,
+  buildTechnologyCardMetadataMap,
+  buildTechnologyCardStateMap,
+  buildTechnologyTriggerProgressMap,
+  getQueuedTechnologyIds,
+  getTechnologyDetailState,
+} from '@/engine/selectors/technologySelectors';
 
 import useGameStore from '@/store/gameStore';
-import { useTechnologyService } from '@/hooks/useDIServices';
-import type { TechStatus } from '@/types/technology';
 import { ResearchPriority } from '@/types/technology';
 import { useLocalStorageState } from 'ahooks';
 import { TECHNOLOGY_STORAGE_KEYS } from '@/constants/storageKeys';
@@ -15,7 +36,9 @@ import { useUnlockedTechsRepair } from '@/hooks/useUnlockedTechsRepair';
 const TechnologyModule: React.FC = React.memo(() => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const technologyService = useTechnologyService();
+  const runtimeRegistry = useGameRuntimeRegistry();
+  const [gridSource, setGridSource] = useState<'legacy' | 'runtime'>('legacy');
+  const legacyCatalog = React.useMemo(() => getGameCatalog(), []);
 
   // 安全修复unlockedTechs状态
   useUnlockedTechsRepair();
@@ -27,6 +50,10 @@ const TechnologyModule: React.FC = React.memo(() => {
     researchQueue,
     unlockedTechs,
     autoResearch,
+    totalItemsProduced,
+    craftedItemCounts,
+    builtEntityCounts,
+    minedEntityCounts,
     initializeTechnologyService,
     startResearch,
     addToResearchQueue,
@@ -42,6 +69,45 @@ const TechnologyModule: React.FC = React.memo(() => {
     TECHNOLOGY_STORAGE_KEYS.SELECTED_TECH,
     { defaultValue: null }
   );
+
+  const runtimeGridView = React.useMemo(() => {
+    if (
+      runtimeRegistry.status !== 'ready' ||
+      !runtimeRegistry.runtime ||
+      !runtimeRegistry.runtimeState
+    ) {
+      return null;
+    }
+
+    const runtimeTechnologies = [...runtimeRegistry.runtime.getCatalog().technologiesInOrder];
+    const runtimeTechStates = buildTechnologyCardStateMap(
+      runtimeTechnologies,
+      runtimeRegistry.runtimeState
+    );
+    const selectedTechnology = selectedTechId
+      ? runtimeRegistry.runtime.getCatalog().technologiesById.get(selectedTechId)
+      : undefined;
+
+    return {
+      technologies: runtimeTechnologies,
+      state: runtimeRegistry.runtimeState,
+      techStates: runtimeTechStates,
+      queuedTechIds: getQueuedTechnologyIds(runtimeRegistry.runtimeState),
+      triggerProgressById: buildTechnologyTriggerProgressMap(
+        runtimeTechnologies,
+        runtimeRegistry.runtimeState
+      ),
+      selectedTechState: selectedTechnology
+        ? getTechnologyDetailState(runtimeRegistry.runtimeState, selectedTechnology)
+        : undefined,
+    };
+  }, [runtimeRegistry, selectedTechId]);
+
+  useEffect(() => {
+    if (gridSource === 'runtime' && !runtimeGridView) {
+      setGridSource('legacy');
+    }
+  }, [gridSource, runtimeGridView]);
 
   // 初始化科技服务 - 优化版本，避免不必要的loading
   useEffect(() => {
@@ -107,55 +173,119 @@ const TechnologyModule: React.FC = React.memo(() => {
     setSelectedTechId(null);
   };
 
-  // 构建科技状态映射
-  const techStates = React.useMemo(() => {
-    const states = new Map<string, { status: TechStatus; progress?: number }>();
-
-    // 安全检查unlockedTechs是否为Set
-    const safeUnlockedTechs = unlockedTechs instanceof Set ? unlockedTechs : new Set();
-
-    // 只有当有科技数据时才计算状态
-    if (technologies.size === 0) {
-      return states;
-    }
-
-    Array.from(technologies.values()).forEach(tech => {
-      let status: TechStatus = 'locked';
-      let progress: number | undefined;
-
-      if (safeUnlockedTechs.has(tech.id)) {
-        status = 'unlocked';
-      } else if (researchState?.techId === tech.id) {
-        status = 'researching';
-        progress = researchState?.progress;
-      } else if (technologyService.isTechAvailable(tech.id)) {
-        status = 'available';
-      }
-
-      states.set(tech.id, { status, progress });
-    });
-
-    return states;
-  }, [technologies, unlockedTechs, researchState, technologyService]);
-
-  // 获取队列中的科技ID
-  const queuedTechIds = React.useMemo(() => {
-    return new Set(researchQueue.map(item => item.techId));
-  }, [researchQueue]);
-
   // 筛选科技列表
-  const filteredTechnologies = React.useMemo(() => {
-    // 如果没有科技数据，返回空数组
+  const legacyTechnologies = React.useMemo(() => {
     if (technologies.size === 0) {
       return [];
     }
 
-    // 直接使用store中的科技数据，避免重复调用service
-    const allTechs = Array.from(technologies.values());
-
-    // 按row属性排序（如果需要特定排序逻辑）
-    return allTechs.sort((a, b) => (a.row || 0) - (b.row || 0));
+    return Array.from(technologies.values());
   }, [technologies]);
+  const legacyGameState = React.useMemo(
+    () =>
+      adaptLegacyStoreStateToGameState(
+        {
+          researchState,
+          researchQueue,
+          unlockedTechs,
+          autoResearch,
+          totalItemsProduced,
+          craftedItemCounts,
+          builtEntityCounts,
+          minedEntityCounts,
+        },
+        { technologies: legacyCatalog.technologiesInOrder }
+      ),
+    [
+      researchState,
+      researchQueue,
+      unlockedTechs,
+      autoResearch,
+      totalItemsProduced,
+      craftedItemCounts,
+      builtEntityCounts,
+      minedEntityCounts,
+      legacyCatalog,
+    ]
+  );
+  const legacyGridView = React.useMemo(() => {
+    const selectedTechnology = selectedTechId
+      ? legacyTechnologies.find(technology => technology.id === selectedTechId)
+      : undefined;
+
+    return {
+      technologies: legacyTechnologies,
+      state: legacyGameState,
+      techStates: buildTechnologyCardStateMap(legacyTechnologies, legacyGameState),
+      queuedTechIds: getQueuedTechnologyIds(legacyGameState),
+      triggerProgressById: buildTechnologyTriggerProgressMap(legacyTechnologies, legacyGameState),
+      selectedTechState: selectedTechnology
+        ? getTechnologyDetailState(legacyGameState, selectedTechnology)
+        : undefined,
+    };
+  }, [legacyTechnologies, legacyGameState, selectedTechId]);
+  const activeGridView =
+    gridSource === 'runtime' && runtimeGridView ? runtimeGridView : legacyGridView;
+  const activeTechnologies = activeGridView.technologies;
+  const activeCatalog =
+    gridSource === 'runtime' && runtimeRegistry.runtime
+      ? runtimeRegistry.runtime.getCatalog()
+      : legacyCatalog;
+  const activeTechStates = activeGridView.techStates;
+  const activeQueuedTechIds = activeGridView.queuedTechIds;
+  const activeTriggerProgressById = activeGridView.triggerProgressById;
+  const activeUnlockedTechIds = activeGridView.state.unlocks.techs;
+  const activeCardMetadataById = React.useMemo(
+    () => buildTechnologyCardMetadataMap(activeTechnologies, activeCatalog),
+    [activeTechnologies, activeCatalog]
+  );
+  const selectedTechnology =
+    selectedTechId && activeTechnologies.length > 0
+      ? activeTechnologies.find(technology => technology.id === selectedTechId)
+      : undefined;
+  const selectedDetailMetadata = React.useMemo(
+    () =>
+      selectedTechnology
+        ? buildTechnologyDetailMetadata(selectedTechnology, activeCatalog, activeUnlockedTechIds)
+        : undefined,
+    [selectedTechnology, activeCatalog, activeUnlockedTechIds]
+  );
+  const selectedDetailState = React.useMemo(() => {
+    if (!selectedTechnology || !selectedTechId) {
+      return undefined;
+    }
+
+    if (gridSource === 'runtime' && runtimeGridView) {
+      return runtimeGridView.selectedTechState;
+    }
+
+    return legacyGridView.selectedTechState;
+  }, [selectedTechnology, selectedTechId, gridSource, runtimeGridView, legacyGridView]);
+  const selectedTriggerProgress = selectedTechId
+    ? activeTriggerProgressById.get(selectedTechId)
+    : undefined;
+  const activeResearchView = React.useMemo(
+    () => adaptGameStateResearchToLegacyView(activeGridView.state, activeCatalog),
+    [activeGridView.state, activeCatalog]
+  );
+  const resolveActiveTechnology = React.useCallback(
+    (techId: string) => activeCatalog.technologiesById.get(techId),
+    [activeCatalog]
+  );
+  const runtimeQueueActions =
+    gridSource === 'runtime' && runtimeRegistry.runtime
+      ? {
+          onRemoveFromQueue: (techId: string) => {
+            runtimeRegistry.runtime?.dispatch({ type: 'research/queue-remove', techId });
+          },
+          onSetAutoResearch: (enabled: boolean) => {
+            runtimeRegistry.runtime?.dispatch({ type: 'research/auto-set', enabled });
+          },
+          onStartResearch: (techId: string) => {
+            runtimeRegistry.runtime?.dispatch({ type: 'research/start', techId });
+          },
+        }
+      : null;
 
   // 加载状态
   if (loading) {
@@ -228,10 +358,44 @@ const TechnologyModule: React.FC = React.memo(() => {
       >
         {/* 科技网格主体 */}
         <Box sx={{ flex: 1, overflow: 'auto' }}>
+          {import.meta.env.DEV && (
+            <Box
+              sx={{
+                px: 2,
+                pt: 2,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 1,
+                flexWrap: 'wrap',
+              }}
+            >
+              <Typography variant="caption" color="text.secondary">
+                卡片状态来源
+              </Typography>
+              <ButtonGroup size="small" variant="outlined">
+                <Button
+                  variant={gridSource === 'legacy' ? 'contained' : 'outlined'}
+                  onClick={() => setGridSource('legacy')}
+                >
+                  旧链路
+                </Button>
+                <Button
+                  variant={gridSource === 'runtime' ? 'contained' : 'outlined'}
+                  disabled={!runtimeGridView}
+                  onClick={() => setGridSource('runtime')}
+                >
+                  新引擎
+                </Button>
+              </ButtonGroup>
+            </Box>
+          )}
           <TechSimpleGrid
-            technologies={filteredTechnologies}
-            techStates={techStates}
-            queuedTechIds={queuedTechIds}
+            technologies={activeTechnologies}
+            techStates={activeTechStates}
+            queuedTechIds={activeQueuedTechIds}
+            cardMetadataById={activeCardMetadataById}
+            triggerProgressById={activeTriggerProgressById}
             onTechClick={handleTechClick}
             useVirtualization={false}
           />
@@ -250,27 +414,49 @@ const TechnologyModule: React.FC = React.memo(() => {
           }}
         >
           <ResearchQueue
-            queue={researchQueue}
-            currentResearch={researchState || undefined}
-            autoResearch={autoResearch}
-            onRemoveFromQueue={removeFromResearchQueue}
-            onSetAutoResearch={setAutoResearch}
-            onStartResearch={handleStartResearch}
+            title={import.meta.env.DEV && gridSource === 'runtime' ? '新引擎研究队列' : '研究队列'}
+            emptyHint={
+              gridSource === 'runtime'
+                ? '点击科技卡片或科技详情中的新引擎按钮来添加研究任务'
+                : undefined
+            }
+            queue={activeResearchView.queue}
+            currentResearch={activeResearchView.currentResearch}
+            autoResearch={activeGridView.state.research.autoResearch}
+            onRemoveFromQueue={
+              runtimeQueueActions ? runtimeQueueActions.onRemoveFromQueue : removeFromResearchQueue
+            }
+            onSetAutoResearch={
+              runtimeQueueActions ? runtimeQueueActions.onSetAutoResearch : setAutoResearch
+            }
+            onStartResearch={
+              runtimeQueueActions ? runtimeQueueActions.onStartResearch : handleStartResearch
+            }
+            resolveTechnology={resolveActiveTechnology}
             collapsible={isMobile}
           />
+          {import.meta.env.DEV && gridSource === 'legacy' && <ExperimentalResearchQueuePreview />}
         </Box>
       </Box>
 
       {/* 详情面板 */}
-      {selectedTechId && (
+      {selectedTechnology && selectedDetailMetadata && (
         <TechDetailPanel
-          techId={selectedTechId}
-          techState={researchState?.techId === selectedTechId ? researchState : undefined}
+          technology={selectedTechnology}
+          techState={selectedDetailState}
+          detailMetadata={selectedDetailMetadata}
+          triggerProgress={selectedTriggerProgress}
+          canResearch={selectedDetailState?.status === 'available'}
           open={!!selectedTechId}
           onClose={handleCloseDetailPanel}
-          onStartResearch={handleStartResearch}
-          onAddToQueue={handleAddToQueue}
+          onStartResearch={gridSource === 'legacy' ? handleStartResearch : undefined}
+          onAddToQueue={gridSource === 'legacy' ? handleAddToQueue : undefined}
           anchor={isMobile ? 'bottom' : 'right'}
+          extraActionContent={
+            import.meta.env.DEV ? (
+              <ExperimentalTechDetailActions techId={selectedTechnology.id} />
+            ) : undefined
+          }
         />
       )}
     </Box>

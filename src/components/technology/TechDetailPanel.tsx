@@ -25,11 +25,14 @@ import {
   Schedule as TimeIcon,
   Build as RequirementIcon,
   NewReleases as UnlockIcon,
+  FlashOn as TriggerIcon,
 } from '@mui/icons-material';
 import FactorioIcon from '@/components/common/FactorioIcon';
-import type { TechResearchState } from '@/types/technology';
-import type { ResearchTrigger } from '@/types/index';
-import { useDataService, useTechnologyService } from '@/hooks/useDIServices';
+import type { Technology, TechStatus } from '@/types/technology';
+import type {
+  TechnologyDetailMetadata,
+  TechnologyResearchTriggerProgress,
+} from '@/engine/selectors/technologySelectors';
 
 // Factorio Design System (与TechGridCard保持一致)
 const FACTORIO_COLORS = {
@@ -126,11 +129,24 @@ const FactorioButton = styled(Button, {
 }));
 
 interface TechDetailPanelProps {
-  /** 要显示的科技ID */
-  techId: string;
+  /** 要显示的科技 */
+  technology: Technology;
 
   /** 科技状态 */
-  techState?: TechResearchState;
+  techState?: {
+    status: TechStatus;
+    progress?: number;
+    timeRemaining?: number;
+  };
+
+  /** 详情展示元数据 */
+  detailMetadata: TechnologyDetailMetadata;
+
+  /** 触发式科技当前进度 */
+  triggerProgress?: TechnologyResearchTriggerProgress;
+
+  /** 是否可研究 */
+  canResearch: boolean;
 
   /** 是否打开面板 */
   open: boolean;
@@ -146,32 +162,31 @@ interface TechDetailPanelProps {
 
   /** 面板位置 */
   anchor?: 'left' | 'right' | 'bottom';
+
+  /** 额外操作区 */
+  extraActionContent?: React.ReactNode;
 }
 
 const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
-  techId,
+  technology,
   techState,
+  detailMetadata,
+  triggerProgress,
+  canResearch,
   open,
   onClose,
   onStartResearch,
   onAddToQueue,
   anchor = 'right',
+  extraActionContent,
 }) => {
   const theme = useTheme();
 
-  // 获取服务实例
-  const techService = useTechnologyService();
-  const dataService = useDataService();
-
-  // 获取科技信息
-  const technology = techService.getTechnology(techId);
-  const status = techState?.status || (techService.isTechUnlocked(techId) ? 'unlocked' : 'locked');
+  const status = techState?.status || 'locked';
   const progress = techState?.progress || 0;
-  const canResearch = techService.isTechAvailable(techId);
-
-  if (!technology) {
-    return null;
-  }
+  const prerequisites = detailMetadata.prerequisites;
+  const unlockInfo = detailMetadata.unlockInfo;
+  const researchTrigger = detailMetadata.researchTrigger;
 
   // 获取状态配置 (使用Factorio配色)
   const getStatusConfig = () => {
@@ -193,9 +208,11 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
       case 'available':
         return {
           color: FACTORIO_COLORS.ORANGE_PRIMARY,
-          icon: <StartIcon />,
-          label: '可研究',
-          description: '满足前置条件，可以开始研究',
+          icon: researchTrigger ? <TriggerIcon /> : <StartIcon />,
+          label: researchTrigger ? '待触发' : '可研究',
+          description: researchTrigger
+            ? '满足自动解锁条件后将立即解锁'
+            : '满足前置条件，可以开始研究',
         };
       default:
         return {
@@ -208,116 +225,6 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
   };
 
   const statusConfig = getStatusConfig();
-
-  // 获取前置科技信息
-  const getPrerequisites = () => {
-    return technology.prerequisites.map(prereqId => {
-      const prereqTech = techService.getTechnology(prereqId);
-      const isUnlocked = techService.isTechUnlocked(prereqId);
-      return {
-        id: prereqId,
-        name: prereqTech?.name || prereqId,
-        unlocked: isUnlocked,
-      };
-    });
-  };
-
-  // 获取解锁内容信息
-  const getUnlockInfo = () => {
-    const unlocks = {
-      items: [] as Array<{ id: string; name: string }>,
-      recipes: [] as Array<{ id: string; name: string }>,
-      buildings: [] as Array<{ id: string; name: string }>,
-    };
-
-    technology.unlocks.items?.forEach(itemId => {
-      const localizedName = dataService.getLocalizedItemName(itemId);
-      unlocks.items.push({
-        id: itemId,
-        name: localizedName || itemId,
-      });
-    });
-
-    technology.unlocks.recipes?.forEach(recipeId => {
-      const localizedName = dataService.getLocalizedRecipeName(recipeId);
-      unlocks.recipes.push({
-        id: recipeId,
-        name: localizedName || recipeId,
-      });
-    });
-
-    technology.unlocks.buildings?.forEach(buildingId => {
-      const localizedName = dataService.getLocalizedItemName(buildingId);
-      unlocks.buildings.push({
-        id: buildingId,
-        name: localizedName || buildingId,
-      });
-    });
-
-    return unlocks;
-  };
-
-  const prerequisites = getPrerequisites();
-  const unlockInfo = getUnlockInfo();
-
-  // 获取研究触发器信息
-  const getResearchTrigger = () => {
-    const techRecipe = dataService.getRecipe(technology.id);
-    return techRecipe?.researchTrigger;
-  };
-
-  const researchTrigger = getResearchTrigger();
-
-  // 格式化研究触发器显示
-  const formatResearchTrigger = (trigger: ResearchTrigger) => {
-    switch (trigger.type) {
-      case 'craft-item': {
-        const localizedName = dataService.getLocalizedItemName(trigger.item!);
-        return {
-          description: `制造 ${trigger.count || 1} 件物品`,
-          itemName: localizedName || trigger.item!,
-          itemId: trigger.item!,
-          count: trigger.count || 1,
-        };
-      }
-      case 'build-entity': {
-        const localizedName = dataService.getLocalizedItemName(trigger.entity!);
-        return {
-          description: `建造 ${trigger.count || 1} 个建筑`,
-          itemName: localizedName || trigger.entity!,
-          itemId: trigger.entity!,
-          count: trigger.count || 1,
-        };
-      }
-      case 'mine-entity': {
-        const localizedName = dataService.getLocalizedItemName(trigger.entity!);
-        return {
-          description: `挖掘 ${trigger.count || 1} 个资源`,
-          itemName: localizedName || trigger.entity!,
-          itemId: trigger.entity!,
-          count: trigger.count || 1,
-        };
-      }
-      case 'create-space-platform': {
-        return {
-          description: '创建太空平台',
-          itemName: '太空平台',
-          itemId: 'space-platform',
-          count: 1,
-        };
-      }
-      case 'capture-spawner': {
-        return {
-          description: '捕获虫巢',
-          itemName: '虫巢',
-          itemId: 'spawner',
-          count: 1,
-        };
-      }
-      default:
-        return null;
-    }
-  };
 
   // 格式化时间显示
   const formatTime = (seconds: number) => {
@@ -506,33 +413,65 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
                   自动解锁条件
                 </Typography>
 
-                {(() => {
-                  const triggerInfo = formatResearchTrigger(researchTrigger);
-                  if (!triggerInfo) return null;
-
-                  return (
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2,
-                        p: 2,
-                        bgcolor: alpha(theme.palette.primary.main, 0.05),
-                        borderRadius: 1,
-                      }}
-                    >
-                      <FactorioIcon itemId={triggerInfo.itemId} size={32} showBorder={false} />
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          {triggerInfo.description}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 2,
+                    p: 2,
+                    bgcolor: alpha(theme.palette.primary.main, 0.05),
+                    borderRadius: 1,
+                  }}
+                >
+                  <FactorioIcon itemId={researchTrigger.itemId} size={32} showBorder={false} />
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {researchTrigger.description}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {researchTrigger.itemName} ×{researchTrigger.count}
+                    </Typography>
+                    {triggerProgress && (
+                      <>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ display: 'block', mt: 0.75 }}
+                        >
+                          当前进度: {triggerProgress.currentCount}/{triggerProgress.requiredCount}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {triggerInfo.itemName} ×{triggerInfo.count}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  );
-                })()}
+                        <Box
+                          sx={{
+                            mt: 1,
+                            width: '100%',
+                            maxWidth: 180,
+                            height: 6,
+                            background: `linear-gradient(135deg, ${FACTORIO_COLORS.BORDER_DARK} 0%, ${alpha(FACTORIO_COLORS.GREY_DARK, 0.3)} 100%)`,
+                            borderRadius: 999,
+                            overflow: 'hidden',
+                            border: `1px solid ${FACTORIO_COLORS.BORDER_ACCENT}`,
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: `${Math.min(100, (triggerProgress.currentCount / triggerProgress.requiredCount) * 100)}%`,
+                              height: '100%',
+                              background: `linear-gradient(90deg, ${statusConfig.color} 0%, ${alpha(statusConfig.color, 0.8)} 100%)`,
+                            }}
+                          />
+                        </Box>
+                        {triggerProgress.completed && (
+                          <Typography
+                            variant="caption"
+                            sx={{ display: 'block', mt: 0.75, color: 'success.light' }}
+                          >
+                            条件已满足，科技会由新引擎自动解锁。
+                          </Typography>
+                        )}
+                      </>
+                    )}
+                  </Box>
+                </Box>
               </CardContent>
             </FactorioCard>
           )}
@@ -782,7 +721,7 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
             {canResearch && !researchTrigger && onStartResearch && (
               <FactorioButton
                 startIcon={<StartIcon />}
-                onClick={() => onStartResearch(techId)}
+                onClick={() => onStartResearch(technology.id)}
                 fullWidth
                 buttonColor={FACTORIO_COLORS.GREEN_SUCCESS}
               >
@@ -793,7 +732,7 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
             {canResearch && !researchTrigger && onAddToQueue && (
               <FactorioButton
                 startIcon={<AddToQueueIcon />}
-                onClick={() => onAddToQueue(techId)}
+                onClick={() => onAddToQueue(technology.id)}
                 fullWidth
                 buttonColor={FACTORIO_COLORS.BLUE_INFO}
               >
@@ -849,6 +788,8 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
               </Box>
             )}
           </Box>
+
+          {extraActionContent && <Box sx={{ mt: 2 }}>{extraActionContent}</Box>}
         </Box>
       </Box>
     </Drawer>

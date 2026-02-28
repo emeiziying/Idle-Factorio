@@ -1,0 +1,79 @@
+Original prompt: 从架构师角度评审当前应用技术方案，并推进重设计蓝图的实施。
+
+2026-02-28
+- 已把 experimental runtime 挂进入口 bootstrap、registry、scheduler 和调试面板，现阶段可以并行跑研究子系统。
+- 已修正旧存档到新快照的桥接，科技定义改为从静态 recipe/item 元数据构建，不再依赖不存在的 `gameData.technologies`。
+- 已将 `ResearchQueue` 抽成可复用视图，科技页开发态会同时显示旧链路研究队列和新引擎研究队列。
+- 当前新增内容：`TechDetailPanel` 支持插入额外操作区，开发态下会显示 experimental runtime 的研究操作按钮，允许对选中科技直接执行开始研究、加入队列、移除队列。
+- 这轮已补本地验证：
+  - `pnpm test` 通过，12 个测试文件 / 215 个测试全绿。
+  - `pnpm build` 通过；当前仍有单个产物 chunk 超过 1000 kB 的 Vite 告警，但不是本轮回归。
+  - 浏览器验证已完成：科技页 experimental 研究队列预览上屏；科技详情抽屉可以打开并滚到底部看到 `Experimental Runtime` 区块；截图检查未见新的渲染异常；console/page errors 为空。
+- 顺手收敛了一处语义不一致：experimental runtime 不再允许通过调试按钮或队列按钮手动启动 `researchTrigger` 科技，和详情面板当前提示保持一致。
+- 当前新增内容：
+  - 新增纯 selector [engine/selectors/technologySelectors.ts]，把科技卡片状态、详情状态、队列 ID、排序和显示过滤从 `TechnologyService` 抽离出来。
+  - `TechSimpleGrid` 已去掉对 `TechnologyService` 的排序/过滤依赖，旧链路和新引擎卡片都复用同一套纯 selector。
+  - 科技页开发态新增“卡片状态来源”切换；切到“新引擎”后，科技卡片状态、排序、过滤和详情顶部状态都来自 runtime state。
+  - runtime 模式下详情抽屉会隐藏旧研究按钮，仅保留 `Experimental Runtime` 操作区，避免新旧写路径混用。
+- 当前新增内容：
+  - `TechGridCard` 已去掉 `TechnologyService/DataService` 依赖，卡片解锁内容、前置科技名称、触发器信息和研究配方摘要统一改由纯 metadata selector 提供。
+  - `loadGameCatalog.ts` 新增同步 `getGameCatalog()`，旧链路也能拿到同一份静态 catalog，避免卡片层继续回退到 service。
+  - `TechSimpleGrid/TechVirtualizedGrid` 现在都显式接收 `cardMetadataById`，卡片展示所需的派生信息已经和业务服务解耦。
+- 这轮验证结果：
+  - `pnpm test` 通过，现为 13 个测试文件 / 219 个测试全绿，新增了 technology selector 单测。
+  - `pnpm build` 通过，仍只有既有的大 chunk 警告。
+  - `$WEB_GAME_CLIENT` 已跑过科技页截图，确认切换条上屏。
+  - 额外 Playwright 校验已确认：切到“新引擎”后可打开科技详情，详情顶部状态显示为 runtime 状态，旧研究按钮隐藏；console/page errors 为空。
+- 这轮验证结果：
+  - `pnpm test` 通过，现为 13 个测试文件 / 220 个测试全绿，新增 metadata selector 覆盖。
+  - `pnpm build` 通过，仍只有既有的大 chunk 警告。
+  - `$WEB_GAME_CLIENT` 已重新跑过科技页截图，卡片列表无视觉回退。
+  - 额外 Playwright 校验已确认：切到“新引擎”后可打开科技详情，卡片摘要与详情展示仍完整，console/page errors 为空。
+- 当前新增内容：
+  - `DataService` 的 i18n 加载已改成显式 locale loader，`zh.json` 不再同时走静态引用和通配动态 import；顺手补了 locale 级缓存，避免后续切换语言时复用错数据。
+  - 新增 [engine/core/__tests__/researchState.test.ts]，覆盖 `research/start`、`research/queue-add`、`research/queue-remove`、`research/auto-set`、自动起研、完成解锁，以及 trigger-tech 禁止手动 start/queue。
+  - `TechDetailPanel` 主体内容已完全切到 catalog/selectors，旧 service 读路径已从详情面板中移除。
+- 这轮验证结果：
+  - `pnpm test` 通过，现为 14 个测试文件 / 226 个测试全绿。
+  - `pnpm build` 通过；此前 `zh.json` 既静态又动态引用的 Vite 告警已消失，当前只剩既有的大 chunk 告警。
+  - `$WEB_GAME_CLIENT` 已重新跑过科技页截图，科技卡片、runtime 切换条、双研究队列和调试面板显示正常。
+  - 额外 Playwright 校验已确认：切到“新引擎”后可打开 `Steam power` 详情抽屉，主体内容与运行时状态正常显示，console/page errors 为空。
+- 当前新增内容：
+  - 新增 [engine/core/researchTriggers.ts]，把 trigger-tech 的计数判断抽成纯规则，并接入 `tickGame()`；新引擎现在会根据 `craftedItemCounts / builtEntityCounts / minedEntityCounts` 自动解锁触发式科技。
+  - `createGameRuntime()` 在创建后会先跑一次 `tick(0)`，因此从旧档导入到新 runtime 后，如果触发条件已满足，科技会立即规范化到已解锁状态，不再等下一秒 scheduler。
+  - `TechnologyModule` 已去掉 legacy 科技状态对 `TechnologyService.isTechAvailable()` 的依赖，旧链路和新引擎现在都通过 selector + `adaptLegacyStoreStateToGameState()` 计算卡片状态、详情状态和 trigger 进度。
+  - `TechGridCard` / `TechDetailPanel` 已支持显示 trigger-tech 动态进度；满足前置但等待触发的科技会显示为“待触发”，并展示 `current/required` 进度。
+  - `ExperimentalTechDetailActions` 的旧提示已改成真实 trigger 进度展示，不再声称“尚未接入自动解锁流程”。
+- 这轮验证结果：
+  - `pnpm test` 通过，现为 14 个测试文件 / 229 个测试全绿；新增了 trigger-tech 自动解锁和 trigger progress selector 覆盖。
+  - `pnpm build` 通过，当前只剩既有的大 chunk 告警。
+  - `$WEB_GAME_CLIENT` 已重新跑过科技页截图；trigger-tech 卡片能显示 `craft-item 0/10` 这类动态进度。
+  - 额外 Playwright 校验已确认：切到“新引擎”后打开 `Steam power` 详情，状态为“待触发”，自动解锁条件区能显示当前进度和进度条，console/page errors 为空。
+- 当前新增内容：
+  - 右侧主 `ResearchQueue` 已改成跟随 `gridSource` 切换：在“新引擎”模式下，主队列直接消费 runtime state；在“旧链路”模式下，继续消费 legacy state。
+  - 新增 [app/runtime/adapters/__tests__/adaptRuntimeResearchToLegacyView.test.ts]，把队列 view adapter 的当前研究、阻塞前置和兼容别名行为补上了测试。
+  - `ResearchQueue` 已去掉对 `TechnologyService` 的隐式回退依赖，科技解析现在必须通过显式 `resolveTechnology` 传入；科技页主侧栏和 experimental preview 都已改成使用 catalog 解析。
+  - `ExperimentalResearchQueuePreview` 现在只在 legacy 模式下显示，用来对照新引擎队列；切到 runtime 模式时，右侧主队列就是新引擎队列，不再重复渲染 preview。
+- 这轮验证结果：
+  - `pnpm test` 通过，现为 15 个测试文件 / 231 个测试全绿。
+  - `pnpm build` 通过，当前只剩既有的大 chunk 告警。
+  - `$WEB_GAME_CLIENT` 已重新跑过科技页 legacy 截图，确认主队列仍是旧链路，experimental preview 还在。
+  - 额外 Playwright 校验已确认：切到“新引擎”后，右侧主队列标题变为 `新引擎研究队列`，且不再重复显示 experimental preview；console/page errors 为空。
+- 当前新增内容：
+  - 新增 [app/bootstrap/__tests__/createGameRuntime.test.ts]，覆盖“旧档导入即满足 trigger 条件时，`createGameRuntime()` 会在初始化阶段通过 `tick(0)` 立即规范化为已解锁状态”。
+  - [engine/core/__tests__/researchState.test.ts] 新增了多级 trigger 依赖链测试，确认同一轮 `tickGame()` 内会按依赖顺序连续解锁 `electronics -> steam-power` 这类链路。
+- 这轮验证结果：
+  - `pnpm test` 通过，现为 16 个测试文件 / 233 个测试全绿。
+  - `pnpm build` 通过，当前只剩既有的大 chunk 告警。
+  - `$WEB_GAME_CLIENT` 已重新跑过科技页截图，未见新的视觉回退。
+- 当前新增内容：
+  - 新增 [app/runtime/__tests__/GameRuntime.test.ts]，覆盖 `dispatch -> tick -> save` 的连续操作下，监听器通知顺序、完成研究事件顺序、`save()` 快照一致性，以及无 repository 时的安全保存行为。
+  - 这组测试同时验证了 `unsubscribe()` 后不会再收到后续 dispatch 的通知，给新 runtime 的外部订阅边界补上了回归保护。
+- 这轮验证结果：
+  - `pnpm test` 通过，现为 17 个测试文件 / 236 个测试全绿。
+  - `pnpm build` 通过，当前只剩既有的大 chunk 告警。
+  - `$WEB_GAME_CLIENT` 已重新跑过科技页截图，未见新的视觉回退。
+
+TODO
+- 评估是否保留 `ExperimentalResearchQueuePreview` 这个 legacy 对照面板；如果后续研究详情和主队列都已经切稳，可以考虑删除整个 preview 入口。
+- 开始迁移研究写路径之外的下一块领域逻辑，优先建议设施/燃料或统计写入，从而减少 `adaptLegacyStoreStateToGameState()` 的桥接面积。

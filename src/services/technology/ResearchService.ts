@@ -66,6 +66,18 @@ export class ResearchService {
   }
 
   /**
+   * 使用外部快照恢复当前研究状态
+   */
+  hydrateCurrentResearch(researchState: TechResearchState | null): void {
+    this.currentResearch = researchState
+      ? {
+          ...researchState,
+          currentCost: { ...researchState.currentCost },
+        }
+      : undefined;
+  }
+
+  /**
    * 开始研究科技
    */
   async startResearch(techId: string): Promise<ResearchResult> {

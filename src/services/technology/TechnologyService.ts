@@ -87,6 +87,26 @@ export class TechnologyService {
   }
 
   /**
+   * 使用已加载的 store 快照恢复科技运行态。
+   * 这是新运行时完全接管前的过渡桥接层。
+   */
+  public async hydrateState(state: {
+    unlockedTechs: Iterable<string>;
+    researchState: TechResearchState | null;
+    researchQueue: ResearchQueueItem[];
+    autoResearch: boolean;
+  }): Promise<void> {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    await this.unlockService.hydrateUnlockedTechs(state.unlockedTechs);
+    this.researchService.hydrateCurrentResearch(state.researchState);
+    this.queueService.hydrateQueue(state.researchQueue, state.autoResearch);
+    await this.progressTracker.initialize(this.treeService, this.unlockService);
+  }
+
+  /**
    * 初始化服务
    */
   public async initialize(): Promise<void> {
@@ -399,6 +419,20 @@ export class TechnologyService {
     if (this.queueService.isAutoResearchEnabled()) {
       this.startNextResearch();
     }
+  }
+
+  /**
+   * 处理触发式科技解锁，不记录研究时间和科技包消耗。
+   */
+  public unlockTechnologyByTrigger(techId: string): boolean {
+    if (this.unlockService.isTechUnlocked(techId)) {
+      return false;
+    }
+
+    this.unlockService.unlockTechnology(techId);
+    this.calculateAvailableTechs();
+    this.logger.info(`Technology unlocked by trigger: ${techId}`);
+    return true;
   }
 
   /**

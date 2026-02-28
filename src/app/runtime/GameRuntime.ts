@@ -2,10 +2,7 @@ import type { SnapshotRepository } from '@/app/persistence/SnapshotRepository';
 import type { GameCatalog } from '@/data/catalog/GameCatalog';
 import { applyGameCommand } from '@/engine/core/applyGameCommand';
 import { tickGame } from '@/engine/core/tickGame';
-import {
-  CURRENT_GAME_SNAPSHOT_VERSION,
-  type GameSnapshot,
-} from '@/engine/model/GameSnapshot';
+import { CURRENT_GAME_SNAPSHOT_VERSION, type GameSnapshot } from '@/engine/model/GameSnapshot';
 import type { GameCommand } from '@/engine/model/GameCommand';
 import type { DomainEvent } from '@/engine/model/DomainEvent';
 import type { GameState } from '@/engine/model/GameState';
@@ -35,6 +32,10 @@ export class GameRuntime {
 
   getState(): GameState {
     return this.state;
+  }
+
+  getCatalog(): GameCatalog {
+    return this.catalog;
   }
 
   subscribe(listener: GameRuntimeListener): () => void {

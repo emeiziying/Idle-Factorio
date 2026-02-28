@@ -4,8 +4,15 @@ import React from 'react';
 import { Box, Typography, useTheme } from '@mui/material';
 import TechGridCard from '@/components/technology/TechGridCard';
 import TechVirtualizedGridWithAutoSizer from '@/components/technology/TechVirtualizedGridWithAutoSizer';
+import type {
+  TechnologyCardMetadata,
+  TechnologyResearchTriggerProgress,
+} from '@/engine/selectors/technologySelectors';
+import {
+  filterDisplayTechnologies,
+  sortTechnologiesByStatus,
+} from '@/engine/selectors/technologySelectors';
 import type { Technology, TechStatus } from '@/types/technology';
-import { useTechnologyService } from '@/hooks/useDIServices';
 
 interface TechSimpleGridProps {
   /** 要显示的科技列表 */
@@ -17,6 +24,12 @@ interface TechSimpleGridProps {
   /** 研究队列中的科技ID */
   queuedTechIds: Set<string>;
 
+  /** 卡片展示元数据 */
+  cardMetadataById: Map<string, TechnologyCardMetadata>;
+
+  /** 触发式科技进度 */
+  triggerProgressById: Map<string, TechnologyResearchTriggerProgress>;
+
   /** 点击科技卡片的回调 */
   onTechClick?: (techId: string) => void;
 
@@ -25,19 +38,26 @@ interface TechSimpleGridProps {
 }
 
 const TechSimpleGrid: React.FC<TechSimpleGridProps> = React.memo(
-  ({ technologies, techStates, queuedTechIds, onTechClick, useVirtualization = false }) => {
+  ({
+    technologies,
+    techStates,
+    queuedTechIds,
+    cardMetadataById,
+    triggerProgressById,
+    onTechClick,
+    useVirtualization = false,
+  }) => {
     const theme = useTheme();
-    const technologyService = useTechnologyService();
 
     // 修改排序逻辑：保持依赖关系排序，按状态分组显示
     const sortedTechnologies = React.useMemo(() => {
-      return technologyService.getTechnologiesSortedByStatus(technologies, techStates);
-    }, [technologies, techStates, technologyService]);
+      return sortTechnologiesByStatus(technologies, techStates);
+    }, [technologies, techStates]);
 
     // 过滤逻辑：只显示当前可研究的和依赖当前可研究的项目 - 使用useMemo缓存
     const filteredTechnologies = React.useMemo(() => {
-      return technologyService.getDisplayTechnologies(sortedTechnologies, techStates);
-    }, [sortedTechnologies, techStates, technologyService]);
+      return filterDisplayTechnologies(sortedTechnologies, techStates);
+    }, [sortedTechnologies, techStates]);
 
     // 获取科技状态 - 使用useCallback缓存
     const getTechState = React.useCallback(
@@ -82,6 +102,8 @@ const TechSimpleGrid: React.FC<TechSimpleGridProps> = React.memo(
           technologies={filteredTechnologies}
           techStates={techStates}
           queuedTechIds={queuedTechIds}
+          cardMetadataById={cardMetadataById}
+          triggerProgressById={triggerProgressById}
           onTechClick={handleTechClick}
         />
       );
@@ -117,6 +139,8 @@ const TechSimpleGrid: React.FC<TechSimpleGridProps> = React.memo(
                 status={state.status}
                 progress={state.progress}
                 inQueue={queuedTechIds.has(tech.id)}
+                metadata={cardMetadataById.get(tech.id)!}
+                triggerProgress={triggerProgressById.get(tech.id)}
                 onClick={handleTechClick}
               />
             );

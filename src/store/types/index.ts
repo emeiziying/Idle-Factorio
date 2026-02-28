@@ -146,7 +146,7 @@ export interface GameMetaSlice {
   // Actions
   saveGame: () => void;
   forceSaveGame: () => Promise<void>;
-  loadGameData: () => Promise<void>;
+  loadGameData: () => Promise<boolean>;
   clearGameData: () => Promise<void>;
 }
 

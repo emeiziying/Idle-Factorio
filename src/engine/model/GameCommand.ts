@@ -21,4 +21,12 @@ export type GameCommand =
   | {
       type: 'research/queue-add';
       techId: string;
+    }
+  | {
+      type: 'research/queue-remove';
+      techId: string;
+    }
+  | {
+      type: 'research/auto-set';
+      enabled: boolean;
     };

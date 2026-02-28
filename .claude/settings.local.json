@@ -88,8 +88,9 @@
   "enabledMcpjsonServers": [
     "context7",
     "sequential-thinking",
-    "mui-mcp",
-    "browser-tools"
+    "promptx",
+    "browser-tools",
+    "mui-mcp"
   ],
   "disabledMcpjsonServers": [
     "mcp-feedback-enhanced",

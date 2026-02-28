@@ -32,6 +32,15 @@ export class ResearchQueueService {
   }
 
   /**
+   * 使用外部快照恢复研究队列与自动研究开关
+   */
+  hydrateQueue(queue: ResearchQueueItem[], autoResearchEnabled: boolean): void {
+    this.researchQueue = queue.map(item => ({ ...item }));
+    this.autoResearchEnabled = autoResearchEnabled;
+    this.updateQueueDependencies();
+  }
+
+  /**
    * 获取研究队列
    */
   getResearchQueue(): ResearchQueueItem[] {
@@ -208,15 +217,17 @@ export class ResearchQueueService {
     const queueTechIds = new Set(this.researchQueue.map(item => item.techId));
 
     // 更新每个项目的 canStart 状态
-    this.researchQueue.forEach(item => {
+    this.researchQueue.forEach((item, index) => {
       const tech = this.treeService.getTechnology(item.techId);
       if (!tech) {
         item.canStart = false;
+        item.queuePosition = index + 1;
         return;
       }
 
       // 检查前置科技是否都不在队列中
       item.canStart = !tech.prerequisites.some((prereqId: string) => queueTechIds.has(prereqId));
+      item.queuePosition = index + 1;
     });
 
     // 重新计算预计时间

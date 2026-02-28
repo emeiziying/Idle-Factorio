@@ -8,7 +8,10 @@ import {
   NewReleases as TriggerIcon,
 } from '@mui/icons-material';
 import FactorioIcon from '@/components/common/FactorioIcon';
-import { useTechnologyService, useDataService } from '@/hooks/useDIServices';
+import type {
+  TechnologyCardMetadata,
+  TechnologyResearchTriggerProgress,
+} from '@/engine/selectors/technologySelectors';
 import type { Technology, TechStatus } from '@/types/technology';
 
 // Factorio Design System
@@ -72,6 +75,12 @@ interface TechGridCardProps {
 
   /** 是否在研究队列中 */
   inQueue: boolean;
+
+  /** 卡片展示元数据 */
+  metadata: TechnologyCardMetadata;
+
+  /** 触发式科技当前进度 */
+  triggerProgress?: TechnologyResearchTriggerProgress;
 
   /** 点击科技卡片的回调 */
   onClick?: (techId: string) => void;
@@ -452,24 +461,11 @@ const UnlockContent: React.FC<{
 });
 
 const TechGridCard: React.FC<TechGridCardProps> = React.memo(
-  ({ technology, status, progress, inQueue, onClick }) => {
+  ({ technology, status, progress, inQueue, metadata, triggerProgress, onClick }) => {
     const theme = useTheme();
-    const technologyService = useTechnologyService();
-    const dataService = useDataService();
+    const { unlockedContent, prerequisiteNames, researchTriggerInfo, researchRecipe } = metadata;
 
-    // Memoize service calls
-    const techData = useMemo(
-      () => ({
-        unlockedContent: technologyService.getUnlockedContentInfo(technology),
-        prerequisiteNames: technologyService.getPrerequisiteNames(technology.prerequisites),
-        researchTriggerInfo: technologyService.getResearchTriggerInfo(technology.id),
-      }),
-      [technology, technologyService]
-    );
-
-    const { unlockedContent, prerequisiteNames, researchTriggerInfo } = techData;
-
-    const hasResearchTrigger = Boolean(researchTriggerInfo);
+    const hasResearchTrigger = researchTriggerInfo.hasResearchTrigger;
     const unlockCount = unlockedContent.total;
 
     // Memoize status configuration
@@ -500,8 +496,12 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(
           bgColor: FACTORIO_COLORS.AVAILABLE_BG,
           borderColor: FACTORIO_COLORS.ORANGE_PRIMARY,
           accentColor: FACTORIO_COLORS.ORANGE_LIGHT,
-          icon: <QueueIcon sx={{ fontSize: 16 }} />,
-          label: '可研究',
+          icon: hasResearchTrigger ? (
+            <TriggerIcon sx={{ fontSize: 16 }} />
+          ) : (
+            <QueueIcon sx={{ fontSize: 16 }} />
+          ),
+          label: hasResearchTrigger ? '待触发' : '可研究',
           textColor: '#ffffff',
           hoverEffect: true,
         },
@@ -517,7 +517,7 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(
         },
       };
       return configs[status] || configs.locked;
-    }, [status]);
+    }, [hasResearchTrigger, status]);
 
     // 可以点击查看详情的条件：不是已完成状态的科技都可以点击查看
     const canClick = status !== 'unlocked';
@@ -654,7 +654,7 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(
                     </Box>
 
                     {/* 可研究状态的特殊提示 */}
-                    {status === 'available' && (
+                    {status === 'available' && !hasResearchTrigger && (
                       <Box sx={{ mt: 0.5 }}>
                         <Box
                           sx={{
@@ -682,6 +682,36 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(
                         </Box>
                       </Box>
                     )}
+
+                    {status === 'available' && hasResearchTrigger && triggerProgress && (
+                      <Box sx={{ mt: 0.5 }}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.25,
+                            px: 0.5,
+                            py: 0.25,
+                            bgcolor: alpha(theme.palette.info.main, 0.1),
+                            borderRadius: 0.5,
+                            border: `1px solid ${alpha(theme.palette.info.main, 0.3)}`,
+                          }}
+                        >
+                          <TriggerIcon sx={{ fontSize: 12, color: theme.palette.info.main }} />
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              fontSize: '0.6rem',
+                              color: theme.palette.info.main,
+                              fontWeight: 600,
+                            }}
+                          >
+                            自动解锁进度 {triggerProgress.currentCount}/
+                            {triggerProgress.requiredCount}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    )}
                   </>
                 )}
 
@@ -690,7 +720,7 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(
                 status === 'available' && (
                   <Box sx={{ mt: 0.5 }}>
                     {(() => {
-                      if (researchTriggerInfo) {
+                      if (researchTriggerInfo.hasResearchTrigger) {
                         // 有研究触发器的科技
                         return (
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
@@ -729,9 +759,11 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(
                                   fontWeight: 600,
                                 }}
                               >
-                                {researchTriggerInfo.hasResearchTrigger
-                                  ? `${researchTriggerInfo.triggerType} ${researchTriggerInfo.triggerCount || 1}`
-                                  : ''}
+                                {researchTriggerInfo.hasResearchTrigger && triggerProgress
+                                  ? `${researchTriggerInfo.triggerType} ${triggerProgress.currentCount}/${triggerProgress.requiredCount}`
+                                  : researchTriggerInfo.hasResearchTrigger
+                                    ? `${researchTriggerInfo.triggerType} ${researchTriggerInfo.triggerCount || 1}`
+                                    : ''}
                               </Typography>
                             </Box>
                           </Box>
@@ -774,114 +806,62 @@ const TechGridCard: React.FC<TechGridCardProps> = React.memo(
           {/* 科技包需求 - 详细显示 */}
           {Object.keys(technology.researchCost).length > 0 && (
             <Box sx={{ mb: 1 }}>
-              {/* 获取研究配方信息 */}
-              {(() => {
-                try {
-                  const techRecipe = dataService.getRecipe(technology.id);
-                  const researchTime = techRecipe?.time || technology.researchTime;
-                  const researchCount = techRecipe?.count || 1;
-
-                  return (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                      {/* 输入物品显示 - 显示单次所需数量 */}
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {Object.entries(techRecipe?.in || {}).map(([packId, amount]) => (
-                          <Box
-                            key={packId}
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 0.25,
-                              px: 0.75,
-                              py: 0.5,
-                              bgcolor: alpha(theme.palette.primary.main, 0.12),
-                              borderRadius: 1,
-                              border: `1px solid ${alpha(theme.palette.primary.main, 0.4)}`,
-                              boxShadow: `0 2px 4px ${alpha(theme.palette.primary.main, 0.2)}`,
-                              transition: 'all 0.2s ease',
-                              '&:hover': {
-                                transform: 'scale(1.05)',
-                                boxShadow: `0 4px 8px ${alpha(theme.palette.primary.main, 0.3)}`,
-                              },
-                            }}
-                          >
-                            <FactorioIcon
-                              itemId={packId}
-                              size={28}
-                              showBorder={false}
-                              quantity={amount}
-                            />
-                          </Box>
-                        ))}
-                      </Box>
-
-                      {/* 研究时间和次数信息 */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ fontSize: '0.65rem' }}
-                        >
-                          时间: {researchTime}s
-                        </Typography>
-                        {researchCount > 1 && (
-                          <>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ fontSize: '0.65rem' }}
-                            >
-                              ×
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ fontSize: '0.65rem' }}
-                            >
-                              {researchCount}
-                            </Typography>
-                          </>
-                        )}
-                      </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {researchRecipe.inputs.map(({ itemId, amount }) => (
+                    <Box
+                      key={itemId}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.25,
+                        px: 0.75,
+                        py: 0.5,
+                        bgcolor: alpha(theme.palette.primary.main, 0.12),
+                        borderRadius: 1,
+                        border: `1px solid ${alpha(theme.palette.primary.main, 0.4)}`,
+                        boxShadow: `0 2px 4px ${alpha(theme.palette.primary.main, 0.2)}`,
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          transform: 'scale(1.05)',
+                          boxShadow: `0 4px 8px ${alpha(theme.palette.primary.main, 0.3)}`,
+                        },
+                      }}
+                    >
+                      <FactorioIcon
+                        itemId={itemId}
+                        size={28}
+                        showBorder={false}
+                        quantity={amount}
+                      />
                     </Box>
-                  );
-                } catch {
-                  // 如果获取配方信息失败，回退到简单显示（仍然显示单次数量）
-                  return (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.25 }}>
-                      {Object.entries(technology.researchCost).map(([packId, totalAmount]) => {
-                        // 尝试从researchCost反推单次数量
-                        const techRecipe = dataService.getRecipe(technology.id);
-                        const unitAmount = techRecipe?.in?.[packId] || totalAmount;
+                  ))}
+                </Box>
 
-                        return (
-                          <Box
-                            key={packId}
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 0.25,
-                              px: 0.25,
-                              py: 0.125,
-                              bgcolor: alpha(theme.palette.primary.main, 0.1),
-                              borderRadius: 0.25,
-                              border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
-                            }}
-                          >
-                            <FactorioIcon itemId={packId} size={12} showBorder={false} />
-                            <Typography
-                              variant="caption"
-                              sx={{ fontWeight: 600, fontSize: '0.65rem' }}
-                            >
-                              {unitAmount}
-                            </Typography>
-                          </Box>
-                        );
-                      })}
-                    </Box>
-                  );
-                }
-              })()}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+                    时间: {researchRecipe.time}s
+                  </Typography>
+                  {researchRecipe.count > 1 && (
+                    <>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontSize: '0.65rem' }}
+                      >
+                        ×
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontSize: '0.65rem' }}
+                      >
+                        {researchRecipe.count}
+                      </Typography>
+                    </>
+                  )}
+                </Box>
+              </Box>
             </Box>
           )}
 

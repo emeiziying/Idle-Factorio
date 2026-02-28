@@ -29,9 +29,15 @@ import {
 } from '@mui/icons-material';
 import FactorioIcon from '@/components/common/FactorioIcon';
 import type { ResearchQueueItem, TechResearchState } from '@/types/technology';
-import { useTechnologyService } from '@/hooks/useDIServices';
+import type { Technology } from '@/types/technology';
 
 interface ResearchQueueProps {
+  /** 队列标题 */
+  title?: string;
+
+  /** 空状态提示 */
+  emptyHint?: string;
+
   /** 研究队列列表 */
   queue: ResearchQueueItem[];
 
@@ -50,26 +56,34 @@ interface ResearchQueueProps {
   /** 开始研究的回调 */
   onStartResearch?: (techId: string) => void;
 
+  /** 科技数据查询 */
+  resolveTechnology: (techId: string) => Technology | undefined;
+
   /** 是否可折叠 */
   collapsible?: boolean;
 }
 
 const ResearchQueue: React.FC<ResearchQueueProps> = React.memo(
   ({
+    title = '研究队列',
+    emptyHint = '点击科技节点的 "添加到队列" 按钮来添加研究任务',
     queue,
     currentResearch,
     autoResearch,
     onRemoveFromQueue,
     onSetAutoResearch,
     onStartResearch,
+    resolveTechnology,
     collapsible = true,
   }) => {
     const theme = useTheme();
     // 当没有当前研究时，默认收起队列
     const [expanded, setExpanded] = React.useState(!!currentResearch);
 
-    // 获取服务实例
-    const techService = useTechnologyService();
+    const getTechnology = React.useCallback(
+      (techId: string) => resolveTechnology(techId),
+      [resolveTechnology]
+    );
 
     // 格式化时间显示 - 使用useCallback缓存
     const formatTime = React.useCallback((seconds: number) => {
@@ -83,13 +97,13 @@ const ResearchQueue: React.FC<ResearchQueueProps> = React.memo(
     const totalQueueTime = React.useMemo(() => {
       let totalTime = 0;
       queue.forEach(item => {
-        const tech = techService.getTechnology(item.techId);
+        const tech = getTechnology(item.techId);
         if (tech) {
           totalTime += tech.researchTime;
         }
       });
       return totalTime;
-    }, [queue, techService]);
+    }, [queue, getTechnology]);
 
     // 获取优先级显示 - 使用useCallback缓存
     const getPriorityLabel = React.useCallback((priority: number) => {
@@ -132,7 +146,7 @@ const ResearchQueue: React.FC<ResearchQueueProps> = React.memo(
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <QueueIcon color="primary" />
-              <Typography variant="h6">研究队列</Typography>
+              <Typography variant="h6">{title}</Typography>
               <Chip size="small" label={`${queue.length} 项`} color="primary" variant="outlined" />
               {totalQueueTime > 0 && (
                 <Chip
@@ -160,7 +174,7 @@ const ResearchQueue: React.FC<ResearchQueueProps> = React.memo(
               <Card variant="outlined" sx={{ bgcolor: theme.palette.info.main + '10' }}>
                 <CardContent sx={{ '&:last-child': { pb: 1.5 } }}>
                   {(() => {
-                    const tech = techService.getTechnology(currentResearch.techId);
+                    const tech = getTechnology(currentResearch.techId);
                     return (
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <FactorioIcon
@@ -217,14 +231,12 @@ const ResearchQueue: React.FC<ResearchQueueProps> = React.memo(
               >
                 <QueueIcon sx={{ fontSize: 48, opacity: 0.5, mb: 1 }} />
                 <Typography variant="body2">研究队列为空</Typography>
-                <Typography variant="caption">
-                  点击科技节点的 "添加到队列" 按钮来添加研究任务
-                </Typography>
+                <Typography variant="caption">{emptyHint}</Typography>
               </Box>
             ) : (
               <List dense>
                 {queue.map((item, index) => {
-                  const tech = techService.getTechnology(item.techId);
+                  const tech = getTechnology(item.techId);
                   const priorityConfig = getPriorityLabel(item.priority);
                   const isBlocked = !item.canStart;
 
@@ -326,13 +338,15 @@ const ResearchQueue: React.FC<ResearchQueueProps> = React.memo(
                             </IconButton>
                           )}
 
-                          <IconButton
-                            size="small"
-                            onClick={() => onRemoveFromQueue?.(item.techId)}
-                            color="error"
-                          >
-                            <RemoveIcon />
-                          </IconButton>
+                          {onRemoveFromQueue && (
+                            <IconButton
+                              size="small"
+                              onClick={() => onRemoveFromQueue(item.techId)}
+                              color="error"
+                            >
+                              <RemoveIcon />
+                            </IconButton>
+                          )}
                         </Box>
                       </ListItemSecondaryAction>
                     </ListItem>
@@ -352,8 +366,8 @@ const ResearchQueue: React.FC<ResearchQueueProps> = React.memo(
                   label={autoResearch ? '已启用' : '已禁用'}
                   color={autoResearch ? 'success' : 'default'}
                   size="small"
-                  onClick={() => onSetAutoResearch?.(!autoResearch)}
-                  clickable
+                  onClick={onSetAutoResearch ? () => onSetAutoResearch(!autoResearch) : undefined}
+                  clickable={!!onSetAutoResearch}
                   icon={autoResearch ? <StartIcon /> : <PauseIcon />}
                 />
               </Box>

@@ -2,6 +2,10 @@ import React, { useMemo, useCallback, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Box, useTheme } from '@mui/material';
 import TechGridCard from '@/components/technology/TechGridCard';
+import type {
+  TechnologyCardMetadata,
+  TechnologyResearchTriggerProgress,
+} from '@/engine/selectors/technologySelectors';
 import type { Technology, TechStatus } from '@/types/technology';
 
 interface TechVirtualizedGridProps {
@@ -13,6 +17,12 @@ interface TechVirtualizedGridProps {
 
   /** 研究队列中的科技ID */
   queuedTechIds: Set<string>;
+
+  /** 卡片展示元数据 */
+  cardMetadataById: Map<string, TechnologyCardMetadata>;
+
+  /** 触发式科技进度 */
+  triggerProgressById: Map<string, TechnologyResearchTriggerProgress>;
 
   /** 点击科技卡片的回调 */
   onTechClick?: (techId: string) => void;
@@ -35,6 +45,8 @@ const TechVirtualizedGrid: React.FC<TechVirtualizedGridProps> = ({
   technologies,
   techStates,
   queuedTechIds,
+  cardMetadataById,
+  triggerProgressById,
   onTechClick,
   height,
   width,
@@ -108,6 +120,8 @@ const TechVirtualizedGrid: React.FC<TechVirtualizedGridProps> = ({
               status={state.status}
               progress={state.progress}
               inQueue={queuedTechIds.has(tech.id)}
+              metadata={cardMetadataById.get(tech.id)!}
+              triggerProgress={triggerProgressById.get(tech.id)}
               onClick={onTechClick}
             />
           </Box>
@@ -115,7 +129,7 @@ const TechVirtualizedGrid: React.FC<TechVirtualizedGridProps> = ({
       }
       return items;
     },
-    [getTechnologyAtPosition, techStates, queuedTechIds, onTechClick, gridConfig]
+    [getTechnologyAtPosition, techStates, queuedTechIds, cardMetadataById, onTechClick, gridConfig]
   );
 
   // 如果没有科技，显示空状态
