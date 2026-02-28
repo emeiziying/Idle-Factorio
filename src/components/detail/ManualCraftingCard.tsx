@@ -1,8 +1,8 @@
 import CraftingButtons from '@/components/detail/CraftingButtons';
 import RecipeFlowDisplay from '@/components/detail/RecipeFlowDisplay';
-import { useCrafting } from '@/hooks/useCrafting';
 import { useDependencyService, useRecipeService } from '@/hooks/useDIServices';
 import { useManualCraftingStatus } from '@/hooks/useManualCraftingStatus';
+import type { Recipe } from '@/types';
 import useGameStore from '@/store/gameStore';
 import type { Item } from '@/types/index';
 import { Box, Typography } from '@mui/material';
@@ -11,13 +11,17 @@ import React, { useMemo } from 'react';
 interface ManualCraftingCardProps {
   item: Item;
   onItemSelect?: (item: Item) => void;
+  onManualCraft: (itemId: string, quantity: number, recipe: Recipe) => void;
 }
 
-const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onItemSelect }) => {
+const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({
+  item,
+  onItemSelect,
+  onManualCraft,
+}) => {
   const { getInventoryItem, inventory } = useGameStore();
   const recipeService = useRecipeService();
   const dependencyService = useDependencyService();
-  const { handleManualCraft } = useCrafting();
   const manualCraftingStatus = useManualCraftingStatus(item);
 
   // 获取手动制作信息
@@ -83,7 +87,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({ item, onItemSel
         </Box>
 
         <CraftingButtons
-          onCraft={quantity => handleManualCraft(item.id, quantity, recipe)}
+          onCraft={quantity => onManualCraft(item.id, quantity, recipe)}
           disabled={!canCraft}
           variant={canCraft ? 'contained' : 'outlined'}
         />
