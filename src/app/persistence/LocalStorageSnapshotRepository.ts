@@ -1,5 +1,9 @@
 import type { SnapshotRepository } from '@/app/persistence/SnapshotRepository';
-import { CURRENT_GAME_SNAPSHOT_VERSION, type GameSnapshot } from '@/engine/model/GameSnapshot';
+import {
+  CURRENT_GAME_SNAPSHOT_VERSION,
+  migrateGameSnapshot,
+  type GameSnapshot,
+} from '@/engine/model/GameSnapshot';
 import LZString from 'lz-string';
 
 export const GAME_RUNTIME_SNAPSHOT_STORAGE_KEY = 'factorio-game-runtime-snapshot';
@@ -43,7 +47,7 @@ export class LocalStorageSnapshotRepository implements SnapshotRepository {
         );
       }
 
-      return parsed;
+      return migrateGameSnapshot(parsed);
     } catch (error) {
       console.error('[GameSnapshotRepository] Failed to load snapshot:', error);
       return null;

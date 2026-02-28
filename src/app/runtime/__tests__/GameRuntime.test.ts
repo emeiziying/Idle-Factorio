@@ -168,7 +168,7 @@ describe('GameRuntime', () => {
     ]);
 
     expect(repository.storedSnapshot).toEqual({
-      schemaVersion: 1,
+      schemaVersion: 2,
       savedAtMs: 6_500,
       state: {
         ...createInitialGameState(),

@@ -1,4 +1,5 @@
 import type { GameCatalog } from '@/data/catalog/GameCatalog';
+import { tickFacilityFuelState, updateFacilityPowerState } from '@/engine/core/facilitySystems';
 import { tickResearch, unlockTriggeredTechnologies } from '@/engine/core/researchState';
 import type { DomainEvent } from '@/engine/model/DomainEvent';
 import type { GameState } from '@/engine/model/GameState';
@@ -15,14 +16,22 @@ export interface TickResult {
 }
 
 export const tickGame = (state: GameState, context: TickContext): TickResult => {
-  const researchResult = tickResearch(state, context.catalog, Math.max(0, context.deltaMs));
+  const normalizedDeltaMs = Math.max(0, context.deltaMs);
+  const powerResult = updateFacilityPowerState(state, context.catalog);
+  const fuelResult = tickFacilityFuelState(powerResult.state, context.catalog, normalizedDeltaMs);
+  const researchResult = tickResearch(fuelResult.state, context.catalog, normalizedDeltaMs);
   const triggerUnlockResult = unlockTriggeredTechnologies(researchResult.state, context.catalog);
 
   return {
     state: {
       ...triggerUnlockResult.state,
-      simulationTimeMs: triggerUnlockResult.state.simulationTimeMs + Math.max(0, context.deltaMs),
+      simulationTimeMs: triggerUnlockResult.state.simulationTimeMs + normalizedDeltaMs,
     },
-    events: [...researchResult.events, ...triggerUnlockResult.events],
+    events: [
+      ...powerResult.events,
+      ...fuelResult.events,
+      ...researchResult.events,
+      ...triggerUnlockResult.events,
+    ],
   };
 };

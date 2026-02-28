@@ -12,6 +12,10 @@ export type DomainEvent =
       instanceId: string;
     }
   | {
+      type: 'facility/no-power';
+      instanceId: string;
+    }
+  | {
       type: 'facility/no-resource';
       instanceId: string;
     };

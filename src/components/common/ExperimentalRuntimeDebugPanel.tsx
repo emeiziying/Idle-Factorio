@@ -26,7 +26,18 @@ const ExperimentalRuntimeDebugPanel: React.FC = () => {
     ? Object.keys(runtimeRegistry.runtimeState.inventory.items).length
     : 0;
   const facilitiesCount = runtimeRegistry.runtimeState?.facilities.length || 0;
+  const facilityUnits =
+    runtimeRegistry.runtimeState?.facilities.reduce(
+      (total, facility) => total + facility.count,
+      0
+    ) || 0;
   const unlockedTechCount = runtimeRegistry.runtimeState?.unlocks.techs.length || 0;
+  const noFuelFacilities =
+    runtimeRegistry.runtimeState?.facilities.filter(facility => facility.status === 'no_fuel')
+      .length || 0;
+  const noPowerFacilities =
+    runtimeRegistry.runtimeState?.facilities.filter(facility => facility.status === 'no_power')
+      .length || 0;
   const simulationSeconds = Math.floor(
     (runtimeRegistry.runtimeState?.simulationTimeMs || 0) / 1000
   );
@@ -109,7 +120,14 @@ const ExperimentalRuntimeDebugPanel: React.FC = () => {
             物品种类: {inventoryKinds}
           </Typography>
           <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
-            设施数量: {facilitiesCount}
+            设施数量: {facilitiesCount} 组 / {facilityUnits} 台
+          </Typography>
+          <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
+            电力: {Math.round(runtimeRegistry.runtimeState?.power.generation || 0)} /{' '}
+            {Math.round(runtimeRegistry.runtimeState?.power.consumption || 0)} kW
+          </Typography>
+          <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
+            缺燃料/缺电: {noFuelFacilities}/{noPowerFacilities}
           </Typography>
           <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
             已解锁科技: {unlockedTechCount}

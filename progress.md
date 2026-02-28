@@ -73,7 +73,19 @@ Original prompt: 从架构师角度评审当前应用技术方案，并推进重
   - `pnpm test` 通过，现为 17 个测试文件 / 236 个测试全绿。
   - `pnpm build` 通过，当前只剩既有的大 chunk 告警。
   - `$WEB_GAME_CLIENT` 已重新跑过科技页截图，未见新的视觉回退。
+- 当前新增内容：
+  - 新引擎 `FacilityState` 已补上 `count`，并把 runtime snapshot schema 升到 v2；[LocalStorageSnapshotRepository.ts](/Volumes/p1/Dev/Idle-Factorio/src/app/persistence/LocalStorageSnapshotRepository.ts) 会在读取旧 experimental snapshot 时自动补齐 `count`。
+  - 新增纯规则 [facilitySystems.ts](/Volumes/p1/Dev/Idle-Factorio/src/engine/core/facilitySystems.ts)，`tickGame()` 现在会处理设施电力快照、`no_power` 状态规范化、burner 设施燃料消耗，以及 `no_fuel` 设施的最小自动补燃。
+  - [adaptLegacyStoreStateToSnapshot.ts](/Volumes/p1/Dev/Idle-Factorio/src/app/persistence/adaptLegacyStoreStateToSnapshot.ts) 已把 legacy 设施数量映射到新 `GameState`，不再在导入 runtime 时丢掉设施规模。
+  - 新增 [facilitySystems.test.ts](/Volumes/p1/Dev/Idle-Factorio/src/engine/core/__tests__/facilitySystems.test.ts) 和 [LocalStorageSnapshotRepository.test.ts](/Volumes/p1/Dev/Idle-Factorio/src/app/persistence/__tests__/LocalStorageSnapshotRepository.test.ts)，覆盖 `no_power`、power deficit 比例、burner 燃料消耗/自动补燃，以及旧 snapshot 迁移。
+  - [ExperimentalRuntimeDebugPanel.tsx](/Volumes/p1/Dev/Idle-Factorio/src/components/common/ExperimentalRuntimeDebugPanel.tsx) 现在会显示 runtime 设施总台数、电力生成/消耗和 `no_fuel/no_power` 计数，便于观察新引擎设施子系统。
+- 这轮验证结果：
+  - `pnpm test` 通过，现为 19 个测试文件 / 241 个测试全绿。
+  - `pnpm build` 通过，当前只剩既有的大 chunk 告警。
+  - `pnpm preview --host 127.0.0.1 --port 4173` 已成功启动；随后按 [$develop-web-game](/Users/quan/.codex/skills/develop-web-game/SKILL.md) 跑过 Playwright client，并人工检查了截图 `/tmp/idle-factorio-runtime-check/shot-0.png`，主界面无白屏或明显布局回退。
+  - 这次 Playwright client 没有产出独立的文本状态文件；浏览器检查主要完成了页面可见性和截图确认。
 
 TODO
 - 评估是否保留 `ExperimentalResearchQueuePreview` 这个 legacy 对照面板；如果后续研究详情和主队列都已经切稳，可以考虑删除整个 preview 入口。
-- 开始迁移研究写路径之外的下一块领域逻辑，优先建议设施/燃料或统计写入，从而减少 `adaptLegacyStoreStateToGameState()` 的桥接面积。
+- 继续把设施子域往新引擎推进，下一步优先迁生产进度/配方执行，而不是继续扩展研究或调试 UI。
+- 评估是否把正式电力面板先接到 runtime selector；现在 power snapshot 已经存在于 `GameState`，可以作为设施模块切 runtime 的第一个只读面板。

@@ -85,6 +85,7 @@ const adaptLegacyFacilityState = (facility: FacilityInstance): FacilityState => 
   return {
     id: facility.id,
     facilityId: facility.facilityId,
+    count: facility.count || 1,
     targetItemId: facility.targetItemId || null,
     status: facility.status,
     efficiency: facility.efficiency,

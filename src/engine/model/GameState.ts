@@ -16,6 +16,7 @@ export interface FacilityFuelState {
 export interface FacilityState {
   id: string;
   facilityId: string;
+  count: number;
   targetItemId: string | null;
   status: 'running' | 'stopped' | 'no_power' | 'no_resource' | 'output_full' | 'no_fuel';
   efficiency: number;
