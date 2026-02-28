@@ -1,6 +1,11 @@
 // 游戏元数据切片
 import type { SliceCreator, GameMetaSlice } from '@/store/types';
-import { gameStorageService } from '@/services/storage/GameStorageService';
+import { getService } from '@/services/core/DIServiceInitializer';
+import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
+import type { GameStorageService } from '@/services/storage/GameStorageService';
+import { warn, error as logError } from '@/utils/logger';
+
+const getStorageService = () => getService<GameStorageService>(SERVICE_TOKENS.GAME_STORAGE_SERVICE);
 
 export const createGameMetaSlice: SliceCreator<GameMetaSlice> = (set, get) => ({
   // 初始状态
@@ -11,7 +16,7 @@ export const createGameMetaSlice: SliceCreator<GameMetaSlice> = (set, get) => ({
   // 存档管理
   clearGameData: async () => {
     // 清除游戏存档
-    await gameStorageService.clearGameData();
+    await getStorageService().clearGameData();
 
     // 重置状态
     set(() => ({
@@ -44,21 +49,22 @@ export const createGameMetaSlice: SliceCreator<GameMetaSlice> = (set, get) => ({
   saveGame: () => {
     // 使用GameStorageService保存游戏数据
     const state = get();
-    gameStorageService.saveGame(state).catch(error => {
-      console.error('[SaveGame] 保存失败:', error);
-    });
+    getStorageService()
+      .saveGame(state)
+      .catch(error => {
+        logError('[SaveGame] 保存失败:', error);
+      });
   },
 
   // 加载存档方法
   loadGameData: async () => {
     try {
-      const loadedState = await gameStorageService.loadGame();
+      const loadedState = await getStorageService().loadGame();
       if (loadedState) {
         set(() => loadedState);
-        console.log('[Load] 存档加载完成');
       }
     } catch (error) {
-      console.error('[Load] 存档加载失败:', error);
+      logError('[Load] 存档加载失败:', error);
     }
   },
 
@@ -66,10 +72,9 @@ export const createGameMetaSlice: SliceCreator<GameMetaSlice> = (set, get) => ({
   forceSaveGame: async () => {
     const state = get();
     try {
-      await gameStorageService.forceSaveGame(state);
-      console.log('[ForceSave] 强制存档完成');
+      await getStorageService().forceSaveGame(state);
     } catch (error) {
-      console.error('[ForceSave] 强制存档失败:', error);
+      warn('[ForceSave] 强制存档失败:', error);
       throw error;
     }
   },

@@ -1,9 +1,11 @@
 /**
  * 基于依赖注入的服务获取 Hooks
  * 替代原有的 useServices，使用 DI 容器获取服务实例
+ *
+ * 注意：所有服务均为 DI 容器管理的单例，getService() 本身是 O(1) 的 Map 查找，
+ * 无需 useMemo 包裹——useMemo 对单例引用没有性能收益，反而增加 React 内存开销。
  */
 
-import { useMemo } from 'react';
 import { getService } from '@/services/core/DIServiceInitializer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 
@@ -21,139 +23,52 @@ import type { GameLoopService } from '@/services/game/GameLoopService';
 import type { GameConfig } from '@/services/core/GameConfig';
 import type { DependencyService } from '@/services/crafting/DependencyService';
 
-/**
- * 获取 DataService 实例
- */
-export const useDataService = (): DataService => {
-  return useMemo(() => {
-    return getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
-  }, []);
-};
+export const useDataService = (): DataService =>
+  getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
 
-/**
- * 获取 UserProgressService 实例
- */
-export const useUserProgressService = (): UserProgressService => {
-  return useMemo(() => {
-    return getService<UserProgressService>(SERVICE_TOKENS.USER_PROGRESS_SERVICE);
-  }, []);
-};
+export const useUserProgressService = (): UserProgressService =>
+  getService<UserProgressService>(SERVICE_TOKENS.USER_PROGRESS_SERVICE);
 
-/**
- * 获取 RecipeService 实例
- */
-export const useRecipeService = (): RecipeService => {
-  return useMemo(() => {
-    return getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
-  }, []);
-};
+export const useRecipeService = (): RecipeService =>
+  getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
 
-/**
- * 获取 TechnologyService 实例
- */
-export const useTechnologyService = (): TechnologyService => {
-  return useMemo(() => {
-    return getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
-  }, []);
-};
+export const useTechnologyService = (): TechnologyService =>
+  getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
 
-/**
- * 获取 TechUnlockService 实例
- */
-export const useTechUnlockService = (): TechUnlockService => {
-  return useMemo(() => {
-    return getService<TechUnlockService>(SERVICE_TOKENS.TECH_UNLOCK_SERVICE);
-  }, []);
-};
+export const useTechUnlockService = (): TechUnlockService =>
+  getService<TechUnlockService>(SERVICE_TOKENS.TECH_UNLOCK_SERVICE);
 
-/**
- * 获取 FuelService 实例
- */
-export const useFuelService = (): FuelService => {
-  return useMemo(() => {
-    return getService<FuelService>(SERVICE_TOKENS.FUEL_SERVICE);
-  }, []);
-};
+export const useFuelService = (): FuelService =>
+  getService<FuelService>(SERVICE_TOKENS.FUEL_SERVICE);
 
-/**
- * 获取 PowerService 实例
- */
-export const usePowerService = (): PowerService => {
-  return useMemo(() => {
-    return getService<PowerService>(SERVICE_TOKENS.POWER_SERVICE);
-  }, []);
-};
+export const usePowerService = (): PowerService =>
+  getService<PowerService>(SERVICE_TOKENS.POWER_SERVICE);
 
-/**
- * 获取 StorageService 实例
- */
-export const useStorageService = (): StorageService => {
-  return useMemo(() => {
-    return getService<StorageService>(SERVICE_TOKENS.STORAGE_SERVICE);
-  }, []);
-};
+export const useStorageService = (): StorageService =>
+  getService<StorageService>(SERVICE_TOKENS.STORAGE_SERVICE);
 
-/**
- * 获取 ManualCraftingValidator 实例
- */
-export const useManualCraftingValidator = (): ManualCraftingValidator => {
-  return useMemo(() => {
-    return getService<ManualCraftingValidator>(SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR);
-  }, []);
-};
+export const useManualCraftingValidator = (): ManualCraftingValidator =>
+  getService<ManualCraftingValidator>(SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR);
 
-/**
- * 获取 GameLoopService 实例
- */
-export const useGameLoopService = (): GameLoopService => {
-  return useMemo(() => {
-    return getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
-  }, []);
-};
+export const useGameLoopService = (): GameLoopService =>
+  getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
 
-/**
- * 获取 GameConfig 实例
- */
-export const useGameConfig = (): GameConfig => {
-  return useMemo(() => {
-    return getService<GameConfig>(SERVICE_TOKENS.GAME_CONFIG);
-  }, []);
-};
+export const useGameConfig = (): GameConfig => getService<GameConfig>(SERVICE_TOKENS.GAME_CONFIG);
 
-/**
- * 获取 DependencyService 实例
- */
-export const useDependencyService = (): DependencyService => {
-  return useMemo(() => {
-    return getService<DependencyService>(SERVICE_TOKENS.DEPENDENCY_SERVICE);
-  }, []);
-};
+export const useDependencyService = (): DependencyService =>
+  getService<DependencyService>(SERVICE_TOKENS.DEPENDENCY_SERVICE);
 
 /**
  * 通用的服务获取 Hook
  */
-export const useService = <T>(token: string): T => {
-  return useMemo(() => {
-    return getService<T>(token);
-  }, [token]);
-};
+export const useService = <T>(token: string): T => getService<T>(token);
 
 /**
  * 获取多个常用服务的 Hook
  */
-export const useCommonServices = () => {
-  const dataService = useDataService();
-  const recipeService = useRecipeService();
-  const technologyService = useTechnologyService();
-  const userProgressService = useUserProgressService();
-
-  return useMemo(
-    () => ({
-      dataService,
-      recipeService,
-      technologyService,
-      userProgressService,
-    }),
-    [dataService, recipeService, technologyService, userProgressService]
-  );
-};
+export const useCommonServices = () => ({
+  dataService: getService<DataService>(SERVICE_TOKENS.DATA_SERVICE),
+  recipeService: getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE),
+  technologyService: getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE),
+  userProgressService: getService<UserProgressService>(SERVICE_TOKENS.USER_PROGRESS_SERVICE),
+});
