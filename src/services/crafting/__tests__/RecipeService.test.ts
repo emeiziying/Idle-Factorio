@@ -1,8 +1,22 @@
+/**
+ * RecipeService 单元测试
+ *
+ * 覆盖范围：
+ *  - 初始化与索引构建（initializeRecipes）
+ *  - 配方查询（getRecipesThatProduce / getRecipesThatUse / getRecipeById / getRecipesByCategory）
+ *  - 按 flags 分类查询（getMiningRecipes / getAutomatedRecipes / getRecyclingRecipes）
+ *  - 搜索（searchRecipes）
+ *  - 效率计算（getRecipeEfficiency / getMostEfficientRecipe）
+ *  - 手动制作解锁检查（getAllManualCraftingRecipes）         ← 修复验证
+ *  - 循环依赖保护（calculateRecipeCost）                    ← 修复验证
+ *  - 科技解锁联动（getUnlockedRecipesThatProduce / getUnlockedMostEfficientRecipe）
+ */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RecipeService } from '../RecipeService';
 import type { Recipe } from '../../../types/index';
 
-// 使用相对路径 mock（测试文件规范）
+// ──────────────────── Mock 依赖 ────────────────────
+// 测试文件使用相对路径 mock（项目规范）
 vi.mock('../../../data/customRecipes', () => ({
   CUSTOM_RECIPES: [],
 }));
@@ -13,17 +27,137 @@ vi.mock('../../core/DIServiceInitializer', () => ({
 
 import { getService } from '../../core/DIServiceInitializer';
 
-// 测试用配方数据
-const makeRecipe = (overrides: Partial<Recipe>): Recipe => ({
-  id: 'test-recipe',
-  name: 'Test Recipe',
-  category: 'intermediate-products',
-  time: 1,
-  in: {},
-  out: { 'test-item': 1 },
-  ...overrides,
-});
+// ──────────────────── 共享 Fixtures ────────────────────
+/**
+ * 模拟一段 Factorio 基础生产链：
+ *
+ *   iron-ore  ──(mining)──────────────────────────► iron-ore
+ *   iron-ore  ──(smelting)─────────────────────────► iron-plate
+ *   iron-plate ──(assembly)────────────────────────► iron-gear-wheel
+ *   copper-plate ──(assembly)──────────────────────► copper-cable x2
+ *   iron-plate + copper-cable ──(assembly)─────────► electronic-circuit
+ *   crude-oil ──(refinery, multi-output)───────────► petroleum-gas + light-oil + heavy-oil
+ *   iron-plate ──(recycling)───────────────────────► iron-ore (recycling flag)
+ */
+const R: Record<string, Recipe> = {
+  ironOreMining: {
+    id: 'iron-ore-mining',
+    name: 'Iron Ore',
+    category: 'mining',
+    time: 1,
+    in: {},
+    out: { 'iron-ore': 1 },
+    flags: ['mining'],
+    producers: [],
+  },
 
+  ironSmelting: {
+    id: 'iron-plate',
+    name: 'Iron Plate',
+    category: 'smelting',
+    time: 3.2,
+    in: { 'iron-ore': 1 },
+    out: { 'iron-plate': 1 },
+    producers: ['stone-furnace', 'steel-furnace'],
+  },
+
+  ironGear: {
+    id: 'iron-gear-wheel',
+    name: 'Iron Gear Wheel',
+    category: 'intermediate-products',
+    time: 0.5,
+    in: { 'iron-plate': 2 },
+    out: { 'iron-gear-wheel': 1 },
+    producers: ['assembling-machine-1'],
+  },
+
+  copperCable: {
+    id: 'copper-cable',
+    name: 'Copper Cable',
+    category: 'intermediate-products',
+    time: 0.5,
+    in: { 'copper-plate': 1 },
+    out: { 'copper-cable': 2 }, // 每次产出 2 个
+    producers: ['assembling-machine-1'],
+  },
+
+  electronicCircuit: {
+    id: 'electronic-circuit',
+    name: 'Electronic Circuit',
+    category: 'intermediate-products',
+    time: 0.5,
+    in: { 'iron-plate': 1, 'copper-cable': 3 },
+    out: { 'electronic-circuit': 1 },
+    producers: ['assembling-machine-1'],
+  },
+
+  // 多输出配方
+  basicOilProcessing: {
+    id: 'basic-oil-processing',
+    name: 'Basic Oil Processing',
+    category: 'oil-processing',
+    time: 5,
+    in: { 'crude-oil': 100 },
+    out: { 'petroleum-gas': 45, 'light-oil': 30, 'heavy-oil': 25 },
+    producers: ['oil-refinery'],
+  },
+
+  // 回收配方
+  ironRecycling: {
+    id: 'iron-plate-recycling',
+    name: 'Iron Plate Recycling',
+    category: 'recycling',
+    time: 0.2,
+    in: { 'iron-plate': 1 },
+    out: { 'iron-ore': 0.25 },
+    flags: ['recycling'],
+    producers: ['recycler'],
+  },
+};
+
+/** 包含所有 fixture 的配方列表 */
+const ALL_FIXTURES = Object.values(R);
+
+// ──────────────────── Mock DI 辅助 ────────────────────
+interface MockTechService {
+  isRecipeUnlocked?: (id: string) => boolean;
+  isItemUnlocked?: (id: string) => boolean;
+}
+
+interface MockValidator {
+  validateManualCrafting?: (itemId: string) => { canCraftManually: boolean };
+  validateRecipe?: (recipe: Recipe) => { canCraftManually: boolean; category?: string };
+}
+
+/**
+ * 配置 getService mock。
+ * 每个 mock 服务的方法默认返回宽松值（全部允许），
+ * 测试可覆盖具体方法行为。
+ */
+const setupMockDI = (opts: { tech?: MockTechService; validator?: MockValidator } = {}) => {
+  const techService = {
+    isRecipeUnlocked: vi.fn(opts.tech?.isRecipeUnlocked ?? (() => true)),
+    isItemUnlocked: vi.fn(opts.tech?.isItemUnlocked ?? (() => true)),
+  };
+  const validator = {
+    validateManualCrafting: vi.fn(
+      opts.validator?.validateManualCrafting ?? (() => ({ canCraftManually: true }))
+    ),
+    validateRecipe: vi.fn(
+      opts.validator?.validateRecipe ?? (() => ({ canCraftManually: true, category: 'basic' }))
+    ),
+  };
+
+  vi.mocked(getService).mockImplementation((token: symbol | string) => {
+    if (token === 'TechnologyService') return techService;
+    if (token === 'ManualCraftingValidator') return validator;
+    return null;
+  });
+
+  return { techService, validator };
+};
+
+// ──────────────────── Test Suite ────────────────────
 describe('RecipeService', () => {
   let service: RecipeService;
 
@@ -32,305 +166,406 @@ describe('RecipeService', () => {
     service = new RecipeService();
   });
 
-  // ======== 初始化与索引构建 ========
+  // ════════════════════════════════════════════════════════
+  // 1. 初始化与索引构建
+  // ════════════════════════════════════════════════════════
   describe('initializeRecipes', () => {
-    it('should merge data.json recipes with custom recipes', () => {
-      const dataRecipes: Recipe[] = [makeRecipe({ id: 'iron-plate', out: { 'iron-plate': 1 } })];
-      service.initializeRecipes(dataRecipes);
-      // CUSTOM_RECIPES mocked as [], so only data recipe
+    it('merges data.json recipes with CUSTOM_RECIPES (mocked as [])', () => {
+      service.initializeRecipes([R.ironSmelting]);
       expect(service.getAllRecipes()).toHaveLength(1);
-      expect(service.getAllRecipes()[0].id).toBe('iron-plate');
     });
 
-    it('should build index for output items', () => {
-      const recipe = makeRecipe({
-        id: 'iron-gear-wheel',
-        out: { 'iron-gear-wheel': 1 },
-        in: { 'iron-plate': 2 },
-      });
-      service.initializeRecipes([recipe]);
+    it('replaces previous data when called again', () => {
+      service.initializeRecipes([R.ironSmelting]);
+      service.initializeRecipes([R.ironGear, R.copperCable]);
+      expect(service.getAllRecipes()).toHaveLength(2);
+    });
+
+    it('indexes output items so getRecipesThatProduce works immediately', () => {
+      service.initializeRecipes([R.ironGear]);
       expect(service.getRecipesThatProduce('iron-gear-wheel')).toHaveLength(1);
     });
 
-    it('should build index for input items without duplicates', () => {
-      const recipe = makeRecipe({
-        id: 'iron-gear-wheel',
-        out: { 'iron-gear-wheel': 1 },
-        in: { 'iron-plate': 2 },
-      });
-      service.initializeRecipes([recipe]);
-      const byItem = service.getRecipesByItem('iron-plate');
-      // Should appear once, not twice
-      expect(byItem.filter(r => r.id === 'iron-gear-wheel')).toHaveLength(1);
+    it('indexes input items without duplicating the same recipe', () => {
+      service.initializeRecipes([R.ironGear]); // in: {iron-plate:2}, out: {iron-gear-wheel:1}
+      const byInput = service.getRecipesByItem('iron-plate');
+      expect(byInput.filter(r => r.id === 'iron-gear-wheel')).toHaveLength(1);
+    });
+
+    it('handles empty recipe list gracefully', () => {
+      service.initializeRecipes([]);
+      expect(service.getAllRecipes()).toHaveLength(0);
     });
   });
 
-  // ======== 配方查询 ========
+  // ════════════════════════════════════════════════════════
+  // 2. 基础配方查询
+  // ════════════════════════════════════════════════════════
   describe('getRecipesThatProduce', () => {
-    it('should return recipes producing the given item', () => {
-      const recipes = [
-        makeRecipe({ id: 'r1', out: { copper: 1 } }),
-        makeRecipe({ id: 'r2', out: { iron: 1 } }),
-        makeRecipe({ id: 'r3', out: { copper: 2, byproduct: 1 } }),
-      ];
-      service.initializeRecipes(recipes);
-      const result = service.getRecipesThatProduce('copper');
-      expect(result).toHaveLength(2);
-      expect(result.map(r => r.id)).toContain('r1');
-      expect(result.map(r => r.id)).toContain('r3');
+    beforeEach(() => service.initializeRecipes(ALL_FIXTURES));
+
+    it('returns all recipes whose output contains the item', () => {
+      // iron-ore 由 mining 和 recycling 两个配方产出
+      const result = service.getRecipesThatProduce('iron-ore');
+      const ids = result.map(r => r.id);
+      expect(ids).toContain('iron-ore-mining');
+      expect(ids).toContain('iron-plate-recycling');
     });
 
-    it('should return empty array when no recipe produces the item', () => {
-      service.initializeRecipes([makeRecipe({ id: 'r1', out: { copper: 1 } })]);
-      expect(service.getRecipesThatProduce('gold')).toHaveLength(0);
+    it('also matches multi-output recipes producing the item as a side-product', () => {
+      const result = service.getRecipesThatProduce('light-oil');
+      expect(result.map(r => r.id)).toContain('basic-oil-processing');
+    });
+
+    it('returns empty array when no recipe produces the item', () => {
+      expect(service.getRecipesThatProduce('unknown-item')).toHaveLength(0);
     });
   });
 
   describe('getRecipesThatUse', () => {
-    it('should return recipes that consume the given item', () => {
-      const recipes = [
-        makeRecipe({ id: 'r1', in: { 'iron-plate': 2 }, out: { gear: 1 } }),
-        makeRecipe({ id: 'r2', in: { copper: 1 }, out: { wire: 2 } }),
-      ];
-      service.initializeRecipes(recipes);
-      expect(service.getRecipesThatUse('iron-plate')).toHaveLength(1);
-      expect(service.getRecipesThatUse('iron-plate')[0].id).toBe('r1');
+    beforeEach(() => service.initializeRecipes(ALL_FIXTURES));
+
+    it('returns all recipes that consume the item as input', () => {
+      const ids = service.getRecipesThatUse('iron-plate').map(r => r.id);
+      expect(ids).toContain('iron-gear-wheel');
+      expect(ids).toContain('electronic-circuit');
+      expect(ids).toContain('iron-plate-recycling');
+    });
+
+    it('returns empty array when no recipe consumes the item', () => {
+      expect(service.getRecipesThatUse('unknown-item')).toHaveLength(0);
+    });
+
+    it('does not include recipes where the item appears only in output', () => {
+      // iron-plate appears in ironSmelting output, but NOT in its input
+      const result = service.getRecipesThatUse('iron-ore');
+      const ids = result.map(r => r.id);
+      expect(ids).not.toContain('iron-ore-mining'); // mining has no inputs
+      expect(ids).toContain('iron-plate'); // smelting uses iron-ore as input
     });
   });
 
   describe('getRecipeById', () => {
-    it('should find recipe by id', () => {
-      const recipe = makeRecipe({ id: 'special-recipe' });
-      service.initializeRecipes([recipe]);
-      expect(service.getRecipeById('special-recipe')).toBeDefined();
-      expect(service.getRecipeById('nonexistent')).toBeUndefined();
+    beforeEach(() => service.initializeRecipes(ALL_FIXTURES));
+
+    it('returns the matching recipe when id exists', () => {
+      const result = service.getRecipeById('iron-gear-wheel');
+      expect(result).toBeDefined();
+      expect(result!.id).toBe('iron-gear-wheel');
+    });
+
+    it('returns undefined when id does not exist', () => {
+      expect(service.getRecipeById('nonexistent-recipe')).toBeUndefined();
     });
   });
 
+  describe('getRecipesByCategory', () => {
+    beforeEach(() => service.initializeRecipes(ALL_FIXTURES));
+
+    it('returns all recipes in the given category', () => {
+      const ids = service.getRecipesByCategory('intermediate-products').map(r => r.id);
+      expect(ids).toContain('iron-gear-wheel');
+      expect(ids).toContain('copper-cable');
+      expect(ids).not.toContain('iron-plate'); // smelting category
+    });
+
+    it('returns empty array for unknown category', () => {
+      expect(service.getRecipesByCategory('nonexistent-category')).toHaveLength(0);
+    });
+  });
+
+  // ════════════════════════════════════════════════════════
+  // 3. Flags 分类查询
+  // ════════════════════════════════════════════════════════
   describe('getMiningRecipes', () => {
-    it('should return only recipes with mining flag', () => {
-      const recipes = [
-        makeRecipe({ id: 'mine-iron', flags: ['mining'], out: { 'iron-ore': 1 } }),
-        makeRecipe({ id: 'smelt-iron', out: { 'iron-plate': 1 } }),
-      ];
-      service.initializeRecipes(recipes);
-      expect(service.getMiningRecipes()).toHaveLength(1);
-      expect(service.getMiningRecipes()[0].id).toBe('mine-iron');
+    beforeEach(() => service.initializeRecipes(ALL_FIXTURES));
+
+    it('returns only recipes flagged as mining', () => {
+      const result = service.getMiningRecipes();
+      expect(result.every(r => r.flags?.includes('mining'))).toBe(true);
+      expect(result.map(r => r.id)).toContain('iron-ore-mining');
+    });
+
+    it('filters by itemId when provided', () => {
+      const result = service.getMiningRecipes('iron-ore');
+      expect(result.every(r => r.out['iron-ore'] !== undefined)).toBe(true);
+    });
+
+    it('returns empty array when item has no mining recipe', () => {
+      expect(service.getMiningRecipes('iron-plate')).toHaveLength(0);
     });
   });
 
-  // ======== 效率计算 ========
+  describe('getAutomatedRecipes', () => {
+    beforeEach(() => service.initializeRecipes(ALL_FIXTURES));
+
+    it('returns recipes without the manual flag', () => {
+      const result = service.getAutomatedRecipes();
+      expect(result.every(r => !r.flags?.includes('manual'))).toBe(true);
+    });
+
+    it('includes smelting and assembly recipes', () => {
+      const ids = service.getAutomatedRecipes().map(r => r.id);
+      expect(ids).toContain('iron-plate');
+      expect(ids).toContain('iron-gear-wheel');
+    });
+
+    it('filters by itemId when provided', () => {
+      const result = service.getAutomatedRecipes('iron-plate');
+      expect(result.every(r => r.out['iron-plate'] !== undefined)).toBe(true);
+    });
+  });
+
+  describe('getRecyclingRecipes', () => {
+    beforeEach(() => service.initializeRecipes(ALL_FIXTURES));
+
+    it('returns only recipes flagged as recycling', () => {
+      const result = service.getRecyclingRecipes();
+      expect(result.every(r => r.flags?.includes('recycling'))).toBe(true);
+      expect(result.map(r => r.id)).toContain('iron-plate-recycling');
+    });
+
+    it('returns empty array when item has no recycling recipe', () => {
+      expect(service.getRecyclingRecipes('copper-cable')).toHaveLength(0);
+    });
+  });
+
+  // ════════════════════════════════════════════════════════
+  // 4. 搜索
+  // ════════════════════════════════════════════════════════
+  describe('searchRecipes', () => {
+    beforeEach(() => service.initializeRecipes(ALL_FIXTURES));
+
+    it('matches by recipe name (case-insensitive)', () => {
+      const ids = service.searchRecipes('iron').map(r => r.id);
+      expect(ids).toContain('iron-plate');
+      expect(ids).toContain('iron-gear-wheel');
+    });
+
+    it('matches by recipe id (case-insensitive)', () => {
+      expect(service.searchRecipes('COPPER').map(r => r.id)).toContain('copper-cable');
+    });
+
+    it('returns empty array when no match found', () => {
+      expect(service.searchRecipes('zzznonexistent')).toHaveLength(0);
+    });
+  });
+
+  // ════════════════════════════════════════════════════════
+  // 5. 效率计算
+  // ════════════════════════════════════════════════════════
   describe('getRecipeEfficiency', () => {
-    it('should compute output per second for specific item', () => {
-      const recipe = makeRecipe({ id: 'r1', time: 2, out: { copper: 4 } });
-      service.initializeRecipes([recipe]);
-      expect(service.getRecipeEfficiency(recipe, 'copper')).toBeCloseTo(2.0);
+    it('computes output-per-second for a specific item', () => {
+      // copper-cable: out={copper-cable:2}, time=0.5s → 4/s
+      expect(service.getRecipeEfficiency(R.copperCable, 'copper-cable')).toBeCloseTo(4.0);
     });
 
-    it('should return 0 for zero time recipes', () => {
-      const recipe = makeRecipe({ id: 'r1', time: 0, out: { copper: 4 } });
-      service.initializeRecipes([recipe]);
-      expect(service.getRecipeEfficiency(recipe, 'copper')).toBe(0);
+    it('returns 0 when recipe time is zero', () => {
+      const zeroTime = { ...R.ironGear, time: 0 };
+      expect(service.getRecipeEfficiency(zeroTime, 'iron-gear-wheel')).toBe(0);
     });
 
-    it('should return 0 when item not in recipe output', () => {
-      const recipe = makeRecipe({ id: 'r1', time: 2, out: { copper: 4 } });
-      service.initializeRecipes([recipe]);
-      expect(service.getRecipeEfficiency(recipe, 'iron')).toBe(0);
+    it('returns 0 when the queried item is not in recipe output', () => {
+      expect(service.getRecipeEfficiency(R.copperCable, 'iron-plate')).toBe(0);
+    });
+
+    it('sums all outputs when no itemId is specified', () => {
+      // basic-oil-processing: (45+30+25)/5 = 20/s total output
+      expect(service.getRecipeEfficiency(R.basicOilProcessing)).toBeCloseTo(20.0);
     });
   });
 
   describe('getMostEfficientRecipe', () => {
-    it('should pick recipe with highest output rate', () => {
-      const slow = makeRecipe({ id: 'slow', time: 4, out: { copper: 1 } }); // 0.25/s
-      const fast = makeRecipe({ id: 'fast', time: 1, out: { copper: 2 } }); // 2/s
+    it('picks the recipe with the highest output-per-second', () => {
+      const slow = { ...R.ironGear, id: 'slow', time: 4, out: { 'iron-gear-wheel': 1 } };
+      const fast = { ...R.ironGear, id: 'fast', time: 0.5, out: { 'iron-gear-wheel': 2 } };
       service.initializeRecipes([slow, fast]);
-      expect(service.getMostEfficientRecipe('copper')?.id).toBe('fast');
+      // slow: 0.25/s, fast: 4/s
+      expect(service.getMostEfficientRecipe('iron-gear-wheel')?.id).toBe('fast');
+    });
+
+    it('returns undefined when no recipe produces the item', () => {
+      service.initializeRecipes([R.ironSmelting]);
+      expect(service.getMostEfficientRecipe('unknown-item')).toBeUndefined();
+    });
+
+    it('returns the only recipe when there is exactly one', () => {
+      service.initializeRecipes([R.ironGear]);
+      expect(service.getMostEfficientRecipe('iron-gear-wheel')?.id).toBe('iron-gear-wheel');
     });
   });
 
-  // ======== 解锁检查（修复验证）========
-  describe('getAllManualCraftingRecipes - unlock check', () => {
-    it('should call isRecipeUnlocked (not isItemUnlocked) for filtering', () => {
-      const mockValidator = {
-        validateManualCrafting: vi.fn().mockReturnValue({ canCraftManually: true }),
-        validateRecipe: vi.fn().mockReturnValue({ canCraftManually: true }),
-      };
-      const mockTechService = {
-        isRecipeUnlocked: vi.fn().mockReturnValue(true),
-        isItemUnlocked: vi.fn().mockReturnValue(false), // Should NOT be called
-      };
-
-      vi.mocked(getService).mockImplementation((token: symbol | string) => {
-        if (token === 'ManualCraftingValidator') return mockValidator;
-        if (token === 'TechnologyService') return mockTechService;
-        return null;
+  // ════════════════════════════════════════════════════════
+  // 6. 手动制作解锁检查（修复验证：isItemUnlocked → isRecipeUnlocked）
+  // ════════════════════════════════════════════════════════
+  describe('getAllManualCraftingRecipes — unlock check (bug fix)', () => {
+    it('calls isRecipeUnlocked (not isItemUnlocked) for unlock filtering', () => {
+      const { techService } = setupMockDI({
+        tech: {
+          isRecipeUnlocked: () => true,
+          isItemUnlocked: vi.fn().mockReturnValue(false), // must NOT be called
+        },
       });
+      service.initializeRecipes([R.ironGear]);
 
-      const recipe = makeRecipe({
-        id: 'copper-cable',
-        out: { 'copper-cable': 2 },
-        in: { copper: 1 },
-      });
-      service.initializeRecipes([recipe]);
+      service.getAllManualCraftingRecipes('iron-gear-wheel');
 
-      service.getAllManualCraftingRecipes('copper-cable');
-
-      expect(mockTechService.isRecipeUnlocked).toHaveBeenCalledWith('copper-cable');
-      expect(mockTechService.isItemUnlocked).not.toHaveBeenCalled();
+      expect(techService.isRecipeUnlocked).toHaveBeenCalledWith('iron-gear-wheel');
+      expect(techService.isItemUnlocked).not.toHaveBeenCalled();
     });
 
-    it('should exclude recipes where isRecipeUnlocked returns false', () => {
-      const mockValidator = {
-        validateManualCrafting: vi.fn().mockReturnValue({ canCraftManually: true }),
-        validateRecipe: vi.fn().mockReturnValue({ canCraftManually: true }),
-      };
-      const mockTechService = {
-        isRecipeUnlocked: vi.fn().mockReturnValue(false),
-        isItemUnlocked: vi.fn(),
-      };
+    it('excludes recipes where isRecipeUnlocked returns false', () => {
+      setupMockDI({ tech: { isRecipeUnlocked: () => false } });
+      service.initializeRecipes([R.ironGear]);
 
-      vi.mocked(getService).mockImplementation((token: symbol | string) => {
-        if (token === 'ManualCraftingValidator') return mockValidator;
-        if (token === 'TechnologyService') return mockTechService;
-        return null;
+      expect(service.getAllManualCraftingRecipes('iron-gear-wheel')).toHaveLength(0);
+    });
+
+    it('includes recipes where isRecipeUnlocked returns true and validator approves', () => {
+      setupMockDI({ tech: { isRecipeUnlocked: () => true } });
+      service.initializeRecipes([R.ironGear]);
+
+      const result = service.getAllManualCraftingRecipes('iron-gear-wheel');
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('iron-gear-wheel');
+    });
+
+    it('returns empty array immediately when item cannot be crafted manually', () => {
+      setupMockDI({
+        validator: { validateManualCrafting: () => ({ canCraftManually: false }) },
       });
+      service.initializeRecipes([R.ironGear]);
 
-      const recipe = makeRecipe({
-        id: 'locked-recipe',
-        out: { 'locked-item': 1 },
-        in: { copper: 1 },
-      });
-      service.initializeRecipes([recipe]);
-
-      const result = service.getAllManualCraftingRecipes('locked-item');
-      expect(result).toHaveLength(0);
+      expect(service.getAllManualCraftingRecipes('iron-gear-wheel')).toHaveLength(0);
     });
   });
 
-  // ======== 循环依赖保护（修复验证）========
-  describe('calculateRecipeCost - cycle detection', () => {
-    it('should not infinite-loop on self-referencing recipes', () => {
-      // 配方 A 的输入包含 A 自身（极端循环情况）
-      const cycleRecipe = makeRecipe({ id: 'cyclic', in: { cyclic: 1 }, out: { cyclic: 2 } });
-      service.initializeRecipes([cycleRecipe]);
+  // ════════════════════════════════════════════════════════
+  // 7. 循环依赖保护（修复验证：calculateRecipeCost 无限递归）
+  // ════════════════════════════════════════════════════════
+  describe('calculateRecipeCost — cycle detection (bug fix)', () => {
+    it('does not throw on a self-referencing recipe (A produces A and needs A)', () => {
+      const cyclic = { ...R.ironGear, id: 'cyclic', in: { cyclic: 1 }, out: { cyclic: 2 } };
+      service.initializeRecipes([cyclic]);
 
-      // Should complete without stack overflow
-      expect(() => service.calculateRecipeCost(cycleRecipe, true)).not.toThrow();
+      expect(() => service.calculateRecipeCost(cyclic, true)).not.toThrow();
     });
 
-    it('should not infinite-loop on mutual dependency (A needs B, B needs A)', () => {
-      const recipeA = makeRecipe({ id: 'recipe-a', in: { 'item-b': 1 }, out: { 'item-a': 1 } });
-      const recipeB = makeRecipe({ id: 'recipe-b', in: { 'item-a': 1 }, out: { 'item-b': 1 } });
+    it('does not throw on mutual dependency (A needs B, B needs A)', () => {
+      const recipeA = { ...R.ironGear, id: 'a', in: { 'item-b': 1 }, out: { 'item-a': 1 } };
+      const recipeB = { ...R.ironGear, id: 'b', in: { 'item-a': 1 }, out: { 'item-b': 1 } };
       service.initializeRecipes([recipeA, recipeB]);
 
       expect(() => service.calculateRecipeCost(recipeA, true)).not.toThrow();
-      expect(() => service.calculateRecipeCost(recipeB, true)).not.toThrow();
     });
 
-    it('should correctly calculate costs for non-cyclic recipes', () => {
-      // iron-plate needs iron-ore (raw), gear needs 2 iron-plate
-      const ironOreRecipe = makeRecipe({
-        id: 'iron-plate',
-        in: { 'iron-ore': 1 },
-        out: { 'iron-plate': 1 },
-      });
-      const gearRecipe = makeRecipe({
-        id: 'gear',
-        in: { 'iron-plate': 2 },
-        out: { 'iron-gear-wheel': 1 },
-      });
-      service.initializeRecipes([ironOreRecipe, gearRecipe]);
+    it('correctly calculates directCost and rawMaterials for linear chains', () => {
+      // gear → 2 iron-plate; iron-plate → 1 iron-ore (raw material, no recipe)
+      service.initializeRecipes([R.ironSmelting, R.ironGear]);
 
-      const cost = service.calculateRecipeCost(gearRecipe, true);
-      // Direct cost: 2 iron-plate
+      const cost = service.calculateRecipeCost(R.ironGear, true);
+
       expect(cost.directCost.get('iron-plate')).toBe(2);
-      // Raw materials: 2 iron-ore (since each iron-plate needs 1 iron-ore)
       expect(cost.rawMaterials.get('iron-ore')).toBe(2);
+    });
+
+    it('does not populate rawMaterials when includeRawMaterials is false', () => {
+      service.initializeRecipes([R.ironSmelting, R.ironGear]);
+
+      const cost = service.calculateRecipeCost(R.ironGear, false);
+
+      expect(cost.directCost.get('iron-plate')).toBe(2);
+      expect(cost.rawMaterials.size).toBe(0);
+    });
+
+    it('returns empty maps for a recipe with no inputs', () => {
+      service.initializeRecipes([R.ironOreMining]);
+
+      const cost = service.calculateRecipeCost(R.ironOreMining, true);
+
+      expect(cost.directCost.size).toBe(0);
+      expect(cost.totalCost.size).toBe(0);
+      expect(cost.rawMaterials.size).toBe(0);
     });
   });
 
-  // ======== 科技解锁联动（新方法验证）========
+  // ════════════════════════════════════════════════════════
+  // 8. 科技解锁联动（UI 层方法）
+  // ════════════════════════════════════════════════════════
   describe('getUnlockedRecipesThatProduce', () => {
-    const setupWithTechService = (unlockedRecipeIds: string[]) => {
-      const mockTechService = {
-        isRecipeUnlocked: vi.fn((id: string) => unlockedRecipeIds.includes(id)),
-      };
-      vi.mocked(getService).mockImplementation((token: symbol | string) => {
-        if (token === 'TechnologyService') return mockTechService;
-        return null;
-      });
-      return mockTechService;
-    };
+    beforeEach(() => service.initializeRecipes(ALL_FIXTURES));
 
-    it('should return only unlocked recipes', () => {
-      const recipes = [
-        makeRecipe({ id: 'r-locked', out: { copper: 1 } }),
-        makeRecipe({ id: 'r-unlocked', out: { copper: 1 } }),
-      ];
-      service.initializeRecipes(recipes);
-      setupWithTechService(['r-unlocked']);
+    it('returns only recipes that isRecipeUnlocked approves', () => {
+      setupMockDI({ tech: { isRecipeUnlocked: id => id === 'iron-plate' } });
 
-      const result = service.getUnlockedRecipesThatProduce('copper');
+      const result = service.getUnlockedRecipesThatProduce('iron-plate');
       expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('r-unlocked');
+      expect(result[0].id).toBe('iron-plate');
     });
 
-    it('should return empty array when all recipes are locked', () => {
-      const recipe = makeRecipe({ id: 'locked', out: { copper: 1 } });
-      service.initializeRecipes([recipe]);
-      setupWithTechService([]);
+    it('returns empty array when all recipes are locked', () => {
+      setupMockDI({ tech: { isRecipeUnlocked: () => false } });
 
-      expect(service.getUnlockedRecipesThatProduce('copper')).toHaveLength(0);
+      expect(service.getUnlockedRecipesThatProduce('iron-ore')).toHaveLength(0);
     });
 
-    it('should return all recipes when all are unlocked', () => {
-      const recipes = [
-        makeRecipe({ id: 'r1', out: { copper: 1 } }),
-        makeRecipe({ id: 'r2', out: { copper: 2 } }),
-      ];
-      service.initializeRecipes(recipes);
-      setupWithTechService(['r1', 'r2']);
+    it('returns all producing recipes when all are unlocked', () => {
+      setupMockDI({ tech: { isRecipeUnlocked: () => true } });
 
-      expect(service.getUnlockedRecipesThatProduce('copper')).toHaveLength(2);
+      // iron-ore is produced by: iron-ore-mining AND iron-plate-recycling
+      expect(service.getUnlockedRecipesThatProduce('iron-ore').length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('filters using recipe id (not item id)', () => {
+      const { techService } = setupMockDI({ tech: { isRecipeUnlocked: () => true } });
+      service.getUnlockedRecipesThatProduce('iron-plate');
+
+      // Verifies isRecipeUnlocked is called with recipe id 'iron-plate'
+      expect(techService.isRecipeUnlocked).toHaveBeenCalledWith('iron-plate');
     });
   });
 
   describe('getUnlockedMostEfficientRecipe', () => {
-    const setupWithTechService = (unlockedRecipeIds: string[]) => {
-      vi.mocked(getService).mockImplementation((token: symbol | string) => {
-        if (token === 'TechnologyService') {
-          return { isRecipeUnlocked: (id: string) => unlockedRecipeIds.includes(id) };
-        }
-        return null;
-      });
-    };
+    it('returns undefined when all recipes are locked', () => {
+      service.initializeRecipes([R.ironGear]);
+      setupMockDI({ tech: { isRecipeUnlocked: () => false } });
 
-    it('should return undefined when no recipes are unlocked', () => {
-      const recipe = makeRecipe({ id: 'r1', out: { copper: 1 } });
-      service.initializeRecipes([recipe]);
-      setupWithTechService([]);
-
-      expect(service.getUnlockedMostEfficientRecipe('copper')).toBeUndefined();
+      expect(service.getUnlockedMostEfficientRecipe('iron-gear-wheel')).toBeUndefined();
     });
 
-    it('should return most efficient among unlocked recipes only', () => {
-      const slow = makeRecipe({ id: 'slow', time: 4, out: { copper: 1 } }); // 0.25/s, unlocked
-      const fast = makeRecipe({ id: 'fast', time: 1, out: { copper: 2 } }); // 2/s, locked
-      service.initializeRecipes([slow, fast]);
-      // Only slow is unlocked; fast is locked
-      setupWithTechService(['slow']);
+    it('ignores locked recipes even when they are faster', () => {
+      const lockedFast = {
+        ...R.ironGear,
+        id: 'locked-fast',
+        time: 0.1,
+        out: { 'iron-gear-wheel': 10 },
+      };
+      const unlockedSlow = {
+        ...R.ironGear,
+        id: 'unlocked-slow',
+        time: 4,
+        out: { 'iron-gear-wheel': 1 },
+      };
+      service.initializeRecipes([lockedFast, unlockedSlow]);
+      setupMockDI({ tech: { isRecipeUnlocked: id => id === 'unlocked-slow' } });
 
-      expect(service.getUnlockedMostEfficientRecipe('copper')?.id).toBe('slow');
+      expect(service.getUnlockedMostEfficientRecipe('iron-gear-wheel')?.id).toBe('unlocked-slow');
     });
 
-    it('should pick fastest among multiple unlocked recipes', () => {
-      const r1 = makeRecipe({ id: 'r1', time: 2, out: { copper: 1 } }); // 0.5/s
-      const r2 = makeRecipe({ id: 'r2', time: 1, out: { copper: 3 } }); // 3/s
+    it('picks the highest-efficiency recipe among multiple unlocked ones', () => {
+      const r1 = { ...R.copperCable, id: 'r1', time: 2, out: { 'copper-cable': 1 } }; // 0.5/s
+      const r2 = { ...R.copperCable, id: 'r2', time: 1, out: { 'copper-cable': 3 } }; // 3/s
       service.initializeRecipes([r1, r2]);
-      setupWithTechService(['r1', 'r2']);
+      setupMockDI({ tech: { isRecipeUnlocked: () => true } });
 
-      expect(service.getUnlockedMostEfficientRecipe('copper')?.id).toBe('r2');
+      expect(service.getUnlockedMostEfficientRecipe('copper-cable')?.id).toBe('r2');
+    });
+
+    it('returns undefined when no recipe exists for the item at all', () => {
+      service.initializeRecipes([]);
+      setupMockDI({ tech: { isRecipeUnlocked: () => true } });
+
+      expect(service.getUnlockedMostEfficientRecipe('unknown-item')).toBeUndefined();
     });
   });
 });
