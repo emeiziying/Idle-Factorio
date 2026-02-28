@@ -15,13 +15,6 @@ import { createGameMetaSlice } from '@/store/slices/gameMetaStore';
 import { createGameLoopSlice } from '@/store/slices/gameLoopStore';
 import { createUIStateSlice } from '@/store/slices/uiStateStore';
 
-// 页面卸载时立即保存
-if (typeof window !== 'undefined') {
-  window.addEventListener('beforeunload', () => {
-    // 页面卸载时会自动触发persist保存
-  });
-}
-
 // 创建复合 store
 const useGameStore = create<GameState>()(
   subscribeWithSelector((set, get, api) => ({
@@ -37,19 +30,9 @@ const useGameStore = create<GameState>()(
   }))
 );
 
-// 初始化加载存档
-const initializeStore = async () => {
-  try {
-    await useGameStore.getState().loadGameData();
-  } catch (error) {
-    console.error('[Init] 存档初始化失败:', error);
-  }
-};
-
-// 立即执行初始化
-initializeStore();
-
-// 注意：原来的自动存档定时器逻辑已移至GameLoopService管理
+// 注意：存档加载（loadGameData）由 DIServiceInitializer.initializeApplication() 在 DI 容器
+// 初始化完成后统一触发，避免 GameStorageService 在 DataService 就绪前被调用的竞态条件。
+// 注意：自动存档定时器逻辑已移至GameLoopService管理
 // 通过GameLoopTaskFactory.createAutoSaveTask()实现
 
 export default useGameStore;

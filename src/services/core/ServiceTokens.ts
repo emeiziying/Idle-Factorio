@@ -25,6 +25,9 @@ export const SERVICE_TOKENS = {
   RESEARCH_QUEUE_SERVICE: 'ResearchQueueService',
   TECH_PROGRESS_TRACKER: 'TechProgressTracker',
 
+  // 存档服务
+  GAME_STORAGE_SERVICE: 'GameStorageService',
+
   // 游戏循环服务
   GAME_LOOP_SERVICE: 'GameLoopService',
   GAME_LOOP_TASK_FACTORY: 'GameLoopTaskFactory',

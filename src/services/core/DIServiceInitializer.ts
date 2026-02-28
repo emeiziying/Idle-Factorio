@@ -31,6 +31,10 @@ import { TechUnlockService } from '@/services/technology/TechUnlockService';
 // 游戏循环服务
 import { GameLoopService } from '@/services/game/GameLoopService';
 import { GameLoopTaskFactory } from '@/services/game/GameLoopTaskFactory';
+import type { GameStoreAdapter } from '@/services/game/GameLoopTaskFactory';
+
+// 存档服务
+import { GameStorageService } from '@/services/storage/GameStorageService';
 
 import useGameStore from '@/store/gameStore';
 
@@ -136,6 +140,12 @@ export class DIServiceInitializer {
     // 6. 注册游戏循环服务
     container.register(SERVICE_TOKENS.GAME_LOOP_SERVICE, GameLoopService);
     container.register(SERVICE_TOKENS.GAME_LOOP_TASK_FACTORY, GameLoopTaskFactory);
+
+    // 7. 注册存档服务（依赖 DataService，通过 DI 注入避免自行 new DataService）
+    container.registerFactory(SERVICE_TOKENS.GAME_STORAGE_SERVICE, () => {
+      const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+      return new GameStorageService(dataService);
+    });
   }
 
   /**
@@ -197,10 +207,18 @@ export class DIServiceInitializer {
 
   /**
    * 初始化应用层
+   *
+   * 注意：此方法是项目中唯一被允许直接调用 useGameStore.getState() 的 Service 层代码。
+   * 它作为 DI 容器与 Zustand Store 之间的桥接层，通过 StoreAccessor/回调模式
+   * 将所有 Store 访问封装后注入到 Service 层，避免 Service 层直接依赖 Store。
    */
   private static async initializeApplication(): Promise<void> {
+    // 0. 在 DI 容器初始化完成后加载存档数据（保证 GameStorageService 能正确访问 DataService）
+    //    必须在 initializeTechnologyService 之前执行，确保 unlockedTechs 等状态从存档恢复
+    const { loadGameData, initializeTechnologyService, startGameLoop } = useGameStore.getState();
+    await loadGameData();
+
     // 1. 同步科技数据到游戏状态存储
-    const { initializeTechnologyService, startGameLoop } = useGameStore.getState();
     await initializeTechnologyService();
 
     // 2. 启动游戏循环系统前，校正从存档恢复的设施燃料功率（可能因数据未加载而使用了占位默认值）
@@ -224,6 +242,27 @@ export class DIServiceInitializer {
         console.warn('[ServiceInit] 校正设施燃料功率失败（可忽略）:', e);
       }
     }
+
+    // 2.5 注入 Store 访问适配器到 GameLoopTaskFactory（解耦 Service→Store 直接依赖）
+    //     以及将设施数据提供者注入到 ResearchService
+    const researchService = container.resolve<ResearchService>(SERVICE_TOKENS.RESEARCH_SERVICE);
+    researchService.setFacilitiesProvider(() => useGameStore.getState().facilities);
+
+    const storeAdapter: GameStoreAdapter = {
+      getCraftingQueueLength: () => useGameStore.getState().craftingQueue.length,
+      hasFacilitiesWithStatus: (statuses: string[]) =>
+        useGameStore.getState().facilities.some(f => statuses.includes(f.status)),
+      hasActiveResearch: () => useGameStore.getState().researchState !== null,
+      getFacilities: () => useGameStore.getState().facilities,
+      getInventoryItem: itemId => useGameStore.getState().getInventoryItem(itemId),
+      updateFacility: (id, updates) => useGameStore.getState().updateFacility(id, updates),
+      batchUpdateInventory: updates => useGameStore.getState().batchUpdateInventory(updates),
+      updateFuelConsumption: dt => useGameStore.getState().updateFuelConsumption(dt),
+      updateResearchProgress: dt => useGameStore.getState().updateResearchProgress(dt),
+      updateGameLoopState: () => useGameStore.getState()._updateGameLoopState?.(),
+      saveGame: () => useGameStore.getState().saveGame(),
+    };
+    GameLoopTaskFactory.setAdapter(storeAdapter);
 
     // 3. 启动游戏循环系统
     const gameLoopService = container.resolve<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);

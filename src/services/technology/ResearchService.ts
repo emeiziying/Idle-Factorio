@@ -18,8 +18,10 @@ import {
   type ResearchProgressEvent,
   type ResearchCompletedEvent,
 } from './events';
-import useGameStore from '@/store/gameStore';
 import type { ResearchCalculation } from '@/services/technology/types';
+
+/** 设施数据提供者回调类型 — 由 DIServiceInitializer 在 initializeApplication 阶段注入 */
+type FacilitiesProvider = () => FacilityInstance[];
 
 export class ResearchService {
   // 当前研究状态
@@ -29,12 +31,24 @@ export class ResearchService {
   private inventoryOps: InventoryOperations | null = null;
   private eventEmitter: TechEventEmitter;
 
+  // 设施数据提供者（由 DIServiceInitializer 注入，避免 Service 直接依赖 Store）
+  private facilitiesProvider: FacilitiesProvider;
+
   // 研究配置
   private readonly BASE_LAB_SPEED = 1.0;
   private readonly LAB_EFFICIENCY_MULTIPLIER = 0.5; // 每个额外研究室增加50%速度
 
   constructor(eventEmitter: TechEventEmitter) {
     this.eventEmitter = eventEmitter;
+    // 默认返回空数组，实际由 DIServiceInitializer.initializeApplication() 注入
+    this.facilitiesProvider = () => [];
+  }
+
+  /**
+   * 注入设施数据提供者（由 DIServiceInitializer 在 DI 完成后调用）
+   */
+  setFacilitiesProvider(provider: FacilitiesProvider): void {
+    this.facilitiesProvider = provider;
   }
 
   /**
@@ -302,9 +316,8 @@ export class ResearchService {
    * 获取研究室统计
    */
   private getLabStatistics(): { count: number; avgEfficiency: number } {
-    // 直接从游戏状态获取设施信息
-    const gameState = useGameStore.getState();
-    const facilities = gameState.facilities || [];
+    // 通过注入的设施提供者获取数据，避免直接依赖 Zustand Store
+    const facilities = this.facilitiesProvider();
     const labs = facilities.filter(
       f => f.facilityId === 'lab' && f.status === FacilityStatus.RUNNING
     );

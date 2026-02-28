@@ -72,8 +72,7 @@ interface PendingSave {
 }
 
 export class GameStorageService {
-  private static instance: GameStorageService;
-  private dataService: DataService | null = null;
+  private dataService: DataService;
 
   // 防抖相关
   private pendingSave: PendingSave | null = null;
@@ -82,8 +81,8 @@ export class GameStorageService {
   private readonly storageKey = 'factorio-game-storage';
   private pendingState: Partial<GameState> | null = null; // 保存等待写入的快照
 
-  private constructor() {
-    // 延迟初始化 dataService，避免在测试收集阶段构造依赖
+  constructor(dataService: DataService) {
+    this.dataService = dataService;
 
     // 页面卸载时立即保存
     if (typeof window !== 'undefined') {
@@ -91,21 +90,6 @@ export class GameStorageService {
         this.flushPendingSave();
       });
     }
-  }
-
-  static getInstance(): GameStorageService {
-    if (!GameStorageService.instance) {
-      GameStorageService.instance = new GameStorageService();
-    }
-    return GameStorageService.instance;
-  }
-
-  // 延迟获取 DataService 实例
-  private getDataService(): DataService {
-    if (!this.dataService) {
-      this.dataService = new DataService();
-    }
-    return this.dataService;
   }
 
   /**
@@ -347,7 +331,7 @@ export class GameStorageService {
       restored.facilities = optimized.facilities.map(facility => {
         const fuelItems = Object.entries(facility.fuel);
         const slots = fuelItems.map(([itemId, energy]) => {
-          const fuelValue = this.getDataService().getItem(itemId)?.fuel?.value || 0;
+          const fuelValue = this.dataService.getItem(itemId)?.fuel?.value || 0;
           // 存档中记录的是“当前这块燃料的剩余能量”，不是总能量
           // 因此恢复时最多只应还原为1个单位的燃料，并且剩余能量不应超过单个燃料的能量值
           const clampedEnergy = Math.max(0, Math.min(energy as number, fuelValue));
@@ -404,7 +388,7 @@ export class GameStorageService {
       });
     }
 
-    return restored;
+    return this.ensureMapSetTypes(restored);
   }
 
   /**
@@ -413,7 +397,7 @@ export class GameStorageService {
   private restoreFromLegacy(data: unknown): Partial<GameState> {
     // 修复Map和Set序列化问题
     const legacyData = data as Record<string, unknown>;
-    return {
+    const restored: Partial<GameState> = {
       ...legacyData,
       inventory: this.ensureInventoryMap(legacyData.inventory),
       favoriteRecipes: new Set((legacyData.favoriteRecipes as string[]) || []),
@@ -422,6 +406,7 @@ export class GameStorageService {
       builtEntityCounts: this.ensureMap(legacyData.builtEntityCounts),
       minedEntityCounts: this.ensureMap(legacyData.minedEntityCounts),
     };
+    return this.ensureMapSetTypes(restored);
   }
 
   /**
@@ -492,12 +477,12 @@ export class GameStorageService {
   }
 
   private getItemStackSize(itemId: string): number {
-    const item = this.getDataService().getItem(itemId);
+    const item = this.dataService.getItem(itemId);
     return item?.stack || 50;
   }
 
   private getFacilityMaxEnergy(facilityType: string): number {
-    const item = this.getDataService().getItem(facilityType);
+    const item = this.dataService.getItem(facilityType);
     if (item?.machine?.usage) {
       // usage 字段就是最大能量消耗，通常也等于最大能量容量
       return item.machine.usage;
@@ -506,12 +491,43 @@ export class GameStorageService {
   }
 
   private getFacilityConsumptionRate(facilityType: string): number {
-    const item = this.getDataService().getItem(facilityType);
+    const item = this.dataService.getItem(facilityType);
     if (item?.machine?.usage) {
       // 燃料消耗率应该保持 kW 单位，与 FuelService.initializeFuelBuffer 保持一致
       return item.machine.usage;
     }
     return 100; // 默认值 (kW)
+  }
+
+  /**
+   * 确保反序列化后的状态中 Map/Set 类型正确（防止 JSON.parse 将其还原为普通对象）
+   */
+  private ensureMapSetTypes(state: Partial<GameState>): Partial<GameState> {
+    return {
+      ...state,
+      inventory:
+        state.inventory instanceof Map ? state.inventory : this.ensureInventoryMap(state.inventory),
+      favoriteRecipes:
+        state.favoriteRecipes instanceof Set
+          ? state.favoriteRecipes
+          : new Set(state.favoriteRecipes as unknown as Iterable<string>),
+      unlockedTechs:
+        state.unlockedTechs instanceof Set
+          ? state.unlockedTechs
+          : new Set(state.unlockedTechs as unknown as Iterable<string>),
+      craftedItemCounts:
+        state.craftedItemCounts instanceof Map
+          ? state.craftedItemCounts
+          : this.ensureMap(state.craftedItemCounts),
+      builtEntityCounts:
+        state.builtEntityCounts instanceof Map
+          ? state.builtEntityCounts
+          : this.ensureMap(state.builtEntityCounts),
+      minedEntityCounts:
+        state.minedEntityCounts instanceof Map
+          ? state.minedEntityCounts
+          : this.ensureMap(state.minedEntityCounts),
+    };
   }
 
   private ensureInventoryMap(inventory: unknown): Map<string, InventoryItem> {
@@ -526,5 +542,3 @@ export class GameStorageService {
     return new Map();
   }
 }
-
-export const gameStorageService = GameStorageService.getInstance();

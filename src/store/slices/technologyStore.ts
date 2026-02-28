@@ -213,7 +213,6 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
     if (!(unlockedTechs instanceof Set)) {
       const safeUnlockedTechs = ensureUnlockedTechsSet(unlockedTechs);
       set(() => ({ unlockedTechs: safeUnlockedTechs }));
-      console.log('Repaired unlockedTechs state');
     }
   },
 
@@ -337,17 +336,11 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
         }
 
         if (shouldUnlock) {
-          // 解锁科技
-          set(state => ({
-            unlockedTechs: new Set([...state.unlockedTechs, recipe.id]),
-          }));
-
-          // DataService 现在直接使用 TechnologyService，无需清理缓存
-
-          // Research unlocked by trigger
-
-          // 可以在这里添加通知系统
-          // TODO: 添加科技解锁通知
+          // 通过 completeResearch action 统一同步：
+          // 1. TechUnlockService.unlockTechnology(techId)（Service 层权威来源）
+          // 2. Store 的 unlockedTechs（响应式 UI 数据源）
+          // 避免两处状态独立维护导致不一致
+          get().completeResearch(recipe.id);
         }
       }
     } catch (error) {

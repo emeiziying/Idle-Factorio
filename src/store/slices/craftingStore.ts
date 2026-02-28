@@ -6,6 +6,7 @@ import type { GameLoopService } from '@/services/game/GameLoopService';
 import type { CraftingSlice, SliceCreator } from '@/store/types';
 import type { CraftingChain, CraftingTask } from '@/types/index';
 import { GameLoopTaskType } from '@/types/gameLoop';
+import { info as logInfo, warn as logWarn } from '@/utils/logger';
 
 export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
   // 初始状态
@@ -38,7 +39,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
         const gameLoopService = getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
         gameLoopService.enableTask(GameLoopTaskType.CRAFTING);
       } catch (error) {
-        console.warn('[制作队列] 无法启用制作任务:', error);
+        logWarn('[制作队列] 无法启用制作任务:', error);
       }
     }
 
@@ -83,7 +84,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
         const gameLoopService = getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
         gameLoopService.enableTask(GameLoopTaskType.CRAFTING);
       } catch (error) {
-        console.warn('[制作队列] 无法启用制作任务:', error);
+        logWarn('[制作队列] 无法启用制作任务:', error);
       }
     }
 
@@ -104,7 +105,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
 
           if (isTaskCompleted) {
             // 任务完成，移除这个任务；若链中已无剩余任务则同时清理链记录
-            console.log(`[链式任务] 移除已完成任务: ${taskId}`);
+            logInfo(`[链式任务] 移除已完成任务: ${taskId}`);
             set(state => {
               const newQueue = state.craftingQueue.filter(t => t.id !== taskId);
               const hasRemainingTasks = newQueue.some(t => t.chainId === chain.id);
@@ -123,7 +124,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
                 );
                 gameLoopService.disableTask(GameLoopTaskType.CRAFTING);
               } catch (error) {
-                console.warn('[制作队列] 无法禁用制作任务:', error);
+                logWarn('[制作队列] 无法禁用制作任务:', error);
               }
             }
             return;
@@ -136,7 +137,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
               }
             }
 
-            console.log(`[链式任务] 取消整个链: ${chain.name}`);
+            logInfo(`[链式任务] 取消整个链: ${chain.name}`);
             // 移除整个链
             set(state => ({
               craftingQueue: state.craftingQueue.filter(task => task.chainId !== chain.id),
@@ -150,7 +151,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
                 );
                 gameLoopService.disableTask(GameLoopTaskType.CRAFTING);
               } catch (error) {
-                console.warn('[制作队列] 无法禁用制作任务:', error);
+                logWarn('[制作队列] 无法禁用制作任务:', error);
               }
             }
             return;
@@ -173,7 +174,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
           const gameLoopService = getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
           gameLoopService.disableTask(GameLoopTaskType.CRAFTING);
         } catch (error) {
-          console.warn('[制作队列] 无法禁用制作任务:', error);
+          logWarn('[制作队列] 无法禁用制作任务:', error);
         }
       }
     }
@@ -204,7 +205,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
 
     // 如果是链式任务的中间产物，不添加到库存
     if (task.isIntermediateProduct && task.chainId) {
-      console.log(`中间产物完成: ${task.itemId} x${task.quantity} (不添加到库存)`);
+      logInfo(`[链式任务] 中间产物完成: ${task.itemId} x${task.quantity} (不添加到库存)`);
 
       // 检查链中是否有依赖于此任务的任务，如果有则可以开始执行
       const chain = state.craftingChains.find(c => c.id === task.chainId);
@@ -224,13 +225,6 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
 
         // 检查是否是链的最后一个任务
         const isLastTask = chain.tasks[chain.tasks.length - 1].id === taskId;
-        console.log(
-          `[链式任务] 任务完成: ${task.itemId} x${task.quantity}, chainId: ${task.chainId}, taskId: ${taskId}`
-        );
-        console.log(
-          `[链式任务] 链中最后任务ID: ${chain.tasks[chain.tasks.length - 1].id}, 当前任务ID: ${taskId}, 是否最后任务: ${isLastTask}`
-        );
-        console.log(`[链式任务] 是否中间产物: ${task.isIntermediateProduct}`);
 
         if (isLastTask) {
           // 最后一个任务完成，根据配方将所有产出物（含副产物）加入库存
@@ -248,7 +242,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
             get().updateInventory(task.itemId, task.quantity);
           }
 
-          console.log(
+          logInfo(
             `[链式任务] 链式任务完成: ${chain.name}, 最终产物: ${task.itemId} x${task.quantity} 已添加到库存`
           );
 
@@ -269,9 +263,6 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
         // 遍历配方所有产出，包括副产物
         for (const [outputItemId, outputPerCraft] of Object.entries(recipe.out)) {
           const actualOutput = task.quantity * (outputPerCraft as number);
-          console.log(
-            `[制作完成] ${outputItemId}: 制作${task.quantity}次，每次产出${outputPerCraft}个，总产出${actualOutput}个，使用配方: ${recipe.id}`
-          );
           get().updateInventory(outputItemId, actualOutput);
         }
       } else {

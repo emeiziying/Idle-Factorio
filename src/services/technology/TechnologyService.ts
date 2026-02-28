@@ -66,7 +66,15 @@ export class TechnologyService {
     // 使用注入的依赖或创建新实例
     this.eventEmitter = eventEmitter || new TechEventEmitter();
     this.treeService = treeService || new TechTreeService();
-    this.unlockService = unlockService || (null as unknown as TechUnlockService);
+
+    if (!unlockService) {
+      throw new Error(
+        '[TechnologyService] TechUnlockService is required. ' +
+          'Ensure it is registered and resolved via the DI container before constructing TechnologyService.'
+      );
+    }
+    this.unlockService = unlockService;
+
     this.researchService = researchService || new ResearchService(this.eventEmitter);
     this.queueService = queueService || new ResearchQueueService(this.eventEmitter);
     this.progressTracker = progressTracker || new TechProgressTracker();

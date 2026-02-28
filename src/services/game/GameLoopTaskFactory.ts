@@ -2,11 +2,40 @@
 import { getService } from '@/services/core/DIServiceInitializer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type { RecipeService } from '@/services/crafting/RecipeService';
-import useGameStore from '@/store/gameStore';
 import type { FacilityInstance } from '@/types/facilities';
+import type { InventoryItem } from '@/types/index';
 import type { GameLoopTask } from '@/types/gameLoop';
 import { GameLoopTaskType } from '@/types/gameLoop';
 import CraftingEngine from '@/utils/craftingEngine';
+import { info as logInfo, error as logError } from '@/utils/logger';
+
+/**
+ * Store 访问适配器接口
+ * 将 GameLoopTaskFactory（Service 层）对 Zustand Store 的直接依赖转换为接口依赖，
+ * 由 DIServiceInitializer.initializeApplication() 在 DI 完成后统一注入。
+ * 这是项目中唯一被允许的 Service 层访问 Store 的方式。
+ */
+export interface GameStoreAdapter {
+  // 用于 shouldRun 检查
+  getCraftingQueueLength: () => number;
+  hasFacilitiesWithStatus: (statuses: string[]) => boolean;
+  hasActiveResearch: () => boolean;
+
+  // 用于设施任务执行
+  getFacilities: () => FacilityInstance[];
+  getInventoryItem: (itemId: string) => InventoryItem;
+  updateFacility: (id: string, updates: Partial<FacilityInstance>) => void;
+  batchUpdateInventory: (updates: Array<{ itemId: string; amount: number }>) => void;
+
+  // 用于燃料/研究/统计/存档任务
+  updateFuelConsumption: (deltaTime: number) => void;
+  updateResearchProgress: (deltaTime: number) => void;
+  updateGameLoopState?: () => void;
+  saveGame: () => void;
+}
+
+// 模块级适配器（由 DIServiceInitializer.setAdapter() 注入，解耦 Service→Store 直接引用）
+let _adapter: GameStoreAdapter | null = null;
 
 // 任务配置接口
 interface TaskConfig {
@@ -15,7 +44,7 @@ interface TaskConfig {
   priority: number;
   baseInterval: number; // 基础更新间隔
   enabledByDefault: boolean;
-  shouldRun?: () => boolean; // 条件检查函数
+  shouldRun?: () => boolean; // 条件检查函数（通过 _adapter 访问 Store）
 }
 
 // 任务配置表
@@ -27,9 +56,7 @@ const TASK_CONFIGS: Record<string, TaskConfig> = {
     baseInterval: 100, // 100ms
     enabledByDefault: false,
     shouldRun: () => {
-      const store = useGameStore.getState();
-      // craftingQueue 中的所有任务都是手动制作任务
-      return store.craftingQueue.length > 0;
+      return _adapter ? _adapter.getCraftingQueueLength() > 0 : false;
     },
   },
   [GameLoopTaskType.FACILITIES]: {
@@ -39,11 +66,9 @@ const TASK_CONFIGS: Record<string, TaskConfig> = {
     baseInterval: 1000, // 1秒
     enabledByDefault: false,
     shouldRun: () => {
-      const store = useGameStore.getState();
-      // 除 running 外，no_resource/output_full 设施也需要周期性恢复检查
-      return store.facilities.some(
-        f => f.status === 'running' || f.status === 'no_resource' || f.status === 'output_full'
-      );
+      return _adapter
+        ? _adapter.hasFacilitiesWithStatus(['running', 'no_resource', 'output_full'])
+        : false;
     },
   },
   [GameLoopTaskType.FUEL_CONSUMPTION]: {
@@ -60,8 +85,7 @@ const TASK_CONFIGS: Record<string, TaskConfig> = {
     baseInterval: 1000,
     enabledByDefault: false,
     shouldRun: () => {
-      const store = useGameStore.getState();
-      return store.researchState !== null;
+      return _adapter ? _adapter.hasActiveResearch() : false;
     },
   },
   [GameLoopTaskType.STATISTICS]: {
@@ -88,6 +112,24 @@ const TASK_CONFIGS: Record<string, TaskConfig> = {
 };
 
 export class GameLoopTaskFactory {
+  /**
+   * 注入 Store 访问适配器（由 DIServiceInitializer 在 DI 完成后调用）
+   * 将 Service 层对 Zustand Store 的直接依赖转换为接口依赖。
+   */
+  static setAdapter(adapter: GameStoreAdapter): void {
+    _adapter = adapter;
+  }
+
+  /** 获取适配器（内部使用，适配器不存在时抛出明确错误） */
+  private static getAdapter(): GameStoreAdapter {
+    if (!_adapter) {
+      throw new Error(
+        '[GameLoopTaskFactory] Store adapter not set. Call setAdapter() before creating tasks.'
+      );
+    }
+    return _adapter;
+  }
+
   // 创建任务的通用方法
   private static createTask(
     config: TaskConfig,
@@ -117,7 +159,7 @@ export class GameLoopTaskFactory {
       try {
         CraftingEngine.updateCraftingQueue();
       } catch (error) {
-        console.error('制作系统更新失败:', error);
+        logError('制作系统更新失败:', error);
       }
     });
   }
@@ -132,8 +174,13 @@ export class GameLoopTaskFactory {
         return;
       }
 
-      const store = useGameStore.getState();
-      const { facilities, updateFacility, batchUpdateInventory, getInventoryItem } = store;
+      const adapter = GameLoopTaskFactory.getAdapter();
+      const { facilities, updateFacility, batchUpdateInventory, getInventoryItem } = {
+        facilities: adapter.getFacilities(),
+        updateFacility: adapter.updateFacility,
+        batchUpdateInventory: adapter.batchUpdateInventory,
+        getInventoryItem: adapter.getInventoryItem,
+      };
       const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
 
       // 批量处理设施更新，减少 store 更新次数
@@ -268,8 +315,7 @@ export class GameLoopTaskFactory {
     const config = TASK_CONFIGS[GameLoopTaskType.FUEL_CONSUMPTION];
 
     return this.createTask(config, (deltaTime: number) => {
-      const store = useGameStore.getState();
-      store.updateFuelConsumption(deltaTime);
+      GameLoopTaskFactory.getAdapter().updateFuelConsumption(deltaTime);
     });
   }
 
@@ -282,8 +328,7 @@ export class GameLoopTaskFactory {
         return;
       }
 
-      const store = useGameStore.getState();
-      store.updateResearchProgress(deltaTime);
+      GameLoopTaskFactory.getAdapter().updateResearchProgress(deltaTime);
     });
   }
 
@@ -292,15 +337,8 @@ export class GameLoopTaskFactory {
     const config = TASK_CONFIGS[GameLoopTaskType.STATISTICS];
 
     return this.createTask(config, () => {
-      const store = useGameStore.getState();
-
-      // 更新游戏循环状态统计
-      if (store._updateGameLoopState) {
-        store._updateGameLoopState();
-      }
-
-      // 可以在这里添加其他统计更新逻辑
-      // 比如计算生产效率、资源消耗率等
+      const adapter = GameLoopTaskFactory.getAdapter();
+      adapter.updateGameLoopState?.();
     });
   }
 
@@ -310,10 +348,9 @@ export class GameLoopTaskFactory {
 
     return this.createTask(config, () => {
       try {
-        const store = useGameStore.getState();
-        store.saveGame();
+        GameLoopTaskFactory.getAdapter().saveGame();
       } catch (error) {
-        console.error('自动存档失败:', error);
+        logError('自动存档失败:', error);
         // 不重新抛出错误，因为存档失败不应该影响游戏循环
       }
     });
@@ -346,6 +383,8 @@ export class GameLoopTaskFactory {
 
   // 智能任务状态管理 - 根据游戏状态动态调整任务
   static updateTasksState(tasks: ReadonlyMap<string, GameLoopTask>): void {
+    if (!_adapter) return; // 适配器尚未注入时跳过
+
     // 根据配置自动更新任务状态
     Object.values(TASK_CONFIGS).forEach(config => {
       const task = tasks.get(config.id);
@@ -355,7 +394,7 @@ export class GameLoopTaskFactory {
         // 只有在状态发生改变时才更新
         if (task.enabled !== shouldEnable) {
           task.enabled = shouldEnable;
-          console.log(`[GameLoop] 任务 ${config.name} ${shouldEnable ? '已启用' : '已禁用'}`);
+          logInfo(`[GameLoop] 任务 ${config.name} ${shouldEnable ? '已启用' : '已禁用'}`);
         }
       }
     });
