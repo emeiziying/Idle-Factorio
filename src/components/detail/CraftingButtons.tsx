@@ -4,7 +4,7 @@ import { Add as AddIcon } from '@mui/icons-material';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface CraftingButtonsProps {
-  onCraft: (quantity: number) => void;
+  onCraft: (quantity: number, event: React.MouseEvent<HTMLButtonElement>) => void;
   disabled?: boolean;
   variant?: 'contained' | 'outlined';
 }
@@ -22,7 +22,7 @@ const CraftingButtons: React.FC<CraftingButtonsProps> = ({
         size={isMobile ? 'medium' : 'small'}
         variant={variant}
         startIcon={<AddIcon />}
-        onClick={() => onCraft(1)}
+        onClick={e => onCraft(1, e)}
         disabled={disabled}
         sx={{
           fontSize: isMobile ? '0.8rem' : '0.875rem',
@@ -36,7 +36,7 @@ const CraftingButtons: React.FC<CraftingButtonsProps> = ({
         size={isMobile ? 'medium' : 'small'}
         variant={variant}
         startIcon={<AddIcon />}
-        onClick={() => onCraft(5)}
+        onClick={e => onCraft(5, e)}
         disabled={disabled}
         sx={{
           fontSize: isMobile ? '0.8rem' : '0.875rem',

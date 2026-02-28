@@ -176,16 +176,16 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
       // 只有链式任务的基础材料需要在取消时归还（因为在创建链时已预先扣除）
 
       // 移除任务
-      set(state => ({
-        craftingQueue: state.craftingQueue.filter(task => task.id !== taskId),
-        production:
-          state.craftingQueue.length === 1
-            ? {
-                ...state.production,
-                showCraftingQueue: false,
-              }
-            : state.production,
-      }));
+      set(state => {
+        const newQueue = state.craftingQueue.filter(task => task.id !== taskId);
+        return {
+          craftingQueue: newQueue,
+          production:
+            newQueue.length === 0
+              ? { ...state.production, showCraftingQueue: false }
+              : state.production,
+        };
+      });
 
       // 检查队列是否为空，如果为空则禁用制作系统
       if (get().craftingQueue.length === 0) {

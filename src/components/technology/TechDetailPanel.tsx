@@ -222,7 +222,7 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
     });
   };
 
-  // 获取解锁内容信息
+  // 获取解锁内容信息（去重：各分类内部去重，同时跨分类不重复展示同一ID）
   const getUnlockInfo = () => {
     const unlocks = {
       items: [] as Array<{ id: string; name: string }>,
@@ -230,28 +230,27 @@ const TechDetailPanel: React.FC<TechDetailPanelProps> = ({
       buildings: [] as Array<{ id: string; name: string }>,
     };
 
+    const seen = new Set<string>();
+
     technology.unlocks.items?.forEach(itemId => {
+      if (seen.has(itemId)) return;
+      seen.add(itemId);
       const localizedName = dataService.getLocalizedItemName(itemId);
-      unlocks.items.push({
-        id: itemId,
-        name: localizedName || itemId,
-      });
+      unlocks.items.push({ id: itemId, name: localizedName || itemId });
     });
 
     technology.unlocks.recipes?.forEach(recipeId => {
+      if (seen.has(recipeId)) return;
+      seen.add(recipeId);
       const localizedName = dataService.getLocalizedRecipeName(recipeId);
-      unlocks.recipes.push({
-        id: recipeId,
-        name: localizedName || recipeId,
-      });
+      unlocks.recipes.push({ id: recipeId, name: localizedName || recipeId });
     });
 
     technology.unlocks.buildings?.forEach(buildingId => {
+      if (seen.has(buildingId)) return;
+      seen.add(buildingId);
       const localizedName = dataService.getLocalizedItemName(buildingId);
-      unlocks.buildings.push({
-        id: buildingId,
-        name: localizedName || buildingId,
-      });
+      unlocks.buildings.push({ id: buildingId, name: localizedName || buildingId });
     });
 
     return unlocks;

@@ -11,7 +11,12 @@ import React, { useMemo } from 'react';
 interface ManualCraftingCardProps {
   item: Item;
   onItemSelect?: (item: Item) => void;
-  onManualCraft: (itemId: string, quantity: number, recipe: Recipe) => void;
+  onManualCraft: (
+    itemId: string,
+    quantity: number,
+    recipe: Recipe,
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => void;
 }
 
 const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({
@@ -87,7 +92,7 @@ const ManualCraftingCard: React.FC<ManualCraftingCardProps> = ({
         </Box>
 
         <CraftingButtons
-          onCraft={quantity => onManualCraft(item.id, quantity, recipe)}
+          onCraft={(quantity, event) => onManualCraft(item.id, quantity, recipe, event)}
           disabled={!canCraft}
           variant={canCraft ? 'contained' : 'outlined'}
         />

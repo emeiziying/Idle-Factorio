@@ -18,6 +18,7 @@ import { useDataService } from '@/hooks/useDIServices';
 import useGameStore from '@/store/gameStore';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { mergeCraftingTasks, getTaskIdsToCancel, type MergedTask } from '@/utils/taskMerger';
+import type { CraftingTask } from '@/types/index';
 
 // Constants
 const QUEUE_CAPACITY = 50;
@@ -30,23 +31,23 @@ const GRID_GAP_DESKTOP = 2;
 // Sub-component for individual crafting queue items
 interface CraftingQueueItemProps {
   task: MergedTask;
+  allTasks: CraftingTask[];
   isMobile: boolean;
   onRemove: (taskIds: string[]) => void;
 }
 
 const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(
-  ({ task, isMobile, onRemove }) => {
+  ({ task, allTasks, isMobile, onRemove }) => {
     const dataService = useDataService();
-    const craftingQueue = useGameStore(state => state.craftingQueue);
 
     // 点击任务项直接取消任务
     const handleClick = useCallback(
       (e: React.MouseEvent) => {
         e.stopPropagation();
-        const taskIds = getTaskIdsToCancel(task, craftingQueue);
+        const taskIds = getTaskIdsToCancel(task, allTasks);
         onRemove(taskIds);
       },
-      [task, onRemove, craftingQueue]
+      [task, onRemove, allTasks]
     );
 
     const handleKeyDown = useCallback(
@@ -54,14 +55,14 @@ const CraftingQueueItem: React.FC<CraftingQueueItemProps> = React.memo(
         // 按Enter或Space键也可以取消任务
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          const taskIds = getTaskIdsToCancel(task, craftingQueue);
+          const taskIds = getTaskIdsToCancel(task, allTasks);
           onRemove(taskIds);
         } else if (e.key === 'Escape') {
           e.preventDefault();
           (e.target as HTMLElement).blur();
         }
       },
-      [task, onRemove, craftingQueue]
+      [task, onRemove, allTasks]
     );
 
     const recipe = dataService.getRecipe(task.recipeId);
@@ -210,8 +211,9 @@ const CraftingQueue: React.FC<CraftingQueueProps> = ({ open = false, onClose }) 
 
   const handleClearAll = useCallback(() => {
     if (window.confirm('确定要清空所有制作任务吗？')) {
-      // Clear all tasks by removing them one by one
-      craftingQueue.forEach(task => removeCraftingTask(task.id));
+      // Snapshot the current IDs before any removal to avoid stale closure issues
+      const taskIds = craftingQueue.map(task => task.id);
+      taskIds.forEach(id => removeCraftingTask(id));
     }
   }, [craftingQueue, removeCraftingTask]);
 
@@ -240,7 +242,8 @@ const CraftingQueue: React.FC<CraftingQueueProps> = ({ open = false, onClose }) 
         maxWidth: isMobile ? '100vw' : '600px',
         borderRadius: isMobile ? '16px 16px 0 0' : '16px',
         position: 'fixed',
-        bottom: 0,
+        // 移动端 tabbar 固定在底部（zIndex:1200），对话框需从 tabbar 顶部滑出
+        bottom: isMobile ? 56 : 0,
         left: isMobile ? 0 : '50%',
         transform: isMobile ? 'none' : 'translateX(-50%)',
       },
@@ -320,6 +323,7 @@ const CraftingQueue: React.FC<CraftingQueueProps> = ({ open = false, onClose }) 
               <CraftingQueueItem
                 key={task.id}
                 task={task}
+                allTasks={craftingQueue}
                 isMobile={isMobile}
                 onRemove={handleRemoveTask}
               />
