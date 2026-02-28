@@ -56,6 +56,12 @@ export const adaptLegacyStoreStateToGameState = (
           item.currentAmount,
         ])
       ),
+      capacities: Object.fromEntries(
+        Array.from(legacyState.inventory?.entries() || []).map(([itemId, item]) => [
+          itemId,
+          item.maxCapacity,
+        ])
+      ),
     },
     facilities: (legacyState.facilities || []).map(adaptLegacyFacilityState),
     research: {

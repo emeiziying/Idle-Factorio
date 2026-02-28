@@ -1,5 +1,6 @@
 export interface InventoryState {
   items: Record<string, number>;
+  capacities?: Record<string, number>;
 }
 
 export interface FacilityProductionState {

@@ -144,11 +144,267 @@ export const tickFacilityFuelState = (
       ...state,
       facilities,
       inventory: {
+        ...state.inventory,
         items: nextInventory,
       },
     },
     events,
   };
+};
+
+export const tickFacilityProductionState = (
+  state: GameState,
+  catalog: GameCatalog,
+  deltaMs: number
+): {
+  state: GameState;
+  events: DomainEvent[];
+} => {
+  const nextInventory = { ...state.inventory.items };
+  const capacities = state.inventory.capacities;
+  const events: DomainEvent[] = [];
+  let totalItemsProducedDelta = 0;
+
+  const facilities = state.facilities.map<FacilityState>(facility => {
+    const recipeId = facility.production?.recipeId;
+    if (!recipeId || !facility.production) {
+      return facility;
+    }
+
+    const recipe = catalog.recipesById.get(recipeId);
+    if (!recipe) {
+      return facility;
+    }
+
+    let nextStatus = facility.status;
+    let recoveredFromBlockedState = false;
+
+    if (
+      nextStatus === 'no_resource' &&
+      hasEnoughInput(recipeId, nextInventory, facility.count, catalog)
+    ) {
+      nextStatus = 'running';
+      recoveredFromBlockedState = true;
+    }
+
+    if (
+      nextStatus === 'output_full' &&
+      hasOutputCapacity(recipeId, nextInventory, capacities, facility.count, catalog)
+    ) {
+      nextStatus = 'running';
+      recoveredFromBlockedState = true;
+    }
+
+    if (nextStatus !== 'running') {
+      return facility;
+    }
+
+    if (recoveredFromBlockedState) {
+      return {
+        ...facility,
+        status: 'running',
+      };
+    }
+
+    const progressPerTick =
+      recipe.time > 0 ? (deltaMs / (recipe.time * 1000)) * (facility.efficiency || 1) : 0;
+
+    const progress = Math.max(0, facility.production.progress);
+
+    if (progress <= 0) {
+      if (!hasEnoughInput(recipeId, nextInventory, facility.count, catalog)) {
+        events.push({
+          type: 'facility/no-resource',
+          instanceId: facility.id,
+        });
+
+        return {
+          ...facility,
+          status: 'no_resource',
+          production: {
+            ...facility.production,
+            progress: 0,
+          },
+        };
+      }
+
+      if (!hasOutputCapacity(recipeId, nextInventory, capacities, facility.count, catalog)) {
+        if (facility.status !== 'output_full') {
+          events.push({
+            type: 'facility/output-full',
+            instanceId: facility.id,
+          });
+        }
+
+        return {
+          ...facility,
+          status: 'output_full',
+          production: {
+            ...facility.production,
+            progress: 0,
+          },
+        };
+      }
+
+      consumeRecipeInput(recipeId, nextInventory, facility.count, catalog);
+    }
+
+    let totalProgress = progress + progressPerTick;
+
+    while (totalProgress >= 1) {
+      if (!hasOutputCapacity(recipeId, nextInventory, capacities, facility.count, catalog)) {
+        if (facility.status !== 'output_full') {
+          events.push({
+            type: 'facility/output-full',
+            instanceId: facility.id,
+          });
+        }
+
+        return {
+          ...facility,
+          status: 'output_full',
+          production: {
+            ...facility.production,
+            progress: 1,
+          },
+        };
+      }
+
+      totalItemsProducedDelta += produceRecipeOutput(
+        recipeId,
+        nextInventory,
+        facility.count,
+        catalog
+      );
+      totalProgress -= 1;
+
+      if (totalProgress <= 0) {
+        break;
+      }
+
+      if (!hasEnoughInput(recipeId, nextInventory, facility.count, catalog)) {
+        events.push({
+          type: 'facility/no-resource',
+          instanceId: facility.id,
+        });
+
+        return {
+          ...facility,
+          status: 'no_resource',
+          production: {
+            ...facility.production,
+            progress: 0,
+          },
+        };
+      }
+
+      consumeRecipeInput(recipeId, nextInventory, facility.count, catalog);
+    }
+
+    return {
+      ...facility,
+      status: nextStatus,
+      production: {
+        ...facility.production,
+        progress: Math.min(1, Math.max(0, totalProgress)),
+      },
+    };
+  });
+
+  return {
+    state: {
+      ...state,
+      facilities,
+      inventory: {
+        ...state.inventory,
+        items: nextInventory,
+      },
+      stats: {
+        ...state.stats,
+        totalItemsProduced: state.stats.totalItemsProduced + totalItemsProducedDelta,
+      },
+    },
+    events,
+  };
+};
+
+const hasEnoughInput = (
+  recipeId: string,
+  inventory: Record<string, number>,
+  facilityCount: number,
+  catalog: GameCatalog
+): boolean => {
+  const recipe = catalog.recipesById.get(recipeId);
+  if (!recipe?.in) {
+    return true;
+  }
+
+  return Object.entries(recipe.in).every(([itemId, amount]) => {
+    const required = amount * Math.max(1, facilityCount);
+    return (inventory[itemId] || 0) >= required;
+  });
+};
+
+const hasOutputCapacity = (
+  recipeId: string,
+  inventory: Record<string, number>,
+  capacities: Record<string, number> | undefined,
+  facilityCount: number,
+  catalog: GameCatalog
+): boolean => {
+  const recipe = catalog.recipesById.get(recipeId);
+  if (!recipe?.out) {
+    return true;
+  }
+
+  return Object.entries(recipe.out).every(([itemId, amount]) => {
+    const capacity = capacities?.[itemId];
+    if (typeof capacity !== 'number') {
+      return true;
+    }
+
+    const produced = amount * Math.max(1, facilityCount);
+    return (inventory[itemId] || 0) + produced <= capacity;
+  });
+};
+
+const consumeRecipeInput = (
+  recipeId: string,
+  inventory: Record<string, number>,
+  facilityCount: number,
+  catalog: GameCatalog
+): void => {
+  const recipe = catalog.recipesById.get(recipeId);
+  if (!recipe?.in) {
+    return;
+  }
+
+  for (const [itemId, amount] of Object.entries(recipe.in)) {
+    const required = amount * Math.max(1, facilityCount);
+    inventory[itemId] = Math.max(0, (inventory[itemId] || 0) - required);
+  }
+};
+
+const produceRecipeOutput = (
+  recipeId: string,
+  inventory: Record<string, number>,
+  facilityCount: number,
+  catalog: GameCatalog
+): number => {
+  const recipe = catalog.recipesById.get(recipeId);
+  if (!recipe?.out) {
+    return 0;
+  }
+
+  let totalProduced = 0;
+
+  for (const [itemId, amount] of Object.entries(recipe.out)) {
+    const produced = amount * Math.max(1, facilityCount);
+    inventory[itemId] = (inventory[itemId] || 0) + produced;
+    totalProduced += produced;
+  }
+
+  return totalProduced;
 };
 
 const calculatePowerState = (

@@ -20,6 +20,7 @@ import {
   Paper,
   Grid,
   LinearProgress,
+  Alert,
 } from '@mui/material';
 import {
   Search,
@@ -36,28 +37,68 @@ import useGameStore from '@/store/gameStore';
 import FactorioIcon from '@/components/common/FactorioIcon';
 import { useDataService } from '@/hooks/useDIServices';
 import { FuelStatusDisplay } from '@/components/facilities/FuelStatusDisplay';
+import { useGameRuntimeRegistry } from '@/app/runtime/useGameRuntimeRegistry';
+
+interface DisplayFacility {
+  id: string;
+  facilityId: string;
+  count: number;
+  status: FacilityStatus;
+  efficiency: number;
+  productionRecipeId: string | null;
+  productionProgress: number;
+  fuelLabel: string | null;
+  legacyFuelBuffer?: FacilityInstance['fuelBuffer'];
+}
 
 const ProductionMonitor: React.FC = () => {
   const { facilities, updateFacility } = useGameStore();
   const dataService = useDataService();
+  const runtimeRegistry = useGameRuntimeRegistry();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
-  // 过滤和分组设施
-  const groupedFacilities = useMemo(() => {
-    const filtered = facilities.filter(facility => {
-      const name = dataService.getItemName(facility.facilityId) || facility.facilityId;
+  const runtimeMode = runtimeRegistry.status === 'ready' && !!runtimeRegistry.runtimeState;
 
-      // 搜索过滤
+  const displayFacilities = useMemo<DisplayFacility[]>(() => {
+    if (runtimeMode && runtimeRegistry.runtimeState) {
+      return runtimeRegistry.runtimeState.facilities.map(facility => ({
+        id: facility.id,
+        facilityId: facility.facilityId,
+        count: facility.count,
+        status: facility.status,
+        efficiency: facility.efficiency,
+        productionRecipeId: facility.production?.recipeId || null,
+        productionProgress: facility.production?.progress || 0,
+        fuelLabel: facility.fuel
+          ? `${facility.fuel.itemId || 'unknown'} x${facility.fuel.quantity}`
+          : null,
+      }));
+    }
+
+    return facilities.map(facility => ({
+      id: facility.id,
+      facilityId: facility.facilityId,
+      count: facility.count,
+      status: facility.status,
+      efficiency: facility.efficiency,
+      productionRecipeId: facility.production?.currentRecipeId || null,
+      productionProgress: facility.production?.progress || 0,
+      fuelLabel: null,
+      legacyFuelBuffer: facility.fuelBuffer,
+    }));
+  }, [runtimeMode, runtimeRegistry.runtimeState, facilities]);
+
+  const groupedFacilities = useMemo(() => {
+    const filtered = displayFacilities.filter(facility => {
+      const name = dataService.getItemName(facility.facilityId) || facility.facilityId;
       if (searchTerm && !name.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
       }
-
       return true;
     });
 
-    // 按类别分组
-    const groups = new Map<string, FacilityInstance[]>();
+    const groups = new Map<string, DisplayFacility[]>();
     filtered.forEach(facility => {
       const category = getFacilityCategory(facility.facilityId);
       if (!groups.has(category)) {
@@ -67,9 +108,8 @@ const ProductionMonitor: React.FC = () => {
     });
 
     return groups;
-  }, [facilities, searchTerm, dataService]);
+  }, [displayFacilities, searchTerm, dataService]);
 
-  // 获取设施类别
   const getFacilityCategory = (facilityId: string): string => {
     if (facilityId.includes('mining-drill')) return 'mining';
     if (facilityId.includes('furnace')) return 'smelting';
@@ -85,7 +125,6 @@ const ProductionMonitor: React.FC = () => {
     return 'other';
   };
 
-  // 获取状态标签
   const getStatusChip = (status: FacilityStatus) => {
     const config = {
       [FacilityStatus.RUNNING]: {
@@ -121,18 +160,19 @@ const ProductionMonitor: React.FC = () => {
     };
 
     const { label, color, icon } = config[status] || config[FacilityStatus.STOPPED];
-
     return <Chip label={label} color={color} size="small" icon={icon} />;
   };
 
-  // 切换设施状态
   const toggleFacilityStatus = (facilityId: string, currentStatus: FacilityStatus) => {
+    if (runtimeMode) {
+      return;
+    }
+
     const newStatus =
       currentStatus === FacilityStatus.RUNNING ? FacilityStatus.STOPPED : FacilityStatus.RUNNING;
     updateFacility(facilityId, { status: newStatus });
   };
 
-  // 渲染列表视图
   const renderListView = () => (
     <TableContainer component={Paper}>
       <Table size="small">
@@ -172,14 +212,14 @@ const ProductionMonitor: React.FC = () => {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      {facility.production?.currentRecipeId ? (
+                      {facility.productionRecipeId ? (
                         <Box display="flex" alignItems="center" gap={1}>
                           <FactorioIcon
-                            itemId={facility.production.currentRecipeId.replace('-recipe', '')}
+                            itemId={facility.productionRecipeId.replace('-recipe', '')}
                             size={20}
                           />
                           <Typography variant="caption">
-                            {(facility.production.progress * 100).toFixed(0)}%
+                            {(facility.productionProgress * 100).toFixed(0)}%
                           </Typography>
                         </Box>
                       ) : (
@@ -190,13 +230,16 @@ const ProductionMonitor: React.FC = () => {
                     </TableCell>
                     <TableCell align="center">
                       <Tooltip title={facility.status === FacilityStatus.RUNNING ? '停止' : '启动'}>
-                        <IconButton
-                          size="small"
-                          onClick={() => toggleFacilityStatus(facility.id, facility.status)}
-                          color={facility.status === FacilityStatus.RUNNING ? 'error' : 'success'}
-                        >
-                          <PowerSettingsNew />
-                        </IconButton>
+                        <span>
+                          <IconButton
+                            size="small"
+                            onClick={() => toggleFacilityStatus(facility.id, facility.status)}
+                            color={facility.status === FacilityStatus.RUNNING ? 'error' : 'success'}
+                            disabled={runtimeMode}
+                          >
+                            <PowerSettingsNew />
+                          </IconButton>
+                        </span>
                       </Tooltip>
                     </TableCell>
                   </TableRow>
@@ -209,7 +252,6 @@ const ProductionMonitor: React.FC = () => {
     </TableContainer>
   );
 
-  // 渲染网格视图
   const renderGridView = () => (
     <Box>
       {Array.from(groupedFacilities.entries()).map(([category, facilityList]) => (
@@ -241,6 +283,7 @@ const ProductionMonitor: React.FC = () => {
                           size="small"
                           onClick={() => toggleFacilityStatus(facility.id, facility.status)}
                           color={facility.status === FacilityStatus.RUNNING ? 'error' : 'success'}
+                          disabled={runtimeMode}
                         >
                           <PowerSettingsNew />
                         </IconButton>
@@ -255,23 +298,32 @@ const ProductionMonitor: React.FC = () => {
                         />
                       </Box>
 
-                      {facility.fuelBuffer && (
-                        <FuelStatusDisplay fuelBuffer={facility.fuelBuffer} compact />
+                      {facility.legacyFuelBuffer && (
+                        <FuelStatusDisplay fuelBuffer={facility.legacyFuelBuffer} compact />
                       )}
 
-                      {facility.production?.currentRecipeId && (
+                      {runtimeMode && facility.fuelLabel && (
+                        <Chip
+                          size="small"
+                          variant="outlined"
+                          label={`燃料: ${facility.fuelLabel}`}
+                          sx={{ mb: 1 }}
+                        />
+                      )}
+
+                      {facility.productionRecipeId && (
                         <Box mt={1}>
                           <Typography variant="caption" color="text.secondary">
                             生产中:
                           </Typography>
                           <Box display="flex" alignItems="center" gap={1}>
                             <FactorioIcon
-                              itemId={facility.production.currentRecipeId.replace('-recipe', '')}
+                              itemId={facility.productionRecipeId.replace('-recipe', '')}
                               size={20}
                             />
                             <LinearProgress
                               variant="determinate"
-                              value={facility.production.progress * 100}
+                              value={facility.productionProgress * 100}
                               sx={{ flex: 1, height: 6 }}
                             />
                           </Box>
@@ -288,7 +340,6 @@ const ProductionMonitor: React.FC = () => {
     </Box>
   );
 
-  // 获取类别名称
   const getCategoryName = (category: string): string => {
     const names: Record<string, string> = {
       mining: '采矿设施',
@@ -304,7 +355,12 @@ const ProductionMonitor: React.FC = () => {
 
   return (
     <Box>
-      {/* 工具栏 */}
+      {runtimeMode && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          当前页面使用 Experimental Runtime 设施快照（只读）。
+        </Alert>
+      )}
+
       <Box display="flex" alignItems="center" gap={2} mb={2}>
         <TextField
           size="small"
@@ -336,19 +392,18 @@ const ProductionMonitor: React.FC = () => {
         </ToggleButtonGroup>
       </Box>
 
-      {/* 统计信息 */}
       <Box display="flex" gap={2} mb={2}>
-        <Chip label={`总设施: ${facilities.length}`} />
+        <Chip label={`总设施: ${displayFacilities.length}`} />
         <Chip
-          label={`运行中: ${facilities.filter(f => f.status === FacilityStatus.RUNNING).length}`}
+          label={`运行中: ${displayFacilities.filter(f => f.status === FacilityStatus.RUNNING).length}`}
           color="success"
         />
         <Chip
-          label={`停止: ${facilities.filter(f => f.status === FacilityStatus.STOPPED).length}`}
+          label={`停止: ${displayFacilities.filter(f => f.status === FacilityStatus.STOPPED).length}`}
         />
         <Chip
           label={`异常: ${
-            facilities.filter(
+            displayFacilities.filter(
               f => f.status !== FacilityStatus.RUNNING && f.status !== FacilityStatus.STOPPED
             ).length
           }`}
@@ -356,7 +411,6 @@ const ProductionMonitor: React.FC = () => {
         />
       </Box>
 
-      {/* 设施列表 */}
       {viewMode === 'list' ? renderListView() : renderGridView()}
     </Box>
   );

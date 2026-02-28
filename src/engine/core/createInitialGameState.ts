@@ -5,6 +5,7 @@ export const createInitialGameState = (): GameState => {
     simulationTimeMs: 0,
     inventory: {
       items: {},
+      capacities: {},
     },
     facilities: [],
     research: {

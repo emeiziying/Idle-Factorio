@@ -1,4 +1,5 @@
 // 重新设计的游戏循环任务工厂 - 高效模块化任务系统
+import { getGameRuntimeRegistryState } from '@/app/runtime/GameRuntimeRegistry';
 import { getService } from '@/services/core/DIServiceInitializer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type { RecipeService } from '@/services/crafting/RecipeService';
@@ -7,6 +8,11 @@ import type { FacilityInstance } from '@/types/facilities';
 import type { GameLoopTask } from '@/types/gameLoop';
 import { GameLoopTaskType } from '@/types/gameLoop';
 import CraftingEngine from '@/utils/craftingEngine';
+
+const shouldRunLegacyFacilitiesLoop = (): boolean => {
+  const runtimeRegistryState = getGameRuntimeRegistryState();
+  return runtimeRegistryState.status !== 'ready';
+};
 
 // 任务配置接口
 interface TaskConfig {
@@ -39,6 +45,10 @@ const TASK_CONFIGS: Record<string, TaskConfig> = {
     baseInterval: 1000, // 1秒
     enabledByDefault: false,
     shouldRun: () => {
+      if (!shouldRunLegacyFacilitiesLoop()) {
+        return false;
+      }
+
       const store = useGameStore.getState();
       // 除 running 外，no_resource/output_full 设施也需要周期性恢复检查
       return store.facilities.some(
@@ -52,6 +62,7 @@ const TASK_CONFIGS: Record<string, TaskConfig> = {
     priority: 3,
     baseInterval: 1000,
     enabledByDefault: true, // 燃料消耗任务应该一直执行
+    shouldRun: () => shouldRunLegacyFacilitiesLoop(),
   },
   [GameLoopTaskType.RESEARCH]: {
     id: GameLoopTaskType.RESEARCH,
@@ -86,6 +97,8 @@ const TASK_CONFIGS: Record<string, TaskConfig> = {
     enabledByDefault: true,
   },
 };
+
+export const isLegacyFacilityLoopEnabled = (): boolean => shouldRunLegacyFacilitiesLoop();
 
 export class GameLoopTaskFactory {
   // 创建任务的通用方法

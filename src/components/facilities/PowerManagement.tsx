@@ -15,25 +15,47 @@ import {
 } from '@mui/material';
 import { Bolt, Add, Remove } from '@mui/icons-material';
 import { usePowerService } from '@/hooks/useDIServices';
+import {
+  buildRuntimeGeneratorStats,
+  buildRuntimePowerBalanceView,
+  type RuntimePowerBalanceView,
+} from '@/engine/selectors/facilitySelectors';
+import { useGameRuntimeRegistry } from '@/app/runtime/useGameRuntimeRegistry';
 import useGameStore from '@/store/gameStore';
 import FactorioIcon from '@/components/common/FactorioIcon';
 
 const PowerManagement: React.FC = () => {
   const { facilities, updateFacility, addFacility, removeFacility, getInventoryItem } =
     useGameStore();
+  const runtimeRegistry = useGameRuntimeRegistry();
   const powerService = usePowerService();
 
-  // 计算电力平衡
-  const powerBalance = useMemo(() => {
-    return powerService.calculatePowerBalance(facilities);
-  }, [facilities, powerService]);
+  const runtimeMode = runtimeRegistry.status === 'ready' && !!runtimeRegistry.runtimeState;
+  const runtimeState = runtimeRegistry.runtimeState;
+  const runtimeCatalog = runtimeRegistry.runtime?.getCatalog();
 
-  // 发电设施统计
+  const legacyPowerBalance = useMemo(() => {
+    return powerService.calculatePowerBalance(facilities);
+  }, [powerService, facilities]);
+
+  const powerBalance = useMemo<RuntimePowerBalanceView>(() => {
+    if (!runtimeMode || !runtimeState || !runtimeCatalog) {
+      return legacyPowerBalance;
+    }
+
+    return buildRuntimePowerBalanceView(runtimeState, runtimeCatalog);
+  }, [runtimeMode, runtimeState, runtimeCatalog, legacyPowerBalance]);
+
   const generatorStats = useMemo(() => {
+    if (runtimeMode && runtimeState) {
+      return buildRuntimeGeneratorStats(runtimeState);
+    }
+
     const stats = new Map<string, { count: number; power: number }>();
 
     facilities.forEach(facility => {
       const power = powerService.getFacilityPowerGeneration(facility) || 0;
+
       if (power > 0) {
         const existing = stats.get(facility.facilityId) || { count: 0, power: 0 };
         stats.set(facility.facilityId, {
@@ -44,9 +66,8 @@ const PowerManagement: React.FC = () => {
     });
 
     return stats;
-  }, [facilities, powerService]);
+  }, [runtimeMode, runtimeState, facilities, powerService]);
 
-  // 格式化功率显示
   const formatPower = (kw: number): string => {
     if (kw >= 1000) {
       return `${(kw / 1000).toFixed(1)} MW`;
@@ -54,7 +75,6 @@ const PowerManagement: React.FC = () => {
     return `${kw.toFixed(0)} kW`;
   };
 
-  // 获取状态颜色
   const getStatusColor = () => {
     switch (powerBalance.status) {
       case 'surplus':
@@ -66,15 +86,17 @@ const PowerManagement: React.FC = () => {
     }
   };
 
-  // 处理发电设施数量变更
   const handleGeneratorChange = (facilityId: string, delta: number) => {
+    if (runtimeMode) {
+      return;
+    }
+
     const existing = facilities.find(f => f.facilityId === facilityId);
 
     if (delta > 0) {
-      // 检查库存
       const inventory = getInventoryItem(facilityId);
       if (inventory.currentAmount < delta) {
-        return; // 库存不足
+        return;
       }
 
       if (existing) {
@@ -98,13 +120,26 @@ const PowerManagement: React.FC = () => {
     }
   };
 
+  const getInventoryAmount = (facilityId: string): number => {
+    if (runtimeMode && runtimeState) {
+      return runtimeState.inventory.items[facilityId] || 0;
+    }
+
+    return getInventoryItem(facilityId).currentAmount;
+  };
+
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
         电力管理
       </Typography>
 
-      {/* 电力平衡概览 */}
+      {runtimeMode && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          当前页面使用 Experimental Runtime 电力快照（只读）。
+        </Alert>
+      )}
+
       <Card sx={{ mb: 2 }}>
         <CardContent>
           <Box display="flex" alignItems="center" gap={1} mb={2}>
@@ -123,7 +158,6 @@ const PowerManagement: React.FC = () => {
             />
           </Box>
 
-          {/* 发电量 vs 消耗量 */}
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 2 }}>
             <Box>
               <Typography variant="body2" color="text.secondary">
@@ -149,7 +183,6 @@ const PowerManagement: React.FC = () => {
             </Box>
           </Box>
 
-          {/* 满足率进度条 */}
           <Box mb={1}>
             <Box display="flex" justifyContent="space-between" mb={0.5}>
               <Typography variant="body2">电力满足率</Typography>
@@ -171,26 +204,25 @@ const PowerManagement: React.FC = () => {
             />
           </Box>
 
-          {/* 警告信息 */}
           {powerBalance.status === 'deficit' && (
             <Alert severity="warning" sx={{ mt: 2 }}>
               <Typography variant="body2">
                 电力不足！所有耗电设施的效率降至 {(powerBalance.satisfactionRatio * 100).toFixed(0)}
                 %
               </Typography>
-              {powerService
-                .getPowerPriorityRecommendations(facilities, powerBalance)
-                .map((rec, i) => (
-                  <Typography key={i} variant="caption" display="block">
-                    • {rec}
-                  </Typography>
-                ))}
+              {!runtimeMode &&
+                powerService
+                  .getPowerPriorityRecommendations(facilities, legacyPowerBalance)
+                  .map((rec, i) => (
+                    <Typography key={i} variant="caption" display="block">
+                      • {rec}
+                    </Typography>
+                  ))}
             </Alert>
           )}
         </CardContent>
       </Card>
 
-      {/* 发电设施配置 */}
       <Card sx={{ mb: 2 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
@@ -200,12 +232,12 @@ const PowerManagement: React.FC = () => {
           <List>
             {['steam-engine', 'steam-turbine', 'solar-panel'].map(generatorId => {
               const stats = generatorStats.get(generatorId) || { count: 0, power: 0 };
-              const inventory = getInventoryItem(generatorId);
+              const inventoryAmount = getInventoryAmount(generatorId);
               const basePower =
                 {
                   'steam-engine': 900,
                   'steam-turbine': 5800,
-                  'solar-panel': 42, // 60kW * 0.7 平均
+                  'solar-panel': 42,
                 }[generatorId] || 0;
 
               return (
@@ -239,7 +271,7 @@ const PowerManagement: React.FC = () => {
                           component="span"
                           display="block"
                         >
-                          库存: {inventory.currentAmount} 台
+                          库存: {inventoryAmount} 台
                         </Typography>
                       </>
                     }
@@ -248,7 +280,7 @@ const PowerManagement: React.FC = () => {
                     <IconButton
                       size="small"
                       onClick={() => handleGeneratorChange(generatorId, -1)}
-                      disabled={stats.count === 0}
+                      disabled={runtimeMode || stats.count === 0}
                     >
                       <Remove />
                     </IconButton>
@@ -258,7 +290,7 @@ const PowerManagement: React.FC = () => {
                     <IconButton
                       size="small"
                       onClick={() => handleGeneratorChange(generatorId, 1)}
-                      disabled={inventory.currentAmount === 0}
+                      disabled={runtimeMode || inventoryAmount === 0}
                     >
                       <Add />
                     </IconButton>
@@ -268,7 +300,6 @@ const PowerManagement: React.FC = () => {
             })}
           </List>
 
-          {/* 蒸汽供应提示 */}
           {(generatorStats.get('steam-engine')?.count || 0) +
             (generatorStats.get('steam-turbine')?.count || 0) >
             0 && (
@@ -281,7 +312,6 @@ const PowerManagement: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* 耗电分析 */}
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>

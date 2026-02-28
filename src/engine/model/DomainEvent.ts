@@ -18,4 +18,8 @@ export type DomainEvent =
   | {
       type: 'facility/no-resource';
       instanceId: string;
+    }
+  | {
+      type: 'facility/output-full';
+      instanceId: string;
     };

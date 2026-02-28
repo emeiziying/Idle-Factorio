@@ -31,6 +31,11 @@ import { usePowerService, useDataService } from '@/hooks/useDIServices';
 import { useRecipeService } from '@/hooks/useDIServices';
 import { FacilityStatus } from '@/types/facilities';
 import FactorioIcon from '@/components/common/FactorioIcon';
+import { useGameRuntimeRegistry } from '@/app/runtime/useGameRuntimeRegistry';
+import {
+  buildRuntimePowerBalanceView,
+  type RuntimePowerBalanceView,
+} from '@/engine/selectors/facilitySelectors';
 
 interface OptimizationSuggestion {
   id: string;
@@ -43,48 +48,88 @@ interface OptimizationSuggestion {
   actionLabel?: string;
 }
 
+interface FacilityView {
+  status: FacilityStatus;
+  efficiency: number;
+  recipeId: string | null;
+}
+
 const EfficiencyOptimizer: React.FC = () => {
   const { facilities } = useGameStore();
   const powerService = usePowerService();
   const dataService = useDataService();
   const recipeService = useRecipeService();
+  const runtimeRegistry = useGameRuntimeRegistry();
 
-  // 识别生产瓶颈
+  const runtimeMode = runtimeRegistry.status === 'ready' && !!runtimeRegistry.runtimeState;
+
+  const facilityViews = useMemo<FacilityView[]>(() => {
+    if (runtimeMode && runtimeRegistry.runtimeState) {
+      return runtimeRegistry.runtimeState.facilities.map(facility => ({
+        status: facility.status,
+        efficiency: facility.efficiency,
+        recipeId: facility.production?.recipeId || null,
+      }));
+    }
+
+    return facilities.map(facility => ({
+      status: facility.status,
+      efficiency: facility.efficiency,
+      recipeId: facility.production?.currentRecipeId || null,
+    }));
+  }, [runtimeMode, runtimeRegistry.runtimeState, facilities]);
+
+  const legacyPowerBalance = useMemo(() => {
+    return powerService.calculatePowerBalance(facilities);
+  }, [powerService, facilities]);
+
+  const powerBalance = useMemo<RuntimePowerBalanceView>(() => {
+    if (!runtimeMode || !runtimeRegistry.runtimeState || !runtimeRegistry.runtime) {
+      return legacyPowerBalance;
+    }
+
+    return buildRuntimePowerBalanceView(
+      runtimeRegistry.runtimeState,
+      runtimeRegistry.runtime.getCatalog()
+    );
+  }, [runtimeMode, runtimeRegistry.runtimeState, runtimeRegistry.runtime, legacyPowerBalance]);
+
   const identifyBottlenecks = useCallback((): Map<string, number> => {
     const itemDeficits = new Map<string, number>();
 
-    // 分析每个设施的输入需求
-    facilities.forEach(facility => {
-      if (facility.status === FacilityStatus.NO_RESOURCE && facility.production?.currentRecipeId) {
-        const recipe = recipeService.getRecipeById(facility.production.currentRecipeId);
-        if (recipe?.in) {
-          Object.entries(recipe.in).forEach(([itemId, amount]) => {
-            const current = itemDeficits.get(itemId) || 0;
-            itemDeficits.set(itemId, current + (amount as number));
-          });
-        }
+    facilityViews.forEach(facility => {
+      if (facility.status !== FacilityStatus.NO_RESOURCE || !facility.recipeId) {
+        return;
       }
+
+      const recipe =
+        runtimeMode && runtimeRegistry.runtime
+          ? runtimeRegistry.runtime.getCatalog().recipesById.get(facility.recipeId)
+          : recipeService.getRecipeById(facility.recipeId);
+
+      if (!recipe?.in) {
+        return;
+      }
+
+      Object.entries(recipe.in).forEach(([itemId, amount]) => {
+        const current = itemDeficits.get(itemId) || 0;
+        itemDeficits.set(itemId, current + (amount as number));
+      });
     });
 
     return itemDeficits;
-  }, [facilities, recipeService]);
+  }, [facilityViews, runtimeMode, runtimeRegistry.runtime, recipeService]);
 
-  // 计算各种效率指标
   const efficiencyMetrics = useMemo(() => {
-    const powerBalance = powerService.calculatePowerBalance(facilities);
-
-    // 设施利用率
-    const totalFacilities = facilities.length;
-    const runningFacilities = facilities.filter(f => f.status === FacilityStatus.RUNNING).length;
+    const totalFacilities = facilityViews.length;
+    const runningFacilities = facilityViews.filter(f => f.status === FacilityStatus.RUNNING).length;
     const utilizationRate = totalFacilities > 0 ? runningFacilities / totalFacilities : 0;
 
-    // 平均效率
     const avgEfficiency =
-      facilities.length > 0
-        ? facilities.reduce((sum, f) => sum + f.efficiency, 0) / facilities.length
+      facilityViews.length > 0
+        ? facilityViews.reduce((sum, f) => sum + f.efficiency, 0) / facilityViews.length
         : 0;
 
-    // 瓶颈分析
     const bottlenecks = identifyBottlenecks();
 
     return {
@@ -93,13 +138,11 @@ const EfficiencyOptimizer: React.FC = () => {
       avgEfficiency,
       bottlenecks,
     };
-  }, [facilities, identifyBottlenecks, powerService]);
+  }, [facilityViews, identifyBottlenecks, powerBalance]);
 
-  // 生成优化建议
   const suggestions = useMemo((): OptimizationSuggestion[] => {
     const suggestions: OptimizationSuggestion[] = [];
 
-    // 电力相关建议
     if (efficiencyMetrics.powerBalance.status === 'deficit') {
       suggestions.push({
         id: 'power-deficit',
@@ -112,7 +155,6 @@ const EfficiencyOptimizer: React.FC = () => {
       });
     }
 
-    // 设施利用率建议
     if (efficiencyMetrics.utilizationRate < 0.5) {
       suggestions.push({
         id: 'low-utilization',
@@ -124,8 +166,7 @@ const EfficiencyOptimizer: React.FC = () => {
       });
     }
 
-    // 燃料相关建议
-    const fuelShortage = facilities.filter(f => f.status === FacilityStatus.NO_FUEL);
+    const fuelShortage = facilityViews.filter(f => f.status === FacilityStatus.NO_FUEL);
     if (fuelShortage.length > 0) {
       suggestions.push({
         id: 'fuel-shortage',
@@ -138,7 +179,6 @@ const EfficiencyOptimizer: React.FC = () => {
       });
     }
 
-    // 瓶颈物品建议
     efficiencyMetrics.bottlenecks.forEach((_deficit, itemId) => {
       const itemName = dataService.getItemName(itemId) || itemId;
       suggestions.push({
@@ -152,7 +192,6 @@ const EfficiencyOptimizer: React.FC = () => {
       });
     });
 
-    // 效率改进建议
     if (
       efficiencyMetrics.avgEfficiency < 0.8 &&
       efficiencyMetrics.powerBalance.status !== 'deficit'
@@ -172,9 +211,8 @@ const EfficiencyOptimizer: React.FC = () => {
       const priority = { critical: 0, warning: 1, improvement: 2 };
       return priority[a.type] - priority[b.type];
     });
-  }, [efficiencyMetrics, dataService, facilities]);
+  }, [efficiencyMetrics, dataService, facilityViews]);
 
-  // 获取建议图标
   const getSuggestionIcon = (suggestion: OptimizationSuggestion) => {
     const icons = {
       power: <Battery20 />,
@@ -185,14 +223,18 @@ const EfficiencyOptimizer: React.FC = () => {
     return icons[suggestion.category] || <TipsAndUpdates />;
   };
 
-  // 获取建议颜色
   const getSuggestionColor = (type: string) => {
     return type === 'critical' ? 'error' : type === 'warning' ? 'warning' : 'info';
   };
 
   return (
     <Box>
-      {/* 效率概览 */}
+      {runtimeMode && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          当前页面使用 Experimental Runtime 设施快照（只读）。
+        </Alert>
+      )}
+
       <Card sx={{ mb: 2 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
@@ -279,7 +321,6 @@ const EfficiencyOptimizer: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* 优化建议 */}
       <Typography variant="h6" gutterBottom>
         优化建议 ({suggestions.length})
       </Typography>
@@ -341,7 +382,6 @@ const EfficiencyOptimizer: React.FC = () => {
         </Box>
       )}
 
-      {/* 生产瓶颈分析 */}
       {efficiencyMetrics.bottlenecks.size > 0 && (
         <Card sx={{ mt: 2 }}>
           <CardContent>
