@@ -249,4 +249,88 @@ describe('RecipeService', () => {
       expect(cost.rawMaterials.get('iron-ore')).toBe(2);
     });
   });
+
+  // ======== 科技解锁联动（新方法验证）========
+  describe('getUnlockedRecipesThatProduce', () => {
+    const setupWithTechService = (unlockedRecipeIds: string[]) => {
+      const mockTechService = {
+        isRecipeUnlocked: vi.fn((id: string) => unlockedRecipeIds.includes(id)),
+      };
+      vi.mocked(getService).mockImplementation((token: symbol | string) => {
+        if (token === 'TechnologyService') return mockTechService;
+        return null;
+      });
+      return mockTechService;
+    };
+
+    it('should return only unlocked recipes', () => {
+      const recipes = [
+        makeRecipe({ id: 'r-locked', out: { copper: 1 } }),
+        makeRecipe({ id: 'r-unlocked', out: { copper: 1 } }),
+      ];
+      service.initializeRecipes(recipes);
+      setupWithTechService(['r-unlocked']);
+
+      const result = service.getUnlockedRecipesThatProduce('copper');
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('r-unlocked');
+    });
+
+    it('should return empty array when all recipes are locked', () => {
+      const recipe = makeRecipe({ id: 'locked', out: { copper: 1 } });
+      service.initializeRecipes([recipe]);
+      setupWithTechService([]);
+
+      expect(service.getUnlockedRecipesThatProduce('copper')).toHaveLength(0);
+    });
+
+    it('should return all recipes when all are unlocked', () => {
+      const recipes = [
+        makeRecipe({ id: 'r1', out: { copper: 1 } }),
+        makeRecipe({ id: 'r2', out: { copper: 2 } }),
+      ];
+      service.initializeRecipes(recipes);
+      setupWithTechService(['r1', 'r2']);
+
+      expect(service.getUnlockedRecipesThatProduce('copper')).toHaveLength(2);
+    });
+  });
+
+  describe('getUnlockedMostEfficientRecipe', () => {
+    const setupWithTechService = (unlockedRecipeIds: string[]) => {
+      vi.mocked(getService).mockImplementation((token: symbol | string) => {
+        if (token === 'TechnologyService') {
+          return { isRecipeUnlocked: (id: string) => unlockedRecipeIds.includes(id) };
+        }
+        return null;
+      });
+    };
+
+    it('should return undefined when no recipes are unlocked', () => {
+      const recipe = makeRecipe({ id: 'r1', out: { copper: 1 } });
+      service.initializeRecipes([recipe]);
+      setupWithTechService([]);
+
+      expect(service.getUnlockedMostEfficientRecipe('copper')).toBeUndefined();
+    });
+
+    it('should return most efficient among unlocked recipes only', () => {
+      const slow = makeRecipe({ id: 'slow', time: 4, out: { copper: 1 } }); // 0.25/s, unlocked
+      const fast = makeRecipe({ id: 'fast', time: 1, out: { copper: 2 } }); // 2/s, locked
+      service.initializeRecipes([slow, fast]);
+      // Only slow is unlocked; fast is locked
+      setupWithTechService(['slow']);
+
+      expect(service.getUnlockedMostEfficientRecipe('copper')?.id).toBe('slow');
+    });
+
+    it('should pick fastest among multiple unlocked recipes', () => {
+      const r1 = makeRecipe({ id: 'r1', time: 2, out: { copper: 1 } }); // 0.5/s
+      const r2 = makeRecipe({ id: 'r2', time: 1, out: { copper: 3 } }); // 3/s
+      service.initializeRecipes([r1, r2]);
+      setupWithTechService(['r1', 'r2']);
+
+      expect(service.getUnlockedMostEfficientRecipe('copper')?.id).toBe('r2');
+    });
+  });
 });

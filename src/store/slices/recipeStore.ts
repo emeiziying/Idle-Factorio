@@ -59,8 +59,9 @@ export const createRecipeSlice: SliceCreator<RecipeSlice> = (set, get) => ({
 
   getRecommendedRecipes: (itemId: string) => {
     const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
-    const recipes = recipeService.getRecipesThatProduce(itemId);
-    const mostEfficient = recipeService.getMostEfficientRecipe(itemId);
+    // 只返回科技系统已解锁的配方，避免 UI 展示未解锁内容
+    const recipes = recipeService.getUnlockedRecipesThatProduce(itemId);
+    const mostEfficient = recipeService.getUnlockedMostEfficientRecipe(itemId);
 
     if (mostEfficient) {
       // 将最高效率配方放在第一位

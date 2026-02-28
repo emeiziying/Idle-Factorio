@@ -329,6 +329,40 @@ export class RecipeService {
   }
 
   /**
+   * 获取生产指定物品的已解锁配方（UI 层专用）
+   * 只返回科技系统已解锁的配方，适合在 UI 层展示时使用
+   * @param itemId 物品ID
+   */
+  getUnlockedRecipesThatProduce(itemId: string): Recipe[] {
+    const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
+    return this.getRecipesThatProduce(itemId).filter(recipe =>
+      techService.isRecipeUnlocked(recipe.id)
+    );
+  }
+
+  /**
+   * 获取生产指定物品效率最高的已解锁配方（UI 层专用）
+   * @param itemId 物品ID
+   */
+  getUnlockedMostEfficientRecipe(itemId: string): Recipe | undefined {
+    const recipes = this.getUnlockedRecipesThatProduce(itemId);
+    if (recipes.length === 0) return undefined;
+
+    let bestRecipe = recipes[0];
+    let bestEfficiency = this.getRecipeEfficiency(bestRecipe, itemId);
+
+    for (const recipe of recipes) {
+      const efficiency = this.getRecipeEfficiency(recipe, itemId);
+      if (efficiency > bestEfficiency) {
+        bestEfficiency = efficiency;
+        bestRecipe = recipe;
+      }
+    }
+
+    return bestRecipe;
+  }
+
+  /**
    * 获取配方统计信息
    * @param itemId 物品ID
    */
