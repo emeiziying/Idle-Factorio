@@ -419,8 +419,8 @@ export class TechnologyService {
    * 设置事件监听器
    */
   private setupEventListeners(): void {
-    // 监听研究完成事件
-    this.eventEmitter.on(TechEventType.RESEARCH_COMPLETED, this.handleResearchCompleted.bind(this));
+    // 注意：研究完成由 updateResearchProgress() 直接调用 handleResearchCompleted()，
+    // 无需在此注册事件监听器，否则会在 handleResearchCompleted 重新发射事件后触发无限循环。
 
     // 监听科技解锁事件
     this.eventEmitter.on(TechEventType.TECH_UNLOCKED, () => {

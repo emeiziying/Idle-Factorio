@@ -34,6 +34,11 @@ export class DataService {
     this.cacheVersion++;
   }
 
+  // 科技解锁后由外部调用，使物品缓存失效
+  invalidateItemCache(): void {
+    this.clearCache();
+  }
+
   // 加载游戏数据
   async loadGameData(): Promise<GameData> {
     if (this.gameData) {

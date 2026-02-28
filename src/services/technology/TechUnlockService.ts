@@ -133,17 +133,6 @@ export class TechUnlockService {
       this.unlockedItems = new Set(initialItems);
       initialRecipes.forEach(recipe => this.unlockedRecipes.add(recipe.id));
       initialBuildings.forEach(building => this.unlockedBuildings.add(building));
-
-      console.log('techUnlockedRecipes', techUnlockedRecipes);
-      console.log('initialItems', initialItems);
-      console.log('initialRecipes', initialRecipes);
-      console.log('initialBuildings', initialBuildings);
-
-      console.log('Initial unlocks applied:', {
-        items: initialItems.length,
-        recipes: initialRecipes.length,
-        buildings: initialBuildings.length,
-      });
     } catch (error) {
       console.error('Failed to calculate initial unlocks:', error);
     }
@@ -366,10 +355,11 @@ export class TechUnlockService {
     const newRecipes: string[] = [];
     const newBuildings: string[] = [];
 
-    // 解锁物品（动态计算，无需存储）
+    // 解锁物品
     if (tech.unlocks.items) {
       tech.unlocks.items.forEach((itemId: string) => {
-        if (!this.isItemUnlocked(itemId)) {
+        if (!this.unlockedItems.has(itemId)) {
+          this.unlockedItems.add(itemId);
           newItems.push(itemId);
         }
       });
