@@ -29,14 +29,21 @@ const FloatingTaskList: React.FC = () => {
     <Box
       sx={{
         position: 'fixed',
-        // 56px 为移动端固定 tabbar 高度，再留 20px 间距
-        bottom: 76,
-        left: 20,
+        // 56px 为移动端固定 tabbar 高度，再留 12px 间距
+        bottom: 68,
+        left: '50%',
+        transform: 'translateX(-50%)',
         zIndex: 1250,
         display: 'flex',
         flexDirection: 'column',
         gap,
         maxWidth: `${itemSize * 6 + gap * 5}px`,
+        px: isMobile ? 1 : 1.5,
+        py: isMobile ? 0.75 : 1,
+        borderRadius: 1.5,
+        bgcolor: 'rgba(0, 0, 0, 0.45)',
+        backdropFilter: 'blur(6px)',
+        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.35)',
         pointerEvents: 'auto', // 允许点击交互
       }}
     >
