@@ -1,0 +1,156 @@
+# Cursor Rules for Idle Factorio
+
+## 项目概述
+这是一个基于 React + TypeScript + Vite 的 Idle Factorio 游戏项目，使用 Material-UI 作为 UI 框架。
+
+## 核心规则
+
+### 1. 导入路径规范
+- **必须使用 `@/` 别名**进行导入，避免使用相对路径
+- ✅ 正确: `import { GameStore } from '@/store/gameStore'`
+- ❌ 错误: `import { GameStore } from './store/gameStore'`
+- ❌ 错误: `import { GameStore } from '../store/gameStore'`
+
+### 2. 代码组织结构
+```
+src/
+├── components/     # UI 组件
+├── services/       # 业务逻辑服务
+├── store/          # 状态管理 (Zustand)
+├── hooks/          # 自定义 React Hooks
+├── utils/          # 工具函数
+├── types/          # TypeScript 类型定义
+├── data/           # 游戏数据
+└── theme/          # 主题配置
+```
+
+### 3. TypeScript 规范
+- 使用严格模式 (strict: true)
+- 避免使用 `any` 类型
+- 优先使用类型推断
+- 为复杂对象定义接口
+
+### 4. React 最佳实践
+- 使用函数组件和 Hooks
+- 避免不必要的重新渲染 (使用 React.memo, useMemo, useCallback)
+- 组件拆分要合理，保持单一职责
+- 使用虚拟化技术处理大列表 (@tanstack/react-virtual)
+
+### 5. 状态管理 (Zustand)
+- Store 文件放在 `@/store/` 目录
+- 使用 `immer` 中间件处理复杂状态更新
+- 合理拆分 store，避免单个 store 过大
+- 使用选择器避免不必要的重新渲染
+
+### 6. 性能优化
+- 使用代码分割和懒加载
+- 优化图片和资源加载
+- 使用 Web Workers 处理计算密集型任务
+- 实施虚拟滚动和分页
+
+### 7. Material-UI 使用
+- 遵循 Material Design 规范
+- 使用主题系统保持视觉一致性
+- 优先使用 MUI 组件，避免重复造轮子
+- 使用 sx prop 进行样式定制
+
+### 8. 测试规范
+- 使用 Vitest 进行单元测试
+- 测试文件放在 `__tests__` 目录或以 `.test.ts(x)` 结尾
+- 保持测试覆盖率在 80% 以上
+- 编写有意义的测试用例
+
+### 9. Git 提交规范
+- 使用语义化提交信息
+- feat: 新功能
+- fix: 修复 bug
+- docs: 文档更新
+- style: 代码格式
+- refactor: 重构
+- test: 测试
+- chore: 构建或辅助工具
+
+### 10. 代码风格
+- 使用 ESLint 和 Prettier 保持代码一致性
+- 函数和变量使用驼峰命名
+- 组件使用 PascalCase
+- 常量使用 UPPER_SNAKE_CASE
+
+## 项目特定规则
+
+### 游戏逻辑
+- 生产计算逻辑放在 `@/services/production/`
+- 配方数据存储在 `@/data/`
+- 使用 TypeScript 强类型定义游戏实体
+
+### 数据持久化
+- 使用 localStorage 保存游戏进度
+- 实现自动保存功能 (每 30 秒)
+- 使用 lz-string 压缩存档数据
+
+### UI/UX 原则
+- 保持界面简洁直观
+- 提供清晰的视觉反馈
+- 响应式设计，支持移动端
+- 使用动画增强用户体验
+
+### 国际化
+- 预留 i18n 支持
+- 文本内容集中管理
+- 使用语义化的 key
+
+## 代码示例
+
+### 正确的导入方式
+```typescript
+// ✅ 使用 @/ 别名
+import { useGameStore } from '@/store/gameStore';
+import { ProductionService } from '@/services/production/ProductionService';
+import { Button } from '@/components/common/Button';
+import { formatNumber } from '@/utils/format';
+import type { Recipe } from '@/types/game';
+
+// ❌ 避免相对路径
+import { useGameStore } from '../store/gameStore';
+import { ProductionService } from './services/production/ProductionService';
+```
+
+### 组件结构示例
+```typescript
+import React from 'react';
+import { Box, Typography } from '@mui/material';
+import { useGameStore } from '@/store/gameStore';
+import { formatNumber } from '@/utils/format';
+
+interface ProductionPanelProps {
+  recipeId: string;
+}
+
+export const ProductionPanel: React.FC<ProductionPanelProps> = ({ recipeId }) => {
+  const { recipes, updateProduction } = useGameStore();
+  
+  // 组件逻辑...
+  
+  return (
+    <Box sx={{ p: 2 }}>
+      <Typography variant="h6">Production</Typography>
+      {/* 组件内容 */}
+    </Box>
+  );
+};
+```
+
+## 调试技巧
+1. 使用 React DevTools 调试组件
+2. 使用 Redux DevTools 调试 Zustand store
+3. 利用 Chrome DevTools 的 Performance 面板优化性能
+4. 使用 console.time() 测量代码执行时间
+
+## 注意事项
+- 始终使用 `@/` 别名导入模块
+- 保持代码模块化和可维护性
+- 编写清晰的注释和文档
+- 定期进行代码审查
+- 关注性能和用户体验
+
+记住：**所有的导入语句都必须使用 `@/` 别名！**

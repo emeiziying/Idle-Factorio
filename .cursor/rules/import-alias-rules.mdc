@@ -1,0 +1,131 @@
+# Import Alias Rules (@/)
+
+## 强制使用 @/ 别名
+
+### 规则说明
+在本项目中，所有的模块导入必须使用 `@/` 别名，这个别名指向 `src/` 目录。
+
+### 配置基础
+- Vite 配置: `vite.config.ts` 中已配置 `alias: { '@': path.resolve(__dirname, './src') }`
+- TypeScript 配置: `tsconfig.app.json` 中已配置 `"paths": { "@/*": ["src/*"] }`
+
+### 导入规范
+
+#### ✅ 正确示例
+```typescript
+// 组件导入
+import { ProductionModule } from '@/components/production/ProductionModule';
+import { FacilitiesModule } from '@/components/facilities/FacilitiesModule';
+
+// Store 导入
+import { useGameStore } from '@/store/gameStore';
+import { useProductionStore } from '@/store/productionStore';
+
+// 服务导入
+import { ProductionService } from '@/services/production/ProductionService';
+import { CraftingService } from '@/services/crafting/CraftingService';
+
+// 工具函数导入
+import { formatNumber, formatTime } from '@/utils/format';
+import { calculateProduction } from '@/utils/calculations';
+
+// 类型导入
+import type { Recipe, Item, Technology } from '@/types/game';
+import type { ProductionState } from '@/types/production';
+
+// 数据导入
+import gameData from '@/data/spa/data.json';
+import { recipes } from '@/data/recipes';
+
+// Hooks 导入
+import { useProduction } from '@/hooks/useProduction';
+import { useAutoSave } from '@/hooks/useAutoSave';
+```
+
+#### ❌ 错误示例
+```typescript
+// 相对路径导入 - 禁止
+import { ProductionModule } from './components/production/ProductionModule';
+import { useGameStore } from '../store/gameStore';
+import { formatNumber } from '../../utils/format';
+
+// 绝对路径导入（不使用别名）- 禁止
+import { Recipe } from 'src/types/game';
+```
+
+### 重构指南
+
+当需要将现有的相对路径导入改为 @/ 别名时：
+
+1. **同级目录导入**
+   ```typescript
+   // 旧: import { Component } from './Component';
+   // 新: import { Component } from '@/components/Component';
+   ```
+
+2. **父级目录导入**
+   ```typescript
+   // 旧: import { util } from '../utils/util';
+   // 新: import { util } from '@/utils/util';
+   ```
+
+3. **多级父目录导入**
+   ```typescript
+   // 旧: import { service } from '../../services/service';
+   // 新: import { service } from '@/services/service';
+   ```
+
+### 特殊情况处理
+
+1. **第三方库** - 保持原样
+   ```typescript
+   import React from 'react';
+   import { Box } from '@mui/material';
+   ```
+
+2. **静态资源** - 使用 @/ 别名
+   ```typescript
+   import logo from '@/assets/logo.png';
+   import gameIcons from '@/data/spa/icons.webp';
+   ```
+
+3. **样式文件** - 使用 @/ 别名
+   ```typescript
+   import '@/styles/global.css';
+   import styles from '@/components/Component.module.css';
+   ```
+
+### 自动修复脚本
+
+如果需要批量修改导入路径，可以使用以下正则表达式：
+
+```regex
+# 查找相对路径导入
+from ['"]\.\.?/(.+)['"]
+
+# 替换为 @/ 别名
+from '@/$1'
+```
+
+### ESLint 配置建议
+
+在 `eslint.config.js` 中添加规则强制使用别名：
+
+```javascript
+{
+  rules: {
+    'no-restricted-imports': ['error', {
+      patterns: ['../*', './*']
+    }]
+  }
+}
+```
+
+### 注意事项
+
+1. **IDE 支持**: 确保 VSCode/Cursor 正确识别 @/ 别名，可以通过 `jsconfig.json` 或 `tsconfig.json` 配置
+2. **自动导入**: 配置 IDE 的自动导入功能默认使用 @/ 别名
+3. **代码审查**: 在 PR 审查时特别注意导入路径是否符合规范
+4. **新文件**: 创建新文件时，从一开始就使用 @/ 别名
+
+记住：**统一使用 @/ 别名可以让代码更清晰、重构更容易、维护更简单！**

@@ -1,122 +1,86 @@
-import React from 'react';
 import {
-  Container,
+  Build as BuildIcon,
+  Factory as FactoryIcon,
+  Science as ScienceIcon,
+} from '@mui/icons-material';
+import {
+  BottomNavigation,
+  BottomNavigationAction,
   Box,
-  Tabs,
-  Tab,
-  Typography,
-  AppBar,
-  Toolbar,
-  ThemeProvider,
-  createTheme,
   CssBaseline,
-  Grid
+  ThemeProvider,
 } from '@mui/material';
-import { Provider } from 'react-redux';
-import { store } from './store';
-import { useAppSelector, useAppDispatch, useGameLoop } from './hooks';
-import { setSelectedTab } from './store/slices/uiSlice';
-import { ItemCategory } from './types';
-import { allItems } from './data';
-import { ItemGrid } from './components/items/ItemGrid';
-import { ItemDetailModal } from './components/items/ItemDetailModal';
-import { CraftingQueue } from './components/crafting/CraftingQueue';
+import React from 'react';
 
-const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#FF6B00', // Factorio orange
-    },
-    secondary: {
-      main: '#2E7D32',
-    },
-  },
-});
+import ClearGameButton from '@/components/common/ClearGameButton';
+import ErrorScreen from '@/components/common/ErrorScreen';
+import LoadingScreen from '@/components/common/LoadingScreen';
+import FacilitiesModule from '@/components/facilities/FacilitiesModule';
+import ProductionModule from '@/components/production/ProductionModule';
+import TechnologyModule from '@/components/technology/TechnologyModule';
+import { APP_STORAGE_KEYS } from '@/constants/storageKeys';
+import { useAppInitialization } from '@/hooks/useAppInitialization';
+import { useAutoSaveBeforeUnload } from '@/hooks/useAutoSaveBeforeUnload';
+import theme from '@/theme';
+import { useLocalStorageState } from 'ahooks';
 
-// Tab 标签映射
-const tabLabels: Record<ItemCategory, string> = {
-  [ItemCategory.RESOURCES]: '资源',
-  [ItemCategory.MATERIALS]: '材料',
-  [ItemCategory.COMPONENTS]: '组件',
-  [ItemCategory.PRODUCTS]: '产品',
-  [ItemCategory.SCIENCE]: '科技',
-  [ItemCategory.MILITARY]: '军事',
-  [ItemCategory.LOGISTICS]: '物流',
-  [ItemCategory.PRODUCTION]: '生产',
-  [ItemCategory.POWER]: '电力',
-};
+const App: React.FC = () => {
+  // 当前模块
+  const [currentModule, setCurrentModule] = useLocalStorageState(APP_STORAGE_KEYS.CURRENT_MODULE, {
+    defaultValue: 0,
+  });
+  // 初始化游戏系统
+  const { isAppReady, initError } = useAppInitialization();
+  // 自动保存游戏进度
+  useAutoSaveBeforeUnload();
 
-function GameContent() {
-  const dispatch = useAppDispatch();
-  const selectedTab = useAppSelector(state => state.ui.selectedTab);
-  
-  // 启动游戏循环
-  useGameLoop();
-  
-  const handleTabChange = (_: React.SyntheticEvent, newValue: ItemCategory) => {
-    dispatch(setSelectedTab(newValue));
+  // 切换模块
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setCurrentModule(newValue);
   };
-  
-  // 获取当前分类的物品
-  const currentItems = allItems.filter(item => item.category === selectedTab);
-  
-  return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Factorio Idle
-          </Typography>
-        </Toolbar>
-      </AppBar>
-      
-      <Container maxWidth="xl" sx={{ mt: 2 }}>
-        <Grid container spacing={2}>
-          {/* 主要内容区域 */}
-          <Grid xs={12} md={9}>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-              <Tabs
-                value={selectedTab}
-                onChange={handleTabChange}
-                variant="scrollable"
-                scrollButtons="auto"
-              >
-                {Object.entries(tabLabels).map(([category, label]) => (
-                  <Tab
-                    key={category}
-                    label={label}
-                    value={category}
-                  />
-                ))}
-              </Tabs>
-            </Box>
-            
-            <ItemGrid items={currentItems} />
-          </Grid>
-          
-          {/* 侧边栏 - 制作队列 */}
-          <Grid xs={12} md={3}>
-            <CraftingQueue />
-          </Grid>
-        </Grid>
-      </Container>
-      
-      {/* 物品详情模态框 */}
-      <ItemDetailModal />
-    </Box>
-  );
-}
 
-function App() {
+  if (initError) {
+    return (
+      <ErrorScreen
+        withTheme
+        error={`初始化失败: ${initError}`}
+        showRetry
+        retryText="重新加载"
+        onRetry={() => window.location.reload()}
+      />
+    );
+  }
+
+  if (!isAppReady) {
+    return (
+      <LoadingScreen
+        withTheme
+        message="正在初始化游戏系统..."
+        subtitle="请稍候，首次加载可能需要几秒钟"
+      />
+    );
+  }
+
   return (
-    <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <GameContent />
-      </ThemeProvider>
-    </Provider>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={theme.customStyles.appContainer}>
+        <Box sx={theme.customStyles.pageContainer}>
+          {currentModule === 0 && <ProductionModule />}
+          {currentModule === 1 && <FacilitiesModule />}
+          {currentModule === 2 && <TechnologyModule />}
+        </Box>
+
+        <BottomNavigation value={currentModule} onChange={handleTabChange} showLabels>
+          <BottomNavigationAction label="生产" icon={<BuildIcon />} showLabel={true} />
+          <BottomNavigationAction label="设施" icon={<FactoryIcon />} showLabel={true} />
+          <BottomNavigationAction label="科技" icon={<ScienceIcon />} showLabel={true} />
+        </BottomNavigation>
+
+        {import.meta.env.DEV && <ClearGameButton />}
+      </Box>
+    </ThemeProvider>
   );
-}
+};
 
 export default App;
