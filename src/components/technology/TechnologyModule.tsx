@@ -21,19 +21,16 @@ const TechnologyModule: React.FC = React.memo(() => {
   useUnlockedTechsRepair();
 
   // 从store获取状态
-  const {
-    technologies,
-    researchState,
-    researchQueue,
-    unlockedTechs,
-    autoResearch,
-    initializeTechnologyService,
-    startResearch,
-    addToResearchQueue,
-    removeFromResearchQueue,
-    setAutoResearch,
-    // updateResearchProgress // 现在由GameLoopService管理
-  } = useGameStore();
+  const technologies = useGameStore(state => state.technologies);
+  const researchState = useGameStore(state => state.researchState);
+  const researchQueue = useGameStore(state => state.researchQueue);
+  const unlockedTechs = useGameStore(state => state.unlockedTechs);
+  const autoResearch = useGameStore(state => state.autoResearch);
+  const initializeTechnologyService = useGameStore(state => state.initializeTechnologyService);
+  const startResearch = useGameStore(state => state.startResearch);
+  const addToResearchQueue = useGameStore(state => state.addToResearchQueue);
+  const removeFromResearchQueue = useGameStore(state => state.removeFromResearchQueue);
+  const setAutoResearch = useGameStore(state => state.setAutoResearch);
 
   // 本地状态 - 智能初始化loading状态
   const [loading, setLoading] = useState(() => technologies.size === 0);

@@ -1,41 +1,16 @@
 // 重新设计的游戏循环任务工厂 - 高效模块化任务系统
-import { getService } from '@/services/core/DIServiceInitializer';
-import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
-import type { RecipeService } from '@/services/crafting/RecipeService';
+import {
+  getGameLoopRuntimePorts,
+  getGameStoreAdapter,
+  updateAppRuntimeContext,
+  type GameLoopRuntimePorts,
+  type GameStoreAdapter,
+} from '@/services/core/AppRuntimeContext';
 import type { FacilityInstance } from '@/types/facilities';
-import type { InventoryItem } from '@/types/index';
 import type { GameLoopTask } from '@/types/gameLoop';
 import { GameLoopTaskType } from '@/types/gameLoop';
 import CraftingEngine from '@/utils/craftingEngine';
 import { info as logInfo, error as logError } from '@/utils/logger';
-
-/**
- * Store 访问适配器接口
- * 将 GameLoopTaskFactory（Service 层）对 Zustand Store 的直接依赖转换为接口依赖，
- * 由 DIServiceInitializer.initializeApplication() 在 DI 完成后统一注入。
- * 这是项目中唯一被允许的 Service 层访问 Store 的方式。
- */
-export interface GameStoreAdapter {
-  // 用于 shouldRun 检查
-  getCraftingQueueLength: () => number;
-  hasFacilitiesWithStatus: (statuses: string[]) => boolean;
-  hasActiveResearch: () => boolean;
-
-  // 用于设施任务执行
-  getFacilities: () => FacilityInstance[];
-  getInventoryItem: (itemId: string) => InventoryItem;
-  updateFacility: (id: string, updates: Partial<FacilityInstance>) => void;
-  batchUpdateInventory: (updates: Array<{ itemId: string; amount: number }>) => void;
-
-  // 用于燃料/研究/统计/存档任务
-  updateFuelConsumption: (deltaTime: number) => void;
-  updateResearchProgress: (deltaTime: number) => void;
-  updateGameLoopState?: () => void;
-  saveGame: () => void;
-}
-
-// 模块级适配器（由 DIServiceInitializer.setAdapter() 注入，解耦 Service→Store 直接引用）
-let _adapter: GameStoreAdapter | null = null;
 
 // 任务配置接口
 interface TaskConfig {
@@ -44,8 +19,16 @@ interface TaskConfig {
   priority: number;
   baseInterval: number; // 基础更新间隔
   enabledByDefault: boolean;
-  shouldRun?: () => boolean; // 条件检查函数（通过 _adapter 访问 Store）
+  shouldRun?: () => boolean;
 }
+
+const tryGetAdapter = (): GameStoreAdapter | null => {
+  try {
+    return getGameStoreAdapter();
+  } catch {
+    return null;
+  }
+};
 
 // 任务配置表
 const TASK_CONFIGS: Record<string, TaskConfig> = {
@@ -55,9 +38,7 @@ const TASK_CONFIGS: Record<string, TaskConfig> = {
     priority: 1,
     baseInterval: 100, // 100ms
     enabledByDefault: false,
-    shouldRun: () => {
-      return _adapter ? _adapter.getCraftingQueueLength() > 0 : false;
-    },
+    shouldRun: () => (tryGetAdapter()?.getCraftingQueueLength() ?? 0) > 0,
   },
   [GameLoopTaskType.FACILITIES]: {
     id: GameLoopTaskType.FACILITIES,
@@ -65,11 +46,8 @@ const TASK_CONFIGS: Record<string, TaskConfig> = {
     priority: 2,
     baseInterval: 1000, // 1秒
     enabledByDefault: false,
-    shouldRun: () => {
-      return _adapter
-        ? _adapter.hasFacilitiesWithStatus(['running', 'no_resource', 'output_full'])
-        : false;
-    },
+    shouldRun: () =>
+      tryGetAdapter()?.hasFacilitiesWithStatus(['running', 'no_resource', 'output_full']) ?? false,
   },
   [GameLoopTaskType.FUEL_CONSUMPTION]: {
     id: GameLoopTaskType.FUEL_CONSUMPTION,
@@ -84,9 +62,7 @@ const TASK_CONFIGS: Record<string, TaskConfig> = {
     priority: 4,
     baseInterval: 1000,
     enabledByDefault: false,
-    shouldRun: () => {
-      return _adapter ? _adapter.hasActiveResearch() : false;
-    },
+    shouldRun: () => tryGetAdapter()?.hasActiveResearch() ?? false,
   },
   [GameLoopTaskType.STATISTICS]: {
     id: GameLoopTaskType.STATISTICS,
@@ -117,17 +93,28 @@ export class GameLoopTaskFactory {
    * 将 Service 层对 Zustand Store 的直接依赖转换为接口依赖。
    */
   static setAdapter(adapter: GameStoreAdapter): void {
-    _adapter = adapter;
+    updateAppRuntimeContext({ gameStoreAdapter: adapter });
+  }
+
+  static resetAdapter(): void {
+    updateAppRuntimeContext({ gameStoreAdapter: null });
+  }
+
+  static setRuntimePorts(runtimePorts: GameLoopRuntimePorts): void {
+    updateAppRuntimeContext({ gameLoopRuntimePorts: runtimePorts });
+  }
+
+  static resetRuntimePorts(): void {
+    updateAppRuntimeContext({ gameLoopRuntimePorts: null });
   }
 
   /** 获取适配器（内部使用，适配器不存在时抛出明确错误） */
   private static getAdapter(): GameStoreAdapter {
-    if (!_adapter) {
-      throw new Error(
-        '[GameLoopTaskFactory] Store adapter not set. Call setAdapter() before creating tasks.'
-      );
-    }
-    return _adapter;
+    return getGameStoreAdapter();
+  }
+
+  private static getRuntimePorts(): GameLoopRuntimePorts {
+    return getGameLoopRuntimePorts();
   }
 
   // 创建任务的通用方法
@@ -157,7 +144,10 @@ export class GameLoopTaskFactory {
       }
 
       try {
-        CraftingEngine.updateCraftingQueue();
+        CraftingEngine.updateCraftingQueue(
+          GameLoopTaskFactory.getAdapter(),
+          GameLoopTaskFactory.getRuntimePorts().recipeQuery
+        );
       } catch (error) {
         logError('制作系统更新失败:', error);
       }
@@ -181,7 +171,7 @@ export class GameLoopTaskFactory {
         batchUpdateInventory: adapter.batchUpdateInventory,
         getInventoryItem: adapter.getInventoryItem,
       };
-      const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+      const recipeService = GameLoopTaskFactory.getRuntimePorts().recipeQuery;
 
       // 批量处理设施更新，减少 store 更新次数
       const facilityUpdates: Array<{ id: string; updates: Partial<FacilityInstance> }> = [];
@@ -383,7 +373,7 @@ export class GameLoopTaskFactory {
 
   // 智能任务状态管理 - 根据游戏状态动态调整任务
   static updateTasksState(tasks: ReadonlyMap<string, GameLoopTask>): void {
-    if (!_adapter) return; // 适配器尚未注入时跳过
+    if (!tryGetAdapter()) return;
 
     // 根据配置自动更新任务状态
     Object.values(TASK_CONFIGS).forEach(config => {

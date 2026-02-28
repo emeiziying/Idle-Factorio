@@ -1,4 +1,5 @@
 // 游戏循环服务 - 重新设计的高性能统一循环管理
+import type { Disposable } from '@/services/core/DIContainer';
 import type { GameLoopConfig, GameLoopStats, GameLoopTask } from '@/types/gameLoop';
 import { PerformanceLevel } from '@/types/gameLoop';
 
@@ -70,27 +71,31 @@ class TaskScheduler {
   }
 }
 
-export class GameLoopService {
+const createInitialStats = (): GameLoopStats => ({
+  fps: 0,
+  deltaTime: 0,
+  totalTime: 0,
+  frameCount: 0,
+  averageDeltaTime: 0,
+  tasksExecuted: 0,
+  performance: {
+    frameTime: 0,
+    averageFrameTime: 0,
+    slowFrames: 0,
+  },
+});
+
+export class GameLoopService implements Disposable {
   private animationFrameId: number | null = null;
+  private scheduledFrameTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private lastFrameTime: number = 0;
   private tasks: Map<string, GameLoopTask> = new Map();
   private scheduler = new TaskScheduler();
   private taskExecutionResults = new Map<string, TaskExecutionResult[]>();
+  private taskRecoveryTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
   // 性能统计
-  private stats: GameLoopStats = {
-    fps: 0,
-    deltaTime: 0,
-    totalTime: 0,
-    frameCount: 0,
-    averageDeltaTime: 0,
-    tasksExecuted: 0,
-    performance: {
-      frameTime: 0,
-      averageFrameTime: 0,
-      slowFrames: 0,
-    },
-  };
+  private stats: GameLoopStats = createInitialStats();
 
   // 配置
   private config: GameLoopConfig = {
@@ -112,6 +117,16 @@ export class GameLoopService {
   private readonly FRAME_TIME_BUFFER_SIZE = 60;
   private slowFrameThreshold: number = 16.67; // 60fps = 16.67ms per frame
   private performanceMonitorIntervalId: ReturnType<typeof setInterval> | null = null;
+  private readonly visibilityChangeHandler = (): void => {
+    this.isVisible = !document.hidden;
+
+    if (this.isVisible) {
+      this.lastFrameTime = performance.now();
+      console.log('[GameLoop] 页面可见，恢复正常频率');
+    } else {
+      console.log('[GameLoop] 页面隐藏，降低更新频率');
+    }
+  };
 
   constructor() {
     this.setupVisibilityHandling();
@@ -127,26 +142,33 @@ export class GameLoopService {
     this.lastFrameTime = performance.now();
     this.stats.frameCount = 0;
 
+    if (this.performanceMonitorIntervalId === null) {
+      this.setupPerformanceMonitoring();
+    }
+
     console.log('[GameLoop] 启动游戏循环');
     this.loop();
   }
 
   // 停止游戏循环
   stop(): void {
-    if (!this.isRunning) return;
-
+    const wasRunning = this.isRunning;
     this.isRunning = false;
-    if (this.animationFrameId) {
+
+    if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
+    this.clearScheduledFrameTimeout();
 
     if (this.performanceMonitorIntervalId !== null) {
       clearInterval(this.performanceMonitorIntervalId);
       this.performanceMonitorIntervalId = null;
     }
 
-    console.log('[GameLoop] 停止游戏循环');
+    if (wasRunning) {
+      console.log('[GameLoop] 停止游戏循环');
+    }
   }
 
   // 暂停/恢复游戏循环
@@ -309,18 +331,19 @@ export class GameLoopService {
     if (!this.isVisible) {
       // 页面不可见时，使用 setTimeout 降低频率（backgroundThrottleRatio 控制）
       const throttledInterval = 1000 / this.config.targetFPS / this.config.backgroundThrottleRatio;
-      setTimeout(() => this.loop(), throttledInterval);
+      this.scheduleLoopTimeout(throttledInterval);
     } else if (this.performanceLevel === PerformanceLevel.BACKGROUND) {
       // 后台性能模式：1 FPS，用于极低资源占用场景
-      setTimeout(() => this.loop(), 1000);
+      this.scheduleLoopTimeout(1000);
     } else if (this.performanceLevel === PerformanceLevel.LOW) {
       // 低性能模式，降低到 15 FPS
-      setTimeout(() => this.loop(), 1000 / 15);
+      this.scheduleLoopTimeout(1000 / 15);
     } else if (this.performanceLevel === PerformanceLevel.MEDIUM) {
       // 中等性能模式，降低到 30 FPS
-      setTimeout(() => this.loop(), 1000 / 30);
+      this.scheduleLoopTimeout(1000 / 30);
     } else {
       // HIGH 模式使用 requestAnimationFrame（最流畅）
+      this.clearScheduledFrameTimeout();
       this.animationFrameId = requestAnimationFrame(() => this.loop());
     }
   }
@@ -352,22 +375,16 @@ export class GameLoopService {
   // 设置页面可见性处理
   private setupVisibilityHandling(): void {
     if (typeof document !== 'undefined') {
-      document.addEventListener('visibilitychange', () => {
-        this.isVisible = !document.hidden;
-
-        if (this.isVisible) {
-          // 页面变为可见时，重置时间避免大跳跃
-          this.lastFrameTime = performance.now();
-          console.log('[GameLoop] 页面可见，恢复正常频率');
-        } else {
-          console.log('[GameLoop] 页面隐藏，降低更新频率');
-        }
-      });
+      document.addEventListener('visibilitychange', this.visibilityChangeHandler);
     }
   }
 
   // 设置性能监控
   private setupPerformanceMonitoring(): void {
+    if (this.performanceMonitorIntervalId !== null) {
+      return;
+    }
+
     // 每5秒重置慢帧计数
     this.performanceMonitorIntervalId = setInterval(() => {
       this.stats.performance.slowFrames = 0;
@@ -401,13 +418,16 @@ export class GameLoopService {
         console.warn(`[GameLoop] 任务 ${task.name} 因频繁错误被暂时禁用`);
 
         // 30秒后重新启用任务
-        setTimeout(() => {
+        this.clearTaskRecoveryTimeout(taskId);
+        const recoveryTimeoutId = setTimeout(() => {
           if (this.tasks.has(taskId)) {
             task.enabled = true;
             this.scheduler.resetTask(taskId); // 重置调度数据
             console.log(`[GameLoop] 任务 ${task.name} 已重新启用`);
           }
+          this.taskRecoveryTimeouts.delete(taskId);
         }, 30000);
+        this.taskRecoveryTimeouts.set(taskId, recoveryTimeoutId);
       }
     }
   }
@@ -424,6 +444,7 @@ export class GameLoopService {
     if (this.tasks.delete(taskId)) {
       this.scheduler.resetTask(taskId);
       this.taskExecutionResults.delete(taskId);
+      this.clearTaskRecoveryTimeout(taskId);
       console.log(`[GameLoop] 移除任务: ${taskId}`);
     }
   }
@@ -509,5 +530,54 @@ export class GameLoopService {
       config: this.config,
       taskStats: this.getTaskStats(),
     });
+  }
+
+  dispose(): void {
+    this.stop();
+
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
+    }
+
+    this.clearAllTaskRecoveryTimeouts();
+    this.tasks.clear();
+    this.taskExecutionResults.clear();
+    this.scheduler = new TaskScheduler();
+    this.frameTimeBuffer = [];
+    this.stats = createInitialStats();
+    this.lastFrameTime = 0;
+    this.isPaused = false;
+    this.isVisible = true;
+    this.performanceLevel = PerformanceLevel.HIGH;
+  }
+
+  private scheduleLoopTimeout(delayMs: number): void {
+    this.clearScheduledFrameTimeout();
+    this.scheduledFrameTimeoutId = setTimeout(() => {
+      this.scheduledFrameTimeoutId = null;
+      this.loop();
+    }, delayMs);
+  }
+
+  private clearScheduledFrameTimeout(): void {
+    if (this.scheduledFrameTimeoutId !== null) {
+      clearTimeout(this.scheduledFrameTimeoutId);
+      this.scheduledFrameTimeoutId = null;
+    }
+  }
+
+  private clearTaskRecoveryTimeout(taskId: string): void {
+    const recoveryTimeoutId = this.taskRecoveryTimeouts.get(taskId);
+    if (recoveryTimeoutId !== undefined) {
+      clearTimeout(recoveryTimeoutId);
+      this.taskRecoveryTimeouts.delete(taskId);
+    }
+  }
+
+  private clearAllTaskRecoveryTimeouts(): void {
+    this.taskRecoveryTimeouts.forEach(timeoutId => {
+      clearTimeout(timeoutId);
+    });
+    this.taskRecoveryTimeouts.clear();
   }
 }

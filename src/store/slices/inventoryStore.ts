@@ -2,9 +2,7 @@
 import type { SliceCreator, InventorySlice } from '@/store/types';
 import { ensureInventoryMap } from '@/store/utils/mapSetHelpers';
 import { getStorageConfig } from '@/data/storageConfigs';
-import type { DataService } from '@/services/core/DataService';
-import { getService } from '@/services/core/DIServiceInitializer';
-import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
+import { getInventoryDataQuery } from '@/store/inventoryDataRuntime';
 import type { DeployedContainer } from '@/types/index';
 
 export const createInventorySlice: SliceCreator<InventorySlice> = (set, get) => ({
@@ -110,7 +108,7 @@ export const createInventorySlice: SliceCreator<InventorySlice> = (set, get) => 
     }
 
     // 新物品，计算默认容量
-    const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+    const dataService = getInventoryDataQuery();
     const item = dataService.getItem(itemId);
     const stackSize = item?.stack || 100; // 默认堆叠大小
 

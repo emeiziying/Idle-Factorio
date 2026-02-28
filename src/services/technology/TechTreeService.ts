@@ -16,8 +16,8 @@ export class TechTreeService {
   private dependentsCache: Map<string, string[]> = new Map();
   private dependencyChainCache: Map<string, string[]> = new Map();
 
-  constructor() {
-    this.dataLoader = new TechDataLoader();
+  constructor(dataLoader: TechDataLoader) {
+    this.dataLoader = dataLoader;
   }
 
   /**

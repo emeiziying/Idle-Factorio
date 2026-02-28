@@ -7,12 +7,14 @@ import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type { DataService } from '@/services/core/DataService';
 
 export class StorageService {
-  constructor() {
-    // 延迟初始化，避免循环依赖
+  private readonly dataService: DataService;
+
+  constructor(dataService: DataService) {
+    this.dataService = dataService;
   }
 
   private getDataService(): DataService {
-    return getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+    return this.dataService;
   }
 
   // 获取完整的存储配置（合并data.json和特定配置）

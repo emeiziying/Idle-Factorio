@@ -8,21 +8,22 @@ import {
   BottomNavigationAction,
   Box,
   CssBaseline,
+  LinearProgress,
   ThemeProvider,
 } from '@mui/material';
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 
 import ClearGameButton from '@/components/common/ClearGameButton';
 import ErrorScreen from '@/components/common/ErrorScreen';
 import LoadingScreen from '@/components/common/LoadingScreen';
-import FacilitiesModule from '@/components/facilities/FacilitiesModule';
-import ProductionModule from '@/components/production/ProductionModule';
-import TechnologyModule from '@/components/technology/TechnologyModule';
 import { APP_STORAGE_KEYS } from '@/constants/storageKeys';
 import { useAppInitialization } from '@/hooks/useAppInitialization';
-import { useAutoSaveBeforeUnload } from '@/hooks/useAutoSaveBeforeUnload';
 import theme from '@/theme';
 import { useLocalStorageState } from 'ahooks';
+
+const ProductionModule = lazy(() => import('@/components/production/ProductionModule'));
+const FacilitiesModule = lazy(() => import('@/components/facilities/FacilitiesModule'));
+const TechnologyModule = lazy(() => import('@/components/technology/TechnologyModule'));
 
 const App: React.FC = () => {
   // 当前模块
@@ -31,8 +32,6 @@ const App: React.FC = () => {
   });
   // 初始化游戏系统
   const { isAppReady, initError } = useAppInitialization();
-  // 自动保存游戏进度
-  useAutoSaveBeforeUnload();
 
   // 切换模块
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -65,11 +64,19 @@ const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={theme.customStyles.appContainer}>
-        <Box sx={theme.customStyles.pageContainer}>
-          {currentModule === 0 && <ProductionModule />}
-          {currentModule === 1 && <FacilitiesModule />}
-          {currentModule === 2 && <TechnologyModule />}
-        </Box>
+        <Suspense
+          fallback={
+            <Box sx={{ ...theme.customStyles.pageContainer, p: 2 }}>
+              <LinearProgress />
+            </Box>
+          }
+        >
+          <Box sx={theme.customStyles.pageContainer}>
+            {currentModule === 0 && <ProductionModule />}
+            {currentModule === 1 && <FacilitiesModule />}
+            {currentModule === 2 && <TechnologyModule />}
+          </Box>
+        </Suspense>
 
         <BottomNavigation value={currentModule} onChange={handleTabChange} showLabels>
           <BottomNavigationAction label="生产" icon={<BuildIcon />} showLabel={true} />

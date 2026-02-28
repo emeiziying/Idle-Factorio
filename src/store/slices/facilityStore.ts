@@ -1,9 +1,9 @@
 // 设施管理切片
-import type { DataService } from '@/services/core/DataService';
-import { getService } from '@/services/core/DIServiceInitializer';
-import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
-import type { FuelService } from '@/services/crafting/FuelService';
-import type { GameLoopService } from '@/services/game/GameLoopService';
+import {
+  getStoreDataQuery,
+  getStoreFuelService,
+  getStoreGameLoopService,
+} from '@/store/storeRuntimeServices';
 import type { FacilitySlice, SliceCreator } from '@/store/types';
 import { GameLoopTaskType } from '@/types/gameLoop';
 
@@ -14,7 +14,7 @@ const isActiveFacilityStatus = (status: string) =>
 // 立即启用/禁用设施任务的辅助函数
 const syncFacilitiesTask = (enable: boolean) => {
   try {
-    const svc = getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
+    const svc = getStoreGameLoopService();
     if (enable) {
       svc.enableTask(GameLoopTaskType.FACILITIES);
     } else {
@@ -31,7 +31,7 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
 
   // 设施管理
   addFacility: facility => {
-    const fuelService = getService<FuelService>(SERVICE_TOKENS.FUEL_SERVICE);
+    const fuelService = getStoreFuelService();
 
     // 检查是否需要燃料缓存
     const fuelBuffer = fuelService.initializeFuelBuffer(facility.facilityId);
@@ -105,7 +105,7 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
       return; // 没有进行中的生产，无需返还
     }
 
-    const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+    const dataService = getStoreDataQuery();
     const recipe = dataService.getRecipe(production.currentRecipeId);
     if (!recipe?.in) {
       return; // 没有输入材料，无需返还
@@ -122,7 +122,7 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
 
   _repairFacilityState: () => {
     const facilities = get().facilities;
-    const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+    const dataService = getStoreDataQuery();
     const needsRepair = facilities.filter(
       facility => !facility.targetItemId && facility.production?.currentRecipeId
     );
@@ -150,7 +150,7 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
     const facility = get().facilities.find(f => f.id === facilityId);
     if (!facility?.fuelBuffer) return false;
 
-    const fuelService = getService<FuelService>(SERVICE_TOKENS.FUEL_SERVICE);
+    const fuelService = getStoreFuelService();
     const result = fuelService.addFuel(
       facility.fuelBuffer,
       fuelItemId,
@@ -172,7 +172,7 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
   },
 
   autoRefuelFacilities: () => {
-    const fuelService = getService<FuelService>(SERVICE_TOKENS.FUEL_SERVICE);
+    const fuelService = getStoreFuelService();
     const facilities = get().facilities;
 
     // 使用智能燃料分配
@@ -187,7 +187,7 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
   },
 
   updateFuelConsumption: (deltaTime: number) => {
-    const fuelService = getService<FuelService>(SERVICE_TOKENS.FUEL_SERVICE);
+    const fuelService = getStoreFuelService();
     const facilities = get().facilities;
 
     // 小工具：为指定设施尝试补充 1 个燃料（按优先级选择兼容燃料）

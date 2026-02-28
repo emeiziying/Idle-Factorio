@@ -332,6 +332,14 @@ export class TechUnlockService {
     return Array.from(this.unlockedBuildings);
   }
 
+  /**
+   * 用 store 中恢复的解锁科技重建运行时解锁内容。
+   */
+  async hydrateUnlockedTechs(unlockedTechs: Iterable<string>): Promise<void> {
+    this.userProgressService.hydrate(unlockedTechs);
+    await this.rebuildUnlockedContent();
+  }
+
   // ========== 解锁操作 ==========
 
   /**

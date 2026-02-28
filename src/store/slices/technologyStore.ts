@@ -2,12 +2,9 @@
 import type { SliceCreator, TechnologySlice } from '@/store/types';
 import type { ResearchPriority } from '@/types/technology';
 import type { InventoryOperations } from '@/types/inventory';
-import type { TechnologyService } from '@/services/technology/TechnologyService';
-import type { RecipeService } from '@/services/crafting/RecipeService';
 import type { Recipe } from '@/types/index';
-import { getService } from '@/services/core/DIServiceInitializer';
-import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import { ensureMap, ensureUnlockedTechsSet } from '@/store/utils/mapSetHelpers';
+import { getStoreRecipeQuery, getStoreTechnologyService } from '@/store/storeRuntimeServices';
 import { error as logError } from '@/utils/logger';
 
 export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) => ({
@@ -29,11 +26,23 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
   // 初始化科技服务
   initializeTechnologyService: async () => {
     try {
-      const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
+      const techService = getStoreTechnologyService();
+      const syncStateFromService = () => {
+        const allTechs = techService.getAllTechnologies();
+        const techMap = new Map(allTechs.map(tech => [tech.id, tech]));
+        const techTreeState = techService.getTechTreeState();
+        const techCategories = techService.getTechCategories();
 
-      // 服务已在全局初始化时完成初始化
+        set(() => ({
+          technologies: techMap,
+          unlockedTechs: new Set(techTreeState.unlockedTechs),
+          researchState: techTreeState.currentResearch || null,
+          researchQueue: techTreeState.researchQueue,
+          autoResearch: techTreeState.autoResearch,
+          techCategories,
+        }));
+      };
 
-      // 创建库存操作实现并注入到科技服务
       const inventoryOps: InventoryOperations = {
         getItemAmount: (itemId: string) => {
           return get().getInventoryItem(itemId).currentAmount;
@@ -67,21 +76,14 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
         },
       };
 
-      // 注入库存操作到科技服务
       techService.setInventoryOperations(inventoryOps);
-
-      // 总是同步科技状态到store（无论服务是否已初始化）
-      const allTechs = techService.getAllTechnologies();
-      const techMap = new Map(allTechs.map(tech => [tech.id, tech]));
-      const techTreeState = techService.getTechTreeState();
-      const unlockedTechs = new Set(techTreeState.unlockedTechs);
-      const techCategories = techService.getTechCategories();
-
-      set(() => ({
-        technologies: techMap,
-        unlockedTechs,
-        techCategories,
-      }));
+      await techService.hydrateState({
+        unlockedTechs: get().unlockedTechs,
+        researchState: get().researchState,
+        researchQueue: get().researchQueue,
+        autoResearch: get().autoResearch,
+      });
+      syncStateFromService();
     } catch (error) {
       logError('Failed to initialize TechnologyService:', error);
     }
@@ -89,16 +91,14 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
 
   // 开始研究
   startResearch: async (techId: string) => {
-    const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
+    const techService = getStoreTechnologyService();
     const result = await techService.startResearch(techId);
 
     if (result.success) {
-      const currentResearch = techService.getCurrentResearch();
-      const queue = techService.getResearchQueue();
-
       set(() => ({
-        researchState: currentResearch || null,
-        researchQueue: queue,
+        researchState: techService.getCurrentResearch() || null,
+        researchQueue: techService.getResearchQueue(),
+        autoResearch: techService.getTechTreeState().autoResearch,
       }));
     }
 
@@ -107,32 +107,26 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
 
   // 完成研究
   completeResearch: (techId: string) => {
-    const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
+    const techService = getStoreTechnologyService();
     techService.completeResearch(techId);
 
-    // 更新store状态
-    const unlockedTechs = new Set([...get().unlockedTechs, techId]);
-    const currentResearch = techService.getCurrentResearch();
-    const queue = techService.getResearchQueue();
-
     set(() => ({
-      unlockedTechs,
-      researchState: currentResearch || null,
-      researchQueue: queue,
+      unlockedTechs: new Set(techService.getTechTreeState().unlockedTechs),
+      researchState: techService.getCurrentResearch() || null,
+      researchQueue: techService.getResearchQueue(),
+      autoResearch: techService.getTechTreeState().autoResearch,
     }));
-
-    // DataService 现在直接使用 TechnologyService，无需清理缓存
   },
 
   // 添加到研究队列
   addToResearchQueue: (techId: string, priority?: ResearchPriority) => {
-    const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
+    const techService = getStoreTechnologyService();
     const result = techService.addToResearchQueue(techId, priority);
 
     if (result.success) {
-      const queue = techService.getResearchQueue();
       set(() => ({
-        researchQueue: queue,
+        researchQueue: techService.getResearchQueue(),
+        autoResearch: techService.getTechTreeState().autoResearch,
       }));
     }
 
@@ -141,26 +135,26 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
 
   // 从队列移除
   removeFromResearchQueue: (techId: string) => {
-    const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
+    const techService = getStoreTechnologyService();
     const success = techService.removeFromResearchQueue(techId);
 
     if (success) {
-      const queue = techService.getResearchQueue();
       set(() => ({
-        researchQueue: queue,
+        researchQueue: techService.getResearchQueue(),
+        autoResearch: techService.getTechTreeState().autoResearch,
       }));
     }
   },
 
   // 重新排序队列
   reorderResearchQueue: (techId: string, newPosition: number) => {
-    const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
+    const techService = getStoreTechnologyService();
     const success = techService.reorderResearchQueue(techId, newPosition);
 
     if (success) {
-      const queue = techService.getResearchQueue();
       set(() => ({
-        researchQueue: queue,
+        researchQueue: techService.getResearchQueue(),
+        autoResearch: techService.getTechTreeState().autoResearch,
       }));
     }
 
@@ -169,11 +163,11 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
 
   // 设置自动研究
   setAutoResearch: (enabled: boolean) => {
-    const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
+    const techService = getStoreTechnologyService();
     techService.setAutoResearch(enabled);
 
     set(() => ({
-      autoResearch: enabled,
+      autoResearch: techService.getTechTreeState().autoResearch,
     }));
   },
 
@@ -190,22 +184,22 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
 
   // 检查科技是否可研究
   isTechAvailable: (techId: string) => {
-    const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
+    const techService = getStoreTechnologyService();
     return techService.isTechAvailable(techId);
   },
 
   // 更新研究进度
   updateResearchProgress: (deltaTime: number) => {
-    const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
+    const techService = getStoreTechnologyService();
     techService.updateResearchProgress(deltaTime);
+    const techTreeState = techService.getTechTreeState();
 
-    // 更新store中的研究状态
-    const currentResearch = techService.getCurrentResearch();
-    if (currentResearch) {
-      set(() => ({
-        researchState: currentResearch,
-      }));
-    }
+    set(() => ({
+      researchState: techTreeState.currentResearch || null,
+      researchQueue: techTreeState.researchQueue,
+      unlockedTechs: new Set(techTreeState.unlockedTechs),
+      autoResearch: techTreeState.autoResearch,
+    }));
   },
 
   _repairUnlockedTechsState: () => {
@@ -270,7 +264,7 @@ export const createTechnologySlice: SliceCreator<TechnologySlice> = (set, get) =
 
     try {
       // 获取所有配方数据
-      const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+      const recipeService = getStoreRecipeQuery();
       const allRecipes = recipeService.getAllRecipes();
 
       // 查找科技类配方

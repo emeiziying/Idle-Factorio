@@ -79,18 +79,14 @@ function ProductionComponent() {
 }
 ```
 
-### 2. 在服务中使用其他服务
+### 2. 在服务中声明依赖（推荐）
 
 ```typescript
-import { getService } from '@/services/core/DIServiceInitializer';
-import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type { DataService } from '@/services/core/DataService';
 
 export class MyService {
-  private dataService: DataService;
-
-  constructor() {
-    this.dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+  constructor(private readonly dataService: DataService) {
+    // ...
   }
 }
 ```
@@ -172,7 +168,7 @@ useCommonServices()       // 常用服务组合
 ### React生态集成
 
 - **自定义Hook**: 封装服务访问，提供React友好的API
-- **性能优化**: 使用useMemo缓存服务实例，避免重复创建
+- **性能优化**: 服务实例由 DI 容器管理，Hook 只负责读取单例引用
 - **类型推导**: 完整的TypeScript类型推导支持
 - **开发体验**: 与React DevTools和其他开发工具良好集成
 
@@ -191,6 +187,7 @@ useCommonServices()       // 常用服务组合
 - 不要在Hook外部缓存服务实例
 - 不要使用字符串作为服务标识
 - 不要在服务中直接访问React状态
+- 不要在服务内部再调用 `getService()` 隐式拉取依赖
 
 ## 🔄 扩展指南
 
@@ -215,7 +212,7 @@ container.register(SERVICE_TOKENS.MY_NEW_SERVICE, MyNewService);
 ```typescript
 // useDIServices.ts
 export const useMyNewService = (): MyNewService => {
-  return useMemo(() => getService<MyNewService>(SERVICE_TOKENS.MY_NEW_SERVICE), []);
+  return getService<MyNewService>(SERVICE_TOKENS.MY_NEW_SERVICE);
 };
 ```
 

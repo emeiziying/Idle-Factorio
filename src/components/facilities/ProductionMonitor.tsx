@@ -38,7 +38,8 @@ import { useDataService } from '@/hooks/useDIServices';
 import { FuelStatusDisplay } from '@/components/facilities/FuelStatusDisplay';
 
 const ProductionMonitor: React.FC = () => {
-  const { facilities, updateFacility } = useGameStore();
+  const facilities = useGameStore(state => state.facilities);
+  const updateFacility = useGameStore(state => state.updateFacility);
   const dataService = useDataService();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');

@@ -1,10 +1,8 @@
 // 手动采集验证工具类
 // 基于 Factorio Wiki 官方规则实现
 
-import { getService } from '@/services/core/DIServiceInitializer';
-import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type { DataService } from '@/services/core/DataService';
-import { RecipeService } from '@/services/crafting/RecipeService';
+import type { RecipeService } from '@/services/crafting/RecipeService';
 import type { Recipe } from '@/types/index';
 import type { IManualCraftingValidator } from '@/services/interfaces/IManualCraftingValidator';
 
@@ -49,8 +47,11 @@ export interface ManualCraftingValidation {
   details?: string; // 可选的详细说明
 }
 
+type RecipeQuery = Pick<RecipeService, 'getRecipesThatProduce' | 'getAllRecipes'>;
+
 export class ManualCraftingValidator implements IManualCraftingValidator {
-  private dataService!: DataService;
+  private readonly dataService: DataService;
+  private recipeQuery: RecipeQuery | null = null;
 
   // 缓存机制 - 提升性能
   private validationCache: Map<string, ManualCraftingValidation> = new Map();
@@ -67,22 +68,22 @@ export class ManualCraftingValidator implements IManualCraftingValidator {
     'crusher',
   ];
 
-  constructor() {
-    // 延迟初始化，避免循环依赖
-    // dataService 将在需要时从 DI 容器获取
-    // 清除缓存，确保新的验证逻辑生效
+  constructor(dataService: DataService) {
+    this.dataService = dataService;
+    this.clearCache();
+  }
+
+  setRecipeQuery(recipeQuery: RecipeQuery): void {
+    this.recipeQuery = recipeQuery;
     this.clearCache();
   }
 
   private getDataService(): DataService {
-    if (!this.dataService) {
-      this.dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
-    }
     return this.dataService;
   }
 
-  private getRecipeService(): RecipeService {
-    return getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+  private getRecipeService(): RecipeQuery | null {
+    return this.recipeQuery;
   }
 
   /**

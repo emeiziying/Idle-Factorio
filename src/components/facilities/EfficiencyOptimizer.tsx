@@ -44,7 +44,7 @@ interface OptimizationSuggestion {
 }
 
 const EfficiencyOptimizer: React.FC = () => {
-  const { facilities } = useGameStore();
+  const facilities = useGameStore(state => state.facilities);
   const powerService = usePowerService();
   const dataService = useDataService();
   const recipeService = useRecipeService();
