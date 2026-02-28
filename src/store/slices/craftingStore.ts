@@ -41,6 +41,12 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
 
     set(state => ({
       craftingQueue: [...state.craftingQueue, newTask],
+      production: wasEmpty
+        ? {
+            ...state.production,
+            showCraftingQueue: true,
+          }
+        : state.production,
     }));
 
     // 立即启用制作任务
@@ -81,6 +87,12 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
     set(state => ({
       craftingQueue: [...state.craftingQueue, ...tasksWithIds],
       craftingChains: [...state.craftingChains, newChain],
+      production: wasEmpty
+        ? {
+            ...state.production,
+            showCraftingQueue: true,
+          }
+        : state.production,
     }));
 
     // 立即启用制作任务
@@ -114,6 +126,13 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
                 craftingChains: hasRemainingTasks
                   ? state.craftingChains
                   : state.craftingChains.filter(c => c.id !== chain.id),
+                production:
+                  newQueue.length === 0
+                    ? {
+                        ...state.production,
+                        showCraftingQueue: false,
+                      }
+                    : state.production,
               };
             });
             // 链的最后一个任务完成时，队列可能已空，需要禁用制作系统
@@ -135,6 +154,13 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
             set(state => ({
               craftingQueue: state.craftingQueue.filter(task => task.chainId !== chain.id),
               craftingChains: state.craftingChains.filter(c => c.id !== chain.id),
+              production:
+                state.craftingQueue.filter(task => task.chainId !== chain.id).length === 0
+                  ? {
+                      ...state.production,
+                      showCraftingQueue: false,
+                    }
+                  : state.production,
             }));
             // 取消整个链后，队列可能已空，需要禁用制作系统
             if (get().craftingQueue.length === 0) {
@@ -152,6 +178,13 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
       // 移除任务
       set(state => ({
         craftingQueue: state.craftingQueue.filter(task => task.id !== taskId),
+        production:
+          state.craftingQueue.length === 1
+            ? {
+                ...state.production,
+                showCraftingQueue: false,
+              }
+            : state.production,
       }));
 
       // 检查队列是否为空，如果为空则禁用制作系统
