@@ -70,10 +70,13 @@ export const getAllCustomRecipes = (): Recipe[] => {
 };
 
 /**
- * 获取手动采集类型的自定义配方
+ * 获取手动采集类型的自定义配方（包含 'manual' 或 'mining' 标记的配方）
+ * 采矿配方（如木材）属于手动采集，因此也包含在内
  */
 export const getManualCustomRecipes = (): Recipe[] => {
-  return CUSTOM_RECIPES.filter(recipe => recipe.flags?.includes('manual'));
+  return CUSTOM_RECIPES.filter(
+    recipe => recipe.flags?.includes('manual') || recipe.flags?.includes('mining')
+  );
 };
 
 /**

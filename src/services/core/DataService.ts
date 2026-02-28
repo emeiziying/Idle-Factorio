@@ -34,6 +34,11 @@ export class DataService {
     this.cacheVersion++;
   }
 
+  // 科技解锁后由外部调用，使物品缓存失效
+  invalidateItemCache(): void {
+    this.clearCache();
+  }
+
   // 加载游戏数据
   async loadGameData(): Promise<GameData> {
     if (this.gameData) {
@@ -283,10 +288,11 @@ export class DataService {
     const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
     return {
       item,
-      recipes: recipeService.getRecipesThatProduce(itemId),
+      // 只返回已解锁的配方，确保 UI 层不展示未解锁内容
+      recipes: recipeService.getUnlockedRecipesThatProduce(itemId),
       usedInRecipes: recipeService.getRecipesThatUse(itemId),
       recipeStats: recipeService.getRecipeStats(itemId),
-      recommendedRecipe: recipeService.getMostEfficientRecipe(itemId),
+      recommendedRecipe: recipeService.getUnlockedMostEfficientRecipe(itemId),
     };
   }
 

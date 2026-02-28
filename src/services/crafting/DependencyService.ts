@@ -95,7 +95,10 @@ export class DependencyService {
 
         // 如果可以手动制作，创建制作任务
         if (canCraftManually && materialRecipe) {
-          const craftQuantity = Math.ceil(shortage / Object.values(materialRecipe.out)[0]);
+          // 优先使用该材料在配方中的实际产出量，回退到第一个输出数量
+          const outputPerCraft =
+            materialRecipe.out[inputItemId] ?? Object.values(materialRecipe.out)[0];
+          const craftQuantity = Math.ceil(shortage / outputPerCraft);
 
           tasks.push({
             id: `chain_${taskIdCounter++}`,
@@ -161,9 +164,11 @@ export class DependencyService {
         !inputRecipe.flags?.includes('mining')
       ) {
         // 这是一个中间产物，需要递归计算其基础材料需求
+        // 优先使用该材料在配方中的实际产出量，回退到第一个输出数量
+        const outputPerCraft = inputRecipe.out[inputItemId] ?? Object.values(inputRecipe.out)[0];
         this.calculateTotalBasicMaterialNeeds(
           inputRecipe,
-          Math.ceil(totalRequired / Object.values(inputRecipe.out)[0]),
+          Math.ceil(totalRequired / outputPerCraft),
           totalNeeds
         );
       } else {

@@ -208,7 +208,7 @@ export class RecipeService {
 
     return allRecipes.filter(recipe => {
       // 检查配方是否被解锁
-      if (!techService.isItemUnlocked(recipe.id)) {
+      if (!techService.isRecipeUnlocked(recipe.id)) {
         return false; // 跳过未解锁的配方
       }
 
@@ -312,6 +312,40 @@ export class RecipeService {
    */
   getMostEfficientRecipe(itemId: string): Recipe | undefined {
     const recipes = this.getRecipesThatProduce(itemId);
+    if (recipes.length === 0) return undefined;
+
+    let bestRecipe = recipes[0];
+    let bestEfficiency = this.getRecipeEfficiency(bestRecipe, itemId);
+
+    for (const recipe of recipes) {
+      const efficiency = this.getRecipeEfficiency(recipe, itemId);
+      if (efficiency > bestEfficiency) {
+        bestEfficiency = efficiency;
+        bestRecipe = recipe;
+      }
+    }
+
+    return bestRecipe;
+  }
+
+  /**
+   * 获取生产指定物品的已解锁配方（UI 层专用）
+   * 只返回科技系统已解锁的配方，适合在 UI 层展示时使用
+   * @param itemId 物品ID
+   */
+  getUnlockedRecipesThatProduce(itemId: string): Recipe[] {
+    const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
+    return this.getRecipesThatProduce(itemId).filter(recipe =>
+      techService.isRecipeUnlocked(recipe.id)
+    );
+  }
+
+  /**
+   * 获取生产指定物品效率最高的已解锁配方（UI 层专用）
+   * @param itemId 物品ID
+   */
+  getUnlockedMostEfficientRecipe(itemId: string): Recipe | undefined {
+    const recipes = this.getUnlockedRecipesThatProduce(itemId);
     if (recipes.length === 0) return undefined;
 
     let bestRecipe = recipes[0];
@@ -433,10 +467,12 @@ export class RecipeService {
    * 计算配方总成本
    * @param recipe 配方
    * @param includeRawMaterials 是否包含原材料成本
+   * @param _visitedRecipes 已访问配方集合（防止循环依赖导致无限递归）
    */
   calculateRecipeCost(
     recipe: Recipe,
-    includeRawMaterials: boolean = true
+    includeRawMaterials: boolean = true,
+    _visitedRecipes: Set<string> = new Set()
   ): {
     directCost: Map<string, number>;
     totalCost: Map<string, number>;
@@ -457,6 +493,10 @@ export class RecipeService {
     }
 
     if (includeRawMaterials) {
+      // 标记当前配方为已访问，防止循环依赖
+      const visitedRecipes = new Set(_visitedRecipes);
+      visitedRecipes.add(recipe.id);
+
       // 计算原材料成本
       for (const [itemId, amount] of Object.entries(recipe.in)) {
         const itemRecipes = this.getRecipesThatProduce(itemId);
@@ -465,10 +505,10 @@ export class RecipeService {
           const existing = rawMaterials.get(itemId) || 0;
           rawMaterials.set(itemId, existing + (amount as number));
         } else {
-          // 递归计算该物品的成本
+          // 递归计算该物品的成本（跳过已访问的配方，防止循环依赖）
           const bestRecipe = this.getMostEfficientRecipe(itemId);
-          if (bestRecipe) {
-            const subCost = this.calculateRecipeCost(bestRecipe, true);
+          if (bestRecipe && !visitedRecipes.has(bestRecipe.id)) {
+            const subCost = this.calculateRecipeCost(bestRecipe, true, visitedRecipes);
             for (const [subItemId, subAmount] of subCost.totalCost) {
               const totalAmount = subAmount * (amount as number);
               const existing = totalCost.get(subItemId) || 0;

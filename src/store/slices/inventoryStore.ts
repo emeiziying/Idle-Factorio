@@ -225,7 +225,7 @@ export const createInventorySlice: SliceCreator<InventorySlice> = (set, get) => 
       };
     }
 
-    // 检查原材料是否足够
+    // 检查原材料是否足够（实际消耗由 CraftingEngine 在任务完成时处理）
     const hasEnoughMaterials = Object.entries(config.recipe).every(([itemId, required]) => {
       const available = get().getInventoryItem(itemId).currentAmount;
       return available >= required * quantity;
@@ -239,15 +239,10 @@ export const createInventorySlice: SliceCreator<InventorySlice> = (set, get) => 
       };
     }
 
-    // 消耗原材料
-    Object.entries(config.recipe).forEach(([itemId, required]) => {
-      get().updateInventory(itemId, -required * quantity);
-    });
-
-    // 添加到制作队列
+    // 添加到制作队列（材料消耗由 CraftingEngine 在任务完成时处理）
     for (let i = 0; i < quantity; i++) {
       get().addCraftingTask({
-        recipeId: `craft_${config.itemId}`,
+        recipeId: config.itemId, // 使用真实配方ID，与 data.json 中的配方 ID 对应
         itemId: config.itemId,
         quantity: 1,
         progress: 0,

@@ -13,7 +13,8 @@ const ManualCraftingFlowCard: React.FC<ManualCraftingFlowCardProps> = ({ item, o
   const recipeService = useRecipeService();
   const validator = useManualCraftingValidator();
 
-  const itemRecipes = recipeService.getRecipesThatProduce(item.id) ?? [];
+  // 只展示已解锁的配方，避免未解锁内容出现在手动制作界面
+  const itemRecipes = recipeService.getUnlockedRecipesThatProduce(item.id) ?? [];
 
   // 使用验证器检查哪些配方可以手动制作
   const recipeValidations = itemRecipes.map((recipe: Recipe) => ({

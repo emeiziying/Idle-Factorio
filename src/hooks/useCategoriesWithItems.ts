@@ -16,6 +16,8 @@ export const useCategoriesWithItems = () => {
 
   // 获取分类的函数
   const updateCategories = useCallback(() => {
+    // 失效物品缓存，确保科技解锁后新物品能正确显示
+    dataService.invalidateItemCache();
     const availableCategories = dataService.getCategoriesWithAvailableItems();
     setCategories(availableCategories);
   }, [dataService]);
