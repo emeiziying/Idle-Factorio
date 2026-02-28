@@ -25,25 +25,46 @@ const FloatingTaskList: React.FC = () => {
   const itemSize = isMobile ? 44 : 56;
   const gap = isMobile ? 0.5 : 1;
 
+  const getDisplayQuantity = (task: (typeof activeTasks)[number]): number => {
+    const recipe = dataService.getRecipe(task.recipeId);
+    if (!recipe?.out) {
+      return task.quantity;
+    }
+
+    const outputPerCraft = recipe.out[task.itemId] ?? Object.values(recipe.out)[0];
+    return task.quantity * Number(outputPerCraft || 1);
+  };
+
   return (
     <Box
       sx={{
         position: 'fixed',
-        // 56px 为移动端固定 tabbar 高度，再留 20px 间距
-        bottom: 76,
-        left: 20,
+        // 56px 为移动端固定 tabbar 高度，再留 12px 间距
+        bottom: 68,
+        left: 0,
+        width: '100%',
         zIndex: 1250,
         display: 'flex',
         flexDirection: 'column',
+        alignItems: 'center',
         gap,
-        maxWidth: `${itemSize * 6 + gap * 5}px`,
+        boxSizing: 'border-box',
+        px: isMobile ? 1 : 1.5,
+        py: isMobile ? 0.75 : 1,
+        borderRadius: 1.5,
+        bgcolor: 'rgba(0, 0, 0, 0.45)',
+        backdropFilter: 'blur(6px)',
+        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.35)',
         pointerEvents: 'auto', // 允许点击交互
       }}
     >
       {Array.from({ length: Math.min(Math.ceil(activeTasks.length / 6), 3) }, (_, rowIndex) => {
         const rowTasks = activeTasks.slice(rowIndex * 6, (rowIndex + 1) * 6);
         return (
-          <Box key={rowIndex} sx={{ display: 'flex', gap, justifyContent: 'flex-start' }}>
+          <Box
+            key={rowIndex}
+            sx={{ display: 'flex', gap, justifyContent: 'center', width: '100%' }}
+          >
             {rowTasks.map(task => {
               const item = dataService.getItem(task.itemId);
               if (!item) return null;
@@ -76,7 +97,7 @@ const FloatingTaskList: React.FC = () => {
                   <FactorioIcon
                     itemId={task.itemId}
                     size={itemSize}
-                    quantity={task.quantity > 1 ? task.quantity : undefined}
+                    quantity={getDisplayQuantity(task) > 1 ? getDisplayQuantity(task) : undefined}
                   />
                   {/* 合并标识 */}
                   {task.isMerged && (

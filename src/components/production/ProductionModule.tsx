@@ -3,7 +3,6 @@ import React, { useEffect } from 'react';
 
 import CategoryTabs from '@/components/common/CategoryTabs';
 import FloatingTaskList from '@/components/common/FloatingTaskList';
-import CraftingQueue from '@/components/production/CraftingQueue';
 import ItemDetailPanel from '@/components/production/ItemDetailPanel';
 import ItemList from '@/components/production/ItemList';
 
@@ -18,11 +17,9 @@ const ProductionModule: React.FC = React.memo(() => {
   const selectedCategory = useGameStore(state => state.production.selectedCategory);
   const selectedItem = useGameStore(state => state.production.selectedItem);
   const isItemJump = useGameStore(state => state.production.isItemJump);
-  const showCraftingQueue = useGameStore(state => state.production.showCraftingQueue);
   const selectProductionCategory = useGameStore(state => state.selectProductionCategory);
   const selectProductionItem = useGameStore(state => state.selectProductionItem);
   const resetItemJump = useGameStore(state => state.resetItemJump);
-  const setCraftingQueueVisible = useGameStore(state => state.setCraftingQueueVisible);
   const autoSelectFirstItemIfNeeded = useGameStore(state => state.autoSelectFirstItemIfNeeded);
   const getFirstItemInCategory = useGameStore(state => state.getFirstItemInCategory);
 
@@ -70,7 +67,7 @@ const ProductionModule: React.FC = React.memo(() => {
       </Box>
 
       {/* 主要内容区域 - 左右分割 */}
-      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
         {/* 左侧物品列表 */}
         <Box
           sx={{
@@ -78,6 +75,7 @@ const ProductionModule: React.FC = React.memo(() => {
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
+            minHeight: 0,
             borderRight: 1,
             borderColor: 'divider',
           }}
@@ -90,7 +88,7 @@ const ProductionModule: React.FC = React.memo(() => {
         </Box>
 
         {/* 右侧物品详情 */}
-        <Box sx={{ flex: 1, overflow: 'hidden' }}>
+        <Box sx={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
           {selectedItem ? (
             <ItemDetailPanel item={selectedItem} onItemSelect={selectProductionItem} />
           ) : (
@@ -106,9 +104,6 @@ const ProductionModule: React.FC = React.memo(() => {
           )}
         </Box>
       </Box>
-
-      {/* 制作队列弹窗 */}
-      <CraftingQueue open={showCraftingQueue} onClose={() => setCraftingQueueVisible(false)} />
 
       {/* 浮动任务列表 - 左下角自动显示 */}
       <FloatingTaskList />
