@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, CardContent, Typography, Chip, Box, Button, useTheme } from '@mui/material';
+import { Card, CardContent, Typography, Chip, Box, Button } from '@mui/material';
 import { AddBox as AddBoxIcon } from '@mui/icons-material';
 import type { Item } from '@/types/index';
 import useGameStore from '@/store/gameStore';
@@ -11,16 +11,19 @@ interface InventoryCardProps {
 
 const InventoryCard: React.FC<InventoryCardProps> = ({ item }) => {
   const [expansionDialogOpen, setExpansionDialogOpen] = useState(false);
-  const theme = useTheme();
   const { getInventoryItem } = useGameStore();
 
   const inventoryItem = getInventoryItem(item.id);
 
   return (
     <>
-      <Card sx={{ ...theme.customStyles.layout.cardCompact, bgcolor: 'transparent', boxShadow: 1 }}>
-        <CardContent sx={{ p: theme.customStyles.spacing.compact }}>
-          <Typography variant="subtitle2" gutterBottom sx={theme.customStyles.typography.subtitle}>
+      <Card sx={{ mb: 0.5, p: 0.5, bgcolor: 'transparent', boxShadow: 1 }}>
+        <CardContent sx={{ p: 0.5 }}>
+          <Typography
+            variant="subtitle2"
+            gutterBottom
+            sx={{ fontSize: '0.8rem', fontWeight: 600, mb: '0.5rem' }}
+          >
             库存信息
           </Typography>
 
@@ -70,12 +73,12 @@ const InventoryCard: React.FC<InventoryCardProps> = ({ item }) => {
           </Button>
 
           {inventoryItem.status !== 'normal' && (
-            <Box mt={theme.customStyles.spacing.compact}>
+            <Box mt={0.5}>
               <Chip
                 label={inventoryItem.status}
                 color="warning"
                 size="small"
-                sx={theme.customStyles.typography.tiny}
+                sx={{ fontSize: '0.65rem' }}
               />
             </Box>
           )}

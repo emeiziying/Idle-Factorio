@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, Chip, Box, Button, useTheme } from '@mui/material';
+import { Typography, Chip, Box, Button } from '@mui/material';
 import type { Item } from '@/types/index';
 import useGameStore from '@/store/gameStore';
 import FactorioIcon from '@/components/common/FactorioIcon';
@@ -14,7 +14,6 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({
   item,
   onItemSelect,
 }) => {
-  const theme = useTheme();
   const dataService = useDataService();
   const storageService = useStorageService();
   const techService = useTechnologyService();
@@ -196,7 +195,7 @@ const InventoryManagementCard: React.FC<InventoryManagementCardProps> = ({
             label={inventoryItem.status}
             color="warning"
             size="small"
-            sx={theme.customStyles.typography.tiny}
+            sx={{ fontSize: '0.65rem' }}
           />
         </Box>
       )}
