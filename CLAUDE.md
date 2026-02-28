@@ -80,15 +80,46 @@ const recipeService = useRecipeService();
 2. **Phase 2**: Initialize core services (DataService, RecipeService, TechnologyService)
 3. **Phase 3**: Initialize application layer (sync tech to store, start game loop)
 
+**Key Features:**
+- Reentrant initialization (safe for React StrictMode double-invocation)
+- Centralized cleanup via `cleanup()` method
+- Runtime port injection via `AppRuntimeContext`
+- Proper error handling with automatic rollback
+
+### Runtime Port Injection Pattern (AppRuntimeContext)
+
+A key architectural pattern is injecting narrow service interfaces into non-React code (store slices, utilities) to avoid circular dependencies:
+
+```typescript
+// AppRuntimeContext provides typed accessor functions for runtime-injected ports
+import { getStoreRuntimeServices, getStorageConfigQuery } from '@/services/core/AppRuntimeContext';
+
+// In store slices or utilities (not React components):
+const services = getStoreRuntimeServices(); // throws if not initialized
+const recipeQuery = services.recipeQuery;
+
+// Convenience accessors from storeRuntimeServices.ts:
+import { getStoreDataQuery, getStoreFuelService } from '@/store/storeRuntimeServices';
+```
+
+**Context published during DIServiceInitializer Phase 3:**
+- `storageConfigQuery` — Storage config methods from StorageService
+- `inventoryDataQuery` — Item lookup from DataService
+- `storeRuntimeServices` — Full runtime ports bundle for store slices
+- `gameStoreAdapter` — Bridge from services to Zustand store actions
+- `gameLoopRuntimePorts` — Recipe query for GameLoopTaskFactory
+
 ### Modular Zustand Store Architecture
 
-The state management uses a modular slice-based architecture:
+The state management uses a modular slice-based architecture with `subscribeWithSelector`:
 
 ```
 src/store/
 ├── index.ts                  # Composite store combining all slices
 ├── gameStore.ts              # Backward compatibility proxy
 ├── gameTimeStore.ts          # Separate game time tracking store
+├── inventoryDataRuntime.ts   # Inventory data query runtime injection
+├── storeRuntimeServices.ts   # Unified store service runtime injection
 ├── types/index.ts            # TypeScript interfaces for all slices
 ├── slices/                   # Individual business domain slices
 │   ├── inventoryStore.ts         # Inventory & container management
@@ -190,7 +221,7 @@ private async addInitialUnlocks(): Promise<void> {
 - **No Hardcoded Lists**: Initial unlocks are calculated from game data automatically
 - **Technology Data Driven**: Scans `items` with `category: "technology"` and their `unlockedRecipes`
 - **Dynamic Adaptation**: Updates automatically when game data changes
-- **Event System**: TechEventEmitter broadcasts unlock changes to interested subscribers
+- **Event System**: `events.ts` broadcasts unlock changes to interested subscribers
 
 ## Import Path Standards
 
@@ -226,19 +257,20 @@ vi.mock('../../store/gameStore');
 The application follows a service-oriented architecture with clear separation of concerns:
 
 **Core Services** (`src/services/core/`):
+- **AppRuntimeContext**: Unified runtime injection context — publishes typed ports for store slices and non-React code
 - **DataService**: Singleton for game data loading, localization, item/recipe lookup
-- **DIContainer**: Custom DI container with circular dependency detection
-- **DIServiceInitializer**: Centralized service registration and initialization orchestration
+- **DIContainer**: Custom DI container with circular dependency detection and `dispose()` support
+- **DIServiceInitializer**: Centralized service registration and initialization orchestration (reentrant-safe)
 - **GameConfig**: Centralized game constants and configuration
 - **ServiceTokens**: Constants for type-safe service lookup
 
 **Crafting Services** (`src/services/crafting/`):
-- **RecipeService**: Recipe querying (produce, consume, manual, automated)
+- **RecipeService**: Recipe querying (produce, consume, manual, automated) with unlock-aware filters
 - **DependencyService**: Recursive material dependency analysis for chain crafting
 - **FuelService**: Fuel buffer management and consumption calculation
 
 **Game Services** (`src/services/game/`):
-- **GameLoopService**: Unified requestAnimationFrame-based loop with task scheduling
+- **GameLoopService**: Unified requestAnimationFrame-based loop with task scheduling and `dispose()`
 - **GameLoopTaskFactory**: Factory for creating default game system tasks
 - **PowerService**: Power generation/consumption calculation and balance analysis
 - **UserProgressService**: Item unlock status and progress tracking
@@ -251,11 +283,15 @@ The application follows a service-oriented architecture with clear separation of
 - **ResearchQueueService**: Research queue ordering and management
 - **TechProgressTracker**: Research progress state tracking
 - **TechDataLoader**: Async technology data loading from game JSON
-- **TechEventEmitter**: Event system broadcasting tech state changes
+- **events.ts**: Event system broadcasting tech state changes
+- **types.ts**: Technology system shared type definitions
 
 **Storage Services** (`src/services/storage/`):
-- **GameStorageService**: Save/load with LZ-String compression (70-80% reduction)
+- **GameStorageService**: Save/load with LZ-String compression (70-80% reduction) and `dispose()`
 - **StorageService**: Container/chest management for inventory expansion
+
+**Service Interfaces** (`src/services/interfaces/`):
+- **IManualCraftingValidator**: Interface for manual crafting validation
 
 ### Custom Hooks Pattern
 
@@ -275,10 +311,7 @@ export const useCategoriesWithItems = () => {
 **Key hooks:**
 - `useAppInitialization` - App startup orchestration
 - `useDIServices` - Service access hooks (`useDataService`, `useRecipeService`, etc.)
-- `useGameLoop` - Game loop integration
 - `useCrafting` - Crafting logic
-- `useProductionLoop` - Production system updates
-- `useI18n` - Localization
 - `useCategoriesWithItems` - Category data fetching with auto-refresh
 - `useItemRecipes` - Recipe retrieval for items
 - `useItemClick` - Item interaction handling
@@ -286,7 +319,7 @@ export const useCategoriesWithItems = () => {
 - `useFacilityRepair` - Facility state integrity repair
 - `useInventoryRepair` - Inventory state integrity repair
 - `useUnlockedTechsRepair` - Tech unlock state repair
-- `useAutoSaveBeforeUnload` - Automatic save on page exit
+- `useI18n` - Localization
 - `useIsMobile` - Responsive mobile detection
 
 ### Core Game Loop (Unified Architecture)
@@ -317,63 +350,128 @@ gameLoopService.addTask({
 src/
 ├── App.tsx                           # Main application component
 ├── main.tsx                          # Entry point
-├── components/                       # React components (~41 TSX files)
+├── vite-env.d.ts                     # Vite environment type definitions
+├── components/                       # React components (~43 TSX files)
 │   ├── common/                       # Shared UI components
 │   │   ├── FactorioIcon.tsx          # Sprite sheet-based icons
 │   │   ├── CategoryTabs.tsx          # Tab navigation
 │   │   ├── ChainCraftingDialog.tsx   # Chain crafting UI
 │   │   ├── FloatingTaskList.tsx      # Floating task display
-│   │   └── ...
+│   │   ├── ClickableWrapper.tsx      # Item click wrapper
+│   │   ├── ClearGameButton.tsx       # Game reset button
+│   │   ├── ErrorScreen.tsx           # Error display
+│   │   ├── InlineLoading.tsx         # Inline loading spinner
+│   │   ├── LoadingScreen.tsx         # Full-screen loader
+│   │   └── index.ts                  # Common module exports
 │   ├── detail/                       # Item detail panel components
+│   │   ├── ItemDetailHeader.tsx      # Item header in detail panel
+│   │   ├── UnifiedRecipeCard.tsx     # Combined production/consumption recipes
+│   │   ├── ManualCraftingCard.tsx    # Manual crafting section
+│   │   ├── ManualCraftingFlowCard.tsx # Advanced crafting flow
+│   │   ├── CraftingButtons.tsx       # Craft action buttons
+│   │   ├── RecipeFlowDisplay.tsx     # Input/output visualization
+│   │   ├── InventoryCard.tsx         # Inventory display
+│   │   ├── InventoryManagementCard.tsx # Inventory operations
+│   │   ├── UsageCard.tsx             # Item usage tracking
+│   │   ├── RecipeFacilitiesCard.tsx  # Production facilities list
+│   │   └── StorageExpansionDialog.tsx # Storage upgrade UI
 │   ├── facilities/                   # Facilities management
 │   │   ├── FacilitiesModule.tsx      # Main facilities interface
 │   │   ├── PowerManagement.tsx       # Power system UI
 │   │   ├── FuelStatusDisplay.tsx     # Fuel management display
-│   │   ├── EfficiencyOptimizer.tsx   # Efficiency analysis
-│   │   └── ...
+│   │   ├── FuelPrioritySettings.tsx  # Fuel priority configuration
+│   │   ├── ProductionMonitor.tsx     # Facility production tracking
+│   │   └── EfficiencyOptimizer.tsx   # Efficiency analysis
 │   ├── production/                   # Production module
 │   │   ├── ProductionModule.tsx      # Main production interface
-│   │   ├── ItemGrid.tsx, ItemCard.tsx # Item browsing
+│   │   ├── ItemGrid.tsx              # Item grid display
+│   │   ├── ItemList.tsx              # Item list alternative view
+│   │   ├── ItemCard.tsx              # Single item card
 │   │   ├── ItemDetailPanel.tsx       # Item details
-│   │   └── ...
+│   │   ├── CraftingQueue.tsx         # Active crafting tasks
+│   │   └── RecipeInfo.tsx            # Recipe analysis display
 │   └── technology/                   # Technology module
 │       ├── TechnologyModule.tsx      # Main tech interface
-│       ├── TechVirtualizedGrid.tsx   # Performance-optimized grid
-│       ├── ResearchQueue.tsx         # Queue management
-│       └── ...
+│       ├── TechDetailPanel.tsx       # Tech detail view
+│       ├── TechVirtualizedGridWithAutoSizer.tsx # Optimized grid with auto-sizing
+│       ├── TechVirtualizedGrid.tsx   # Virtualized tech grid
+│       ├── TechSimpleGrid.tsx        # Simple tech grid
+│       ├── TechGridCard.tsx          # Single tech card
+│       └── ResearchQueue.tsx         # Queue management
 ├── constants/
 │   └── storageKeys.ts                # localStorage key constants
 ├── data/                             # Game data and configurations
 │   ├── customRecipes.ts              # Custom recipe definitions
 │   ├── fuelConfigs.ts                # Fuel system configuration
 │   ├── storageConfigData.ts          # Storage configuration data
-│   └── storageConfigs.ts             # Storage config definitions
-├── hooks/                            # Custom React hooks (~18 files)
+│   ├── storageConfigs.ts             # Storage config definitions
+│   └── storageConfigRuntime.ts       # Storage config runtime injection
+├── hooks/                            # Custom React hooks (12 files)
+│   ├── useAppInitialization.ts       # App startup orchestration
+│   ├── useDIServices.ts              # Service access hooks
+│   ├── useCategoriesWithItems.ts     # Category data with auto-refresh
+│   ├── useCrafting.ts                # Crafting logic
+│   ├── useFacilityRepair.ts          # Facility state integrity repair
+│   ├── useI18n.ts                    # Localization
+│   ├── useInventoryRepair.ts         # Inventory state integrity repair
+│   ├── useIsMobile.ts                # Responsive mobile detection
+│   ├── useItemClick.ts               # Item interaction handling
+│   ├── useItemRecipes.ts             # Recipe retrieval for items
+│   ├── useManualCraftingStatus.ts    # Manual craft validation
+│   └── useUnlockedTechsRepair.ts     # Tech unlock state repair
 ├── services/                         # Business logic services
-│   ├── core/                         # DI container + core services
-│   ├── crafting/                     # Recipe + dependency + fuel
-│   ├── game/                         # Game loop + power + progress
-│   ├── storage/                      # Save/load + containers
-│   └── technology/                   # Tech tree + research (7 services)
+│   ├── core/                         # DI container + core services (7 files)
+│   │   ├── AppRuntimeContext.ts      # Unified runtime port injection context
+│   │   ├── DataService.ts
+│   │   ├── DIContainer.ts
+│   │   ├── DIServiceInitializer.ts
+│   │   ├── GameConfig.ts
+│   │   ├── ServiceTokens.ts
+│   │   └── index.ts
+│   ├── crafting/                     # Recipe + dependency + fuel (4 files)
+│   ├── game/                         # Game loop + power + progress (5 files)
+│   ├── interfaces/                   # Service contracts
+│   │   └── IManualCraftingValidator.ts
+│   ├── storage/                      # Save/load + containers (3 files)
+│   ├── technology/                   # Tech tree + research (10 files)
+│   │   ├── TechnologyService.ts
+│   │   ├── TechTreeService.ts
+│   │   ├── TechUnlockService.ts
+│   │   ├── ResearchService.ts
+│   │   ├── ResearchQueueService.ts
+│   │   ├── TechProgressTracker.ts
+│   │   ├── TechDataLoader.ts
+│   │   ├── events.ts                 # Tech event broadcasting
+│   │   ├── types.ts                  # Technology type definitions
+│   │   └── index.ts
+│   └── index.ts
 ├── store/                            # Zustand state management
 │   ├── index.ts                      # Composite store
 │   ├── gameStore.ts                  # Backward compatibility proxy
 │   ├── gameTimeStore.ts              # Game time tracking
+│   ├── inventoryDataRuntime.ts       # Inventory data query runtime
+│   ├── storeRuntimeServices.ts       # Store service runtime injection
 │   ├── slices/                       # 8 modular slices
 │   ├── types/index.ts                # Store TypeScript types
 │   └── utils/mapSetHelpers.ts        # Map/Set serialization
+├── test/
+│   └── setup.ts                      # Vitest configuration and setup
 ├── theme/index.ts                    # Material-UI dark theme
 ├── types/                            # Shared TypeScript types
 │   ├── index.ts                      # Core game types
 │   ├── facilities.ts                 # Facility interfaces
 │   ├── gameLoop.ts                   # Game loop types
 │   ├── inventory.ts                  # Inventory types
-│   └── technology.ts                 # Technology system types
+│   ├── technology.ts                 # Technology system types
+│   ├── mui-theme.d.ts                # Material-UI theme type extensions
+│   └── test-utils.ts                 # Testing utility types
 └── utils/                            # Utility functions
     ├── craftingEngine.ts             # Manual crafting logic
     ├── manualCraftingValidator.ts    # Validation logic
     ├── taskMerger.ts                 # Task merging logic
+    ├── common.ts                     # Common utility functions
     ├── logger.ts                     # Logging system
+    ├── navigation.ts                 # Navigation helpers
     └── styleHelpers.ts               # CSS/styling utilities
 ```
 
@@ -426,7 +524,7 @@ interface GameState {
 ### Mobile-First Design
 
 - **Bottom Navigation**: Primary navigation with 3 active modules (Production, Facilities, Technology)
-- **Material-UI Theme**: Custom dark theme optimized for mobile devices
+- **Material-UI Theme**: Custom dark theme optimized for mobile devices with extended type definitions in `types/mui-theme.d.ts`
 - **Responsive Layout**: Flexible breakpoints and touch-friendly interactions
 - **Virtualization**: `@tanstack/react-virtual` + `react-virtualized-auto-sizer` for large lists
 
@@ -436,7 +534,7 @@ interface GameState {
 - **CategoryTabs**: Tab-based category navigation with dynamic content
 - **ItemDetailPanel**: Right panel with recipe analysis and crafting options
 - **ChainCraftingDialog**: Interactive chain crafting flow
-- **TechVirtualizedGrid**: Performance-optimized technology grid
+- **TechVirtualizedGridWithAutoSizer**: Performance-optimized technology grid with auto-sizing
 - **FloatingTaskList**: Floating overlay for active task display
 
 ### Component Patterns
@@ -475,6 +573,22 @@ const favoriteRecipes = useGameStore(state => state.favoriteRecipes);
 const craftingQueue = useGameStore(state => state.craftingQueue);
 
 // Map/Set persistence handled automatically with repair mechanisms
+```
+
+### Runtime Port Injection (non-React code)
+
+Store slices and utilities access services through runtime ports — **never import services directly** in store slices:
+
+```typescript
+// ✅ Correct - use runtime accessor in store slices
+import { getStoreDataQuery, getStoreFuelService } from '@/store/storeRuntimeServices';
+
+// Inside a store action:
+const dataQuery = getStoreDataQuery();
+const recipe = dataQuery.getRecipe(recipeId);
+
+// ❌ Incorrect - direct service import in store slices creates circular deps
+import { DataService } from '@/services/core/DataService';
 ```
 
 ### Testing Best Practices
@@ -524,7 +638,7 @@ const craftingQueue = useGameStore(state => state.craftingQueue);
 ### Completed Systems ✅
 
 - **Production Module**: Full crafting queue and inventory management
-- **Recipe System**: Advanced analysis with efficiency calculations
+- **Recipe System**: Advanced analysis with efficiency calculations and unlock-aware filters
 - **Data Management**: Async loading with internationalization (zh, ja)
 - **State Persistence**: Zustand store with Map/Set serialization
 - **Chain Crafting**: Sophisticated material pre-calculation system
@@ -533,7 +647,8 @@ const craftingQueue = useGameStore(state => state.craftingQueue);
 - **Technology System**: Full tree with research queue, unlock progression
 - **Fuel System**: Fuel buffer management and consumption tracking
 - **Power System**: Power balance calculation (PowerService)
-- **Dependency Injection**: Custom DI container with 30+ registered services
+- **Dependency Injection**: Custom DI container with 30+ registered services and disposal support
+- **Runtime Port Injection**: AppRuntimeContext providing typed ports to store/utils
 - **UI System**: 3-module mobile-first navigation
 
 ### In Progress 🚧
@@ -580,6 +695,7 @@ Additional documentation lives in `/docs/`:
 - `systems/` - System design documents (fuel, storage, power, technology, logistics)
 - `architecture/services/` - Service architecture and refactoring plans
 - `ci-cd.md` - CI/CD pipeline documentation
+- `design/` - UI and game design specifications
 
 ## Memories
 
