@@ -70,7 +70,7 @@ const ProductionModule: React.FC = React.memo(() => {
       </Box>
 
       {/* 主要内容区域 - 左右分割 */}
-      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
         {/* 左侧物品列表 */}
         <Box
           sx={{
@@ -78,6 +78,7 @@ const ProductionModule: React.FC = React.memo(() => {
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
+            minHeight: 0,
             borderRight: 1,
             borderColor: 'divider',
           }}
@@ -90,7 +91,7 @@ const ProductionModule: React.FC = React.memo(() => {
         </Box>
 
         {/* 右侧物品详情 */}
-        <Box sx={{ flex: 1, overflow: 'hidden' }}>
+        <Box sx={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
           {selectedItem ? (
             <ItemDetailPanel item={selectedItem} onItemSelect={selectProductionItem} />
           ) : (
