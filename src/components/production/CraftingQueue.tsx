@@ -242,7 +242,8 @@ const CraftingQueue: React.FC<CraftingQueueProps> = ({ open = false, onClose }) 
         maxWidth: isMobile ? '100vw' : '600px',
         borderRadius: isMobile ? '16px 16px 0 0' : '16px',
         position: 'fixed',
-        bottom: 0,
+        // 移动端 tabbar 固定在底部（zIndex:1200），对话框需从 tabbar 顶部滑出
+        bottom: isMobile ? 56 : 0,
         left: isMobile ? 0 : '50%',
         transform: isMobile ? 'none' : 'translateX(-50%)',
       },

@@ -28,10 +28,11 @@ const FloatingTaskList: React.FC = () => {
   return (
     <Box
       sx={{
-        position: 'absolute',
-        bottom: 20,
+        position: 'fixed',
+        // 56px 为移动端固定 tabbar 高度，再留 20px 间距
+        bottom: 76,
         left: 20,
-        zIndex: 1000,
+        zIndex: 1250,
         display: 'flex',
         flexDirection: 'column',
         gap,
