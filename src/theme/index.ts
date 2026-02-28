@@ -1,50 +1,5 @@
 import { createTheme } from '@mui/material/styles';
 
-// 扩展主题类型
-declare module '@mui/material/styles' {
-  interface Theme {
-    customStyles: {
-      appContainer: React.CSSProperties;
-      pageContainer: React.CSSProperties;
-      typography: {
-        compact: React.CSSProperties;
-        small: React.CSSProperties;
-        tiny: React.CSSProperties;
-        subtitle: React.CSSProperties;
-      };
-      spacing: {
-        compact: number;
-        tight: number;
-      };
-      layout: {
-        cardCompact: React.CSSProperties;
-        inventoryInfo: React.CSSProperties;
-      };
-    };
-  }
-
-  interface ThemeOptions {
-    customStyles?: {
-      appContainer?: React.CSSProperties;
-      pageContainer?: React.CSSProperties;
-      typography?: {
-        compact?: React.CSSProperties;
-        small?: React.CSSProperties;
-        tiny?: React.CSSProperties;
-        subtitle?: React.CSSProperties;
-      };
-      spacing?: {
-        compact?: number;
-        tight?: number;
-      };
-      layout?: {
-        cardCompact?: React.CSSProperties;
-        inventoryInfo?: React.CSSProperties;
-      };
-    };
-  }
-}
-
 // 创建移动端优化的深色主题
 const theme = createTheme({
   palette: {
@@ -58,55 +13,6 @@ const theme = createTheme({
     background: {
       default: '#2a2a2a',
       paper: '#3a3a3a',
-    },
-  },
-  // 自定义样式变量
-  customStyles: {
-    appContainer: {
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100vh',
-      width: '100vw',
-    },
-    pageContainer: {
-      flex: 1,
-      overflowY: 'auto',
-      display: 'flex',
-      flexDirection: 'column',
-      paddingBottom: '56px',
-    },
-    typography: {
-      compact: {
-        fontSize: '0.8rem',
-        fontWeight: 600,
-      },
-      small: {
-        fontSize: '0.75rem',
-      },
-      tiny: {
-        fontSize: '0.65rem',
-      },
-      subtitle: {
-        fontSize: '0.8rem',
-        fontWeight: 600,
-        marginBottom: '0.5rem',
-      },
-    },
-    spacing: {
-      compact: 0.5,
-      tight: 0.25,
-    },
-    layout: {
-      cardCompact: {
-        marginBottom: '0.5rem',
-        padding: '0.5rem',
-      },
-      inventoryInfo: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        minWidth: '60px',
-      },
     },
   },
   components: {

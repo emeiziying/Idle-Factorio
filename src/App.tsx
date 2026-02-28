@@ -63,15 +63,39 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={theme.customStyles.appContainer}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100vh',
+          width: '100vw',
+        }}
+      >
         <Suspense
           fallback={
-            <Box sx={{ ...theme.customStyles.pageContainer, p: 2 }}>
+            <Box
+              sx={{
+                flex: 1,
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                paddingBottom: '56px',
+                p: 2,
+              }}
+            >
               <LinearProgress />
             </Box>
           }
         >
-          <Box sx={theme.customStyles.pageContainer}>
+          <Box
+            sx={{
+              flex: 1,
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              paddingBottom: '56px',
+            }}
+          >
             {currentModule === 0 && <ProductionModule />}
             {currentModule === 1 && <FacilitiesModule />}
             {currentModule === 2 && <TechnologyModule />}
