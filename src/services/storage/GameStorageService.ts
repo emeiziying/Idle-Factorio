@@ -4,6 +4,7 @@
  */
 
 import { DataService } from '@/services/core/DataService';
+import type { Disposable } from '@/services/core/DIContainer';
 import type { FacilityInstance, FacilityStatus } from '@/types/facilities';
 import type { CraftingChain, CraftingTask, DeployedContainer, InventoryItem } from '@/types/index';
 import type { ResearchQueueItem, TechResearchState } from '@/types/technology';
@@ -71,7 +72,7 @@ interface PendingSave {
   reject: (error: unknown) => void;
 }
 
-export class GameStorageService {
+export class GameStorageService implements Disposable {
   private dataService: DataService;
 
   // 防抖相关
@@ -80,15 +81,16 @@ export class GameStorageService {
   private readonly debounceMs: number = 2000;
   private readonly storageKey = 'factorio-game-storage';
   private pendingState: Partial<GameState> | null = null; // 保存等待写入的快照
+  private readonly beforeUnloadHandler = (): void => {
+    this.flushPendingSave();
+  };
 
   constructor(dataService: DataService) {
     this.dataService = dataService;
 
     // 页面卸载时立即保存
     if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', () => {
-        this.flushPendingSave();
-      });
+      window.addEventListener('beforeunload', this.beforeUnloadHandler);
     }
   }
 
@@ -465,6 +467,26 @@ export class GameStorageService {
         this.pendingState = null;
       }
     }
+  }
+
+  dispose(): void {
+    this.flushPendingSave();
+
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('beforeunload', this.beforeUnloadHandler);
+    }
+
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+      this.saveTimeout = null;
+    }
+
+    if (this.pendingSave) {
+      this.pendingSave.resolve();
+      this.pendingSave = null;
+    }
+
+    this.pendingState = null;
   }
 
   // 工具方法

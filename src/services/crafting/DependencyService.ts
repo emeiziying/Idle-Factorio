@@ -3,8 +3,6 @@ import type { Recipe, CraftingTask } from '@/types/index';
 
 import { RecipeService } from '@/services/crafting/RecipeService';
 import ManualCraftingValidator from '@/utils/manualCraftingValidator';
-import { getService } from '@/services/core/DIServiceInitializer';
-import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 
 export interface CraftingDependency {
   itemId: string;
@@ -28,11 +26,12 @@ export interface CraftingChainAnalysis {
 }
 
 export class DependencyService {
-  private validator: ManualCraftingValidator;
+  private readonly recipeService: RecipeService;
+  private readonly validator: ManualCraftingValidator;
 
-  constructor() {
-    // 使用DI容器获取依赖
-    this.validator = getService<ManualCraftingValidator>(SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR);
+  constructor(recipeService: RecipeService, validator: ManualCraftingValidator) {
+    this.recipeService = recipeService;
+    this.validator = validator;
   }
 
   /**
@@ -216,9 +215,7 @@ export class DependencyService {
    * @returns 配方或null
    */
   private getBestManualCraftingRecipe(itemId: string): Recipe | null {
-    // 通过DI获取RecipeService实例
-    const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
-    const recipes = recipeService.getRecipesThatProduce(itemId) || [];
+    const recipes = this.recipeService.getRecipesThatProduce(itemId) || [];
 
     // 过滤出可手动制作的配方
     const manualRecipes = recipes.filter(recipe => {

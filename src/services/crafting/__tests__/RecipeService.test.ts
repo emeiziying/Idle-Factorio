@@ -13,6 +13,11 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RecipeService } from '../RecipeService';
+import type {
+  IManualCraftingValidator,
+  ManualCraftingValidation,
+  RecipeValidation,
+} from '../../interfaces/IManualCraftingValidator';
 import type { Recipe } from '../../../types/index';
 
 // ──────────────────── Mock 依赖 ────────────────────
@@ -20,12 +25,6 @@ import type { Recipe } from '../../../types/index';
 vi.mock('../../../data/customRecipes', () => ({
   CUSTOM_RECIPES: [],
 }));
-
-vi.mock('../../core/DIServiceInitializer', () => ({
-  getService: vi.fn(),
-}));
-
-import { getService } from '../../core/DIServiceInitializer';
 
 // ──────────────────── 共享 Fixtures ────────────────────
 /**
@@ -125,36 +124,46 @@ interface MockTechService {
 }
 
 interface MockValidator {
-  validateManualCrafting?: (itemId: string) => { canCraftManually: boolean };
-  validateRecipe?: (recipe: Recipe) => { canCraftManually: boolean; category?: string };
+  validateManualCrafting?: (itemId: string) => Partial<ManualCraftingValidation>;
+  validateRecipe?: (recipe: Recipe) => Partial<RecipeValidation>;
 }
 
 /**
- * 配置 getService mock。
- * 每个 mock 服务的方法默认返回宽松值（全部允许），
- * 测试可覆盖具体方法行为。
+ * 构造一个带显式依赖的 RecipeService。
  */
-const setupMockDI = (opts: { tech?: MockTechService; validator?: MockValidator } = {}) => {
+const createService = (opts: { tech?: MockTechService; validator?: MockValidator } = {}) => {
   const techService = {
     isRecipeUnlocked: vi.fn(opts.tech?.isRecipeUnlocked ?? (() => true)),
     isItemUnlocked: vi.fn(opts.tech?.isItemUnlocked ?? (() => true)),
   };
-  const validator = {
-    validateManualCrafting: vi.fn(
-      opts.validator?.validateManualCrafting ?? (() => ({ canCraftManually: true }))
-    ),
-    validateRecipe: vi.fn(
-      opts.validator?.validateRecipe ?? (() => ({ canCraftManually: true, category: 'basic' }))
-    ),
+  const defaultManualValidation: ManualCraftingValidation = {
+    canCraftManually: true,
+    category: 'basic',
+    reason: '',
+  };
+  const defaultRecipeValidation: RecipeValidation = {
+    canCraftManually: true,
+    category: 'basic',
+    reason: '',
+  };
+  const validator: IManualCraftingValidator = {
+    validateManualCrafting: vi.fn((itemId: string) => ({
+      ...defaultManualValidation,
+      ...opts.validator?.validateManualCrafting?.(itemId),
+    })),
+    validateRecipe: vi.fn((recipe: Recipe) => ({
+      ...defaultRecipeValidation,
+      ...opts.validator?.validateRecipe?.(recipe),
+    })),
+    isEntityMiningRecipe: vi.fn(() => false),
   };
 
-  vi.mocked(getService).mockImplementation((token: symbol | string) => {
-    if (token === 'TechnologyService') return techService;
-    if (token === 'ManualCraftingValidator') return validator;
-    return null;
+  const service = new RecipeService(validator);
+  service.setUnlockPorts({
+    isRecipeUnlocked: techService.isRecipeUnlocked,
   });
 
-  return { techService, validator };
+  return { service, techService, validator };
 };
 
 // ──────────────────── Test Suite ────────────────────
@@ -163,7 +172,7 @@ describe('RecipeService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    service = new RecipeService();
+    service = createService().service;
   });
 
   // ════════════════════════════════════════════════════════
@@ -400,29 +409,30 @@ describe('RecipeService', () => {
   // ════════════════════════════════════════════════════════
   describe('getAllManualCraftingRecipes — unlock check (bug fix)', () => {
     it('calls isRecipeUnlocked (not isItemUnlocked) for unlock filtering', () => {
-      const { techService } = setupMockDI({
+      const setup = createService({
         tech: {
           isRecipeUnlocked: () => true,
           isItemUnlocked: vi.fn().mockReturnValue(false), // must NOT be called
         },
       });
+      service = setup.service;
       service.initializeRecipes([R.ironGear]);
 
       service.getAllManualCraftingRecipes('iron-gear-wheel');
 
-      expect(techService.isRecipeUnlocked).toHaveBeenCalledWith('iron-gear-wheel');
-      expect(techService.isItemUnlocked).not.toHaveBeenCalled();
+      expect(setup.techService.isRecipeUnlocked).toHaveBeenCalledWith('iron-gear-wheel');
+      expect(setup.techService.isItemUnlocked).not.toHaveBeenCalled();
     });
 
     it('excludes recipes where isRecipeUnlocked returns false', () => {
-      setupMockDI({ tech: { isRecipeUnlocked: () => false } });
+      service = createService({ tech: { isRecipeUnlocked: () => false } }).service;
       service.initializeRecipes([R.ironGear]);
 
       expect(service.getAllManualCraftingRecipes('iron-gear-wheel')).toHaveLength(0);
     });
 
     it('includes recipes where isRecipeUnlocked returns true and validator approves', () => {
-      setupMockDI({ tech: { isRecipeUnlocked: () => true } });
+      service = createService({ tech: { isRecipeUnlocked: () => true } }).service;
       service.initializeRecipes([R.ironGear]);
 
       const result = service.getAllManualCraftingRecipes('iron-gear-wheel');
@@ -431,9 +441,9 @@ describe('RecipeService', () => {
     });
 
     it('returns empty array immediately when item cannot be crafted manually', () => {
-      setupMockDI({
+      service = createService({
         validator: { validateManualCrafting: () => ({ canCraftManually: false }) },
-      });
+      }).service;
       service.initializeRecipes([R.ironGear]);
 
       expect(service.getAllManualCraftingRecipes('iron-gear-wheel')).toHaveLength(0);
@@ -496,7 +506,8 @@ describe('RecipeService', () => {
     beforeEach(() => service.initializeRecipes(ALL_FIXTURES));
 
     it('returns only recipes that isRecipeUnlocked approves', () => {
-      setupMockDI({ tech: { isRecipeUnlocked: id => id === 'iron-plate' } });
+      service = createService({ tech: { isRecipeUnlocked: id => id === 'iron-plate' } }).service;
+      service.initializeRecipes(ALL_FIXTURES);
 
       const result = service.getUnlockedRecipesThatProduce('iron-plate');
       expect(result).toHaveLength(1);
@@ -504,31 +515,36 @@ describe('RecipeService', () => {
     });
 
     it('returns empty array when all recipes are locked', () => {
-      setupMockDI({ tech: { isRecipeUnlocked: () => false } });
+      service = createService({ tech: { isRecipeUnlocked: () => false } }).service;
+      service.initializeRecipes(ALL_FIXTURES);
 
       expect(service.getUnlockedRecipesThatProduce('iron-ore')).toHaveLength(0);
     });
 
     it('returns all producing recipes when all are unlocked', () => {
-      setupMockDI({ tech: { isRecipeUnlocked: () => true } });
+      service = createService({ tech: { isRecipeUnlocked: () => true } }).service;
+      service.initializeRecipes(ALL_FIXTURES);
 
       // iron-ore is produced by: iron-ore-mining AND iron-plate-recycling
       expect(service.getUnlockedRecipesThatProduce('iron-ore').length).toBeGreaterThanOrEqual(2);
     });
 
     it('filters using recipe id (not item id)', () => {
-      const { techService } = setupMockDI({ tech: { isRecipeUnlocked: () => true } });
+      const setup = createService({ tech: { isRecipeUnlocked: () => true } });
+      service = setup.service;
+      service.initializeRecipes(ALL_FIXTURES);
       service.getUnlockedRecipesThatProduce('iron-plate');
 
       // Verifies isRecipeUnlocked is called with recipe id 'iron-plate'
-      expect(techService.isRecipeUnlocked).toHaveBeenCalledWith('iron-plate');
+      expect(setup.techService.isRecipeUnlocked).toHaveBeenCalledWith('iron-plate');
     });
   });
 
   describe('getUnlockedMostEfficientRecipe', () => {
     it('returns undefined when all recipes are locked', () => {
       service.initializeRecipes([R.ironGear]);
-      setupMockDI({ tech: { isRecipeUnlocked: () => false } });
+      service = createService({ tech: { isRecipeUnlocked: () => false } }).service;
+      service.initializeRecipes([R.ironGear]);
 
       expect(service.getUnlockedMostEfficientRecipe('iron-gear-wheel')).toBeUndefined();
     });
@@ -546,8 +562,8 @@ describe('RecipeService', () => {
         time: 4,
         out: { 'iron-gear-wheel': 1 },
       };
+      service = createService({ tech: { isRecipeUnlocked: id => id === 'unlocked-slow' } }).service;
       service.initializeRecipes([lockedFast, unlockedSlow]);
-      setupMockDI({ tech: { isRecipeUnlocked: id => id === 'unlocked-slow' } });
 
       expect(service.getUnlockedMostEfficientRecipe('iron-gear-wheel')?.id).toBe('unlocked-slow');
     });
@@ -555,15 +571,16 @@ describe('RecipeService', () => {
     it('picks the highest-efficiency recipe among multiple unlocked ones', () => {
       const r1 = { ...R.copperCable, id: 'r1', time: 2, out: { 'copper-cable': 1 } }; // 0.5/s
       const r2 = { ...R.copperCable, id: 'r2', time: 1, out: { 'copper-cable': 3 } }; // 3/s
+      service = createService({ tech: { isRecipeUnlocked: () => true } }).service;
       service.initializeRecipes([r1, r2]);
-      setupMockDI({ tech: { isRecipeUnlocked: () => true } });
 
       expect(service.getUnlockedMostEfficientRecipe('copper-cable')?.id).toBe('r2');
     });
 
     it('returns undefined when no recipe exists for the item at all', () => {
       service.initializeRecipes([]);
-      setupMockDI({ tech: { isRecipeUnlocked: () => true } });
+      service = createService({ tech: { isRecipeUnlocked: () => true } }).service;
+      service.initializeRecipes([]);
 
       expect(service.getUnlockedMostEfficientRecipe('unknown-item')).toBeUndefined();
     });

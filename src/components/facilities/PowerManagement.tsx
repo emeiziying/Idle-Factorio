@@ -19,8 +19,11 @@ import useGameStore from '@/store/gameStore';
 import FactorioIcon from '@/components/common/FactorioIcon';
 
 const PowerManagement: React.FC = () => {
-  const { facilities, updateFacility, addFacility, removeFacility, getInventoryItem } =
-    useGameStore();
+  const facilities = useGameStore(state => state.facilities);
+  const updateFacility = useGameStore(state => state.updateFacility);
+  const addFacility = useGameStore(state => state.addFacility);
+  const removeFacility = useGameStore(state => state.removeFacility);
+  const getInventoryItem = useGameStore(state => state.getInventoryItem);
   const powerService = usePowerService();
 
   // 计算电力平衡

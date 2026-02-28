@@ -3,6 +3,13 @@
  * 替代原有的 ServiceInitializer，使用 DI 容器管理依赖关系
  */
 
+import {
+  resetAppRuntimeContext,
+  updateAppRuntimeContext,
+  type GameLoopRuntimePorts,
+  type GameStoreAdapter,
+  type StoreRuntimeServices,
+} from '@/services/core/AppRuntimeContext';
 import { container } from '@/services/core/DIContainer';
 import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 
@@ -23,6 +30,7 @@ import { PowerService } from '@/services/game/PowerService';
 import { TechEventEmitter } from '@/services/technology/events';
 import { ResearchQueueService } from '@/services/technology/ResearchQueueService';
 import { ResearchService } from '@/services/technology/ResearchService';
+import { TechDataLoader } from '@/services/technology/TechDataLoader';
 import { TechnologyService } from '@/services/technology/TechnologyService';
 import { TechProgressTracker } from '@/services/technology/TechProgressTracker';
 import { TechTreeService } from '@/services/technology/TechTreeService';
@@ -31,26 +39,49 @@ import { TechUnlockService } from '@/services/technology/TechUnlockService';
 // 游戏循环服务
 import { GameLoopService } from '@/services/game/GameLoopService';
 import { GameLoopTaskFactory } from '@/services/game/GameLoopTaskFactory';
-import type { GameStoreAdapter } from '@/services/game/GameLoopTaskFactory';
 
 // 存档服务
 import { GameStorageService } from '@/services/storage/GameStorageService';
 
 import useGameStore from '@/store/gameStore';
 
+interface CoreRuntime {
+  dataService: DataService;
+  fuelService: FuelService;
+  gameLoopService: GameLoopService;
+  gameStorageService: GameStorageService;
+  recipeService: RecipeService;
+  storageService: StorageService;
+  technologyService: TechnologyService;
+}
+
 export class DIServiceInitializer {
   private static initialized = false;
+  private static servicesRegistered = false;
+  private static initializationPromise: Promise<void> | null = null;
   private static taskMonitorIntervalId: ReturnType<typeof setInterval> | null = null;
 
   /**
    * 注册所有服务到 DI 容器
    */
   static registerServices(): void {
+    if (this.servicesRegistered) {
+      return;
+    }
+
     // 1. 注册基础服务（无依赖）
     container.register(SERVICE_TOKENS.USER_PROGRESS_SERVICE, UserProgressService);
-    container.register(SERVICE_TOKENS.STORAGE_SERVICE, StorageService);
-    container.register(SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR, ManualCraftingValidator);
     container.register(SERVICE_TOKENS.DATA_SERVICE, DataService);
+
+    container.registerFactory(SERVICE_TOKENS.STORAGE_SERVICE, () => {
+      const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+      return new StorageService(dataService);
+    });
+
+    container.registerFactory(SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR, () => {
+      const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+      return new ManualCraftingValidator(dataService);
+    });
 
     // 注册 GameConfig 服务（依赖 DataService）
     container.registerFactory(SERVICE_TOKENS.GAME_CONFIG, () => {
@@ -60,10 +91,22 @@ export class DIServiceInitializer {
 
     // 2. 注册事件系统和基础业务服务
     container.register(SERVICE_TOKENS.TECH_EVENT_EMITTER, TechEventEmitter);
-    container.register(SERVICE_TOKENS.RECIPE_SERVICE, RecipeService);
+    container.registerFactory(SERVICE_TOKENS.RECIPE_SERVICE, () => {
+      const validator = container.resolve<ManualCraftingValidator>(
+        SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR
+      );
+      const recipeService = new RecipeService(validator);
+      validator.setRecipeQuery(recipeService);
+      return recipeService;
+    });
 
     // 3. 注册科技系统子服务
-    container.register(SERVICE_TOKENS.TECH_TREE_SERVICE, TechTreeService);
+    container.registerFactory(SERVICE_TOKENS.TECH_TREE_SERVICE, () => {
+      const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+      const recipeService = container.resolve<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+      const dataLoader = new TechDataLoader(dataService, recipeService);
+      return new TechTreeService(dataLoader);
+    });
 
     container.registerFactory(SERVICE_TOKENS.TECH_UNLOCK_SERVICE, () => {
       const userProgressService = container.resolve<UserProgressService>(
@@ -84,7 +127,11 @@ export class DIServiceInitializer {
 
     container.registerFactory(SERVICE_TOKENS.RESEARCH_SERVICE, () => {
       const eventEmitter = container.resolve<TechEventEmitter>(SERVICE_TOKENS.TECH_EVENT_EMITTER);
-      return new ResearchService(eventEmitter);
+      const treeService = container.resolve<TechTreeService>(SERVICE_TOKENS.TECH_TREE_SERVICE);
+      const unlockService = container.resolve<TechUnlockService>(
+        SERVICE_TOKENS.TECH_UNLOCK_SERVICE
+      );
+      return new ResearchService(eventEmitter, treeService, unlockService);
     });
 
     container.registerFactory(SERVICE_TOKENS.RESEARCH_QUEUE_SERVICE, () => {
@@ -109,7 +156,7 @@ export class DIServiceInitializer {
         SERVICE_TOKENS.TECH_PROGRESS_TRACKER
       );
 
-      const technologyService = new TechnologyService(
+      return new TechnologyService(
         eventEmitter,
         treeService,
         unlockService,
@@ -117,12 +164,16 @@ export class DIServiceInitializer {
         queueService,
         progressTracker
       );
-
-      return technologyService;
     });
 
     // 5. 注册其他业务服务
-    container.register(SERVICE_TOKENS.DEPENDENCY_SERVICE, DependencyService);
+    container.registerFactory(SERVICE_TOKENS.DEPENDENCY_SERVICE, () => {
+      const recipeService = container.resolve<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+      const validator = container.resolve<ManualCraftingValidator>(
+        SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR
+      );
+      return new DependencyService(recipeService, validator);
+    });
 
     container.registerFactory(SERVICE_TOKENS.FUEL_SERVICE, () => {
       const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
@@ -146,6 +197,8 @@ export class DIServiceInitializer {
       const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
       return new GameStorageService(dataService);
     });
+
+    this.servicesRegistered = true;
   }
 
   /**
@@ -156,49 +209,79 @@ export class DIServiceInitializer {
       return;
     }
 
-    try {
-      // 1. 注册服务
+    if (this.initializationPromise) {
+      return this.initializationPromise;
+    }
+
+    this.initializationPromise = (async () => {
       this.registerServices();
 
-      // 2. 初始化核心服务
-      await this.initializeCoreServices();
+      try {
+        const coreRuntime = await this.initializeCoreServices();
+        await this.initializeApplication(coreRuntime);
+        this.initialized = true;
+      } catch (error) {
+        this.cleanup();
+        this.initialized = false;
+        throw error;
+      } finally {
+        this.initializationPromise = null;
+      }
+    })();
 
-      // 3. 初始化应用层
-      await this.initializeApplication();
-
-      this.initialized = true;
-    } catch (error) {
-      // 如果初始化失败，重置状态
-      this.initialized = false;
-      throw error;
-    }
+    return this.initializationPromise;
   }
 
   /**
    * 初始化核心服务
    */
-  private static async initializeCoreServices(): Promise<void> {
+  private static async initializeCoreServices(): Promise<CoreRuntime> {
     const startTime = Date.now();
 
     try {
-      // 1. 初始化数据服务并加载游戏数据
       const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
       const gameData = await dataService.loadGameData();
+      const recipeService = container.resolve<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+      const storageService = container.resolve<StorageService>(SERVICE_TOKENS.STORAGE_SERVICE);
+      const fuelService = container.resolve<FuelService>(SERVICE_TOKENS.FUEL_SERVICE);
+      const gameLoopService = container.resolve<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
+      const gameStorageService = container.resolve<GameStorageService>(
+        SERVICE_TOKENS.GAME_STORAGE_SERVICE
+      );
 
-      // 2. 初始化配方服务
       if (gameData.recipes) {
-        const recipeService = container.resolve<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
         recipeService.initializeRecipes(gameData.recipes);
       }
 
-      // 3. 初始化科技服务
       const technologyService = container.resolve<TechnologyService>(
         SERVICE_TOKENS.TECHNOLOGY_SERVICE
       );
       await technologyService.initialize();
+      recipeService.setUnlockPorts({
+        isRecipeUnlocked: recipeId => technologyService.isRecipeUnlocked(recipeId),
+      });
+
+      dataService.setDependencyPorts({
+        recipeQuery: recipeService,
+        itemUnlockChecker: itemId => technologyService.isItemUnlocked(itemId),
+      });
+
+      const coreRuntime: CoreRuntime = {
+        dataService,
+        fuelService,
+        gameLoopService,
+        gameStorageService,
+        recipeService,
+        storageService,
+        technologyService,
+      };
+
+      this.publishCoreRuntimeContext(coreRuntime);
 
       const totalTime = Date.now() - startTime;
       console.log(`[ServiceInit] All core services initialized in ${totalTime}ms`);
+
+      return coreRuntime;
     } catch (error) {
       console.error('[ServiceInit] Core services initialization failed:', error);
       throw error;
@@ -212,47 +295,121 @@ export class DIServiceInitializer {
    * 它作为 DI 容器与 Zustand Store 之间的桥接层，通过 StoreAccessor/回调模式
    * 将所有 Store 访问封装后注入到 Service 层，避免 Service 层直接依赖 Store。
    */
-  private static async initializeApplication(): Promise<void> {
-    // 0. 在 DI 容器初始化完成后加载存档数据（保证 GameStorageService 能正确访问 DataService）
-    //    必须在 initializeTechnologyService 之前执行，确保 unlockedTechs 等状态从存档恢复
+  private static async initializeApplication(coreRuntime: CoreRuntime): Promise<void> {
     const { loadGameData, initializeTechnologyService, startGameLoop } = useGameStore.getState();
     await loadGameData();
-
-    // 1. 同步科技数据到游戏状态存储
     await initializeTechnologyService();
 
-    // 2. 启动游戏循环系统前，校正从存档恢复的设施燃料功率（可能因数据未加载而使用了占位默认值）
     try {
       const store = useGameStore.getState();
-      const dataService = container.resolve<DataService>(SERVICE_TOKENS.DATA_SERVICE);
       const facilities = store.facilities;
       facilities.forEach(f => {
         if (!f.fuelBuffer) return;
-        const item = dataService.getItem(f.facilityId);
+        const item = coreRuntime.dataService.getItem(f.facilityId);
         const usage = item?.machine?.usage;
-        if (typeof usage === 'number' && usage > 0 && f.fuelBuffer!.burnRate !== usage) {
+        if (typeof usage === 'number' && usage > 0 && f.fuelBuffer.burnRate !== usage) {
           store.updateFacility(f.id, {
-            fuelBuffer: { ...f.fuelBuffer!, burnRate: usage },
+            fuelBuffer: { ...f.fuelBuffer, burnRate: usage },
           });
         }
       });
-    } catch (e) {
-      // 在开发环境下输出日志，避免打断初始化流程
+    } catch (error) {
       if (import.meta.env.DEV) {
-        console.warn('[ServiceInit] 校正设施燃料功率失败（可忽略）:', e);
+        console.warn('[ServiceInit] 校正设施燃料功率失败（可忽略）:', error);
       }
     }
 
-    // 2.5 注入 Store 访问适配器到 GameLoopTaskFactory（解耦 Service→Store 直接依赖）
-    //     以及将设施数据提供者注入到 ResearchService
     const researchService = container.resolve<ResearchService>(SERVICE_TOKENS.RESEARCH_SERVICE);
     researchService.setFacilitiesProvider(() => useGameStore.getState().facilities);
 
-    const storeAdapter: GameStoreAdapter = {
+    const runtimePorts: GameLoopRuntimePorts = {
+      recipeQuery: coreRuntime.recipeService,
+    };
+    const storeAdapter = this.createGameStoreAdapter();
+    this.publishApplicationRuntimeContext(storeAdapter, runtimePorts);
+
+    const defaultTasks = GameLoopTaskFactory.createAllDefaultTasks();
+    defaultTasks.forEach(task => coreRuntime.gameLoopService.addTask(task));
+
+    if (!coreRuntime.gameLoopService.isRunningState()) {
+      startGameLoop();
+    }
+
+    if (this.taskMonitorIntervalId !== null) {
+      clearInterval(this.taskMonitorIntervalId);
+    }
+    this.taskMonitorIntervalId = setInterval(() => {
+      GameLoopTaskFactory.updateTasksState(coreRuntime.gameLoopService.getTasks());
+    }, 10000);
+  }
+
+  /**
+   * 清理资源
+   */
+  static cleanup(): void {
+    if (!this.initialized && this.initializationPromise === null) {
+      return;
+    }
+
+    if (this.taskMonitorIntervalId !== null) {
+      clearInterval(this.taskMonitorIntervalId);
+      this.taskMonitorIntervalId = null;
+    }
+
+    if (container.hasInstance(SERVICE_TOKENS.GAME_LOOP_SERVICE)) {
+      const gameLoopService = container.resolve<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
+      gameLoopService.stop();
+    }
+
+    try {
+      const { stopGameLoop } = useGameStore.getState();
+      stopGameLoop();
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('[DIServiceInit] 游戏循环停止失败:', error);
+      }
+    }
+
+    try {
+      container.disposeInstances();
+    } finally {
+      resetAppRuntimeContext();
+      this.initialized = false;
+      this.initializationPromise = null;
+    }
+  }
+
+  /**
+   * 重置初始化状态（主要用于测试）
+   */
+  static reset(): void {
+    this.cleanup();
+    container.clear();
+    resetAppRuntimeContext();
+    this.initialized = false;
+    this.servicesRegistered = false;
+    this.initializationPromise = null;
+  }
+
+  /**
+   * 获取服务实例
+   */
+  static getService<T>(token: string): T {
+    return container.resolve<T>(token);
+  }
+
+  private static createGameStoreAdapter(): GameStoreAdapter {
+    return {
       getCraftingQueueLength: () => useGameStore.getState().craftingQueue.length,
       hasFacilitiesWithStatus: (statuses: string[]) =>
         useGameStore.getState().facilities.some(f => statuses.includes(f.status)),
       hasActiveResearch: () => useGameStore.getState().researchState !== null,
+      getCraftingQueue: () => useGameStore.getState().craftingQueue,
+      updateCraftingProgress: (taskId, progress, startTime) =>
+        useGameStore.getState().updateCraftingProgress(taskId, progress, startTime),
+      updateInventory: (itemId, amount) => useGameStore.getState().updateInventory(itemId, amount),
+      completeCraftingTask: taskId => useGameStore.getState().completeCraftingTask(taskId),
+      trackMinedEntity: (itemId, count) => useGameStore.getState().trackMinedEntity(itemId, count),
       getFacilities: () => useGameStore.getState().facilities,
       getInventoryItem: itemId => useGameStore.getState().getInventoryItem(itemId),
       updateFacility: (id, updates) => useGameStore.getState().updateFacility(id, updates),
@@ -262,67 +419,36 @@ export class DIServiceInitializer {
       updateGameLoopState: () => useGameStore.getState()._updateGameLoopState?.(),
       saveGame: () => useGameStore.getState().saveGame(),
     };
-    GameLoopTaskFactory.setAdapter(storeAdapter);
-
-    // 3. 启动游戏循环系统
-    const gameLoopService = container.resolve<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
-
-    // 添加所有默认的游戏系统任务
-    const defaultTasks = GameLoopTaskFactory.createAllDefaultTasks();
-    defaultTasks.forEach(task => gameLoopService.addTask(task));
-
-    // 启动状态管理层的游戏循环控制器（内部会调用 gameLoopService.start()）
-    startGameLoop();
-
-    // 设置任务状态监控定时器（清理旧的，防止热重载时重复创建）
-    if (this.taskMonitorIntervalId !== null) {
-      clearInterval(this.taskMonitorIntervalId);
-    }
-    this.taskMonitorIntervalId = setInterval(() => {
-      GameLoopTaskFactory.updateTasksState(gameLoopService.getTasks());
-    }, 10000);
   }
 
-  /**
-   * 清理资源
-   */
-  static cleanup(): void {
-    // 清理任务监控定时器
-    if (this.taskMonitorIntervalId !== null) {
-      clearInterval(this.taskMonitorIntervalId);
-      this.taskMonitorIntervalId = null;
-    }
+  private static publishCoreRuntimeContext(coreRuntime: CoreRuntime): void {
+    const storeRuntimeServices: StoreRuntimeServices = {
+      dataQuery: coreRuntime.dataService,
+      fuelService: coreRuntime.fuelService,
+      gameLoopService: coreRuntime.gameLoopService,
+      gameStorage: coreRuntime.gameStorageService,
+      recipeQuery: coreRuntime.recipeService,
+      technologyService: coreRuntime.technologyService,
+    };
 
-    // 停止游戏循环
-    if (container.has(SERVICE_TOKENS.GAME_LOOP_SERVICE)) {
-      const gameLoopService = container.resolve<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
-      gameLoopService.stop();
-    }
-
-    // 停止状态管理层的游戏循环控制器
-    try {
-      const { stopGameLoop } = useGameStore.getState();
-      stopGameLoop();
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error('[DIServiceInit] 游戏循环停止失败:', error);
-      }
-    }
+    updateAppRuntimeContext({
+      inventoryDataQuery: coreRuntime.dataService,
+      storageConfigQuery: coreRuntime.storageService,
+      storeRuntimeServices,
+      gameLoopRuntimePorts: {
+        recipeQuery: coreRuntime.recipeService,
+      },
+    });
   }
 
-  /**
-   * 重置初始化状态（主要用于测试）
-   */
-  static reset(): void {
-    container.clear();
-    this.initialized = false;
-  }
-
-  /**
-   * 获取服务实例
-   */
-  static getService<T>(token: string): T {
-    return container.resolve<T>(token);
+  private static publishApplicationRuntimeContext(
+    gameStoreAdapter: GameStoreAdapter,
+    gameLoopRuntimePorts: GameLoopRuntimePorts
+  ): void {
+    updateAppRuntimeContext({
+      gameStoreAdapter,
+      gameLoopRuntimePorts,
+    });
   }
 }
 

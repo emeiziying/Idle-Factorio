@@ -2,9 +2,7 @@
 import type { SliceCreator } from '@/store/types';
 import type { Item } from '@/types/index';
 import { PRODUCTION_STORAGE_KEYS } from '@/constants/storageKeys';
-import { getService } from '@/services/core/DIServiceInitializer';
-import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
-import type { DataService } from '@/services/core/DataService';
+import { getStoreDataQuery } from '@/store/storeRuntimeServices';
 
 // UI状态切片接口
 export interface UIStateSlice {
@@ -251,7 +249,7 @@ export const createUIStateSlice: SliceCreator<UIStateSlice> = (set, get) => ({
     }
 
     // 数据已在全局初始化时加载完成
-    const dataService = getService<DataService>(SERVICE_TOKENS.DATA_SERVICE);
+    const dataService = getStoreDataQuery();
     const itemsByRow = dataService.getItemsByRow(selectedCategory);
     const sortedRows = Array.from(itemsByRow.keys()).sort((a, b) => a - b);
 

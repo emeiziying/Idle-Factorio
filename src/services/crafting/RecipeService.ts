@@ -1,12 +1,13 @@
 import { CUSTOM_RECIPES } from '@/data/customRecipes';
-import { getService } from '@/services/core/DIServiceInitializer';
-import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
 import type {
   IManualCraftingValidator,
   ManualCraftingValidation,
 } from '@/services/interfaces/IManualCraftingValidator';
-import type { TechnologyService } from '@/services/technology/TechnologyService';
 import type { Recipe } from '@/types';
+
+interface RecipeUnlockPorts {
+  isRecipeUnlocked: (recipeId: string) => boolean;
+}
 
 /**
  * 配方服务
@@ -15,9 +16,19 @@ import type { Recipe } from '@/types';
 export class RecipeService {
   private allRecipes: Recipe[] = [];
   private recipesByItem: Map<string, Recipe[]> = new Map();
+  private readonly validator: IManualCraftingValidator;
+  private unlockPorts: RecipeUnlockPorts | null = null;
 
-  constructor() {
-    // 公开构造函数，支持依赖注入
+  constructor(validator: IManualCraftingValidator) {
+    this.validator = validator;
+  }
+
+  setUnlockPorts(unlockPorts: RecipeUnlockPorts): void {
+    this.unlockPorts = unlockPorts;
+  }
+
+  private isRecipeUnlocked(recipeId: string): boolean {
+    return this.unlockPorts?.isRecipeUnlocked(recipeId) ?? true;
   }
 
   /**
@@ -155,14 +166,8 @@ export class RecipeService {
    * @returns 手动制作配方，如果不能手动制作则返回 null
    */
   getManualCraftingRecipe(itemId: string): Recipe | null {
-    const validator = getService<IManualCraftingValidator>(
-      SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR
-    );
-
-    const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
-
     // 1. 先判断物品是否可以手动制作
-    const validation = validator.validateManualCrafting(itemId);
+    const validation = this.validator.validateManualCrafting(itemId);
     if (!validation.canCraftManually) {
       return null;
     }
@@ -172,11 +177,11 @@ export class RecipeService {
 
     for (const recipe of allRecipes) {
       // 检查配方是否被解锁
-      if (!techService.isRecipeUnlocked(recipe.id)) {
+      if (!this.isRecipeUnlocked(recipe.id)) {
         continue; // 跳过未解锁的配方
       }
 
-      const recipeValidation = validator.validateRecipe(recipe);
+      const recipeValidation = this.validator.validateRecipe(recipe);
       if (recipeValidation.canCraftManually) {
         return recipe; // 返回第一个可手动制作的配方
       }
@@ -191,14 +196,8 @@ export class RecipeService {
    * @returns 所有可手动制作的配方列表
    */
   getAllManualCraftingRecipes(itemId: string): Recipe[] {
-    const validator = getService<IManualCraftingValidator>(
-      SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR
-    );
-
-    const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
-
     // 1. 先判断物品是否可以手动制作
-    const validation = validator.validateManualCrafting(itemId);
+    const validation = this.validator.validateManualCrafting(itemId);
     if (!validation.canCraftManually) {
       return [];
     }
@@ -208,11 +207,11 @@ export class RecipeService {
 
     return allRecipes.filter(recipe => {
       // 检查配方是否被解锁
-      if (!techService.isRecipeUnlocked(recipe.id)) {
+      if (!this.isRecipeUnlocked(recipe.id)) {
         return false; // 跳过未解锁的配方
       }
 
-      const recipeValidation = validator.validateRecipe(recipe);
+      const recipeValidation = this.validator.validateRecipe(recipe);
       return recipeValidation.canCraftManually;
     });
   }
@@ -223,11 +222,7 @@ export class RecipeService {
    * @returns 是否可以手动制作
    */
   canCraftManually(itemId: string): boolean {
-    const validator = getService<IManualCraftingValidator>(
-      SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR
-    );
-
-    const validation = validator.validateManualCrafting(itemId);
+    const validation = this.validator.validateManualCrafting(itemId);
     return validation.canCraftManually;
   }
 
@@ -242,11 +237,7 @@ export class RecipeService {
     allRecipes: Recipe[];
     validation: ManualCraftingValidation;
   } {
-    const validator = getService<IManualCraftingValidator>(
-      SERVICE_TOKENS.MANUAL_CRAFTING_VALIDATOR
-    );
-
-    const validation = validator.validateManualCrafting(itemId);
+    const validation = this.validator.validateManualCrafting(itemId);
     const recipe = this.getManualCraftingRecipe(itemId);
     const allRecipes = this.getAllManualCraftingRecipes(itemId);
 
@@ -334,10 +325,7 @@ export class RecipeService {
    * @param itemId 物品ID
    */
   getUnlockedRecipesThatProduce(itemId: string): Recipe[] {
-    const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
-    return this.getRecipesThatProduce(itemId).filter(recipe =>
-      techService.isRecipeUnlocked(recipe.id)
-    );
+    return this.getRecipesThatProduce(itemId).filter(recipe => this.isRecipeUnlocked(recipe.id));
   }
 
   /**

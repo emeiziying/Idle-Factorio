@@ -7,6 +7,10 @@ type Constructor<T = Record<string, unknown>> = new (...args: unknown[]) => T;
 type Factory<T> = () => T;
 type AsyncFactory<T> = () => Promise<T>;
 
+export interface Disposable {
+  dispose(): void;
+}
+
 interface ServiceDefinition<T> {
   factory: Factory<T> | AsyncFactory<T>;
   singleton?: boolean;
@@ -155,11 +159,38 @@ export class DIContainer {
   }
 
   /**
+   * 检查服务实例是否已被解析创建
+   */
+  hasInstance(token: string): boolean {
+    return this.instances.has(token);
+  }
+
+  /**
+   * 销毁所有已解析实例，但保留注册定义
+   */
+  disposeInstances(): void {
+    const resolvedInstances = Array.from(this.instances.entries()).reverse();
+
+    for (const [, instance] of resolvedInstances) {
+      if (this.isDisposable(instance)) {
+        try {
+          instance.dispose();
+        } catch (error) {
+          console.error('[DIContainer] Failed to dispose service instance:', error);
+        }
+      }
+    }
+
+    this.instances.clear();
+    this.resolving.clear();
+  }
+
+  /**
    * 清除所有服务（主要用于测试）
    */
   clear(): void {
+    this.disposeInstances();
     this.services.clear();
-    this.instances.clear();
     this.resolving.clear();
   }
 
@@ -174,6 +205,10 @@ export class DIContainer {
     }
 
     return graph;
+  }
+
+  private isDisposable(instance: unknown): instance is Disposable {
+    return typeof instance === 'object' && instance !== null && 'dispose' in instance;
   }
 }
 

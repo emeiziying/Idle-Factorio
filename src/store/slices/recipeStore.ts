@@ -1,9 +1,7 @@
 // 配方管理切片
 import type { SliceCreator, RecipeSlice } from '@/store/types';
 import type { Recipe } from '@/types/index';
-import type { RecipeService } from '@/services/crafting/RecipeService';
-import { getService } from '@/services/core/DIServiceInitializer';
-import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
+import { getStoreRecipeQuery } from '@/store/storeRuntimeServices';
 
 export const createRecipeSlice: SliceCreator<RecipeSlice> = (set, get) => ({
   // 初始状态
@@ -42,7 +40,7 @@ export const createRecipeSlice: SliceCreator<RecipeSlice> = (set, get) => ({
   },
 
   getRecentRecipes: () => {
-    const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+    const recipeService = getStoreRecipeQuery();
     const recentIds = get().recentRecipes;
     return recentIds
       .map(id => recipeService.getRecipeById(id))
@@ -50,7 +48,7 @@ export const createRecipeSlice: SliceCreator<RecipeSlice> = (set, get) => ({
   },
 
   getFavoriteRecipes: () => {
-    const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+    const recipeService = getStoreRecipeQuery();
     const favoriteIds = Array.from(get().favoriteRecipes);
     return favoriteIds
       .map(id => recipeService.getRecipeById(id))
@@ -58,7 +56,7 @@ export const createRecipeSlice: SliceCreator<RecipeSlice> = (set, get) => ({
   },
 
   getRecommendedRecipes: (itemId: string) => {
-    const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+    const recipeService = getStoreRecipeQuery();
     // 只返回科技系统已解锁的配方，避免 UI 展示未解锁内容
     const recipes = recipeService.getUnlockedRecipesThatProduce(itemId);
     const mostEfficient = recipeService.getUnlockedMostEfficientRecipe(itemId);
@@ -72,12 +70,12 @@ export const createRecipeSlice: SliceCreator<RecipeSlice> = (set, get) => ({
   },
 
   getRecipeStats: (itemId: string) => {
-    const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+    const recipeService = getStoreRecipeQuery();
     return recipeService.getRecipeStats(itemId);
   },
 
   searchRecipes: (query: string) => {
-    const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+    const recipeService = getStoreRecipeQuery();
     return recipeService.searchRecipes(query);
   },
 });

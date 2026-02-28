@@ -1,12 +1,22 @@
 // 制作队列切片
-import { getService } from '@/services/core/DIServiceInitializer';
-import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
-import type { RecipeService } from '@/services/crafting/RecipeService';
-import type { GameLoopService } from '@/services/game/GameLoopService';
+import { getStoreGameLoopService, getStoreRecipeQuery } from '@/store/storeRuntimeServices';
 import type { CraftingSlice, SliceCreator } from '@/store/types';
 import type { CraftingChain, CraftingTask } from '@/types/index';
 import { GameLoopTaskType } from '@/types/gameLoop';
 import { info as logInfo, warn as logWarn } from '@/utils/logger';
+
+const syncCraftingTask = (enabled: boolean): void => {
+  try {
+    const gameLoopService = getStoreGameLoopService();
+    if (enabled) {
+      gameLoopService.enableTask(GameLoopTaskType.CRAFTING);
+    } else {
+      gameLoopService.disableTask(GameLoopTaskType.CRAFTING);
+    }
+  } catch (error) {
+    logWarn(`[制作队列] 无法${enabled ? '启用' : '禁用'}制作任务:`, error);
+  }
+};
 
 export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
   // 初始状态
@@ -35,12 +45,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
 
     // 立即启用制作任务
     if (wasEmpty) {
-      try {
-        const gameLoopService = getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
-        gameLoopService.enableTask(GameLoopTaskType.CRAFTING);
-      } catch (error) {
-        logWarn('[制作队列] 无法启用制作任务:', error);
-      }
+      syncCraftingTask(true);
     }
 
     return true;
@@ -80,12 +85,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
 
     // 立即启用制作任务
     if (wasEmpty) {
-      try {
-        const gameLoopService = getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
-        gameLoopService.enableTask(GameLoopTaskType.CRAFTING);
-      } catch (error) {
-        logWarn('[制作队列] 无法启用制作任务:', error);
-      }
+      syncCraftingTask(true);
     }
 
     return chainId;
@@ -118,14 +118,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
             });
             // 链的最后一个任务完成时，队列可能已空，需要禁用制作系统
             if (get().craftingQueue.length === 0) {
-              try {
-                const gameLoopService = getService<GameLoopService>(
-                  SERVICE_TOKENS.GAME_LOOP_SERVICE
-                );
-                gameLoopService.disableTask(GameLoopTaskType.CRAFTING);
-              } catch (error) {
-                logWarn('[制作队列] 无法禁用制作任务:', error);
-              }
+              syncCraftingTask(false);
             }
             return;
           } else {
@@ -145,14 +138,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
             }));
             // 取消整个链后，队列可能已空，需要禁用制作系统
             if (get().craftingQueue.length === 0) {
-              try {
-                const gameLoopService = getService<GameLoopService>(
-                  SERVICE_TOKENS.GAME_LOOP_SERVICE
-                );
-                gameLoopService.disableTask(GameLoopTaskType.CRAFTING);
-              } catch (error) {
-                logWarn('[制作队列] 无法禁用制作任务:', error);
-              }
+              syncCraftingTask(false);
             }
             return;
           }
@@ -170,12 +156,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
 
       // 检查队列是否为空，如果为空则禁用制作系统
       if (get().craftingQueue.length === 0) {
-        try {
-          const gameLoopService = getService<GameLoopService>(SERVICE_TOKENS.GAME_LOOP_SERVICE);
-          gameLoopService.disableTask(GameLoopTaskType.CRAFTING);
-        } catch (error) {
-          logWarn('[制作队列] 无法禁用制作任务:', error);
-        }
+        syncCraftingTask(false);
       }
     }
   },
@@ -228,7 +209,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
 
         if (isLastTask) {
           // 最后一个任务完成，根据配方将所有产出物（含副产物）加入库存
-          const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+          const recipeService = getStoreRecipeQuery();
           const recipe = recipeService.getRecipeById(task.recipeId);
 
           if (recipe && recipe.out) {
@@ -256,7 +237,7 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
       }
     } else {
       // 普通任务，根据配方将所有产出物（含副产物）加入库存
-      const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
+      const recipeService = getStoreRecipeQuery();
       const recipe = recipeService.getRecipeById(task.recipeId);
 
       if (recipe && recipe.out) {

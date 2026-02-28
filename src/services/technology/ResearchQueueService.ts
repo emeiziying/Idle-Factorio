@@ -39,6 +39,27 @@ export class ResearchQueueService {
   }
 
   /**
+   * 从持久化状态恢复研究队列和自动研究开关。
+   */
+  hydrateQueue(
+    researchQueue: ResearchQueueItem[],
+    options?: {
+      autoResearch?: boolean;
+    }
+  ): void {
+    this.researchQueue = researchQueue.map((item, index) => ({
+      ...item,
+      queuePosition: index + 1,
+    }));
+
+    if (typeof options?.autoResearch === 'boolean') {
+      this.autoResearchEnabled = options.autoResearch;
+    }
+
+    this.updateQueueDependencies();
+  }
+
+  /**
    * 添加科技到研究队列
    */
   addToQueue(techId: string, priority: ResearchPriority = ResearchPriority.NORMAL): QueueResult {

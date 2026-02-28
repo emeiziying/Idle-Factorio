@@ -1,11 +1,7 @@
 // 游戏元数据切片
 import type { SliceCreator, GameMetaSlice } from '@/store/types';
-import { getService } from '@/services/core/DIServiceInitializer';
-import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
-import type { GameStorageService } from '@/services/storage/GameStorageService';
+import { getStoreGameStorage } from '@/store/storeRuntimeServices';
 import { warn, error as logError } from '@/utils/logger';
-
-const getStorageService = () => getService<GameStorageService>(SERVICE_TOKENS.GAME_STORAGE_SERVICE);
 
 export const createGameMetaSlice: SliceCreator<GameMetaSlice> = (set, get) => ({
   // 初始状态
@@ -16,7 +12,7 @@ export const createGameMetaSlice: SliceCreator<GameMetaSlice> = (set, get) => ({
   // 存档管理
   clearGameData: async () => {
     // 清除游戏存档
-    await getStorageService().clearGameData();
+    await getStoreGameStorage().clearGameData();
 
     // 重置状态
     set(() => ({
@@ -49,7 +45,7 @@ export const createGameMetaSlice: SliceCreator<GameMetaSlice> = (set, get) => ({
   saveGame: () => {
     // 使用GameStorageService保存游戏数据
     const state = get();
-    getStorageService()
+    getStoreGameStorage()
       .saveGame(state)
       .catch(error => {
         logError('[SaveGame] 保存失败:', error);
@@ -59,7 +55,7 @@ export const createGameMetaSlice: SliceCreator<GameMetaSlice> = (set, get) => ({
   // 加载存档方法
   loadGameData: async () => {
     try {
-      const loadedState = await getStorageService().loadGame();
+      const loadedState = await getStoreGameStorage().loadGame();
       if (loadedState) {
         set(() => loadedState);
       }
@@ -72,7 +68,7 @@ export const createGameMetaSlice: SliceCreator<GameMetaSlice> = (set, get) => ({
   forceSaveGame: async () => {
     const state = get();
     try {
-      await getStorageService().forceSaveGame(state);
+      await getStoreGameStorage().forceSaveGame(state);
     } catch (error) {
       warn('[ForceSave] 强制存档失败:', error);
       throw error;

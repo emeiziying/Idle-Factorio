@@ -13,14 +13,9 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DependencyService } from '../DependencyService';
+import type { RecipeService } from '../RecipeService';
+import ManualCraftingValidator from '@/utils/manualCraftingValidator';
 import type { Recipe } from '../../../types/index';
-
-// ──────────────────── Mock 依赖 ────────────────────
-vi.mock('../../core/DIServiceInitializer', () => ({
-  getService: vi.fn(),
-}));
-
-import { getService } from '../../core/DIServiceInitializer';
 
 // ──────────────────── 共享 Fixtures ────────────────────
 /**
@@ -114,18 +109,20 @@ const setup = (recipeDb: Map<string, Recipe[]>, canCraft = true) => {
   const mockValidator = {
     validateManualCrafting: vi.fn().mockReturnValue({ canCraftManually: canCraft }),
     validateRecipe: vi.fn().mockReturnValue({ canCraftManually: canCraft }),
+    isEntityMiningRecipe: vi.fn().mockReturnValue(false),
   };
   const mockRecipeService = {
     getRecipesThatProduce: vi.fn((itemId: string) => recipeDb.get(itemId) ?? []),
   };
 
-  vi.mocked(getService).mockImplementation((token: symbol | string) => {
-    if (token === 'ManualCraftingValidator') return mockValidator;
-    if (token === 'RecipeService') return mockRecipeService;
-    return null;
-  });
-
-  return { service: new DependencyService(), mockValidator, mockRecipeService };
+  return {
+    service: new DependencyService(
+      mockRecipeService as unknown as RecipeService,
+      mockValidator as unknown as ManualCraftingValidator
+    ),
+    mockValidator,
+    mockRecipeService,
+  };
 };
 
 // ──────────────────── Test Suite ────────────────────

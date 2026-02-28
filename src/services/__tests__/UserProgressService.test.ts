@@ -1,26 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { UserProgressService } from '@/services/game/UserProgressService';
-
-// 模拟日志记录器
-vi.mock('../../utils/logger', () => ({
-  warn: vi.fn(),
-}));
 
 // UserProgressService 测试套件 - 用户进度管理服务（仅科技解锁）
 describe('UserProgressService', () => {
   let service: UserProgressService;
 
   beforeEach(() => {
-    // 清空 localStorage
-    localStorage.clear();
-
     // 创建新实例
     service = new UserProgressService();
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-    localStorage.clear();
   });
 
   // 实例创建测试
@@ -159,56 +146,28 @@ describe('UserProgressService', () => {
     });
   });
 
-  // 数据持久化测试
-  describe('data persistence', () => {
-    // 测试：数据持久化 - 应该保存和加载解锁的科技
-    it('should persist and load unlocked techs', () => {
-      // 解锁一些科技
-      service.unlockTechs(['automation', 'logistics']);
+  // 显式状态恢复测试
+  describe('state hydration', () => {
+    it('should hydrate unlocked techs from persisted state', () => {
+      service.hydrate(['automation', 'logistics']);
 
-      // 创建新实例（模拟重新加载）
-      const newService = new UserProgressService();
-
-      // 验证数据是否正确加载
-      expect(newService.isTechUnlocked('automation')).toBe(true);
-      expect(newService.isTechUnlocked('logistics')).toBe(true);
+      expect(service.isTechUnlocked('automation')).toBe(true);
+      expect(service.isTechUnlocked('logistics')).toBe(true);
+      expect(service.getUnlockedTechs()).toEqual(['automation', 'logistics']);
     });
 
-    // 测试：应该获取正确的解锁科技列表
-    it('should get correct unlocked techs list', () => {
-      const unlockedTechs = service.getUnlockedTechs();
-      expect(Array.isArray(unlockedTechs)).toBe(true);
+    it('should replace previous in-memory progress when hydrating', () => {
+      service.unlockTech('automation');
+      service.hydrate(['steel-processing']);
+
+      expect(service.isTechUnlocked('automation')).toBe(false);
+      expect(service.isTechUnlocked('steel-processing')).toBe(true);
+      expect(service.getUnlockedTechs()).toEqual(['steel-processing']);
     });
 
-    // 测试：正确的存储键
-    it('should use correct storage key', () => {
-      service.unlockTechs(['test-tech']);
-
-      const stored = localStorage.getItem('factorio_user_progress');
-      expect(stored).toBeTruthy();
-
-      const data = JSON.parse(stored!);
-      expect(data.unlockedTechs).toBeDefined();
-    });
-
-    // 测试：在localStorage中存储数据
-    it('should store data in localStorage', () => {
+    it('should keep progress in memory only', () => {
       service.unlockTech('tech1');
 
-      const stored = localStorage.getItem('factorio_user_progress');
-      expect(stored).toBeTruthy();
-
-      const data = JSON.parse(stored!);
-      expect(data.unlockedTechs).toContain('tech1');
-      expect(data.lastUpdated).toBeDefined();
-    });
-
-    // 测试：损坏的localStorage数据应被安全处理
-    it('should handle corrupted localStorage data safely', () => {
-      // 模拟损坏的JSON数据
-      localStorage.setItem('factorio_user_progress', 'corrupted data');
-
-      // 应该能安全创建新实例
       const newService = new UserProgressService();
       expect(newService.getUnlockedTechs()).toEqual([]);
     });

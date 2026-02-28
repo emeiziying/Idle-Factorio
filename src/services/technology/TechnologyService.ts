@@ -65,7 +65,14 @@ export class TechnologyService {
   ) {
     // 使用注入的依赖或创建新实例
     this.eventEmitter = eventEmitter || new TechEventEmitter();
-    this.treeService = treeService || new TechTreeService();
+
+    if (!treeService) {
+      throw new Error(
+        '[TechnologyService] TechTreeService is required. ' +
+          'Ensure it is registered and resolved via the DI container before constructing TechnologyService.'
+      );
+    }
+    this.treeService = treeService;
 
     if (!unlockService) {
       throw new Error(
@@ -75,7 +82,9 @@ export class TechnologyService {
     }
     this.unlockService = unlockService;
 
-    this.researchService = researchService || new ResearchService(this.eventEmitter);
+    this.researchService =
+      researchService ||
+      new ResearchService(this.eventEmitter, this.treeService, this.unlockService);
     this.queueService = queueService || new ResearchQueueService(this.eventEmitter);
     this.progressTracker = progressTracker || new TechProgressTracker();
 
@@ -92,6 +101,37 @@ export class TechnologyService {
    */
   public setInventoryOperations(inventoryOps: InventoryOperations): void {
     this.researchService.setInventoryOperations(inventoryOps);
+  }
+
+  /**
+   * 从 store 持久化状态恢复科技系统运行时状态。
+   * store 仍然是唯一持久化来源，service 只保存计算所需的运行时副本。
+   */
+  public async hydrateState(state: {
+    unlockedTechs?: Iterable<string>;
+    researchState?: TechResearchState | null;
+    researchQueue?: ResearchQueueItem[];
+    autoResearch?: boolean;
+  }): Promise<void> {
+    await this.waitForInitialization();
+
+    if (state.unlockedTechs) {
+      await this.unlockService.hydrateUnlockedTechs(state.unlockedTechs);
+      this.progressTracker.resetStatistics();
+      await this.progressTracker.initialize(this.treeService, this.unlockService);
+    }
+
+    if (state.researchQueue) {
+      this.queueService.hydrateQueue(state.researchQueue, {
+        autoResearch: state.autoResearch,
+      });
+    } else if (typeof state.autoResearch === 'boolean') {
+      this.queueService.setAutoResearch(state.autoResearch);
+    }
+
+    if (state.researchState !== undefined) {
+      this.researchService.hydrateCurrentResearch(state.researchState);
+    }
   }
 
   /**

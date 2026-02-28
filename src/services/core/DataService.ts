@@ -1,14 +1,8 @@
 // 游戏数据管理服务
 
-import { getService } from '@/services/core/DIServiceInitializer';
-import { SERVICE_TOKENS } from '@/services/core/ServiceTokens';
-import { RecipeService } from '@/services/crafting/RecipeService';
-import type { TechnologyService } from '@/services/technology/TechnologyService';
+import type { RecipeService } from '@/services/crafting/RecipeService';
 import type { Category, GameData, IconData, Item, Recipe } from '@/types/index';
 import { error as logError } from '@/utils/logger';
-
-// 异步导入游戏数据
-import gameData from '@/data/spa/data.json';
 
 interface I18nData {
   categories: Record<string, string>;
@@ -18,9 +12,20 @@ interface I18nData {
   technologies?: Record<string, string>; // 可选，如果没有则回退到 recipes 字段
 }
 
+type RecipeQuery = Pick<
+  RecipeService,
+  | 'getRecipeById'
+  | 'getUnlockedRecipesThatProduce'
+  | 'getRecipesThatUse'
+  | 'getRecipeStats'
+  | 'getUnlockedMostEfficientRecipe'
+>;
+
 export class DataService {
   private gameData: GameData | null = null;
   private i18nData: I18nData | null = null;
+  private recipeQuery: RecipeQuery | null = null;
+  private itemUnlockChecker: ((itemId: string) => boolean) | null = null;
 
   // 性能优化：添加缓存
   private itemsByRowCache = new Map<string, Map<number, Item[]>>();
@@ -39,6 +44,20 @@ export class DataService {
     this.clearCache();
   }
 
+  setDependencyPorts(dependencies: {
+    recipeQuery?: RecipeQuery;
+    itemUnlockChecker?: (itemId: string) => boolean;
+  }): void {
+    if (dependencies.recipeQuery) {
+      this.recipeQuery = dependencies.recipeQuery;
+    }
+
+    if (dependencies.itemUnlockChecker) {
+      this.itemUnlockChecker = dependencies.itemUnlockChecker;
+      this.clearCache();
+    }
+  }
+
   // 加载游戏数据
   async loadGameData(): Promise<GameData> {
     if (this.gameData) {
@@ -46,6 +65,7 @@ export class DataService {
     }
 
     try {
+      const { default: gameData } = await import('@/data/spa/data.json');
       this.gameData = gameData as unknown as GameData;
 
       // 加载国际化数据
@@ -136,18 +156,21 @@ export class DataService {
   getUnlockedItems(): Item[] {
     if (!this.gameData) return [];
 
-    const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
-    return this.gameData.items.filter((item: Item) => techService.isItemUnlocked(item.id));
+    if (!this.itemUnlockChecker) {
+      return [];
+    }
+
+    return this.gameData.items.filter((item: Item) => this.itemUnlockChecker?.(item.id));
   }
 
   // 按分类获取物品（仅返回已解锁）
   getItemsByCategory(categoryId: string, includeUnlocked: boolean = true): Item[] {
     if (!this.gameData) return [];
 
-    const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
     return this.gameData.items.filter(
       (item: Item) =>
-        item.category === categoryId && (includeUnlocked || techService.isItemUnlocked(item.id))
+        item.category === categoryId &&
+        (includeUnlocked || !this.itemUnlockChecker || this.itemUnlockChecker(item.id))
     );
   }
 
@@ -166,8 +189,7 @@ export class DataService {
 
   // 获取配方
   getRecipe(recipeId: string): Recipe | undefined {
-    const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
-    return recipeService.getRecipeById(recipeId);
+    return this.recipeQuery?.getRecipeById(recipeId);
   }
 
   // 获取所有分类（按原始数据顺序）
@@ -215,9 +237,9 @@ export class DataService {
     }
 
     // 获取已解锁的物品
-    const techService = getService<TechnologyService>(SERVICE_TOKENS.TECHNOLOGY_SERVICE);
     const items = Object.values(this.gameData.items).filter(
-      (item: Item) => item.category === categoryId && techService.isItemUnlocked(item.id)
+      (item: Item) =>
+        item.category === categoryId && (!this.itemUnlockChecker || this.itemUnlockChecker(item.id))
     );
 
     const itemsByRow = new Map<number, Item[]>();
@@ -257,8 +279,7 @@ export class DataService {
    * 获取物品或配方的图标信息
    */
   getIconInfo(itemId: string): { iconId: string; iconText?: string } {
-    const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
-    const recipe = recipeService.getRecipeById(itemId);
+    const recipe = this.recipeQuery?.getRecipeById(itemId);
     const item = this.getItem(itemId);
 
     // 优先级：配方 iconText > 物品 iconText
@@ -285,14 +306,13 @@ export class DataService {
     const item = this.getItem(itemId);
     if (!item) return null;
 
-    const recipeService = getService<RecipeService>(SERVICE_TOKENS.RECIPE_SERVICE);
     return {
       item,
       // 只返回已解锁的配方，确保 UI 层不展示未解锁内容
-      recipes: recipeService.getUnlockedRecipesThatProduce(itemId),
-      usedInRecipes: recipeService.getRecipesThatUse(itemId),
-      recipeStats: recipeService.getRecipeStats(itemId),
-      recommendedRecipe: recipeService.getUnlockedMostEfficientRecipe(itemId),
+      recipes: this.recipeQuery?.getUnlockedRecipesThatProduce(itemId) || [],
+      usedInRecipes: this.recipeQuery?.getRecipesThatUse(itemId) || [],
+      recipeStats: this.recipeQuery?.getRecipeStats(itemId),
+      recommendedRecipe: this.recipeQuery?.getUnlockedMostEfficientRecipe(itemId),
     };
   }
 
