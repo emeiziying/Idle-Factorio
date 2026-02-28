@@ -36,7 +36,8 @@ const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item, onItemSelect })
   const idRef = useRef(0);
 
   const addFloatingText = useCallback(
-    (text: string, event: React.MouseEvent<HTMLButtonElement>) => {
+    (text: string, event?: React.MouseEvent<HTMLButtonElement>) => {
+      if (!event) return;
       const rect = event.currentTarget.getBoundingClientRect();
       const id = ++idRef.current;
       setFloatingTexts(prev => [...prev, { id, text, x: rect.left + rect.width / 2, y: rect.top }]);
@@ -50,7 +51,7 @@ const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item, onItemSelect })
       itemId: string,
       quantity: number,
       recipe: Recipe,
-      event: React.MouseEvent<HTMLButtonElement>
+      event?: React.MouseEvent<HTMLButtonElement>
     ) => {
       const result = handleManualCraft(itemId, quantity, recipe);
       if (result !== null) {
@@ -67,6 +68,7 @@ const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item, onItemSelect })
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
+        minHeight: 0,
         bgcolor: 'background.default',
       }}
     >
@@ -86,6 +88,7 @@ const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item, onItemSelect })
       <Box
         sx={{
           flex: 1,
+          minHeight: 0,
           overflow: 'auto',
           p: 1,
           overscrollBehavior: 'none',
