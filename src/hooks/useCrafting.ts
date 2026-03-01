@@ -148,7 +148,9 @@ export const useCrafting = () => {
 
   // 返回成功合成的数量（用于飘字），失败返回 null
   const executeChainCrafting = (chainAnalysis: CraftingChainAnalysis): ManualCraftResult => {
-    // 预先扣除总基础材料库存
+    const { updateInventory } = useGameStore.getState();
+
+    // 预先扣除总基础材料库存（供子任务使用的深层基础材料）
     if (chainAnalysis.totalBasicMaterialNeeds) {
       for (const [materialId, totalNeeded] of chainAnalysis.totalBasicMaterialNeeds) {
         const available = getInventoryItem(materialId).currentAmount;
@@ -161,11 +163,36 @@ export const useCrafting = () => {
           return null;
         }
       }
-
-      // 扣除基础材料库存
-      const { updateInventory } = useGameStore.getState();
       for (const [materialId, totalNeeded] of chainAnalysis.totalBasicMaterialNeeds) {
         updateInventory(materialId, -totalNeeded);
+      }
+    }
+
+    // 立即扣除主任务直接使用库存的那部分原材料：
+    // - 有缺口的输入：扣除现有库存量（子任务补足缺口）
+    // - 无缺口的输入：扣除全部需求量（全部来自库存）
+    // 这样可以防止连续点击合成时重复使用同一批原材料
+    const rawMaterialsConsumed = new Map(chainAnalysis.totalBasicMaterialNeeds || []);
+    const depItemIds = new Set(chainAnalysis.dependencies.map(d => d.itemId));
+
+    for (const dep of chainAnalysis.dependencies) {
+      if (dep.available > 0) {
+        updateInventory(dep.itemId, -dep.available);
+        rawMaterialsConsumed.set(
+          dep.itemId,
+          (rawMaterialsConsumed.get(dep.itemId) || 0) + dep.available
+        );
+      }
+    }
+
+    const mainRecipe = chainAnalysis.mainTask.recipe;
+    if (mainRecipe?.in) {
+      for (const [itemId, requiredPerCraft] of Object.entries(mainRecipe.in)) {
+        if (!depItemIds.has(itemId)) {
+          const totalRequired = (requiredPerCraft as number) * chainAnalysis.mainTask.quantity;
+          updateInventory(itemId, -totalRequired);
+          rawMaterialsConsumed.set(itemId, (rawMaterialsConsumed.get(itemId) || 0) + totalRequired);
+        }
       }
     }
 
@@ -188,7 +215,7 @@ export const useCrafting = () => {
       },
       status: 'pending' as const,
       totalProgress: 0,
-      rawMaterialsConsumed: chainAnalysis.totalBasicMaterialNeeds,
+      rawMaterialsConsumed,
     };
 
     const chainId = addCraftingChain(chainData);
