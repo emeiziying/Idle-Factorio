@@ -47,7 +47,12 @@ const TASK_CONFIGS: Record<string, TaskConfig> = {
     baseInterval: 1000, // 1秒
     enabledByDefault: false,
     shouldRun: () =>
-      tryGetAdapter()?.hasFacilitiesWithStatus(['running', 'no_resource', 'output_full']) ?? false,
+      tryGetAdapter()?.hasFacilitiesWithStatus([
+        'running',
+        'no_resource',
+        'output_full',
+        'no_fuel',
+      ]) ?? false,
   },
   [GameLoopTaskType.FUEL_CONSUMPTION]: {
     id: GameLoopTaskType.FUEL_CONSUMPTION,
@@ -165,6 +170,12 @@ export class GameLoopTaskFactory {
       }
 
       const adapter = GameLoopTaskFactory.getAdapter();
+
+      // 在获取设施列表前，先尝试恢复 no_fuel 设施。
+      // delta=0 不消耗燃料，仅触发缺燃料设施的补充逻辑，
+      // 使其在本 tick 就能以 'running' 状态被下方生产逻辑处理。
+      adapter.updateFuelConsumption(0);
+
       const { facilities, updateFacility, batchUpdateInventory, getInventoryItem } = {
         facilities: adapter.getFacilities(),
         updateFacility: adapter.updateFacility,
