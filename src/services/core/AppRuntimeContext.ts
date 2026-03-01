@@ -95,6 +95,7 @@ export interface GameStoreAdapter {
   updateInventory: (itemId: string, amount: number) => void;
   completeCraftingTask: (taskId: string) => void;
   trackMinedEntity: (itemId: string, count: number) => void;
+  trackCraftedItem: (itemId: string, count: number) => void;
   getFacilities: () => FacilityInstance[];
   getInventoryItem: (itemId: string) => InventoryItem;
   updateFacility: (id: string, updates: Partial<FacilityInstance>) => void;

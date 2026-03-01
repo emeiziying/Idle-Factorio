@@ -9,7 +9,10 @@ import { GameLoopTaskType } from '@/types/gameLoop';
 
 // 判断设施是否处于需要循环处理的活跃状态
 const isActiveFacilityStatus = (status: string) =>
-  status === 'running' || status === 'no_resource' || status === 'output_full';
+  status === 'running' ||
+  status === 'no_resource' ||
+  status === 'output_full' ||
+  status === 'no_fuel';
 
 // 立即启用/禁用设施任务的辅助函数
 const syncFacilitiesTask = (enable: boolean) => {
@@ -45,6 +48,11 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
 
     // 追踪建造的实体（用于研究触发器）
     get().trackBuiltEntity(facility.facilityId, 1);
+
+    // 新设施处于活跃状态时立即启用设施任务，避免等待 updateTasksState 轮询（最长 10s）
+    if (isActiveFacilityStatus(facility.status)) {
+      syncFacilitiesTask(true);
+    }
   },
 
   updateFacility: (facilityId: string, updates) => {

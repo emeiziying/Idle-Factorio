@@ -42,11 +42,10 @@ const FloatingTaskList: React.FC = () => {
         // 56px 为移动端固定 tabbar 高度，再留 12px 间距
         bottom: 68,
         left: 0,
-        width: '100%',
         zIndex: 1250,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         gap,
         boxSizing: 'border-box',
         px: isMobile ? 1 : 1.5,
@@ -63,7 +62,7 @@ const FloatingTaskList: React.FC = () => {
         return (
           <Box
             key={rowIndex}
-            sx={{ display: 'flex', gap, justifyContent: 'center', width: '100%' }}
+            sx={{ display: 'flex', gap, justifyContent: 'flex-start' }}
           >
             {rowTasks.map(task => {
               const item = dataService.getItem(task.itemId);
