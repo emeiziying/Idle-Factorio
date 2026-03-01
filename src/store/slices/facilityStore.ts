@@ -45,6 +45,11 @@ export const createFacilitySlice: SliceCreator<FacilitySlice> = (set, get) => ({
 
     // 追踪建造的实体（用于研究触发器）
     get().trackBuiltEntity(facility.facilityId, 1);
+
+    // 新设施处于活跃状态时立即启用设施任务，避免等待 updateTasksState 轮询（最长 10s）
+    if (isActiveFacilityStatus(facility.status)) {
+      syncFacilitiesTask(true);
+    }
   },
 
   updateFacility: (facilityId: string, updates) => {
