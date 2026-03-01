@@ -90,7 +90,9 @@ const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item, onItemSelect })
           flex: 1,
           minHeight: 0,
           overflow: 'auto',
-          p: 1,
+          pt: 1,
+          px: 1,
+          pb: '120px',
           overscrollBehavior: 'none',
           scrollBehavior: 'smooth',
         }}
