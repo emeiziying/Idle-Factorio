@@ -331,6 +331,12 @@ export class DIServiceInitializer {
     const defaultTasks = GameLoopTaskFactory.createAllDefaultTasks();
     defaultTasks.forEach(task => coreRuntime.gameLoopService.addTask(task));
 
+    // Immediately sync task enabled/disabled states based on current game state.
+    // Without this, tasks like FACILITIES (enabledByDefault: false) stay disabled for up
+    // to 10 seconds after a save/load, causing facilities in output_full/running/no_resource
+    // to not be processed and get stuck in their current state.
+    GameLoopTaskFactory.updateTasksState(coreRuntime.gameLoopService.getTasks());
+
     if (!coreRuntime.gameLoopService.isRunningState()) {
       startGameLoop();
     }
