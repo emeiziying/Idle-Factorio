@@ -203,8 +203,11 @@ export class FuelService {
 
     buffer.totalEnergy = this.calculateTotalEnergy(buffer);
 
-    if (energyConsumed === 0 && energyNeeded > 0) {
-      return { success: false, reason: 'No fuel available', energyConsumed: 0 };
+    // 只要本 tick 仍有未满足的能量需求（燃料不足或耗尽），就返回 false 触发补燃
+    // 原来的 energyConsumed === 0 条件会在燃料最后一格耗完时（energyConsumed > 0 但 remainingNeed > 0）
+    // 错误地返回 success:true，导致 tryRefuelOne 在该 tick 不被调用，延迟一个 tick 才补燃
+    if (remainingNeed > 0) {
+      return { success: false, reason: 'No fuel available', energyConsumed };
     }
 
     return { success: true, energyConsumed };
