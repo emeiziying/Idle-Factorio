@@ -249,7 +249,9 @@ export class TechUnlockService {
    * 从科技收集解锁内容
    */
   private collectUnlocksFromTech(tech: Technology): void {
-    // 物品解锁现在是动态计算的，无需存储
+    if (tech.unlocks.items) {
+      tech.unlocks.items.forEach(itemId => this.unlockedItems.add(itemId));
+    }
 
     if (tech.unlocks.recipes) {
       tech.unlocks.recipes.forEach(recipe => this.unlockedRecipes.add(recipe));
