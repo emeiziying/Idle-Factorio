@@ -68,15 +68,6 @@ class CraftingEngine {
     // 直接使用任务的recipeId获取配方
     const selectedRecipe = recipeLookup.getRecipeById(task.recipeId);
 
-    // 如果有配方且有输入材料，则消耗材料（链式任务的原材料已在创建时扣除）
-    if (selectedRecipe && selectedRecipe.in && !task.chainId) {
-      // 非链式任务才扣除材料
-      Object.entries(selectedRecipe.in).forEach(([inputItemId, required]) => {
-        const totalRequired = (required as number) * task.quantity;
-        adapter.updateInventory(inputItemId, -totalRequired);
-      });
-    }
-
     // 如果是采矿配方，追踪挖掘的实体（用于研究触发器）
     if (selectedRecipe && selectedRecipe.flags?.includes('mining')) {
       adapter.trackMinedEntity(task.itemId, task.quantity);

@@ -49,6 +49,20 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
         : state.production,
     }));
 
+    // 立即扣除原材料（链式任务的基础材料已在创建链时统一扣除）
+    if (!task.chainId) {
+      try {
+        const recipe = getStoreRecipeQuery().getRecipeById(task.recipeId);
+        if (recipe?.in) {
+          for (const [itemId, required] of Object.entries(recipe.in)) {
+            get().updateInventory(itemId, -(required as number) * task.quantity);
+          }
+        }
+      } catch (error) {
+        logWarn('[制作队列] 无法扣除制作材料:', error);
+      }
+    }
+
     // 立即启用制作任务
     if (wasEmpty) {
       syncCraftingTask(true);
@@ -172,8 +186,19 @@ export const createCraftingSlice: SliceCreator<CraftingSlice> = (set, get) => ({
       }
 
       // 普通手动制作任务处理
-      // 手动制作任务的材料在完成时才消耗，取消未完成任务不需要归还材料
-      // 只有链式任务的基础材料需要在取消时归还（因为在创建链时已预先扣除）
+      // 材料在创建任务时已立即扣除，取消未完成任务需要归还材料
+      if (task.status !== 'completed') {
+        try {
+          const recipe = getStoreRecipeQuery().getRecipeById(task.recipeId);
+          if (recipe?.in) {
+            for (const [itemId, required] of Object.entries(recipe.in)) {
+              get().updateInventory(itemId, (required as number) * task.quantity);
+            }
+          }
+        } catch (error) {
+          logWarn('[制作队列] 无法归还制作材料:', error);
+        }
+      }
 
       // 移除任务
       set(state => {
