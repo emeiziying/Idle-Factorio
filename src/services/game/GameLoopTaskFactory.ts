@@ -277,6 +277,8 @@ export class GameLoopTaskFactory {
             if (recipe.out) {
               for (const [itemId, quantity] of Object.entries(recipe.out)) {
                 batchedInventoryUpdates.push({ itemId, amount: quantity as number });
+                // 记录产出，触发科技解锁检测（craft-item 类型 researchTrigger）
+                adapter.trackCraftedItem(itemId, quantity as number);
               }
             }
             updatedProduction.progress = 0;

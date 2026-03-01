@@ -410,6 +410,7 @@ export class DIServiceInitializer {
       updateInventory: (itemId, amount) => useGameStore.getState().updateInventory(itemId, amount),
       completeCraftingTask: taskId => useGameStore.getState().completeCraftingTask(taskId),
       trackMinedEntity: (itemId, count) => useGameStore.getState().trackMinedEntity(itemId, count),
+      trackCraftedItem: (itemId, count) => useGameStore.getState().trackCraftedItem(itemId, count),
       getFacilities: () => useGameStore.getState().facilities,
       getInventoryItem: itemId => useGameStore.getState().getInventoryItem(itemId),
       updateFacility: (id, updates) => useGameStore.getState().updateFacility(id, updates),
