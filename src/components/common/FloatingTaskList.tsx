@@ -60,10 +60,7 @@ const FloatingTaskList: React.FC = () => {
       {Array.from({ length: Math.min(Math.ceil(activeTasks.length / 6), 3) }, (_, rowIndex) => {
         const rowTasks = activeTasks.slice(rowIndex * 6, (rowIndex + 1) * 6);
         return (
-          <Box
-            key={rowIndex}
-            sx={{ display: 'flex', gap, justifyContent: 'flex-start' }}
-          >
+          <Box key={rowIndex} sx={{ display: 'flex', gap, justifyContent: 'flex-start' }}>
             {rowTasks.map(task => {
               const item = dataService.getItem(task.itemId);
               if (!item) return null;

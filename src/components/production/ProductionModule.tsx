@@ -71,7 +71,7 @@ const ProductionModule: React.FC = React.memo(() => {
         {/* 左侧物品列表 */}
         <Box
           sx={{
-            width: '25%',
+            width: '101px',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',

@@ -1,11 +1,15 @@
-import React from 'react';
-import { Box } from '@mui/material';
-import { Add as AddIcon, ArrowForward as ArrowIcon } from '@mui/icons-material';
-import type { Recipe } from '@/types/index';
-import FactorioIcon from '@/components/common/FactorioIcon';
-import useGameStore from '@/store/gameStore';
-import { useDataService } from '@/hooks/useDIServices';
 import TimeIcon from '@/assets/Time.png';
+import FactorioIcon from '@/components/common/FactorioIcon';
+import { useDataService } from '@/hooks/useDIServices';
+import useGameStore from '@/store/gameStore';
+import type { Recipe } from '@/types/index';
+import {
+  Add as AddIcon,
+  ArrowDownward as ArrowDownIcon,
+  ArrowForward as ArrowIcon,
+} from '@mui/icons-material';
+import { Box } from '@mui/material';
+import React from 'react';
 
 interface RecipeFlowDisplayProps {
   recipe: Recipe;
@@ -70,6 +74,74 @@ const RecipeFlowDisplay: React.FC<RecipeFlowDisplayProps> = ({
     });
   };
 
+  const totalItems = Object.keys(recipe.in).length + Object.keys(recipe.out).length;
+  const useVerticalLayout = totalItems >= 4;
+
+  if (useVerticalLayout) {
+    return (
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        gap={0.5}
+        sx={{
+          p: 1.5,
+          bgcolor: 'background.default',
+          borderRadius: 1,
+          border: '1px solid',
+          borderColor: 'divider',
+          minHeight: 'fit-content',
+          width: '100%',
+        }}
+      >
+        {/* 输入行：时间 + 输入材料 */}
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          gap={0.25}
+          sx={{ flexWrap: 'wrap' }}
+        >
+          {showTime && (
+            <>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <FactorioIcon
+                  customImage={TimeIcon}
+                  size={iconSize}
+                  quantity={customTime !== undefined ? customTime : recipe.time}
+                />
+              </Box>
+              {Object.keys(recipe.in).length > 0 && (
+                <AddIcon sx={{ color: 'text.secondary', fontSize: iconSize * 0.6 }} />
+              )}
+            </>
+          )}
+          {renderItems(recipe.in)}
+        </Box>
+
+        {/* 向下箭头 */}
+        <ArrowDownIcon sx={{ color: themeColor, fontSize: iconSize * 0.6 }} />
+
+        {/* 输出行 */}
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          gap={0.25}
+          sx={{ flexWrap: 'wrap' }}
+        >
+          {renderItems(recipe.out, false)}
+        </Box>
+      </Box>
+    );
+  }
+
   return (
     <Box
       display="flex"
@@ -85,6 +157,7 @@ const RecipeFlowDisplay: React.FC<RecipeFlowDisplayProps> = ({
         minHeight: 'fit-content',
         width: '100%',
         textAlign: 'center',
+        flexWrap: 'wrap',
       }}
     >
       {/* 时间图标 */}

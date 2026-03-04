@@ -34,10 +34,14 @@ const ItemDetailPanel: React.FC<ItemDetailPanelProps> = ({ item, onItemSelect })
 
   const [floatingTexts, setFloatingTexts] = useState<FloatingTextEntry[]>([]);
   const idRef = useRef(0);
+  const lastNativeEventRef = useRef<Event | null>(null);
 
   const addFloatingText = useCallback(
     (text: string, event?: React.MouseEvent<HTMLButtonElement>) => {
       if (!event) return;
+      // 同一个原生事件可能因 re-render 导致回调被多次触发，去重
+      if (event.nativeEvent === lastNativeEventRef.current) return;
+      lastNativeEventRef.current = event.nativeEvent;
       const rect = event.currentTarget.getBoundingClientRect();
       const id = ++idRef.current;
       setFloatingTexts(prev => [...prev, { id, text, x: rect.left + rect.width / 2, y: rect.top }]);

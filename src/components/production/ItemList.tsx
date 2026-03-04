@@ -78,7 +78,6 @@ const ItemList: React.FC<ItemListProps> = React.memo(
                   />
                 ))}
               </Box>
-
               {/* 分隔线 */}
               {index < sortedRows.length - 1 && <Divider sx={{ my: 0.5, opacity: 0.15 }} />}
             </Box>
